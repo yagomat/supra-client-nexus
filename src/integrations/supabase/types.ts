@@ -170,6 +170,10 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: Json
       }
+      recalculate_all_client_status: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

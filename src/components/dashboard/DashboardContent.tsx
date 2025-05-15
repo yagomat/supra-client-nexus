@@ -20,7 +20,6 @@ export const DashboardContent = ({ stats, loading }: DashboardContentProps) => {
 
   return (
     <div className="flex flex-col space-y-4">
-      <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
       <p className="text-muted-foreground">
         Bem-vindo ao seu painel de gestão de clientes. Aqui você encontra um resumo das suas estatísticas.
       </p>

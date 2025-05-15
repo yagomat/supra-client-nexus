@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Cliente, Pagamento, DashboardStats, ValoresPredefinidos } from "@/types";
 
@@ -120,6 +121,7 @@ export async function createPagamento(pagamento: Omit<Pagamento, "id" | "created
 export async function updatePagamento(id: string, status: string, data_pagamento: string | null = null): Promise<Pagamento> {
   const updateData: any = { status };
   
+  // A lógica de definir a data_pagamento agora é mais crítica com as novas regras de status
   if (status !== "nao_pago" && data_pagamento === null) {
     updateData.data_pagamento = new Date().toISOString();
   } else if (data_pagamento !== null) {
@@ -139,6 +141,15 @@ export async function updatePagamento(id: string, status: string, data_pagamento
   }
   
   return data as Pagamento;
+}
+
+export async function recalculateAllClientStatus(): Promise<void> {
+  const { error } = await supabase.rpc('recalculate_all_client_status');
+  
+  if (error) {
+    console.error("Erro ao recalcular status dos clientes:", error);
+    throw error;
+  }
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
