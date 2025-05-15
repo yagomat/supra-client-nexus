@@ -2,10 +2,13 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Session } from "@supabase/supabase-js";
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  session: Session | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, nome: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -15,45 +18,66 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Aqui verificaremos se há uma sessão ativa no Supabase
-    // E carregaremos o usuário atualmente autenticado
-    console.log("Verificando autenticação no supabase...");
-    // Simulando carregamento para a demonstração
-    const checkAuth = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        setSession(currentSession);
+        if (currentSession && currentSession.user) {
+          setUser({
+            id: currentSession.user.id,
+            email: currentSession.user.email || "",
+            nome: currentSession.user.user_metadata.nome
+          });
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      }
+    );
 
-    return () => clearTimeout(checkAuth);
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      if (currentSession && currentSession.user) {
+        setUser({
+          id: currentSession.user.id,
+          email: currentSession.user.email || "",
+          nome: currentSession.user.user_metadata.nome
+        });
+      }
+      setLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      // Aqui iremos autenticar com Supabase
-      console.log("Autenticando com", email);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
       
-      // Simulação para demonstração
-      setTimeout(() => {
-        setUser({
-          id: "1",
-          email,
-          nome: "Usuário Demo"
-        });
-        setLoading(false);
-      }, 1000);
+      if (error) {
+        throw error;
+      }
       
       toast({
         title: "Login realizado com sucesso",
         description: "Bem-vindo ao sistema de gestão de clientes",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Erro ao fazer login",
-        description: "Verifique suas credenciais e tente novamente",
+        description: error.message || "Verifique suas credenciais e tente novamente",
         variant: "destructive",
       });
       setLoading(false);
@@ -64,27 +88,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, nome: string) => {
     try {
       setLoading(true);
-      // Aqui iremos criar uma conta com Supabase
-      console.log("Criando conta para", email);
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { nome }
+        }
+      });
       
-      // Simulação para demonstração
-      setTimeout(() => {
-        setUser({
-          id: "1",
-          email,
-          nome
-        });
-        setLoading(false);
-      }, 1000);
+      if (error) {
+        throw error;
+      }
       
       toast({
         title: "Conta criada com sucesso",
         description: "Bem-vindo ao sistema de gestão de clientes",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Erro ao criar conta",
-        description: "Verifique os dados informados e tente novamente",
+        description: error.message || "Verifique os dados informados e tente novamente",
         variant: "destructive",
       });
       setLoading(false);
@@ -93,21 +116,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    setLoading(true);
-    // Aqui iremos fazer logout no Supabase
-    console.log("Realizando logout");
-    
-    // Simulação para demonstração
-    setTimeout(() => {
-      setUser(null);
+    try {
+      setLoading(true);
+      await supabase.auth.signOut();
+    } catch (error: any) {
+      toast({
+        title: "Erro ao fazer logout",
+        description: error.message || "Ocorreu um erro ao sair do sistema",
+        variant: "destructive",
+      });
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        session,
         loading,
         signIn,
         signUp,

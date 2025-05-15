@@ -30,6 +30,12 @@ export interface Cliente {
   status: "ativo" | "inativo"; // Calculado pelo backend
 }
 
+export interface ClienteComPagamentos extends Cliente {
+  pagamentos: {
+    [key: string]: Pagamento;
+  };
+}
+
 export interface Pagamento {
   id: string;
   cliente_id: string;

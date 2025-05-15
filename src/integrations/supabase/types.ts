@@ -9,13 +9,167 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      clientes: {
+        Row: {
+          aplicativo: string
+          aplicativo_2: string | null
+          created_at: string
+          data_licenca_2: string | null
+          data_licenca_aplicativo: string | null
+          dia_vencimento: number
+          dispositivo_smart: string | null
+          dispositivo_smart_2: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          possui_tela_adicional: boolean | null
+          senha_2: string | null
+          senha_aplicativo: string
+          servidor: string
+          status: string | null
+          telefone: string | null
+          uf: string | null
+          user_id: string
+          usuario_2: string | null
+          usuario_aplicativo: string
+          valor_plano: number | null
+        }
+        Insert: {
+          aplicativo: string
+          aplicativo_2?: string | null
+          created_at?: string
+          data_licenca_2?: string | null
+          data_licenca_aplicativo?: string | null
+          dia_vencimento: number
+          dispositivo_smart?: string | null
+          dispositivo_smart_2?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          possui_tela_adicional?: boolean | null
+          senha_2?: string | null
+          senha_aplicativo: string
+          servidor: string
+          status?: string | null
+          telefone?: string | null
+          uf?: string | null
+          user_id: string
+          usuario_2?: string | null
+          usuario_aplicativo: string
+          valor_plano?: number | null
+        }
+        Update: {
+          aplicativo?: string
+          aplicativo_2?: string | null
+          created_at?: string
+          data_licenca_2?: string | null
+          data_licenca_aplicativo?: string | null
+          dia_vencimento?: number
+          dispositivo_smart?: string | null
+          dispositivo_smart_2?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          possui_tela_adicional?: boolean | null
+          senha_2?: string | null
+          senha_aplicativo?: string
+          servidor?: string
+          status?: string | null
+          telefone?: string | null
+          uf?: string | null
+          user_id?: string
+          usuario_2?: string | null
+          usuario_aplicativo?: string
+          valor_plano?: number | null
+        }
+        Relationships: []
+      }
+      pagamentos: {
+        Row: {
+          ano: number
+          cliente_id: string
+          created_at: string
+          data_pagamento: string | null
+          id: string
+          mes: number
+          status: string
+        }
+        Insert: {
+          ano: number
+          cliente_id: string
+          created_at?: string
+          data_pagamento?: string | null
+          id?: string
+          mes: number
+          status: string
+        }
+        Update: {
+          ano?: number
+          cliente_id?: string
+          created_at?: string
+          data_pagamento?: string | null
+          id?: string
+          mes?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagamentos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string | null
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          nome?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string | null
+        }
+        Relationships: []
+      }
+      valores_predefinidos: {
+        Row: {
+          id: string
+          tipo: string
+          user_id: string
+          valor: string
+        }
+        Insert: {
+          id?: string
+          tipo: string
+          user_id: string
+          valor: string
+        }
+        Update: {
+          id?: string
+          tipo?: string
+          user_id?: string
+          valor?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_dashboard_stats: {
+        Args: { user_id_param: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

@@ -1,5 +1,5 @@
 
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
@@ -9,6 +9,7 @@ import ListaClientes from "./pages/ListaClientes";
 import GestaoPagamentos from "./pages/GestaoPagamentos";
 import BancoDados from "./pages/BancoDados";
 import NotFound from "./pages/NotFound";
+import { useEffect } from "react";
 
 interface PrivateRouteProps {
   children: React.ReactNode;
@@ -16,6 +17,7 @@ interface PrivateRouteProps {
 
 const PrivateRoute = ({ children }: PrivateRouteProps) => {
   const { user, loading } = useAuth();
+  const location = useLocation();
   
   if (loading) {
     return (
@@ -26,18 +28,28 @@ const PrivateRoute = ({ children }: PrivateRouteProps) => {
   }
   
   if (!user) {
-    return <Navigate to="/login" replace />;
+    // Save the attempted url for redirecting after login
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
   
   return <>{children}</>;
 };
 
 export const AppRoutes = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  const location = useLocation();
+
+  // Handle redirects after authentication
+  useEffect(() => {
+    if (!loading && user && ['/login', '/cadastro', '/'].includes(location.pathname)) {
+      // Redirect to dashboard if authenticated and on auth pages
+      window.location.href = '/dashboard';
+    }
+  }, [loading, user, location.pathname]);
 
   return (
     <Routes>
-      <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
+      <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
       <Route path="/cadastro" element={user ? <Navigate to="/dashboard" replace /> : <Cadastro />} />
       
