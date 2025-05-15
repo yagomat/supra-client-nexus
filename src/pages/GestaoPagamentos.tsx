@@ -105,7 +105,7 @@ const GestaoPagamentos = () => {
       return {
         ...cliente,
         pagamentos: clientePagamentos,
-      };
+      } as ClienteComPagamentos;
     });
     
     setClientesComPagamentos(clientesPagamentos);
@@ -132,12 +132,12 @@ const GestaoPagamentos = () => {
     setSearchTerm("");
   };
 
-  const handleChangeStatus = async (cliente: Cliente, mes: number, ano: number, status: PaymentStatus) => {
+  const handleChangeStatus = async (cliente: ClienteComPagamentos, mes: number, ano: number, status: PaymentStatus) => {
     try {
       setSubmitting(true);
       
       const chave = `${mes}-${ano}`;
-      const pagamentoExistente = cliente.pagamentos ? cliente.pagamentos[chave] : undefined;
+      const pagamentoExistente = cliente.pagamentos[chave];
       
       if (pagamentoExistente) {
         // Atualizar pagamento existente
@@ -303,7 +303,7 @@ const GestaoPagamentos = () => {
                         <TableBody>
                           {filteredClientes.map((cliente) => {
                             const chave = `${mesAtual}-${anoAtual}`;
-                            const pagamento = cliente.pagamentos ? cliente.pagamentos[chave] : undefined;
+                            const pagamento = cliente.pagamentos[chave];
                             
                             return (
                               <TableRow key={cliente.id}>
@@ -396,7 +396,7 @@ const GestaoPagamentos = () => {
                               </TableCell>
                               {meses.map((mes) => {
                                 const chave = `${mes.value}-${anoAtual}`;
-                                const pagamento = cliente.pagamentos ? cliente.pagamentos[chave] : undefined;
+                                const pagamento = cliente.pagamentos[chave];
                                 
                                 let cellClass = "";
                                 if (pagamento) {
