@@ -21,6 +21,7 @@ const Login = () => {
     try {
       setIsLoading(true);
       await signIn(email, password);
+      // Usar navigate em vez de window.location para evitar recarregar a página
       navigate("/dashboard");
     } catch (error) {
       console.error("Erro ao fazer login", error);

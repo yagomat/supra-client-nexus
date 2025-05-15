@@ -39,11 +39,21 @@ export const AppRoutes = () => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  // Handle redirects after authentication
+  // Use useEffect com dependências mais específicas para evitar loop infinito
   useEffect(() => {
     if (!loading && user && ['/login', '/cadastro', '/'].includes(location.pathname)) {
-      // Redirect to dashboard if authenticated and on auth pages
-      window.location.href = '/dashboard';
+      // Use navigate do React Router em vez de window.location
+      // para evitar recarregamento completo da página
+      const navigate = () => {
+        const router = document.querySelector('a[href="/dashboard"]');
+        if (router) {
+          (router as HTMLElement).click();
+        }
+      };
+      
+      // Pequeno delay para evitar múltiplas navegações
+      const timer = setTimeout(navigate, 100);
+      return () => clearTimeout(timer);
     }
   }, [loading, user, location.pathname]);
 
