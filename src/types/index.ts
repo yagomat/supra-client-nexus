@@ -27,7 +27,7 @@ export interface Cliente {
   data_licenca_2: string | null;
   
   observacoes: string | null;
-  status: "ativo" | "inativo"; // Calculado pelo backend
+  status: string; // Changed from "ativo" | "inativo" to string to match what comes from the database
 }
 
 export interface ClienteComPagamentos extends Cliente {
@@ -41,7 +41,7 @@ export interface Pagamento {
   cliente_id: string;
   mes: number; // 1-12
   ano: number;
-  status: PaymentStatus;
+  status: string; // Changed from PaymentStatus to string to match what comes from the database
   data_pagamento: string | null;
   created_at: string;
 }

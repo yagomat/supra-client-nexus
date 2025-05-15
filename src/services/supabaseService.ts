@@ -1,6 +1,5 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { Cliente, Pagamento, DashboardStats, ValoresPredefinidos, PaymentStatus } from "@/types";
+import { Cliente, Pagamento, DashboardStats, ValoresPredefinidos } from "@/types";
 
 // Function to get all clients for the authenticated user
 export async function getClientes(): Promise<Cliente[]> {
@@ -14,7 +13,7 @@ export async function getClientes(): Promise<Cliente[]> {
     throw error;
   }
   
-  return clientes || [];
+  return clientes as Cliente[] || [];
 }
 
 export async function getClienteById(id: string): Promise<Cliente | undefined> {
@@ -29,7 +28,7 @@ export async function getClienteById(id: string): Promise<Cliente | undefined> {
     throw error;
   }
   
-  return data;
+  return data as Cliente;
 }
 
 export async function createCliente(cliente: Omit<Cliente, "id" | "created_at" | "status">): Promise<Cliente> {
@@ -55,7 +54,7 @@ export async function createCliente(cliente: Omit<Cliente, "id" | "created_at" |
     throw error;
   }
   
-  return data;
+  return data as Cliente;
 }
 
 export async function updateCliente(id: string, cliente: Partial<Cliente>): Promise<Cliente> {
@@ -71,7 +70,7 @@ export async function updateCliente(id: string, cliente: Partial<Cliente>): Prom
     throw error;
   }
   
-  return data;
+  return data as Cliente;
 }
 
 export async function deleteCliente(id: string): Promise<void> {
@@ -100,7 +99,7 @@ export async function getPagamentos(clienteId?: string): Promise<Pagamento[]> {
     throw error;
   }
   
-  return data || [];
+  return data as Pagamento[] || [];
 }
 
 export async function createPagamento(pagamento: Omit<Pagamento, "id" | "created_at">): Promise<Pagamento> {
@@ -115,10 +114,10 @@ export async function createPagamento(pagamento: Omit<Pagamento, "id" | "created
     throw error;
   }
   
-  return data;
+  return data as Pagamento;
 }
 
-export async function updatePagamento(id: string, status: PaymentStatus, data_pagamento: string | null = null): Promise<Pagamento> {
+export async function updatePagamento(id: string, status: string, data_pagamento: string | null = null): Promise<Pagamento> {
   const updateData: any = { status };
   
   if (status !== "nao_pago" && data_pagamento === null) {
@@ -139,7 +138,7 @@ export async function updatePagamento(id: string, status: PaymentStatus, data_pa
     throw error;
   }
   
-  return data;
+  return data as Pagamento;
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
@@ -159,7 +158,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     throw error;
   }
   
-  return data;
+  return data as unknown as DashboardStats;
 }
 
 export async function getValoresPredefinidos(): Promise<ValoresPredefinidos> {
