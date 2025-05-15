@@ -7,12 +7,14 @@ import { DashboardStats } from "@/types";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, UserCheck, UserX, UserPlus } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
 
 const Dashboard = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -21,13 +23,18 @@ const Dashboard = () => {
         setStats(data);
       } catch (error) {
         console.error("Erro ao buscar estatísticas", error);
+        toast({
+          title: "Erro ao carregar o dashboard",
+          description: "Não foi possível carregar as estatísticas. Por favor, tente novamente mais tarde.",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchStats();
-  }, []);
+  }, [toast]);
 
   const renderStatCard = (title: string, value: number | string, icon: React.ReactNode, className?: string) => (
     <Card className={className}>
@@ -47,6 +54,18 @@ const Dashboard = () => {
     </Card>
   );
 
+  // Safe getter functions to handle potential null values
+  const getSafeData = (dataArray: any[] | null | undefined, defaultValue: any[] = []) => {
+    return Array.isArray(dataArray) ? dataArray : defaultValue;
+  };
+
+  // Create safe versions of each data set
+  const safeEvolucaoClientes = stats?.evolucao_clientes ? getSafeData(stats.evolucao_clientes) : [];
+  const safeDispositivos = stats?.distribuicao_dispositivos ? getSafeData(stats.distribuicao_dispositivos) : [];
+  const safeAplicativos = stats?.distribuicao_aplicativos ? getSafeData(stats.distribuicao_aplicativos) : [];
+  const safeUfs = stats?.distribuicao_ufs ? getSafeData(stats.distribuicao_ufs) : [];
+  const safeServidores = stats?.distribuicao_servidores ? getSafeData(stats.distribuicao_servidores) : [];
+
   return (
     <DashboardLayout>
       <div className="flex flex-col space-y-4">
@@ -58,7 +77,7 @@ const Dashboard = () => {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {renderStatCard(
             "Total de Clientes",
-            loading ? "" : stats ? stats.clientes_ativos + stats.clientes_inativos : "0",
+            loading ? "" : stats ? (stats.clientes_ativos || 0) + (stats.clientes_inativos || 0) : "0",
             <Users size={24} className="text-primary" />,
             "border-l-4 border-primary"
           )}
@@ -92,10 +111,10 @@ const Dashboard = () => {
                 <div className="flex items-center justify-center h-full">
                   <Skeleton className="h-full w-full" />
                 </div>
-              ) : stats ? (
+              ) : safeEvolucaoClientes.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={stats.evolucao_clientes}
+                    data={safeEvolucaoClientes}
                     margin={{
                       top: 10,
                       right: 20,
@@ -110,7 +129,11 @@ const Dashboard = () => {
                     <Bar dataKey="quantidade" fill="#3b82f6" />
                   </BarChart>
                 </ResponsiveContainer>
-              ) : null}
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  Nenhum dado disponível
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -124,11 +147,11 @@ const Dashboard = () => {
                   <div className="flex items-center justify-center h-full">
                     <Skeleton className="h-full w-full" />
                   </div>
-                ) : stats ? (
+                ) : safeDispositivos.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={stats.distribuicao_dispositivos}
+                        data={safeDispositivos}
                         cx="50%"
                         cy="50%"
                         labelLine={false}
@@ -137,14 +160,18 @@ const Dashboard = () => {
                         dataKey="quantidade"
                         nameKey="dispositivo"
                       >
-                        {stats.distribuicao_dispositivos.map((_, index) => (
+                        {safeDispositivos.map((_, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
                       <Legend />
                     </PieChart>
                   </ResponsiveContainer>
-                ) : null}
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    Nenhum dado disponível
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -157,11 +184,11 @@ const Dashboard = () => {
                   <div className="flex items-center justify-center h-full">
                     <Skeleton className="h-full w-full" />
                   </div>
-                ) : stats ? (
+                ) : safeAplicativos.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={stats.distribuicao_aplicativos}
+                        data={safeAplicativos}
                         cx="50%"
                         cy="50%"
                         labelLine={false}
@@ -170,14 +197,18 @@ const Dashboard = () => {
                         dataKey="quantidade"
                         nameKey="aplicativo"
                       >
-                        {stats.distribuicao_aplicativos.map((_, index) => (
+                        {safeAplicativos.map((_, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
                       <Legend />
                     </PieChart>
                   </ResponsiveContainer>
-                ) : null}
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    Nenhum dado disponível
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -190,11 +221,11 @@ const Dashboard = () => {
                   <div className="flex items-center justify-center h-full">
                     <Skeleton className="h-full w-full" />
                   </div>
-                ) : stats ? (
+                ) : safeUfs.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={stats.distribuicao_ufs}
+                        data={safeUfs}
                         cx="50%"
                         cy="50%"
                         labelLine={false}
@@ -203,14 +234,18 @@ const Dashboard = () => {
                         dataKey="quantidade"
                         nameKey="uf"
                       >
-                        {stats.distribuicao_ufs.map((_, index) => (
+                        {safeUfs.map((_, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
                       <Legend />
                     </PieChart>
                   </ResponsiveContainer>
-                ) : null}
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    Nenhum dado disponível
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -223,11 +258,11 @@ const Dashboard = () => {
                   <div className="flex items-center justify-center h-full">
                     <Skeleton className="h-full w-full" />
                   </div>
-                ) : stats ? (
+                ) : safeServidores.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={stats.distribuicao_servidores}
+                        data={safeServidores}
                         cx="50%"
                         cy="50%"
                         labelLine={false}
@@ -236,14 +271,18 @@ const Dashboard = () => {
                         dataKey="quantidade"
                         nameKey="servidor"
                       >
-                        {stats.distribuicao_servidores.map((_, index) => (
+                        {safeServidores.map((_, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
                       <Legend />
                     </PieChart>
                   </ResponsiveContainer>
-                ) : null}
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    Nenhum dado disponível
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
