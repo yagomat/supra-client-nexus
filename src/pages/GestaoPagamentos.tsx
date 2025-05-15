@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -9,12 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { getClientes, getPagamentos, createPagamento, updatePagamento } from "@/services/supabaseService";
-import { Cliente, Pagamento, PaymentStatus } from "@/types";
+import { Cliente, Pagamento } from "@/types";
 import { Search, X, Loader2 } from "lucide-react";
 import { formatDate } from "@/utils/dateUtils";
 
 type PaymentStatusOption = {
-  value: PaymentStatus;
+  value: string;
   label: string;
   className: string;
 };
@@ -132,7 +131,7 @@ const GestaoPagamentos = () => {
     setSearchTerm("");
   };
 
-  const handleChangeStatus = async (cliente: ClienteComPagamentos, mes: number, ano: number, status: PaymentStatus) => {
+  const handleChangeStatus = async (cliente: ClienteComPagamentos, mes: number, ano: number, status: string) => {
     try {
       setSubmitting(true);
       
@@ -184,7 +183,7 @@ const GestaoPagamentos = () => {
     }
   };
 
-  const getStatusBadge = (status: PaymentStatus | undefined) => {
+  const getStatusBadge = (status: string | undefined) => {
     if (!status) return <Badge variant="outline">Não Registrado</Badge>;
     
     const option = paymentStatusOptions.find((o) => o.value === status);
@@ -329,7 +328,7 @@ const GestaoPagamentos = () => {
                                           cliente, 
                                           mesAtual, 
                                           anoAtual, 
-                                          value as PaymentStatus
+                                          value
                                         )
                                       }
                                       value={pagamento?.status}
@@ -418,7 +417,7 @@ const GestaoPagamentos = () => {
                                             cliente, 
                                             mes.value, 
                                             anoAtual, 
-                                            value as PaymentStatus
+                                            value
                                           )
                                         }
                                         value={pagamento?.status}
