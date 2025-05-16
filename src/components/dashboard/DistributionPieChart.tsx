@@ -8,6 +8,8 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'
 
 interface DistributionData {
   [key: string]: string | number;
+  startAngle?: number;
+  endAngle?: number;
 }
 
 interface DistributionPieChartProps {
@@ -32,16 +34,19 @@ export const DistributionPieChart = ({
     // Calculate position - move labels further from center for better spacing
     const radius = isMobile ? 50 : 70;
     const RADIAN = Math.PI / 180;
-    const middleAngle = (data[index].startAngle + data[index].endAngle) / 2;
-    const innerRadius = 40;
-    const outerRadius = 80;
+    
+    // Safely access angle data and convert to number if necessary
+    const startAngle = typeof data[index]?.startAngle === 'number' ? data[index].startAngle as number : 0;
+    const endAngle = typeof data[index]?.endAngle === 'number' ? data[index].endAngle as number : 0;
+    
+    const middleAngle = (startAngle + endAngle) / 2;
     
     // Calculate optimal position for labels
     const posX = cx + (radius + 5) * Math.cos(-middleAngle * RADIAN);
     const posY = cy + (radius + 5) * Math.sin(-middleAngle * RADIAN);
     
     // For very small slices or on mobile, don't show labels to prevent overlap
-    if (isMobile || (data[index].endAngle - data[index].startAngle) < 10) {
+    if (isMobile || (endAngle - startAngle) < 10) {
       return null;
     }
     
