@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { getValoresPredefinidos, updateValoresPredefinidos } from "@/services/supabaseService";
+import { getValoresPredefinidos, updateValoresPredefinidos } from "@/services/valoresPredefinidosService";
 import { ValoresPredefinidos } from "@/types";
 import { Loader2, Plus, Trash2, Save, Download, Upload } from "lucide-react";
 

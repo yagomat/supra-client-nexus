@@ -10,7 +10,8 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
-import { createCliente, getValoresPredefinidos } from "@/services/supabaseService";
+import { createCliente } from "@/services/clienteService";
+import { getValoresPredefinidos } from "@/services/valoresPredefinidosService";
 import { ValoresPredefinidos } from "@/types";
 import { PlusCircle, Loader2 } from "lucide-react";
 

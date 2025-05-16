@@ -1,15 +1,15 @@
-
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useToast } from "@/components/ui/use-toast";
-import { getClientes, deleteCliente } from "@/services/supabaseService";
+import { getClientes, updateCliente, deleteCliente } from "@/services/clienteService";
 import { Cliente } from "@/types";
-import { ClienteListHeader } from "@/components/clientes/ClienteListHeader";
-import { ClienteFilters } from "@/components/clientes/ClienteFilters";
 import { ClienteTable } from "@/components/clientes/ClienteTable";
+import { ClienteFilters } from "@/components/clientes/ClienteFilters";
+import { ClienteListHeader } from "@/components/clientes/ClienteListHeader";
 import { ClienteModals } from "@/components/clientes/ClienteModals";
-import { LoadingState } from "@/components/clientes/LoadingState";
 import { EmptyState } from "@/components/clientes/EmptyState";
+import { LoadingState } from "@/components/clientes/LoadingState";
 
 const ListaClientes = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -23,6 +23,7 @@ const ListaClientes = () => {
   const [isObservacoesModalOpen, setIsObservacoesModalOpen] = useState(false);
   const [clienteParaExcluir, setClienteParaExcluir] = useState<string | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchClientes = async () => {
