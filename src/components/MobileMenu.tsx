@@ -93,8 +93,8 @@ export function MobileMenu() {
                       )
                     }
                   >
-                    <span className="mr-3">{item.icon}</span>
-                    <span>{item.name}</span>
+                    <span className="mr-3 text-white">{item.icon}</span>
+                    <span className="text-white">{item.name}</span>
                   </NavLink>
                 </SheetClose>
               ))}

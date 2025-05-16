@@ -73,14 +73,14 @@ export function SidebarMenu({ className }: SidebarProps) {
     >
       <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
         {!collapsed && (
-          <div className="text-sidebar-foreground font-bold">
+          <div className="text-white font-bold">
             Gestão de Clientes
           </div>
         )}
         <Button
           variant="ghost"
           size="icon"
-          className="text-sidebar-foreground hover:bg-sidebar-accent"
+          className="text-white hover:bg-sidebar-accent"
           onClick={toggleSidebar}
         >
           {collapsed ? <ChevronLeft size={20} /> : <X size={20} />}
@@ -96,8 +96,8 @@ export function SidebarMenu({ className }: SidebarProps) {
               cn(
                 "flex items-center px-4 py-3 my-1 mx-2 rounded-md text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  ? "bg-sidebar-primary text-white"
+                  : "text-white hover:bg-sidebar-accent hover:text-white"
               )
             }
           >
