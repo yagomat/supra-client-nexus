@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { getDashboardStats, recalculateAllClientStatus } from "@/services/supabaseService";
+import { getDashboardStats, recalculateAllClientStatus } from "@/services/dashboardService";
 import { DashboardStats } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
 import { DashboardContent } from "@/components/dashboard/DashboardContent";

@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { getClientes, getPagamentos, createPagamento, updatePagamento } from "@/services/supabaseService";
+import { getClientes } from "@/services/clienteService";
+import { getPagamentos, createPagamento, updatePagamento } from "@/services/pagamentoService";
 import { Cliente, Pagamento, ClienteComPagamentos } from "@/types";
 
 export const usePagamentos = () => {
