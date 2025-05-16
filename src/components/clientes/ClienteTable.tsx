@@ -36,6 +36,7 @@ export const ClienteTable = ({
               <TableHead>Telefone</TableHead>
               <TableHead>UF</TableHead>
               <TableHead>Servidor</TableHead>
+              <TableHead>Dia de Venc.</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Tela Principal</TableHead>
               <TableHead>Tela Adicional</TableHead>
@@ -51,6 +52,7 @@ export const ClienteTable = ({
                 <TableCell>{cliente.telefone || "-"}</TableCell>
                 <TableCell>{cliente.uf || "-"}</TableCell>
                 <TableCell>{cliente.servidor}</TableCell>
+                <TableCell>{cliente.dia_vencimento}</TableCell>
                 <TableCell>
                   <ClienteStatusBadge status={cliente.status} />
                 </TableCell>

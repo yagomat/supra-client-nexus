@@ -35,6 +35,7 @@ export const PagamentosMatriz = ({
         <TableHeader>
           <TableRow>
             <TableHead>Nome</TableHead>
+            <TableHead>Dia de Venc.</TableHead>
             <TableHead>Status</TableHead>
             {displayMeses.map((mes) => (
               <TableHead key={mes.value} className="text-center">
@@ -47,6 +48,7 @@ export const PagamentosMatriz = ({
           {clientes.map((cliente) => (
             <TableRow key={cliente.id}>
               <TableCell className="font-medium">{cliente.nome}</TableCell>
+              <TableCell>{cliente.dia_vencimento}</TableCell>
               <TableCell>
                 <Badge
                   variant="outline"

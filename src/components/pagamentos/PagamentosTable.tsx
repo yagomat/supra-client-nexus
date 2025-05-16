@@ -33,6 +33,7 @@ export const PagamentosTable = ({
             {!isMobile && <TableHead>Telefone</TableHead>}
             {!isMobile && <TableHead>UF</TableHead>}
             <TableHead>Servidor</TableHead>
+            <TableHead>Dia de Venc.</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Pagamento ({mesAtual}/{anoAtual})</TableHead>
           </TableRow>
@@ -49,6 +50,7 @@ export const PagamentosTable = ({
                 {!isMobile && <TableCell>{cliente.telefone || "-"}</TableCell>}
                 {!isMobile && <TableCell>{cliente.uf || "-"}</TableCell>}
                 <TableCell>{cliente.servidor}</TableCell>
+                <TableCell>{cliente.dia_vencimento}</TableCell>
                 <TableCell>
                   <Badge
                     variant="outline"
