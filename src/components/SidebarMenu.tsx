@@ -101,8 +101,8 @@ export function SidebarMenu({ className }: SidebarProps) {
               )
             }
           >
-            <span className="mr-3">{item.icon}</span>
-            {!collapsed && <span>{item.name}</span>}
+            <span className="mr-3 text-white">{item.icon}</span>
+            {!collapsed && <span className="text-white">{item.name}</span>}
           </NavLink>
         ))}
       </div>
@@ -111,14 +111,14 @@ export function SidebarMenu({ className }: SidebarProps) {
         <div className="p-4 border-t border-sidebar-border mt-auto">
           <div className="flex items-center justify-between">
             {!collapsed && (
-              <div className="text-sidebar-foreground text-sm truncate">
+              <div className="text-white text-sm truncate">
                 {user.nome || user.email}
               </div>
             )}
             <Button
               variant="ghost"
               size="icon"
-              className="text-sidebar-foreground hover:bg-sidebar-accent"
+              className="text-white hover:bg-sidebar-accent"
               onClick={signOut}
               title="Sair"
             >
