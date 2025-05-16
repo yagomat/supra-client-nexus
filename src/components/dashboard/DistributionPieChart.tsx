@@ -1,7 +1,7 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, Legend, ResponsiveContainer, Tooltip } from "recharts";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
@@ -27,12 +27,48 @@ export const DistributionPieChart = ({
 }: DistributionPieChartProps) => {
   const isMobile = useIsMobile();
   
-  const renderCustomizedLabel = ({ name, percent }: any) => {
-    // For mobile, show only the percentage if the name is too long
-    if (isMobile && name.length > 10) {
-      return `${(percent * 100).toFixed(0)}%`;
+  // Custom label that only shows values, not percentages
+  const renderCustomizedLabel = ({ x, y, cx, cy, name, value, index }: any) => {
+    // Calculate position - move labels further from center for better spacing
+    const radius = isMobile ? 50 : 70;
+    const RADIAN = Math.PI / 180;
+    const middleAngle = (data[index].startAngle + data[index].endAngle) / 2;
+    const innerRadius = 40;
+    const outerRadius = 80;
+    
+    // Calculate optimal position for labels
+    const posX = cx + (radius + 5) * Math.cos(-middleAngle * RADIAN);
+    const posY = cy + (radius + 5) * Math.sin(-middleAngle * RADIAN);
+    
+    // For very small slices or on mobile, don't show labels to prevent overlap
+    if (isMobile || (data[index].endAngle - data[index].startAngle) < 10) {
+      return null;
     }
-    return `${name}: ${(percent * 100).toFixed(0)}%`;
+    
+    return (
+      <text 
+        x={posX} 
+        y={posY} 
+        fill={COLORS[index % COLORS.length]}
+        textAnchor={posX > cx ? 'start' : 'end'}
+        dominantBaseline="central"
+        fontSize={10}
+      >
+        {value}
+      </text>
+    );
+  };
+
+  // Custom tooltip that shows both name and quantity
+  const renderTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-2 border border-gray-200 shadow-md rounded text-xs">
+          <p className="font-medium">{`${payload[0].name}: ${payload[0].value}`}</p>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -52,7 +88,7 @@ export const DistributionPieChart = ({
                 data={data}
                 cx="50%"
                 cy="50%"
-                labelLine={!isMobile}
+                labelLine={false}
                 label={renderCustomizedLabel}
                 outerRadius={isMobile ? 60 : 80}
                 dataKey={valueKey}
@@ -62,7 +98,20 @@ export const DistributionPieChart = ({
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Legend layout={isMobile ? "horizontal" : "vertical"} verticalAlign={isMobile ? "bottom" : "middle"} align={isMobile ? "center" : "right"} />
+              <Legend 
+                layout={isMobile ? "horizontal" : "vertical"} 
+                verticalAlign={isMobile ? "bottom" : "middle"} 
+                align={isMobile ? "center" : "right"} 
+                formatter={(value, entry, index) => {
+                  // Truncate long names to prevent overflow
+                  const maxLength = isMobile ? 10 : 15;
+                  const displayName = value.length > maxLength ? 
+                    `${value.substring(0, maxLength)}...` : value;
+                  return <span className="text-xs">{displayName}</span>;
+                }}
+                wrapperStyle={{ fontSize: '10px' }}
+              />
+              <Tooltip content={renderTooltip} />
             </PieChart>
           </ResponsiveContainer>
         ) : (
