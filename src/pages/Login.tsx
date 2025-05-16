@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -13,6 +14,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,6 +27,11 @@ const Login = () => {
       navigate("/dashboard");
     } catch (error) {
       console.error("Erro ao fazer login", error);
+      toast({
+        title: "Erro de autenticação",
+        description: "Verifique seu e-mail e senha e tente novamente.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }

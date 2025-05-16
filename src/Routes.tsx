@@ -9,7 +9,6 @@ import ListaClientes from "./pages/ListaClientes";
 import GestaoPagamentos from "./pages/GestaoPagamentos";
 import BancoDados from "./pages/BancoDados";
 import NotFound from "./pages/NotFound";
-import { useEffect } from "react";
 
 interface PrivateRouteProps {
   children: React.ReactNode;
@@ -37,25 +36,6 @@ const PrivateRoute = ({ children }: PrivateRouteProps) => {
 
 export const AppRoutes = () => {
   const { user, loading } = useAuth();
-  const location = useLocation();
-
-  // Use useEffect com dependências mais específicas para evitar loop infinito
-  useEffect(() => {
-    if (!loading && user && ['/login', '/cadastro', '/'].includes(location.pathname)) {
-      // Use navigate do React Router em vez de window.location
-      // para evitar recarregamento completo da página
-      const navigate = () => {
-        const router = document.querySelector('a[href="/dashboard"]');
-        if (router) {
-          (router as HTMLElement).click();
-        }
-      };
-      
-      // Pequeno delay para evitar múltiplas navegações
-      const timer = setTimeout(navigate, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [loading, user, location.pathname]);
 
   return (
     <Routes>
