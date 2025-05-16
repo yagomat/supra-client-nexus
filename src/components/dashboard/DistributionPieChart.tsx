@@ -2,6 +2,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from "recharts";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
 
@@ -24,12 +25,22 @@ export const DistributionPieChart = ({
   nameKey, 
   valueKey = "quantidade" 
 }: DistributionPieChartProps) => {
+  const isMobile = useIsMobile();
+  
+  const renderCustomizedLabel = ({ name, percent }: any) => {
+    // For mobile, show only the percentage if the name is too long
+    if (isMobile && name.length > 10) {
+      return `${(percent * 100).toFixed(0)}%`;
+    }
+    return `${name}: ${(percent * 100).toFixed(0)}%`;
+  };
+
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
-      <CardContent className="h-[250px]">
+      <CardContent className={`${isMobile ? 'h-[200px]' : 'h-[250px]'}`}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <Skeleton className="h-full w-full" />
@@ -41,9 +52,9 @@ export const DistributionPieChart = ({
                 data={data}
                 cx="50%"
                 cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
+                labelLine={!isMobile}
+                label={renderCustomizedLabel}
+                outerRadius={isMobile ? 60 : 80}
                 dataKey={valueKey}
                 nameKey={nameKey}
               >
@@ -51,7 +62,7 @@ export const DistributionPieChart = ({
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Legend />
+              <Legend layout={isMobile ? "horizontal" : "vertical"} verticalAlign={isMobile ? "bottom" : "middle"} align={isMobile ? "center" : "right"} />
             </PieChart>
           </ResponsiveContainer>
         ) : (

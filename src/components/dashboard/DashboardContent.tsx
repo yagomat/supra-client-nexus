@@ -3,6 +3,7 @@ import { ClientEvolutionChart } from "./ClientEvolutionChart";
 import { StatsCards } from "./StatsCards";
 import { DistributionCharts } from "./DistributionCharts";
 import { DashboardStats } from "@/types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DashboardContentProps {
   stats: DashboardStats | null;
@@ -10,6 +11,8 @@ interface DashboardContentProps {
 }
 
 export const DashboardContent = ({ stats, loading }: DashboardContentProps) => {
+  const isMobile = useIsMobile();
+  
   // Safe getter function to handle potential null values
   const getSafeData = (dataArray: any[] | null | undefined, defaultValue: any[] = []) => {
     return Array.isArray(dataArray) ? dataArray : defaultValue;
@@ -19,16 +22,22 @@ export const DashboardContent = ({ stats, loading }: DashboardContentProps) => {
   const safeEvolucaoClientes = stats?.evolucao_clientes ? getSafeData(stats.evolucao_clientes) : [];
 
   return (
-    <div className="flex flex-col space-y-4">
+    <div className="flex flex-col space-y-4 w-full">
       <p className="text-muted-foreground">
         Bem-vindo ao seu painel de gestão de clientes. Aqui você encontra um resumo das suas estatísticas.
       </p>
 
       <StatsCards stats={stats} loading={loading} />
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'md:grid-cols-2'} w-full`}>
         <ClientEvolutionChart data={safeEvolucaoClientes} loading={loading} />
-        <DistributionCharts stats={stats} loading={loading} />
+        {isMobile ? (
+          <DistributionCharts stats={stats} loading={loading} />
+        ) : (
+          <div className="w-full">
+            <DistributionCharts stats={stats} loading={loading} />
+          </div>
+        )}
       </div>
     </div>
   );

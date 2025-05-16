@@ -2,6 +2,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ClientEvolutionChartProps {
   data: { mes: string; quantidade: number }[];
@@ -9,12 +10,14 @@ interface ClientEvolutionChartProps {
 }
 
 export const ClientEvolutionChart = ({ data, loading }: ClientEvolutionChartProps) => {
+  const isMobile = useIsMobile();
+  
   return (
-    <Card className="col-span-2 md:col-span-1">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>Evolução de Clientes Ativos (12 meses)</CardTitle>
       </CardHeader>
-      <CardContent className="h-[300px]">
+      <CardContent className={`${isMobile ? 'h-[250px]' : 'h-[300px]'}`}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <Skeleton className="h-full w-full" />
@@ -25,14 +28,23 @@ export const ClientEvolutionChart = ({ data, loading }: ClientEvolutionChartProp
               data={data}
               margin={{
                 top: 10,
-                right: 20,
-                left: 0,
-                bottom: 40,
+                right: isMobile ? 10 : 20,
+                left: isMobile ? 0 : 0,
+                bottom: isMobile ? 60 : 40,
               }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="mes" angle={-45} textAnchor="end" />
-              <YAxis />
+              <XAxis 
+                dataKey="mes" 
+                angle={-45} 
+                textAnchor="end"
+                height={60}
+                tick={{ fontSize: isMobile ? 10 : 12 }}
+              />
+              <YAxis 
+                width={isMobile ? 30 : 40}
+                tick={{ fontSize: isMobile ? 10 : 12 }}
+              />
               <Tooltip />
               <Bar dataKey="quantidade" fill="#3b82f6" />
             </BarChart>

@@ -1,6 +1,7 @@
 
 import { DistributionPieChart } from "./DistributionPieChart";
 import { DashboardStats } from "@/types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DistributionChartsProps {
   stats: DashboardStats | null;
@@ -8,6 +9,8 @@ interface DistributionChartsProps {
 }
 
 export const DistributionCharts = ({ stats, loading }: DistributionChartsProps) => {
+  const isMobile = useIsMobile();
+  
   // Safe getter function to handle potential null values
   const getSafeData = (dataArray: any[] | null | undefined, defaultValue: any[] = []) => {
     return Array.isArray(dataArray) ? dataArray : defaultValue;
@@ -20,7 +23,7 @@ export const DistributionCharts = ({ stats, loading }: DistributionChartsProps) 
   const safeServidores = stats?.distribuicao_servidores ? getSafeData(stats.distribuicao_servidores) : [];
 
   return (
-    <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+    <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'} w-full`}>
       <DistributionPieChart
         title="Distribuição por Dispositivo"
         data={safeDispositivos}
