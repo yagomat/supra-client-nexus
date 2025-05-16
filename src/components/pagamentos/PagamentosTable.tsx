@@ -67,6 +67,7 @@ export const PagamentosTable = ({
                       }
                       disabled={submitting}
                       width={isMobile ? "w-[110px]" : "w-[140px]"}
+                      minimal={isMobile}
                     />
                   </div>
                 </TableCell>
