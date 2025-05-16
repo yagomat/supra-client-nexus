@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { getClientes, getPagamentos, createPagamento, updatePagamento } from "@/services/supabaseService";
+import { getClientes } from "@/services/clienteService";
+import { getPagamentos, createPagamento, updatePagamento } from "@/services/pagamentoService";
 import { Cliente, Pagamento } from "@/types";
 import { Search, X, Loader2 } from "lucide-react";
 import { formatDate } from "@/utils/dateUtils";
