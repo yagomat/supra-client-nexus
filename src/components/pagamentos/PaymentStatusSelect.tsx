@@ -8,13 +8,15 @@ interface PaymentStatusSelectProps {
   onStatusChange: (value: string) => void;
   disabled?: boolean;
   width?: string;
+  minimal?: boolean;
 }
 
 export const PaymentStatusSelect = ({ 
   status, 
   onStatusChange, 
   disabled = false,
-  width = "w-[140px]"
+  width = "w-[140px]",
+  minimal = false
 }: PaymentStatusSelectProps) => {
   return (
     <Select
@@ -23,7 +25,7 @@ export const PaymentStatusSelect = ({
       disabled={disabled}
     >
       <SelectTrigger className={width}>
-        <SelectValue placeholder="Alterar status" />
+        <SelectValue placeholder={minimal ? "Status" : "Alterar status"} />
       </SelectTrigger>
       <SelectContent>
         {paymentStatusOptions.map((option) => (
@@ -32,7 +34,7 @@ export const PaymentStatusSelect = ({
             value={option.value}
             className={option.className}
           >
-            {option.label}
+            {minimal ? option.label.substring(0, 5) + "..." : option.label}
           </SelectItem>
         ))}
       </SelectContent>

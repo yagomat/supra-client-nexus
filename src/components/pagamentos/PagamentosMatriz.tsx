@@ -15,6 +15,7 @@ interface PagamentosMatrizProps {
   anoAtual: number;
   submitting: boolean;
   onChangeStatus: (cliente: ClienteComPagamentos, mes: number, ano: number, status: string) => void;
+  isMobile?: boolean;
 }
 
 export const PagamentosMatriz = ({ 
@@ -22,8 +23,12 @@ export const PagamentosMatriz = ({
   meses, 
   anoAtual, 
   submitting,
-  onChangeStatus 
+  onChangeStatus,
+  isMobile = false
 }: PagamentosMatrizProps) => {
+  // Se for mobile, limitamos os meses exibidos para melhor visualização
+  const displayMeses = isMobile ? meses.slice(0, 6) : meses;
+  
   return (
     <div className="overflow-x-auto">
       <Table>
@@ -31,9 +36,9 @@ export const PagamentosMatriz = ({
           <TableRow>
             <TableHead>Nome</TableHead>
             <TableHead>Status</TableHead>
-            {meses.map((mes) => (
-              <TableHead key={mes.value}>
-                {mes.label.substring(0, 3)}
+            {displayMeses.map((mes) => (
+              <TableHead key={mes.value} className="text-center">
+                {isMobile ? mes.label.substring(0, 3) : mes.label.substring(0, 3)}
               </TableHead>
             ))}
           </TableRow>
@@ -50,7 +55,7 @@ export const PagamentosMatriz = ({
                   {cliente.status === "ativo" ? "Ativo" : "Inativo"}
                 </Badge>
               </TableCell>
-              {meses.map((mes) => {
+              {displayMeses.map((mes) => {
                 const chave = `${mes.value}-${anoAtual}`;
                 const pagamento = cliente.pagamentos[chave];
                 
@@ -74,7 +79,8 @@ export const PagamentosMatriz = ({
                           onChangeStatus(cliente, mes.value, anoAtual, value)
                         }
                         disabled={submitting}
-                        width="w-[100px]"
+                        width={isMobile ? "w-[80px]" : "w-[100px]"}
+                        minimal={isMobile}
                       />
                     </div>
                   </TableCell>
