@@ -2,7 +2,7 @@
 import { Cliente, ClienteComPagamentos, Pagamento } from "@/types";
 
 export const determineClientStatus = (
-  cliente: ClienteComPagamentos,
+  cliente: ClienteComPagamentos | Cliente,
   allPagamentos: Pagamento[]
 ): string => {
   const hoje = new Date();

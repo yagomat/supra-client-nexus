@@ -6,8 +6,10 @@ import { z } from "zod";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { getCliente, updateCliente } from "@/services/clienteService";
+import { getPagamentos } from "@/services/pagamentoService";
 import { getValoresPredefinidos } from "@/services/valoresPredefinidosService";
-import { Cliente, ValoresPredefinidos } from "@/types";
+import { Cliente, ValoresPredefinidos, Pagamento } from "@/types";
+import { determineClientStatus } from "./payments/useClientStatus";
 
 // Form schema definition
 const formSchema = z.object({
@@ -45,6 +47,8 @@ export const useClienteForm = (clienteId: string | undefined) => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [valoresPredefinidos, setValoresPredefinidos] = useState<ValoresPredefinidos | null>(null);
+  const [clientePagamentos, setClientePagamentos] = useState<Pagamento[]>([]);
+  const [originalVencimento, setOriginalVencimento] = useState<number>(1);
 
   const form = useForm<ClienteFormValues>({
     resolver: zodResolver(formSchema),
@@ -82,6 +86,13 @@ export const useClienteForm = (clienteId: string | undefined) => {
         // Buscar dados do cliente
         if (!clienteId) return;
         const cliente = await getCliente(clienteId);
+        
+        // Salvar o dia de vencimento original para comparação posterior
+        setOriginalVencimento(cliente.dia_vencimento);
+        
+        // Buscar pagamentos do cliente para determinar o status
+        const pagamentos = await getPagamentos(clienteId);
+        setClientePagamentos(pagamentos);
         
         // Buscar valores predefinidos
         const predefinidos = await getValoresPredefinidos();
@@ -126,6 +137,36 @@ export const useClienteForm = (clienteId: string | undefined) => {
 
     fetchData();
   }, [clienteId, form, toast]);
+
+  // Efeito para monitorar alterações no dia de vencimento
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      // Se o dia de vencimento foi alterado
+      if (name === "dia_vencimento" && clienteId && clientePagamentos.length > 0) {
+        const newVencimento = Number(value.dia_vencimento);
+        
+        // Verificar se o vencimento foi realmente alterado
+        if (newVencimento !== originalVencimento) {
+          // Criar um objeto cliente temporário para passar para determineClientStatus
+          const clienteTemp = {
+            id: clienteId,
+            dia_vencimento: newVencimento,
+            status: form.getValues("status"),
+            pagamentos: {}
+          } as any;
+          
+          // Determinar o novo status com base no dia de vencimento alterado
+          const newStatus = determineClientStatus(clienteTemp, clientePagamentos);
+          
+          // Atualizar o campo status no formulário
+          form.setValue("status", newStatus);
+        }
+      }
+    });
+    
+    // Cancelar a assinatura ao desmontar o componente
+    return () => subscription.unsubscribe();
+  }, [form, clienteId, clientePagamentos, originalVencimento]);
 
   const onSubmit = async (data: ClienteFormValues) => {
     if (!clienteId) return;
