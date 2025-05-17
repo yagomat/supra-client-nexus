@@ -27,10 +27,11 @@ export const usePaymentStatus = (
         // Atualizar pagamento existente
         updatedPagamento = await updatePagamento(pagamentoExistente.id, status);
         
-        // Atualizar estado local dos pagamentos
-        setPagamentos((prev) =>
-          prev.map((p) => (p.id === pagamentoExistente.id ? updatedPagamento : p))
+        // Atualizar estado local dos pagamentos - FIX: Create a new array instead of using a callback
+        const updatedPagamentosArray = pagamentos.map((p) => 
+          (p.id === pagamentoExistente.id ? updatedPagamento : p)
         );
+        setPagamentos(updatedPagamentosArray);
         
         toast({
           title: "Status atualizado",
@@ -49,8 +50,9 @@ export const usePaymentStatus = (
         const pagamentoCriado = await createPagamento(novoPagamento);
         updatedPagamento = pagamentoCriado;
         
-        // Atualizar estado local dos pagamentos
-        setPagamentos((prev) => [...prev, pagamentoCriado]);
+        // Atualizar estado local dos pagamentos - FIX: Create a new array instead of using a callback
+        const updatedPagamentosArray = [...pagamentos, pagamentoCriado];
+        setPagamentos(updatedPagamentosArray);
         
         toast({
           title: "Pagamento registrado",
