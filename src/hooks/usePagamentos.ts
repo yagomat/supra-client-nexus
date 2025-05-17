@@ -104,6 +104,51 @@ export const usePagamentos = () => {
     }
   }, [searchTerm, clientesComPagamentos]);
 
+  // Nova função para determinar o status do cliente com base nos pagamentos
+  const determineClientStatus = (
+    cliente: ClienteComPagamentos,
+    allPagamentos: Pagamento[]
+  ): string => {
+    const hoje = new Date();
+    const mesAtual = hoje.getMonth() + 1;
+    const anoAtual = hoje.getFullYear();
+    const diaAtual = hoje.getDate();
+    
+    let mesAnterior = mesAtual === 1 ? 12 : mesAtual - 1;
+    let anoAnterior = mesAtual === 1 ? anoAtual - 1 : anoAtual;
+    
+    // Verificar se há pagamento para o mês atual
+    const pagamentoMesAtual = allPagamentos.find(
+      p => 
+        p.cliente_id === cliente.id && 
+        p.mes === mesAtual && 
+        p.ano === anoAtual && 
+        (p.status === "pago" || p.status === "pago_confianca")
+    );
+    
+    // Se pagou o mês atual, está ativo
+    if (pagamentoMesAtual) {
+      return "ativo";
+    }
+    
+    // Verificar se há pagamento para o mês anterior
+    const pagamentoMesAnterior = allPagamentos.find(
+      p => 
+        p.cliente_id === cliente.id && 
+        p.mes === mesAnterior && 
+        p.ano === anoAnterior && 
+        (p.status === "pago" || p.status === "pago_confianca")
+    );
+    
+    // Se pagou o mês anterior e ainda não chegou no dia do vencimento, está ativo
+    if (pagamentoMesAnterior && diaAtual <= cliente.dia_vencimento) {
+      return "ativo";
+    }
+    
+    // Em qualquer outro caso, está inativo
+    return "inativo";
+  };
+
   const handleChangeStatus = async (cliente: ClienteComPagamentos, mes: number, ano: number, status: string) => {
     try {
       setSubmitting(true);
@@ -111,13 +156,15 @@ export const usePagamentos = () => {
       const chave = `${mes}-${ano}`;
       const pagamentoExistente = cliente.pagamentos[chave];
       
+      let updatedPagamento: Pagamento;
+      
       if (pagamentoExistente) {
         // Atualizar pagamento existente
-        await updatePagamento(pagamentoExistente.id, status);
+        updatedPagamento = await updatePagamento(pagamentoExistente.id, status);
         
-        // Atualizar estado local
+        // Atualizar estado local dos pagamentos
         setPagamentos((prev) =>
-          prev.map((p) => (p.id === pagamentoExistente.id ? { ...p, status } : p))
+          prev.map((p) => (p.id === pagamentoExistente.id ? updatedPagamento : p))
         );
         
         toast({
@@ -135,8 +182,9 @@ export const usePagamentos = () => {
         };
         
         const pagamentoCriado = await createPagamento(novoPagamento);
+        updatedPagamento = pagamentoCriado;
         
-        // Atualizar estado local
+        // Atualizar estado local dos pagamentos
         setPagamentos((prev) => [...prev, pagamentoCriado]);
         
         toast({
@@ -144,6 +192,40 @@ export const usePagamentos = () => {
           description: `Pagamento de ${meses.find((m) => m.value === mes)?.label} registrado com sucesso.`,
         });
       }
+      
+      // Atualizar o status do cliente em tempo real
+      // 1. Criar uma cópia atualizada dos pagamentos
+      const updatedPagamentos = pagamentoExistente
+        ? pagamentos.map((p) => (p.id === pagamentoExistente.id ? updatedPagamento : p))
+        : [...pagamentos, updatedPagamento];
+      
+      // 2. Determinar o novo status
+      const newStatus = determineClientStatus(cliente, updatedPagamentos);
+      
+      // 3. Atualizar o status local do cliente
+      if (cliente.status !== newStatus) {
+        // Atualizar o cliente na lista de clientes
+        setClientes((prev) =>
+          prev.map((c) => 
+            c.id === cliente.id ? { ...c, status: newStatus } : c
+          )
+        );
+        
+        // Atualizar o cliente na lista filtrada
+        setFilteredClientes((prev) =>
+          prev.map((c) => 
+            c.id === cliente.id ? { ...c, status: newStatus } : c
+          )
+        );
+        
+        // Atualizar o cliente na lista completa
+        setClientesComPagamentos((prev) =>
+          prev.map((c) => 
+            c.id === cliente.id ? { ...c, status: newStatus } : c
+          )
+        );
+      }
+      
     } catch (error) {
       console.error("Erro ao atualizar status de pagamento", error);
       toast({
