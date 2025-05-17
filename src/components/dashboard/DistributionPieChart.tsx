@@ -81,7 +81,7 @@ export const DistributionPieChart = ({
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
-      <CardContent className={`${isMobile ? 'h-[200px]' : 'h-[250px]'}`}>
+      <CardContent className="h-[250px]">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <Skeleton className="h-full w-full" />

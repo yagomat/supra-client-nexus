@@ -29,16 +29,11 @@ export const DashboardContent = ({ stats, loading }: DashboardContentProps) => {
 
       <StatsCards stats={stats} loading={loading} />
 
-      <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'md:grid-cols-2'} w-full`}>
+      <div className="w-full">
         <ClientEvolutionChart data={safeEvolucaoClientes} loading={loading} />
-        {isMobile ? (
-          <DistributionCharts stats={stats} loading={loading} />
-        ) : (
-          <div className="w-full">
-            <DistributionCharts stats={stats} loading={loading} />
-          </div>
-        )}
       </div>
+
+      <DistributionCharts stats={stats} loading={loading} />
     </div>
   );
 };

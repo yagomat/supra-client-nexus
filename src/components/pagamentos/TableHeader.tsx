@@ -13,7 +13,6 @@ export const TableHeaderComponent = ({ isMobile = false }: TableHeaderComponentP
         <TableHead>Nome</TableHead>
         {!isMobile && <TableHead>Telefone</TableHead>}
         {!isMobile && <TableHead>UF</TableHead>}
-        <TableHead>Servidor</TableHead>
         <TableHead>Dia de Venc.</TableHead>
         <TableHead>Status</TableHead>
         <TableHead>Pagamento</TableHead>

@@ -23,7 +23,7 @@ export const DistributionCharts = ({ stats, loading }: DistributionChartsProps) 
   const safeServidores = stats?.distribuicao_servidores ? getSafeData(stats.distribuicao_servidores) : [];
 
   return (
-    <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'} w-full`}>
+    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 w-full">
       <DistributionPieChart
         title="Distribuição por Dispositivo"
         data={safeDispositivos}
