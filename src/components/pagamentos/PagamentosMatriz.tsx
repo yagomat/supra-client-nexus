@@ -1,7 +1,7 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { PaymentStatusSelect } from "./PaymentStatusSelect";
+import { PaymentStatusButton } from "./PaymentStatusButton";
 import { ClienteComPagamentos } from "@/types";
 
 interface MesData {
@@ -75,14 +75,13 @@ export const PagamentosMatriz = ({
                 return (
                   <TableCell key={mes.value} className={cellClass}>
                     <div className="flex justify-center">
-                      <PaymentStatusSelect
+                      <PaymentStatusButton
                         status={pagamento?.status}
                         onStatusChange={(value) => 
                           onChangeStatus(cliente, mes.value, anoAtual, value)
                         }
                         disabled={submitting}
-                        width={isMobile ? "w-[80px]" : "w-[100px]"}
-                        minimal={isMobile}
+                        minimal={true}
                       />
                     </div>
                   </TableCell>

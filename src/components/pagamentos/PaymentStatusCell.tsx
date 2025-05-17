@@ -1,6 +1,6 @@
 
 import { PaymentStatusBadge } from "./PaymentStatusBadge";
-import { PaymentStatusSelect } from "./PaymentStatusSelect";
+import { PaymentStatusButton } from "./PaymentStatusButton";
 import { ClienteComPagamentos } from "@/types";
 
 interface PaymentStatusCellProps {
@@ -26,13 +26,12 @@ export const PaymentStatusCell = ({
   return (
     <div className="flex items-center space-x-2">
       {!isMobile && <PaymentStatusBadge status={pagamento?.status} />}
-      <PaymentStatusSelect
+      <PaymentStatusButton
         status={pagamento?.status}
         onStatusChange={(value) => 
           onChangeStatus(cliente, mesAtual, anoAtual, value)
         }
         disabled={submitting}
-        width={isMobile ? "w-[110px]" : "w-[140px]"}
         minimal={isMobile}
       />
     </div>

@@ -26,8 +26,6 @@ export const ClienteRow = ({
     <TableRow>
       {!isMobile && <TableCell>{formatDate(cliente.created_at)}</TableCell>}
       <TableCell className="font-medium">{cliente.nome}</TableCell>
-      {!isMobile && <TableCell>{cliente.telefone || "-"}</TableCell>}
-      {!isMobile && <TableCell>{cliente.uf || "-"}</TableCell>}
       <TableCell>{cliente.dia_vencimento}</TableCell>
       <TableCell>
         <ClientStatusBadge status={cliente.status} />
