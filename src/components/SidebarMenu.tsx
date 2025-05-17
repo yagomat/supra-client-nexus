@@ -64,9 +64,9 @@ export function SidebarMenu({ className }: SidebarProps) {
   ];
 
   return (
-    <aside
+    <div
       className={cn(
-        "h-screen bg-sidebar fixed z-20 transition-all duration-300 shadow-lg",
+        "flex flex-col h-screen bg-sidebar fixed z-20 transition-all duration-300 shadow-lg",
         collapsed ? "w-[70px]" : "w-64",
         className
       )}
@@ -127,6 +127,6 @@ export function SidebarMenu({ className }: SidebarProps) {
           </div>
         </div>
       )}
-    </aside>
+    </div>
   );
 }

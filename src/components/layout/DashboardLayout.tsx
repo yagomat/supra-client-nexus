@@ -17,7 +17,7 @@ export function DashboardLayout({ children, className }: DashboardLayoutProps) {
     <div className="flex h-screen bg-background">
       <SidebarMenu />
       <main className={cn(
-        "flex-1 overflow-auto transition-all duration-300", 
+        "flex-1 overflow-auto", 
         isMobile ? "w-full px-3 py-2" : "ml-[70px] p-6 lg:ml-64", 
         className
       )}>
