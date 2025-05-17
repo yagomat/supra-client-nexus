@@ -60,23 +60,23 @@ export const PagamentosMatriz = ({
               {displayMeses.map((mes) => {
                 const chave = `${mes.value}-${anoAtual}`;
                 const pagamento = cliente.pagamentos[chave];
+                // Default status is "nao_pago" (not paid)
+                const status = pagamento?.status || "nao_pago";
                 
                 let cellClass = "";
-                if (pagamento) {
-                  if (pagamento.status === "pago") {
-                    cellClass = "bg-success/20";
-                  } else if (pagamento.status === "pago_confianca") {
-                    cellClass = "bg-warning/20";
-                  } else if (pagamento.status === "nao_pago") {
-                    cellClass = "bg-danger/20";
-                  }
+                if (status === "pago") {
+                  cellClass = "bg-success/20";
+                } else if (status === "pago_confianca") {
+                  cellClass = "bg-warning/20";
+                } else if (status === "nao_pago") {
+                  cellClass = "bg-danger/20";
                 }
                 
                 return (
                   <TableCell key={mes.value} className={cellClass}>
                     <div className="flex justify-center">
                       <PaymentStatusButton
-                        status={pagamento?.status}
+                        status={status}
                         onStatusChange={(value) => 
                           onChangeStatus(cliente, mes.value, anoAtual, value)
                         }

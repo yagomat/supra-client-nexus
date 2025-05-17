@@ -22,17 +22,20 @@ export const PaymentStatusCell = ({
 }: PaymentStatusCellProps) => {
   const chave = `${mesAtual}-${anoAtual}`;
   const pagamento = cliente.pagamentos[chave];
+  // Default status is "nao_pago" (not paid)
+  const status = pagamento?.status || "nao_pago";
   
   return (
     <div className="flex items-center space-x-2">
-      {!isMobile && <PaymentStatusBadge status={pagamento?.status} />}
+      {!isMobile && <PaymentStatusBadge status={status} />}
       <PaymentStatusButton
-        status={pagamento?.status}
+        status={status}
         onStatusChange={(value) => 
           onChangeStatus(cliente, mesAtual, anoAtual, value)
         }
         disabled={submitting}
         minimal={isMobile}
+        isList={true}
       />
     </div>
   );

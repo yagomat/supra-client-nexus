@@ -9,15 +9,17 @@ interface PaymentStatusButtonProps {
   onStatusChange: (status: string) => void;
   disabled?: boolean;
   minimal?: boolean;
+  isList?: boolean;
 }
 
 export const PaymentStatusButton = ({
   status,
   onStatusChange,
   disabled = false,
-  minimal = false
+  minimal = false,
+  isList = false
 }: PaymentStatusButtonProps) => {
-  // Use local state to provide immediate UI feedback before API responds
+  // Default status is "nao_pago" (not paid)
   const [currentStatus, setCurrentStatus] = useState(status || "nao_pago");
   
   const handleClick = () => {
@@ -74,7 +76,10 @@ export const PaymentStatusButton = ({
             onClick={handleClick}
           >
             {appearance.icon}
-            {!minimal && <span className="ml-1">{appearance.shortLabel}</span>}
+            {/* Show shortLabel only if not in list view AND not minimal */}
+            {!minimal && !isList && <span className="ml-1">{appearance.shortLabel}</span>}
+            {/* In mobile view, always show the shortLabel if not minimal */}
+            {minimal && <span className="sr-only">{appearance.label}</span>}
           </Button>
         </TooltipTrigger>
         <TooltipContent>
