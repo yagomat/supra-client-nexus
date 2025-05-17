@@ -268,7 +268,7 @@ const EditarCliente = () => {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="">Não informado</SelectItem>
+                                <SelectItem value="nao_informado">Não informado</SelectItem>
                                 {valoresPredefinidos.ufs.map((uf) => (
                                   <SelectItem key={uf} value={uf}>
                                     {uf}
@@ -361,7 +361,7 @@ const EditarCliente = () => {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="">Não informado</SelectItem>
+                                <SelectItem value="nao_informado">Não informado</SelectItem>
                                 {valoresPredefinidos.valores_plano.map((valor) => (
                                   <SelectItem key={valor} value={valor.toString()}>
                                     R$ {valor.toFixed(2).replace('.', ',')}
@@ -418,7 +418,7 @@ const EditarCliente = () => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="">Não informado</SelectItem>
+                              <SelectItem value="nao_informado">Não informado</SelectItem>
                               {valoresPredefinidos.dispositivos_smart.map((dispositivo) => (
                                 <SelectItem key={dispositivo} value={dispositivo}>
                                   {dispositivo}
@@ -552,7 +552,7 @@ const EditarCliente = () => {
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  <SelectItem value="">Não informado</SelectItem>
+                                  <SelectItem value="nao_informado">Não informado</SelectItem>
                                   {valoresPredefinidos.dispositivos_smart.map((dispositivo) => (
                                     <SelectItem key={dispositivo} value={dispositivo}>
                                       {dispositivo}
@@ -584,7 +584,7 @@ const EditarCliente = () => {
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    <SelectItem value="">Não informado</SelectItem>
+                                    <SelectItem value="nao_informado">Não informado</SelectItem>
                                     {valoresPredefinidos.aplicativos.map((app) => (
                                       <SelectItem key={app} value={app}>
                                         {app}
