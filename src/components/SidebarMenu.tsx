@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -19,16 +19,25 @@ import {
 
 interface SidebarProps {
   className?: string;
+  onCollapseChange?: (collapsed: boolean) => void;
 }
 
-export function SidebarMenu({ className }: SidebarProps) {
+export function SidebarMenu({ className, onCollapseChange }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const { user, signOut } = useAuth();
   const isMobile = useIsMobile();
 
   const toggleSidebar = () => {
-    setCollapsed(!collapsed);
+    const newCollapsedState = !collapsed;
+    setCollapsed(newCollapsedState);
+    // Notify parent component about state change
+    onCollapseChange?.(newCollapsedState);
   };
+
+  // Ensure parent component is notified of initial state
+  useEffect(() => {
+    onCollapseChange?.(collapsed);
+  }, []);
 
   // Don't render the sidebar at all on mobile
   if (isMobile) {
