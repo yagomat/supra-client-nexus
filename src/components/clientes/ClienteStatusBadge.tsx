@@ -5,7 +5,7 @@ interface ClienteStatusBadgeProps {
   status: string;
 }
 
-export const ClienteStatusBadge = ({ status }: ClienteStatusBadgeProps) = {
+export const ClienteStatusBadge = ({ status }: ClienteStatusBadgeProps) => {
   return (
     <Badge
       variant="outline"
