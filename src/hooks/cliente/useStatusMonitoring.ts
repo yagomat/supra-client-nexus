@@ -2,7 +2,6 @@
 import { useEffect } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { updateCliente, getCliente } from "@/services/clienteService";
-import { recalculateClientStatus } from "@/services/clientStatusService";
 import { Pagamento, ClienteFormValues } from "@/types";
 
 export const useStatusMonitoring = (
@@ -20,11 +19,9 @@ export const useStatusMonitoring = (
         // Verificar se o vencimento foi realmente alterado
         if (newVencimento !== originalVencimento) {
           try {
-            // Primeiro atualiza o dia de vencimento no backend
+            // Apenas atualiza o dia de vencimento no backend
+            // O status será recalculado automaticamente pelo trigger do Supabase
             await updateCliente(clienteId, { dia_vencimento: newVencimento });
-            
-            // Em seguida, aciona a recalculação de status no Supabase
-            await recalculateClientStatus(clienteId);
             
             // Busca o cliente atualizado para obter o novo status
             const clienteAtualizado = await getCliente(clienteId);
@@ -32,7 +29,7 @@ export const useStatusMonitoring = (
             // Atualiza o campo status no formulário
             form.setValue("status", clienteAtualizado.status);
           } catch (error) {
-            console.error("Erro ao recalcular status do cliente:", error);
+            console.error("Erro ao atualizar dia de vencimento:", error);
           }
         }
       }
