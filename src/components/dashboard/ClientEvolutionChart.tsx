@@ -12,6 +12,42 @@ interface ClientEvolutionChartProps {
 export const ClientEvolutionChart = ({ data, loading }: ClientEvolutionChartProps) => {
   const isMobile = useIsMobile();
   
+  // Certifique-se de que temos dados para todos os 12 meses
+  const ensureAllMonths = (originalData: { mes: string; quantidade: number }[]) => {
+    // Se não tivermos dados, retorna um array vazio
+    if (!originalData || originalData.length === 0) return [];
+    
+    // Extrair os meses dos dados existentes
+    const existingMonths = originalData.map(item => item.mes);
+    
+    // Verificar se temos exatamente 12 meses
+    if (existingMonths.length === 12) return originalData;
+    
+    // Último ano de dados (12 meses)
+    const last12Months = [];
+    const today = new Date();
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const monthName = date.toLocaleDateString('pt-BR', { month: 'short' });
+      const yearShort = date.getFullYear().toString().slice(-2);
+      const formattedMonth = `${monthName}/${yearShort}`;
+      
+      // Procurar este mês nos dados existentes
+      const existingData = originalData.find(item => item.mes === formattedMonth);
+      
+      if (existingData) {
+        last12Months.push(existingData);
+      } else {
+        last12Months.push({ mes: formattedMonth, quantidade: 0 });
+      }
+    }
+    
+    return last12Months;
+  };
+  
+  // Aplicar a função para garantir todos os meses
+  const completeData = ensureAllMonths(data);
+  
   return (
     <Card className="w-full">
       <CardHeader>
@@ -22,10 +58,10 @@ export const ClientEvolutionChart = ({ data, loading }: ClientEvolutionChartProp
           <div className="flex items-center justify-center h-full">
             <Skeleton className="h-full w-full" />
           </div>
-        ) : data.length > 0 ? (
+        ) : completeData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={data}
+              data={completeData}
               margin={{
                 top: 10,
                 right: isMobile ? 10 : 20,
