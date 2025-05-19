@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -362,7 +361,7 @@ const BancoDados = () => {
                   <TabsTrigger value="ufs">UF</TabsTrigger>
                   <TabsTrigger value="servidores">Servidores</TabsTrigger>
                   <TabsTrigger value="dias_vencimento">Vencimentos</TabsTrigger>
-                  <TabsTrigger value="valores_plano">Valores</TabsTrigger>
+                  <TabsTrigger value="valores_plano">Plano</TabsTrigger>
                   <TabsTrigger value="dispositivos_smart">Dispositivos</TabsTrigger>
                   <TabsTrigger value="aplicativos">Aplicativos</TabsTrigger>
                 </TabsList>
