@@ -1,3 +1,4 @@
+
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { Cliente } from '@/types';
@@ -66,10 +67,10 @@ const convertToString = (value: any): string => {
   return String(value);
 };
 
-// Função para exportar clientes para CSV
+// Função para exportar clientes para Excel
 export async function exportClientesToExcel(clientes: Cliente[]): Promise<void> {
   try {
-    // Converter os clientes para o formato Excel/CSV
+    // Converter os clientes para o formato Excel
     const excelData: ClienteExcel[] = clientes.map(cliente => ({
       'Data de cadastro': formatDate(cliente.created_at),
       'Nome': cliente.nome,
@@ -91,7 +92,7 @@ export async function exportClientesToExcel(clientes: Cliente[]): Promise<void> 
       'Observações': cliente.observacoes || ''
     }));
 
-    // Criar uma planilha CSV
+    // Criar uma planilha Excel
     const worksheet = XLSX.utils.json_to_sheet(excelData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Clientes');
@@ -119,23 +120,22 @@ export async function exportClientesToExcel(clientes: Cliente[]): Promise<void> 
     ];
     worksheet['!cols'] = colWidths;
 
-    // Gerar e salvar o arquivo CSV
-    // Usamos o formato .csv em vez de .xlsx
-    const csvBuffer = XLSX.write(workbook, { bookType: 'csv', type: 'array' });
-    const data = new Blob([csvBuffer], { type: 'text/csv;charset=utf-8;' });
+    // Gerar e salvar o arquivo Excel (.xlsx)
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
     
     // Nome do arquivo com data atual
-    const fileName = `clientes_${new Date().toISOString().split('T')[0]}.csv`;
+    const fileName = `clientes_${new Date().toISOString().split('T')[0]}.xlsx`;
     saveAs(data, fileName);
     
     return Promise.resolve();
   } catch (error) {
-    console.error('Erro ao exportar clientes para CSV:', error);
-    return Promise.reject('Erro ao exportar clientes para CSV');
+    console.error('Erro ao exportar clientes para Excel:', error);
+    return Promise.reject('Erro ao exportar clientes para Excel');
   }
 }
 
-// Função para importar clientes de um arquivo CSV
+// Função para importar clientes de um arquivo Excel
 export async function importClientesFromExcel(file: File): Promise<{ success: boolean, imported: number, errors: string[] }> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -157,7 +157,7 @@ export async function importClientesFromExcel(file: File): Promise<{ success: bo
         for (const row of jsonData) {
           try {
             console.log("Processando linha:", row);
-            // Converter dados do Excel/CSV para o formato do cliente
+            // Converter dados do Excel para o formato do cliente
             const cliente = {
               nome: row['Nome'],
               telefone: row['Telefone'] ? convertToString(row['Telefone']) : null,
@@ -212,7 +212,7 @@ export async function importClientesFromExcel(file: File): Promise<{ success: bo
           errors
         });
       } catch (error) {
-        console.error('Erro ao importar clientes do CSV:', error);
+        console.error('Erro ao importar clientes do Excel:', error);
         reject('Erro ao ler o arquivo. Verifique se o formato está correto.');
       }
     };
