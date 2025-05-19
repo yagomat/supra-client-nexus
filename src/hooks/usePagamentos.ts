@@ -42,7 +42,12 @@ export const usePagamentos = () => {
       let query = supabase
         .from('clientes')
         .select(`
-          id, nome, telefone, plano, status,
+          id, nome, telefone, plano, status, created_at, 
+          uf, servidor, dia_vencimento, valor_plano,
+          dispositivo_smart, aplicativo, usuario_aplicativo, 
+          senha_aplicativo, data_licenca_aplicativo, possui_tela_adicional,
+          dispositivo_smart_2, aplicativo_2, usuario_2, senha_2, 
+          data_licenca_2, observacoes,
           pagamentos:pagamentos!inner(
             id, cliente_id, mes, ano, valor, status, data_pagamento
           )
@@ -108,10 +113,10 @@ export const usePagamentos = () => {
     try {
       setLoading(true);
 
-      // First, get all clients that match the filters
+      // First, get all clients that match the filters with all fields needed for ClienteComPagamentos
       let queryClientes = supabase
         .from('clientes')
-        .select('id, nome, telefone, status')
+        .select('*')
         .order('nome', { ascending: true });
 
       if (status) {
@@ -159,28 +164,10 @@ export const usePagamentos = () => {
         // Create empty pagamentos object
         const pagamentosObj: Record<string, Pagamento> = {};
         
-        // Add all the required fields for ClienteComPagamentos type
+        // Create a properly typed ClienteComPagamentos object
         const clienteComPagamentos: ClienteComPagamentos = {
           ...cliente,
-          // Add all required fields with default values if not present
-          pagamentos: pagamentosObj,
-          created_at: cliente.created_at || new Date().toISOString(),
-          uf: cliente.uf || null,
-          servidor: cliente.servidor || '',
-          dia_vencimento: cliente.dia_vencimento || 1,
-          valor_plano: cliente.valor_plano || null,
-          dispositivo_smart: cliente.dispositivo_smart || null,
-          aplicativo: cliente.aplicativo || '',
-          usuario_aplicativo: cliente.usuario_aplicativo || '',
-          senha_aplicativo: cliente.senha_aplicativo || '',
-          data_licenca_aplicativo: cliente.data_licenca_aplicativo || null,
-          possui_tela_adicional: cliente.possui_tela_adicional || false,
-          dispositivo_smart_2: cliente.dispositivo_smart_2 || null,
-          aplicativo_2: cliente.aplicativo_2 || null,
-          usuario_2: cliente.usuario_2 || null,
-          senha_2: cliente.senha_2 || null,
-          data_licenca_2: cliente.data_licenca_2 || null,
-          observacoes: cliente.observacoes || null
+          pagamentos: pagamentosObj
         };
         
         return clienteComPagamentos;
@@ -256,7 +243,7 @@ export const usePagamentos = () => {
         }
         
         if (data) {
-          // Safely cast and access the data
+          // Safely cast and access the data using type assertion
           const responseData = data as { action: string; pagamento: Pagamento };
           if (responseData.pagamento) {
             pagamento.id = responseData.pagamento.id;

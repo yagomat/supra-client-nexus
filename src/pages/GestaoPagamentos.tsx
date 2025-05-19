@@ -50,7 +50,7 @@ const GestaoPagamentos = () => {
           
           toast({
             title: "Status do cliente atualizado",
-            description: `O status do cliente ${payload.new.nome} foi atualizado para ${payload.new.status}.`,
+            description: `O status do cliente foi atualizado.`,
           });
         }
       )
@@ -73,7 +73,7 @@ const GestaoPagamentos = () => {
       .subscribe();
 
     // Load initial data
-    reloadData(anoAtual, mesAtual);
+    reloadData();
 
     // Clean up subscriptions when component unmounts
     return () => {
