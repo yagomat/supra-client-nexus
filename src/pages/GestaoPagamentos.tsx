@@ -12,6 +12,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { enableRealtimeForTable } from "@/services/clientStatusService";
+import { ClienteComPagamentos } from "@/types";
 
 const GestaoPagamentos = () => {
   const {
@@ -28,18 +29,19 @@ const GestaoPagamentos = () => {
     submitting,
     handleChangeStatus,
     handleLimparFiltro,
+    sortOrder,
+    setSortOrder,
     meses,
     anos
   } = usePagamentos();
   
-  const [sortOrder, setSortOrder] = useState<'nome' | 'data'>('data');
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
   // Apply sorting when clients or sort order changes
   useEffect(() => {
-    if (clientes && clientes.length > 0) {
-      const sorted = [...clientes].sort((a, b) => {
+    if (filteredClientes && filteredClientes.length > 0) {
+      const sorted = [...filteredClientes].sort((a, b) => {
         if (sortOrder === 'nome') {
           return a.nome.localeCompare(b.nome);
         } else {
@@ -49,7 +51,7 @@ const GestaoPagamentos = () => {
       
       setFilteredClientes(sorted);
     }
-  }, [clientes, sortOrder, setFilteredClientes]);
+  }, [sortOrder, setFilteredClientes, filteredClientes]);
 
   // Handle sort order change
   const handleSortChange = (order: 'nome' | 'data') => {

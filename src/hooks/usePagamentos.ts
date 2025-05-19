@@ -26,6 +26,8 @@ export const usePagamentos = () => {
     filteredClientes,
     setFilteredClientes,
     handleLimparFiltro,
+    sortOrder,
+    setSortOrder,
     meses,
     anos
   } = usePaymentFilters(clientesComPagamentos);
@@ -50,6 +52,8 @@ export const usePagamentos = () => {
     submitting,
     handleChangeStatus,
     handleLimparFiltro,
+    sortOrder,
+    setSortOrder,
     meses,
     anos
   };
