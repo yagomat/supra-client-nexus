@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Import, FileUp, Loader2 } from "lucide-react";
 import { Cliente } from "@/types";
-import { exportClientesToExcel, importClientesFromExcel } from "@/services/clienteExcelService";
+import { exportClientesToExcel, importClientesFromExcel } from "@/services/clienteExcel";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 

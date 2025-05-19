@@ -6,3 +6,5 @@ export * from './dashboardService';
 export * from './valoresPredefinidosService';
 export * from './userRoleService';
 export * from './clientStatusService';
+export * from './clienteExcel';
+
