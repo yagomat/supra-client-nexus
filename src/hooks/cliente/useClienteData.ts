@@ -20,36 +20,55 @@ export const useClienteData = () => {
   const originalVencimento = cliente?.dia_vencimento || 0;
 
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchClienteData = async () => {
+      if (!id) {
+        // No id provided, don't try to fetch
+        if (isMounted) setLoading(false);
+        return;
+      }
+      
       try {
-        setLoading(true);
+        if (isMounted) setLoading(true);
         
-        // Buscar predefinições
-        const predefinidos = await getValoresPredefinidos();
-        setValoresPredefinidos(predefinidos);
+        // Promise.all for parallel fetching
+        const [predefinidos, clienteData] = await Promise.all([
+          getValoresPredefinidos(),
+          getCliente(id)
+        ]);
         
-        // Buscar dados do cliente
-        if (id) {
-          const clienteData = await getCliente(id);
+        // Only update state if component is still mounted
+        if (isMounted) {
+          setValoresPredefinidos(predefinidos);
           setCliente(clienteData);
           
           // Buscar pagamentos relacionados a este cliente
           const pagamentosData = await getPagamentos(id);
-          setPagamentos(pagamentosData);
+          if (isMounted) {
+            setPagamentos(pagamentosData);
+          }
         }
       } catch (error) {
         console.error("Erro ao buscar dados do cliente:", error);
-        toast({
-          title: "Erro ao carregar cliente",
-          description: "Não foi possível carregar os dados do cliente. Por favor, tente novamente.",
-          variant: "destructive",
-        });
+        if (isMounted) {
+          toast({
+            title: "Erro ao carregar cliente",
+            description: "Não foi possível carregar os dados do cliente. Por favor, tente novamente.",
+            variant: "destructive",
+          });
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchClienteData();
+    
+    // Cleanup function to prevent updating state after unmounting
+    return () => {
+      isMounted = false;
+    };
   }, [id, toast]);
 
   return {

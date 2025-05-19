@@ -11,6 +11,10 @@ export const useStatusMonitoring = (
   originalVencimento: number
 ) => {
   useEffect(() => {
+    if (!clienteId) {
+      return; // Don't set up monitoring if there's no client ID
+    }
+    
     const subscription = form.watch(async (value, { name }) => {
       // Se o dia de vencimento foi alterado
       if (name === "dia_vencimento" && clienteId && clientePagamentos.length > 0) {

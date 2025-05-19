@@ -8,10 +8,19 @@ import { BasicInformationSection } from "@/components/cliente/form-sections/Basi
 import { MainScreenSection } from "@/components/cliente/form-sections/MainScreenSection";
 import { AdditionalScreenSection } from "@/components/cliente/form-sections/AdditionalScreenSection";
 import { ObservationsSection } from "@/components/cliente/form-sections/ObservationsSection";
+import { useEffect } from "react";
 
 const EditarCliente = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  
+  useEffect(() => {
+    if (!id) {
+      navigate("/clientes");
+    }
+  }, [id, navigate]);
+  
+  // Pass the ID from params to the hook
   const { form, loading, submitting, valoresPredefinidos, onSubmit } = useClienteForm(id);
 
   if (loading) {
