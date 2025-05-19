@@ -184,11 +184,18 @@ export async function importClientesFromExcel(file: File): Promise<{ success: bo
               status: 'ativo' // Status padrão para novos clientes
             };
             
-            // Validar dados mínimos obrigatórios
-            if (!cliente.nome || !cliente.servidor || !cliente.aplicativo || 
-                !cliente.usuario_aplicativo || !cliente.senha_aplicativo || 
-                isNaN(cliente.dia_vencimento)) {
-              errors.push(`Cliente com nome "${cliente.nome || 'sem nome'}" possui campos obrigatórios faltando`);
+            // Validar campos específicos obrigatórios
+            const camposFaltantes = [];
+            if (!cliente.nome) camposFaltantes.push('Nome');
+            if (!cliente.servidor) camposFaltantes.push('Servidor');
+            if (!cliente.aplicativo) camposFaltantes.push('Aplicativo');
+            if (!cliente.usuario_aplicativo) camposFaltantes.push('Usuário');
+            if (!cliente.senha_aplicativo) camposFaltantes.push('Senha');
+            if (isNaN(cliente.dia_vencimento)) camposFaltantes.push('Dia de Vencimento');
+            
+            // Se houver campos faltantes, adicionar erro detalhado
+            if (camposFaltantes.length > 0) {
+              errors.push(`Cliente "${cliente.nome || 'sem nome'}" possui campos obrigatórios faltando: ${camposFaltantes.join(', ')}`);
               continue;
             }
             
