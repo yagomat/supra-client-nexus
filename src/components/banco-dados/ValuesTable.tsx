@@ -32,7 +32,7 @@ export const ValuesTable = ({ values, type, onDelete, isNumeric = false, isPlano
             values.map((value, index) => (
               <TableRow key={index}>
                 <TableCell>
-                  {isNumeric ? value : isPlano ? value : value}
+                  {value.toString()}
                 </TableCell>
                 <TableCell className="text-right">
                   <Button
@@ -50,4 +50,4 @@ export const ValuesTable = ({ values, type, onDelete, isNumeric = false, isPlano
       </Table>
     </div>
   );
-};
+}

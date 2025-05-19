@@ -44,9 +44,6 @@ export const useBancoDados = () => {
       const isNumeric = ["dias_vencimento"].includes(activeTab);
       const isPlano = activeTab === "valores_plano";
       
-      let updatedValues: (string | number)[] = [];
-      const currentValues = valoresPredefinidos[activeTab as keyof ValoresPredefinidos];
-      
       if (isNumeric) {
         if (typeof newValueOrNumber !== 'number') {
           toast({
@@ -69,7 +66,20 @@ export const useBancoDados = () => {
           }
         }
         
-        updatedValues = [...currentValues as number[], newValueOrNumber];
+        const currentValues = valoresPredefinidos[activeTab as keyof ValoresPredefinidos] as number[];
+        const updatedValues = [...currentValues, newValueOrNumber];
+        
+        // Remove duplicates and sort
+        const uniqueSorted = Array.from(new Set(updatedValues)).sort((a, b) => a - b);
+        
+        // Update backend with the correct numeric type
+        await updateValoresPredefinidos(activeTab as keyof ValoresPredefinidos, uniqueSorted);
+        
+        // Update local state
+        setValoresPredefinidos({
+          ...valoresPredefinidos,
+          [activeTab]: uniqueSorted,
+        });
       } else {
         if (typeof newValueOrNumber !== 'string') {
           toast({
@@ -104,26 +114,21 @@ export const useBancoDados = () => {
           return;
         }
         
-        updatedValues = [...currentValues as string[], newValueOrNumber];
+        const currentValues = valoresPredefinidos[activeTab as keyof ValoresPredefinidos] as string[];
+        const updatedValues = [...currentValues, newValueOrNumber];
+        
+        // Remove duplicates and sort
+        const uniqueSorted = Array.from(new Set(updatedValues)).sort();
+        
+        // Update backend with the correct string type
+        await updateValoresPredefinidos(activeTab as keyof ValoresPredefinidos, uniqueSorted);
+        
+        // Update local state
+        setValoresPredefinidos({
+          ...valoresPredefinidos,
+          [activeTab]: uniqueSorted,
+        });
       }
-      
-      // Remove duplicates and sort
-      if (isNumeric) {
-        updatedValues = Array.from(new Set(updatedValues as number[]));
-        updatedValues = (updatedValues as number[]).sort((a, b) => a - b);
-      } else {
-        updatedValues = Array.from(new Set(updatedValues as string[]));
-        updatedValues = (updatedValues as string[]).sort();
-      }
-      
-      // Update backend
-      await updateValoresPredefinidos(activeTab as keyof ValoresPredefinidos, updatedValues);
-      
-      // Update local state
-      setValoresPredefinidos({
-        ...valoresPredefinidos,
-        [activeTab]: updatedValues,
-      });
       
       // Close dialog
       setIsAddDialogOpen(false);
@@ -188,7 +193,6 @@ export const useBancoDados = () => {
     try {
       setSaving(true);
       
-      let values: (string | number)[] = [];
       const isNumeric = ["dias_vencimento"].includes(activeTab);
       const isPlano = activeTab === "valores_plano";
       
@@ -196,7 +200,8 @@ export const useBancoDados = () => {
       const items = importText.split("\n").map((item) => item.trim()).filter((item) => item.length > 0);
       
       if (isNumeric) {
-        values = items.map((item) => {
+        // For numeric values (dias_vencimento)
+        const numericValues: number[] = items.map((item) => {
           const num = parseFloat(item);
           if (isNaN(num)) {
             throw new Error(`Valor inválido: ${item}`);
@@ -212,7 +217,20 @@ export const useBancoDados = () => {
           
           return num;
         });
+        
+        // Remove duplicates and sort numerically
+        const uniqueSorted = Array.from(new Set(numericValues)).sort((a, b) => a - b);
+        
+        // Update backend with the correct type
+        await updateValoresPredefinidos(activeTab as keyof ValoresPredefinidos, uniqueSorted);
+        
+        // Update local state
+        setValoresPredefinidos({
+          ...valoresPredefinidos!,
+          [activeTab]: uniqueSorted,
+        });
       } else {
+        // For string values (ufs, servidores, valores_plano, etc.)
         // Validate value lengths
         for (const item of items) {
           if (activeTab === "ufs" && item.length > 2) {
@@ -223,33 +241,26 @@ export const useBancoDados = () => {
             throw new Error(`Valor do plano inválido (máximo 4 caracteres): ${item}`);
           }
         }
-        values = items;
+        
+        // Remove duplicates and sort alphabetically
+        const uniqueSorted = Array.from(new Set(items)).sort();
+        
+        // Update backend with the correct type
+        await updateValoresPredefinidos(activeTab as keyof ValoresPredefinidos, uniqueSorted);
+        
+        // Update local state
+        setValoresPredefinidos({
+          ...valoresPredefinidos!,
+          [activeTab]: uniqueSorted,
+        });
       }
-      
-      // Remove duplicates
-      if (isNumeric) {
-        values = Array.from(new Set(values as number[]));
-        values = (values as number[]).sort((a, b) => a - b);
-      } else {
-        values = Array.from(new Set(values as string[]));
-        values = (values as string[]).sort();
-      }
-      
-      // Update backend
-      await updateValoresPredefinidos(activeTab as keyof ValoresPredefinidos, values);
-      
-      // Update local state
-      setValoresPredefinidos({
-        ...valoresPredefinidos!,
-        [activeTab]: values,
-      });
       
       // Close dialog
       setIsImportDialogOpen(false);
       
       toast({
         title: "Importação concluída",
-        description: `Foram importados ${values.length} valores com sucesso.`,
+        description: `Foram importados ${items.length} valores com sucesso.`,
       });
     } catch (error) {
       console.error("Erro ao importar valores", error);
