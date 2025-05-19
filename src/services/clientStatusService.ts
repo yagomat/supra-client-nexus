@@ -31,9 +31,10 @@ export async function recalculateClientStatus(clientId: string): Promise<void> {
       const ultimoPagamento = pagamentos[0];
       
       // Atualizar o registro de pagamento para acionar o trigger
+      // Em vez de updated_at, que não existe no tipo, usamos status para forçar a atualização
       const { error: updateError } = await supabase
         .from('pagamentos')
-        .update({ updated_at: new Date().toISOString() })
+        .update({ status: ultimoPagamento.status })
         .eq('id', ultimoPagamento.id);
       
       if (updateError) {
