@@ -1,6 +1,6 @@
 
 import { Menu, X } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,6 +21,7 @@ import {
 
 export function MobileMenu() {
   const { user, signOut } = useAuth();
+  const location = useLocation();
 
   const navItems = [
     {
@@ -49,6 +50,24 @@ export function MobileMenu() {
       icon: <Database size={20} />,
     },
   ];
+
+  // Function to check if a specific route is active
+  const isRouteActive = (href: string) => {
+    // Exact match for paths like /dashboard, /pagamentos, etc.
+    if (href === location.pathname) return true;
+    
+    // Special case for /clientes/cadastrar - only match exact path
+    if (href === "/clientes/cadastrar") {
+      return location.pathname === "/clientes/cadastrar";
+    }
+    
+    // Special case for /clientes - only match exact path or editar route
+    if (href === "/clientes") {
+      return location.pathname === "/clientes" || location.pathname.startsWith("/clientes/editar");
+    }
+    
+    return false;
+  };
 
   return (
     <div className="md:hidden">
@@ -84,10 +103,10 @@ export function MobileMenu() {
                 <SheetClose key={item.href} asChild>
                   <NavLink
                     to={item.href}
-                    className={({ isActive }) =>
+                    className={
                       cn(
                         "flex items-center px-4 py-3 my-1 mx-2 rounded-md text-sm font-medium transition-colors",
-                        isActive
+                        isRouteActive(item.href)
                           ? "bg-sidebar-primary text-white"
                           : "text-white hover:bg-sidebar-accent"
                       )

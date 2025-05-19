@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,6 +26,7 @@ export function SidebarMenu({ className, onCollapseChange }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const { user, signOut } = useAuth();
   const isMobile = useIsMobile();
+  const location = useLocation();
 
   const toggleSidebar = () => {
     const newCollapsedState = !collapsed;
@@ -72,6 +73,24 @@ export function SidebarMenu({ className, onCollapseChange }: SidebarProps) {
     },
   ];
 
+  // Function to check if a specific route is active
+  const isRouteActive = (href: string) => {
+    // Exact match for paths like /dashboard, /pagamentos, etc.
+    if (href === location.pathname) return true;
+    
+    // Special case for /clientes/cadastrar - only match exact path
+    if (href === "/clientes/cadastrar") {
+      return location.pathname === "/clientes/cadastrar";
+    }
+    
+    // Special case for /clientes - only match exact path or editar route
+    if (href === "/clientes") {
+      return location.pathname === "/clientes" || location.pathname.startsWith("/clientes/editar");
+    }
+    
+    return false;
+  };
+
   return (
     <div
       className={cn(
@@ -104,7 +123,7 @@ export function SidebarMenu({ className, onCollapseChange }: SidebarProps) {
             className={({ isActive }) =>
               cn(
                 "flex items-center px-4 py-3 my-1 mx-2 rounded-md text-sm font-medium transition-colors",
-                isActive
+                isRouteActive(item.href)
                   ? "bg-sidebar-primary text-white"
                   : "text-white hover:bg-sidebar-accent hover:text-white"
               )
