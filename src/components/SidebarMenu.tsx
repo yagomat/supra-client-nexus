@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom"; // Adicionar useLocation
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,6 +26,7 @@ export function SidebarMenu({ className, onCollapseChange }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const { user, signOut } = useAuth();
   const isMobile = useIsMobile();
+  const location = useLocation(); // Usar o hook useLocation para obter a rota atual
 
   const toggleSidebar = () => {
     const newCollapsedState = !collapsed;
@@ -54,11 +55,13 @@ export function SidebarMenu({ className, onCollapseChange }: SidebarProps) {
       name: "Cadastrar Cliente",
       href: "/clientes/cadastrar",
       icon: <UserPlus size={20} />,
+      exact: true, // Adicionar propriedade exact
     },
     {
       name: "Lista de Clientes",
       href: "/clientes",
       icon: <Users size={20} />,
+      exact: true, // Adicionar propriedade exact
     },
     {
       name: "Gestão de Pagamentos",
@@ -101,14 +104,27 @@ export function SidebarMenu({ className, onCollapseChange }: SidebarProps) {
           <NavLink
             key={item.href}
             to={item.href}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center px-4 py-3 my-1 mx-2 rounded-md text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-sidebar-primary text-white"
-                  : "text-white hover:bg-sidebar-accent hover:text-white"
-              )
-            }
+            className={({ isActive }) => {
+              // Verificação específica para os links que têm a propriedade exact
+              if (item.exact) {
+                // Se o item é "exact", só será considerado ativo se a rota atual for exatamente igual ao href do item
+                const isExactActive = location.pathname === item.href;
+                return cn(
+                  "flex items-center px-4 py-3 my-1 mx-2 rounded-md text-sm font-medium transition-colors",
+                  isExactActive
+                    ? "bg-sidebar-primary text-white"
+                    : "text-white hover:bg-sidebar-accent hover:text-white"
+                );
+              } else {
+                // Comportamento padrão para outros itens
+                return cn(
+                  "flex items-center px-4 py-3 my-1 mx-2 rounded-md text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-sidebar-primary text-white"
+                    : "text-white hover:bg-sidebar-accent hover:text-white"
+                );
+              }
+            }}
           >
             <span className="mr-3 text-white">{item.icon}</span>
             {!collapsed && <span className="text-white">{item.name}</span>}

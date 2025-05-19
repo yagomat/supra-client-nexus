@@ -25,6 +25,12 @@ export const ClienteTable = ({
 }: ClienteTableProps) => {
   const navigate = useNavigate();
   
+  // Função para formatar o valor do plano
+  const formatarValorPlano = (valor: number | null | undefined): string => {
+    if (valor === null || valor === undefined) return "-";
+    return `R$ ${valor.toFixed(2).replace('.', ',')}`;
+  };
+  
   return (
     <div className="border rounded-md overflow-hidden">
       <div className="overflow-x-auto">
@@ -36,7 +42,10 @@ export const ClienteTable = ({
               <TableHead>Telefone</TableHead>
               <TableHead>UF</TableHead>
               <TableHead>Servidor</TableHead>
-              <TableHead>Dia de Venc.</TableHead>
+              <TableHead className="whitespace-normal text-center" style={{ maxWidth: "80px" }}>
+                Dia de<br />Venc.
+              </TableHead>
+              <TableHead>Plano</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Tela Principal</TableHead>
               <TableHead>Tela Adicional</TableHead>
@@ -52,7 +61,8 @@ export const ClienteTable = ({
                 <TableCell>{cliente.telefone || "-"}</TableCell>
                 <TableCell>{cliente.uf || "-"}</TableCell>
                 <TableCell>{cliente.servidor}</TableCell>
-                <TableCell>{cliente.dia_vencimento}</TableCell>
+                <TableCell className="text-center">{cliente.dia_vencimento}</TableCell>
+                <TableCell>{formatarValorPlano(cliente.valor_plano)}</TableCell>
                 <TableCell>
                   <ClienteStatusBadge status={cliente.status} />
                 </TableCell>

@@ -26,7 +26,8 @@ const GestaoPagamentos = () => {
     handleChangeStatus,
     handleLimparFiltro,
     meses,
-    anos
+    anos,
+    reloadData // Certifique-se de que o hook usePagamentos exporta esta função
   } = usePagamentos();
   
   const isMobile = useIsMobile();
@@ -42,23 +43,41 @@ const GestaoPagamentos = () => {
           event: 'UPDATE', 
           schema: 'public', 
           table: 'clientes',
-          filter: 'status=eq.ativo OR status=eq.inativo'
         }, 
         (payload) => {
+          // Recarregar os dados quando houver alteração no status de um cliente
+          reloadData();
+          
           toast({
             title: "Status do cliente atualizado",
             description: `O status do cliente ${payload.new.nome} foi atualizado para ${payload.new.status}.`,
           });
-          // Não precisamos fazer nada aqui já que o componente será atualizado na próxima renderização
         }
       )
       .subscribe();
 
-    // Limpar subscription quando o componente for desmontado
+    // Inscrever-se para atualizações em tempo real dos pagamentos
+    const pagamentoSubscription = supabase
+      .channel('pagamento-changes')
+      .on('postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'pagamentos',
+        },
+        (payload) => {
+          // Recarregar os dados quando houver alteração em pagamentos
+          reloadData();
+        }
+      )
+      .subscribe();
+
+    // Limpar subscriptions quando o componente for desmontado
     return () => {
       supabase.removeChannel(clienteSubscription);
+      supabase.removeChannel(pagamentoSubscription);
     };
-  }, [toast]);
+  }, [toast, reloadData]);
 
   return (
     <DashboardLayout>
