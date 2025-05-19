@@ -4,7 +4,7 @@ import { z } from "zod";
 // Definição do esquema do formulário
 export const formSchema = z.object({
   nome: z.string().min(1, { message: "Nome é obrigatório" }).max(100),
-  telefone: z.string().optional().max(20),
+  telefone: z.string().max(20).optional(),
   uf: z.string().optional(),
   servidor: z.string().min(1, { message: "Servidor é obrigatório" }),
   dia_vencimento: z.coerce.number().min(1).max(31),
@@ -13,19 +13,19 @@ export const formSchema = z.object({
   // Tela principal
   dispositivo_smart: z.string().optional(),
   aplicativo: z.string().min(1, { message: "Aplicativo é obrigatório" }),
-  usuario_aplicativo: z.string().optional().max(25),
-  senha_aplicativo: z.string().optional().max(25),
+  usuario_aplicativo: z.string().max(25).optional(),
+  senha_aplicativo: z.string().max(25).optional(),
   data_licenca_aplicativo: z.string().optional(),
   
   // Tela adicional
   possui_tela_adicional: z.boolean().default(false),
   dispositivo_smart_2: z.string().optional(),
   aplicativo_2: z.string().optional(),
-  usuario_2: z.string().optional().max(25),
-  senha_2: z.string().optional().max(25),
+  usuario_2: z.string().max(25).optional(),
+  senha_2: z.string().max(25).optional(),
   data_licenca_2: z.string().optional(),
   
-  observacoes: z.string().optional().max(300),
+  observacoes: z.string().max(300).optional(),
   status: z.string(),
 });
 
