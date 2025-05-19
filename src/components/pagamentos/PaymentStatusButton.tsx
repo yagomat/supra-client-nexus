@@ -34,7 +34,6 @@ export const PaymentStatusButton = ({
       currentStatus === "nao_pago" ? "pago" :
       currentStatus === "pago" ? "pago_confianca" : "nao_pago";
     
-    setCurrentStatus(nextStatus);
     onStatusChange(nextStatus);
   };
   
@@ -82,9 +81,7 @@ export const PaymentStatusButton = ({
             onClick={handleClick}
           >
             {appearance.icon}
-            {/* Show shortLabel only if not in list view AND not minimal */}
             {!minimal && !isList && <span className="ml-1">{appearance.shortLabel}</span>}
-            {/* In mobile view, always show the shortLabel if not minimal */}
             {minimal && <span className="sr-only">{appearance.label}</span>}
           </Button>
         </TooltipTrigger>

@@ -1,21 +1,19 @@
 
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { Pagamento, ClienteComPagamentos } from "@/types";
+import { ClienteComPagamentos } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 
-// No need to pass pagamentos and setPagamentos since we're not managing them here anymore
 export const usePaymentStatus = () => {
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
-
-  // We don't need to enable realtime or subscribe here as that's now centralized in useClientesPagamentos
   
   const handleChangeStatus = async (cliente: ClienteComPagamentos, mes: number, ano: number, status: string) => {
     try {
       setSubmitting(true);
       
-      // Call our Supabase function to handle the payment status update
+      // Call Supabase function to handle payment status update
+      // This will trigger the database triggers and realtime updates
       const { error } = await supabase.rpc(
         'handle_payment_status_update', 
         { 
@@ -30,7 +28,7 @@ export const usePaymentStatus = () => {
         throw error;
       }
       
-      // No need to manually update state as we're now subscribed to real-time updates
+      // No need to manually update state as we're subscribed to real-time updates
       // through the centralized subscription in useClientesPagamentos
       
     } catch (error) {
