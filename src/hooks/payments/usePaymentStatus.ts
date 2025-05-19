@@ -24,8 +24,9 @@ export const usePaymentStatus = (
     const setupRealtime = async () => {
       try {
         await enableRealtimeForTable('clientes');
+        await enableRealtimeForTable('pagamentos');
       } catch (error) {
-        console.error("Error enabling realtime for clientes:", error);
+        console.error("Error enabling realtime:", error);
       }
     };
     
@@ -45,7 +46,6 @@ export const usePaymentStatus = (
           filter: 'status=eq.ativo OR status=eq.inativo'
         }, 
         (payload) => {
-          // We don't need to modify the pagamentos array here
           // Just display a toast notification to inform the user
           const newStatus = payload.new.status;
           toast({
@@ -56,16 +56,51 @@ export const usePaymentStatus = (
       )
       .subscribe();
 
+    // Subscribe to changes on the pagamentos table
+    const pagamentosChannel = supabase
+      .channel('pagamentos-changes')
+      .on('postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'pagamentos'
+        },
+        (payload) => {
+          // When payment changes happen, we sync our local state with the database
+          if (payload.eventType === 'INSERT') {
+            setPagamentos(prev => [...prev, payload.new as Pagamento]);
+            
+            toast({
+              title: "Novo pagamento registrado",
+              description: `Pagamento de ${meses.find((m) => m.value === payload.new.mes)?.label} registrado com sucesso.`,
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            setPagamentos(prev => 
+              prev.map(p => p.id === payload.new.id ? (payload.new as Pagamento) : p)
+            );
+            
+            toast({
+              title: "Status de pagamento atualizado",
+              description: `Pagamento de ${meses.find((m) => m.value === payload.new.mes)?.label} atualizado com sucesso.`,
+            });
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(clientesChannel);
+      supabase.removeChannel(pagamentosChannel);
     };
-  }, [toast]);
+  }, [toast, setPagamentos]);
 
   const handleChangeStatus = async (cliente: ClienteComPagamentos, mes: number, ano: number, status: string) => {
     try {
       setSubmitting(true);
       
       // Call our Supabase function to handle the payment status update
+      // This function already handles both creation and update of payments
+      // and automatically triggers the update_cliente_status trigger
       const { data, error } = await supabase.rpc(
         'handle_payment_status_update', 
         { 
@@ -80,41 +115,8 @@ export const usePaymentStatus = (
         throw error;
       }
       
-      if (!data) {
-        throw new Error("No data returned from payment status update");
-      }
-      
-      // First cast to unknown, then to our interface type for safety
-      const response = data as unknown as PaymentStatusUpdateResponse;
-      
-      // Extract the payment data from the function result
-      const updatedPagamento = response.pagamento;
-      
-      // Update local state based on whether it was a new record or an update
-      let updatedPagamentosArray: Pagamento[];
-      
-      if (response.action === 'created') {
-        // Add the new payment to the array
-        updatedPagamentosArray = [...pagamentos, updatedPagamento];
-        
-        toast({
-          title: "Pagamento registrado",
-          description: `Pagamento de ${meses.find((m) => m.value === mes)?.label} registrado com sucesso.`,
-        });
-      } else {
-        // Update existing payment
-        updatedPagamentosArray = pagamentos.map((p) => 
-          (p.id === updatedPagamento.id ? updatedPagamento : p)
-        );
-        
-        toast({
-          title: "Status atualizado",
-          description: `Pagamento de ${meses.find((m) => m.value === mes)?.label} atualizado com sucesso.`,
-        });
-      }
-      
-      // Update the local pagamentos state
-      setPagamentos(updatedPagamentosArray);
+      // No need to manually update the state here as we're now subscribed
+      // to real-time updates through the pagamentos-changes channel
       
     } catch (error) {
       console.error("Erro ao atualizar status de pagamento", error);

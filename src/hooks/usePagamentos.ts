@@ -11,7 +11,6 @@ export const usePagamentos = () => {
     pagamentos, 
     setPagamentos, 
     clientesComPagamentos,
-    setClientesComPagamentos,
     loading,
     anoAtual,
     setAnoAtual
