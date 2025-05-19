@@ -22,7 +22,7 @@ export const ClientEvolutionChart = ({ data, loading }: ClientEvolutionChartProp
           <div className="flex items-center justify-center h-full">
             <Skeleton className="h-full w-full" />
           </div>
-        ) : data && data.length > 0 ? (
+        ) : data.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={data}
@@ -32,8 +32,6 @@ export const ClientEvolutionChart = ({ data, loading }: ClientEvolutionChartProp
                 left: isMobile ? 0 : 0,
                 bottom: isMobile ? 60 : 40,
               }}
-              barSize={isMobile ? 15 : 30} // Controle explícito do tamanho da barra
-              barGap={2} // Espaço entre as barras
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
@@ -42,18 +40,13 @@ export const ClientEvolutionChart = ({ data, loading }: ClientEvolutionChartProp
                 textAnchor="end"
                 height={60}
                 tick={{ fontSize: isMobile ? 10 : 12 }}
-                interval={0} // Garantir que todos os rótulos sejam exibidos
               />
               <YAxis 
                 width={isMobile ? 30 : 40}
                 tick={{ fontSize: isMobile ? 10 : 12 }}
               />
-              <Tooltip formatter={(value: number) => [value, "Clientes ativos"]} />
-              <Bar 
-                dataKey="quantidade" 
-                fill="#3b82f6" 
-                name="Clientes ativos"
-              />
+              <Tooltip />
+              <Bar dataKey="quantidade" fill="#3b82f6" />
             </BarChart>
           </ResponsiveContainer>
         ) : (

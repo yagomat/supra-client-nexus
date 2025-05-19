@@ -4,7 +4,6 @@ import { useToast } from "@/components/ui/use-toast";
 import { Pagamento, ClienteComPagamentos } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { meses } from "./usePaymentFilters";
-import { enableRealtimeForClients } from "@/services/clientStatusService";
 
 // Define the response type from our Supabase function
 interface PaymentStatusUpdateResponse {
@@ -24,7 +23,7 @@ export const usePaymentStatus = (
     // Enable real-time updates for the clientes table by setting REPLICA IDENTITY
     const setupRealtimeForClients = async () => {
       try {
-        await enableRealtimeForClients();
+        await supabase.rpc('enable_realtime_for_clients');
       } catch (error) {
         console.error("Error setting up realtime for clients:", error);
       }

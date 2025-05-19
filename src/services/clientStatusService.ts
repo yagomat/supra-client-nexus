@@ -3,8 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export async function enableRealtimeForClients(): Promise<void> {
   try {
-    // Use supabase.rpc with type assertion to call our new function
-    await supabase.rpc('enable_realtime_for_clients' as any);
+    await supabase.rpc('enable_realtime_for_clients');
   } catch (error) {
     console.error("Error enabling real-time for clients:", error);
     throw error;
