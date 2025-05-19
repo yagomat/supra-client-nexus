@@ -16,18 +16,11 @@ export async function getUserRoles(userId?: string): Promise<UserRole[]> {
       userId = currentUser.user.id;
     }
     
-    // Since get_user_roles RPC isn't available, use a workaround with raw query
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id')
-      .filter('id', 'eq', userId)
-      .then(async () => {
-        // This is just to validate the user exists
-        // Now we use a direct query (will be typed as any)
-        return await supabase.from('user_roles')
-          .select('role')
-          .eq('user_id', userId) as any;
-      });
+    // Use a direct query with type assertion to bypass TypeScript limitations
+    const { data, error } = await supabase.rpc(
+      'get_user_roles',
+      { user_id_param: userId }
+    ) as { data: { role: UserRole }[] | null, error: any };
       
     if (error) {
       console.error("Erro ao buscar papéis do usuário:", error);
@@ -35,7 +28,7 @@ export async function getUserRoles(userId?: string): Promise<UserRole[]> {
     }
     
     // Extract roles from the response
-    return (data || []).map(row => row.role) as UserRole[];
+    return data ? data.map(item => item.role) : [];
   } catch (error) {
     console.error("Erro ao verificar papéis do usuário:", error);
     return [];
@@ -55,20 +48,21 @@ export async function isGerente(userId?: string): Promise<boolean> {
   return await hasRole('gerente', userId);
 }
 
-// This function handles role addition manually without RPC
+// This function handles role addition using RPC
 export async function addUserRole(userId: string, role: UserRole): Promise<void> {
   // Verify if current user is admin first
   if (!await isAdmin()) {
     throw new Error("Permissão negada: Apenas administradores podem modificar papéis de usuários");
   }
   
-  // Insert role directly with cast to bypass type checking
-  const { error } = await (supabase
-    .from('user_roles' as any)
-    .insert({
-      user_id: userId,
-      role: role
-    } as any));
+  // Insert role using RPC function with type assertion
+  const { error } = await supabase.rpc(
+    'add_user_role',
+    { 
+      user_id_param: userId,
+      role_param: role 
+    }
+  ) as { data: null, error: any };
     
   if (error) {
     if (error.code === '23505') { // Código para unique violation
@@ -86,12 +80,14 @@ export async function removeUserRole(userId: string, role: UserRole): Promise<vo
     throw new Error("Permissão negada: Apenas administradores podem modificar papéis de usuários");
   }
   
-  // Remove role directly with cast to bypass type checking
-  const { error } = await (supabase
-    .from('user_roles' as any)
-    .delete()
-    .eq('user_id', userId)
-    .eq('role', role) as any);
+  // Remove role using RPC function with type assertion
+  const { error } = await supabase.rpc(
+    'remove_user_role',
+    {
+      user_id_param: userId,
+      role_param: role
+    }
+  ) as { data: null, error: any };
     
   if (error) {
     console.error("Erro ao remover papel do usuário:", error);
