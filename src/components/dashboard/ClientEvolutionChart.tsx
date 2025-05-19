@@ -48,6 +48,10 @@ export const ClientEvolutionChart = ({ data, loading }: ClientEvolutionChartProp
   // Aplicar a função para garantir todos os meses
   const completeData = ensureAllMonths(data);
   
+  // Debug para verificar os dados
+  console.log('Client Evolution Chart - Original Data:', data);
+  console.log('Client Evolution Chart - Complete Data:', completeData);
+  
   return (
     <Card className="w-full">
       <CardHeader>

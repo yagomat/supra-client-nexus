@@ -16,6 +16,7 @@ const Dashboard = () => {
     try {
       setLoading(true);
       const data = await getDashboardStats();
+      console.log("Dashboard stats data:", data);
       setStats(data);
     } catch (error) {
       console.error("Erro ao buscar estatísticas", error);

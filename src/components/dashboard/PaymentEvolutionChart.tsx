@@ -48,6 +48,10 @@ export const PaymentEvolutionChart = ({ data, loading }: PaymentEvolutionChartPr
   // Aplicar a função para garantir todos os meses
   const completeData = ensureAllMonths(data);
   
+  // Debug para verificar os dados
+  console.log('Payment Evolution Chart - Original Data:', data);
+  console.log('Payment Evolution Chart - Complete Data:', completeData);
+  
   const formatCurrency = (value: number) => {
     return `R$ ${value.toFixed(2)}`.replace('.', ',');
   };
