@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -151,7 +150,7 @@ export const useClienteForm = (clienteId: string | undefined) => {
             // Primeiro atualiza o dia de vencimento temporariamente no backend
             await updateCliente(clienteId, { dia_vencimento: newVencimento });
             
-            // Em seguida, aciona a recalculação de status que usa a lógica do backend
+            // Em seguida, aciona a recalculação de status usando nossa função atualizada
             await recalculateClientStatus(clienteId);
             
             // Busca o cliente atualizado para obter o novo status
