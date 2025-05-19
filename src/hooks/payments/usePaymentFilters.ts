@@ -44,13 +44,11 @@ export const usePaymentFilters = (clientesComPagamentos: ClienteComPagamentos[])
     }
     
     // Apply sorting
-    results = results.sort((a, b) => {
-      if (sortOrder === 'nome') {
-        return a.nome.localeCompare(b.nome);
-      } else {
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      }
-    });
+    if (sortOrder === 'nome') {
+      results.sort((a, b) => a.nome.localeCompare(b.nome));
+    } else {
+      results.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
     
     setFilteredClientes(results);
   }, [clientesComPagamentos, searchTerm, sortOrder]);

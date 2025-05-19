@@ -38,21 +38,6 @@ const GestaoPagamentos = () => {
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
-  // Apply sorting when clients or sort order changes
-  useEffect(() => {
-    if (filteredClientes && filteredClientes.length > 0) {
-      const sorted = [...filteredClientes].sort((a, b) => {
-        if (sortOrder === 'nome') {
-          return a.nome.localeCompare(b.nome);
-        } else {
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-        }
-      });
-      
-      setFilteredClientes(sorted);
-    }
-  }, [sortOrder, setFilteredClientes, filteredClientes]);
-
   // Handle sort order change
   const handleSortChange = (order: 'nome' | 'data') => {
     setSortOrder(order);

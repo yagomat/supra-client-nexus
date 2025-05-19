@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -35,17 +34,7 @@ const ListaClientes = () => {
       // Usar a função getClientes com o filtro de status
       const data = await getClientes(statusFilter);
       setClientes(data);
-      
-      // Apply sorting to the fetched data
-      const sortedData = [...data].sort((a, b) => {
-        if (sortOrder === 'nome') {
-          return a.nome.localeCompare(b.nome);
-        } else {
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-        }
-      });
-      
-      setFilteredClientes(sortedData);
+      applyFiltersAndSort(data);
     } catch (error) {
       console.error("Erro ao buscar clientes", error);
       toast({
@@ -56,6 +45,32 @@ const ListaClientes = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Function to apply filters and sorting
+  const applyFiltersAndSort = (clientesData: Cliente[]) => {
+    let results = [...clientesData];
+    
+    // Apply search filter
+    if (searchTerm) {
+      results = results.filter(
+        (cliente) =>
+          cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (cliente.telefone && cliente.telefone.includes(searchTerm)) ||
+          (cliente.uf && cliente.uf.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          cliente.servidor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (cliente.observacoes && cliente.observacoes.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+    
+    // Apply sorting
+    if (sortOrder === 'nome') {
+      results.sort((a, b) => a.nome.localeCompare(b.nome));
+    } else {
+      results.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
+    
+    setFilteredClientes(results);
   };
 
   useEffect(() => {
@@ -81,35 +96,14 @@ const ListaClientes = () => {
     return () => {
       supabase.removeChannel(clientesChannel);
     };
-  }, [toast, statusFilter, sortOrder]);
-
+  }, [statusFilter]);
+  
+  // Re-apply filters and sort when any of these dependencies change
   useEffect(() => {
-    // Apply sorting and filtering
-    let results = [...clientes];
-    
-    // Apply search filter
-    if (searchTerm) {
-      results = results.filter(
-        (cliente) =>
-          cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (cliente.telefone && cliente.telefone.includes(searchTerm)) ||
-          (cliente.uf && cliente.uf.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          cliente.servidor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (cliente.observacoes && cliente.observacoes.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
+    if (clientes.length > 0) {
+      applyFiltersAndSort(clientes);
     }
-    
-    // Apply sorting
-    results.sort((a, b) => {
-      if (sortOrder === 'nome') {
-        return a.nome.localeCompare(b.nome);
-      } else {
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      }
-    });
-    
-    setFilteredClientes(results);
-  }, [searchTerm, clientes, sortOrder]);
+  }, [searchTerm, sortOrder]);
 
   const handleSortChange = (order: 'nome' | 'data') => {
     setSortOrder(order);

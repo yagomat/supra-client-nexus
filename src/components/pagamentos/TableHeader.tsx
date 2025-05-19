@@ -30,7 +30,7 @@ export const TableHeaderComponent = ({
             <div className="flex items-center">
               Data de Cadastro
               {onSortChange && <ArrowUpDown className="ml-1 h-4 w-4" />}
-              {sortOrder === 'data' && <span className="ml-1">•</span>}
+              {sortOrder === 'data' && <span className="ml-1 text-primary">•</span>}
             </div>
           </TableHead>
         )}
@@ -41,7 +41,7 @@ export const TableHeaderComponent = ({
           <div className="flex items-center">
             Nome
             {onSortChange && <ArrowUpDown className="ml-1 h-4 w-4" />}
-            {sortOrder === 'nome' && <span className="ml-1">•</span>}
+            {sortOrder === 'nome' && <span className="ml-1 text-primary">•</span>}
           </div>
         </TableHead>
         <TableHead>Dia de Venc.</TableHead>
