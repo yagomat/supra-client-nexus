@@ -5,6 +5,12 @@ import { Pagamento, ClienteComPagamentos } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { meses } from "./usePaymentFilters";
 
+// Define the response type from our Supabase function
+interface PaymentStatusUpdateResponse {
+  action: 'created' | 'updated';
+  pagamento: Pagamento;
+}
+
 export const usePaymentStatus = (
   pagamentos: Pagamento[],
   setPagamentos: (pagamentos: Pagamento[]) => void
@@ -16,7 +22,7 @@ export const usePaymentStatus = (
     try {
       setSubmitting(true);
       
-      // Call our new Supabase function to handle the payment status update
+      // Call our Supabase function to handle the payment status update
       const { data, error } = await supabase.rpc(
         'handle_payment_status_update', 
         { 
@@ -31,13 +37,16 @@ export const usePaymentStatus = (
         throw error;
       }
       
+      // Properly cast the response to our interface
+      const response = data as PaymentStatusUpdateResponse;
+      
       // Extract the payment data from the function result
-      const updatedPagamento = data.pagamento as Pagamento;
+      const updatedPagamento = response.pagamento;
       
       // Update local state based on whether it was a new record or an update
       let updatedPagamentosArray: Pagamento[];
       
-      if (data.action === 'created') {
+      if (response.action === 'created') {
         // Add the new payment to the array
         updatedPagamentosArray = [...pagamentos, updatedPagamento];
         
