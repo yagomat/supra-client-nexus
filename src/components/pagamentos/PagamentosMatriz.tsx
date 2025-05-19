@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { PaymentStatusButton } from "./PaymentStatusButton";
 import { ClienteComPagamentos } from "@/types";
+import { ClientStatusBadge } from "./ClientStatusBadge";
 
 interface MesData {
   value: number;
@@ -50,12 +51,7 @@ export const PagamentosMatriz = ({
               <TableCell className="font-medium">{cliente.nome}</TableCell>
               <TableCell>{cliente.dia_vencimento}</TableCell>
               <TableCell>
-                <Badge
-                  variant="outline"
-                  className={cliente.status === "ativo" ? "status-active" : "status-inactive"}
-                >
-                  {cliente.status === "ativo" ? "Ativo" : "Inativo"}
-                </Badge>
+                <ClientStatusBadge status={cliente.status} />
               </TableCell>
               {displayMeses.map((mes) => {
                 const chave = `${mes.value}-${anoAtual}`;

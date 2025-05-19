@@ -32,10 +32,8 @@ export const usePagamentos = () => {
   } = usePaymentFilters(clientesComPagamentos);
 
   // Gerenciamento de status de pagamento
-  const { submitting, handleChangeStatus } = usePaymentStatus(
-    pagamentos, 
-    setPagamentos
-  );
+  // No longer need to pass pagamentos and setPagamentos
+  const { submitting, handleChangeStatus } = usePaymentStatus();
 
   return {
     filteredClientes,

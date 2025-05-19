@@ -1,7 +1,6 @@
-
 import { Button } from "@/components/ui/button";
 import { Check, X, ShieldCheck } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface PaymentStatusButtonProps {
@@ -19,8 +18,15 @@ export const PaymentStatusButton = ({
   minimal = false,
   isList = false
 }: PaymentStatusButtonProps) => {
-  // Default status is "nao_pago" (not paid)
+  // Use local state that stays synchronized with prop changes
   const [currentStatus, setCurrentStatus] = useState(status || "nao_pago");
+  
+  // Keep local state in sync with props
+  useEffect(() => {
+    if (status !== undefined) {
+      setCurrentStatus(status);
+    }
+  }, [status]);
   
   const handleClick = () => {
     // Cycle through status options: nao_pago -> pago -> pago_confianca -> nao_pago

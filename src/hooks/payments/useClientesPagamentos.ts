@@ -44,37 +44,49 @@ export const useClientesPagamentos = () => {
     const setupRealtime = async () => {
       try {
         await enableRealtimeForTable('clientes');
+        await enableRealtimeForTable('pagamentos');
       } catch (error) {
-        console.error("Error enabling realtime for clientes:", error);
+        console.error("Error enabling realtime:", error);
       }
     };
     
     setupRealtime();
   }, []);
 
-  // Carregar clientes e pagamentos inicialmente
+  // Carregar clientes e pagamentos inicialmente e inscrever-se para atualizações em tempo real
   useEffect(() => {
     fetchData();
     
-    // Inscrever-se para atualizações em tempo real dos pagamentos
+    // Inscrever-se para atualizações em tempo real dos pagamentos (um único canal para todos)
     const pagamentosChannel = supabase
-      .channel('pagamentos-changes-clientespagamentos')
+      .channel('pagamentos-master-channel')
       .on('postgres_changes', 
         { 
           event: '*', 
           schema: 'public', 
           table: 'pagamentos',
         }, 
-        () => {
-          // Recarregar dados quando houver alterações
-          fetchData();
+        (payload) => {
+          // Atualizar a lista de pagamentos localmente
+          if (payload.eventType === 'INSERT') {
+            setPagamentos(prev => [...prev, payload.new as Pagamento]);
+            
+            toast({
+              title: "Novo pagamento registrado",
+              description: `Pagamento registrado com sucesso.`,
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            setPagamentos(prev => prev.map(p => 
+              p.id === payload.new.id ? payload.new as Pagamento : p
+            ));
+          }
         }
       )
       .subscribe();
       
-    // Inscrever-se para atualizações em tempo real dos clientes
+    // Inscrever-se para atualizações em tempo real dos clientes (um único canal para todos)
     const clientesChannel = supabase
-      .channel('clientes-changes')
+      .channel('clientes-master-channel')
       .on('postgres_changes', 
         { 
           event: 'UPDATE', 
@@ -105,7 +117,7 @@ export const useClientesPagamentos = () => {
       supabase.removeChannel(pagamentosChannel);
       supabase.removeChannel(clientesChannel);
     };
-  }, [fetchData]);
+  }, [fetchData, toast]);
 
   // Processar clientes e pagamentos
   useEffect(() => {
@@ -122,7 +134,8 @@ export const useClientesPagamentos = () => {
           ano: anoAtual,
           status: "nao_pago",
           data_pagamento: null,
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         };
       });
       
