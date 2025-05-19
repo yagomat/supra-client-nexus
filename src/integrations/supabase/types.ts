@@ -201,13 +201,22 @@ export type Database = {
         }[]
       }
       filter_pagamentos: {
-        Args: {
-          p_cliente_id?: string
-          p_mes?: number
-          p_ano?: number
-          p_status?: string
-          p_user_id?: string
-        }
+        Args:
+          | {
+              p_cliente_id?: string
+              p_mes?: number
+              p_ano?: number
+              p_status?: string
+              p_user_id?: string
+            }
+          | {
+              p_cliente_id?: string
+              p_mes?: number
+              p_ano?: number
+              p_status?: string
+              p_user_id?: string
+              p_ordem?: string
+            }
         Returns: {
           ano: number
           cliente_id: string
