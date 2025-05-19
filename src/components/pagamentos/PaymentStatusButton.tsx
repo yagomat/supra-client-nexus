@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Check, X, ShieldCheck } from "lucide-react";
 import { useState } from "react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface PaymentStatusButtonProps {
   status?: string;
@@ -65,25 +65,27 @@ export const PaymentStatusButton = ({
   const appearance = getButtonAppearance();
   
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button 
-          variant={appearance.variant}
-          className={appearance.className}
-          size="sm"
-          disabled={disabled}
-          onClick={handleClick}
-        >
-          {appearance.icon}
-          {/* Show shortLabel only if not in list view AND not minimal */}
-          {!minimal && !isList && <span className="ml-1">{appearance.shortLabel}</span>}
-          {/* In mobile view, always show the shortLabel if not minimal */}
-          {minimal && <span className="sr-only">{appearance.label}</span>}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>
-        <p>{appearance.label}</p>
-      </TooltipContent>
-    </Tooltip>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button 
+            variant={appearance.variant}
+            className={appearance.className}
+            size="sm"
+            disabled={disabled}
+            onClick={handleClick}
+          >
+            {appearance.icon}
+            {/* Show shortLabel only if not in list view AND not minimal */}
+            {!minimal && !isList && <span className="ml-1">{appearance.shortLabel}</span>}
+            {/* In mobile view, always show the shortLabel if not minimal */}
+            {minimal && <span className="sr-only">{appearance.label}</span>}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{appearance.label}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };

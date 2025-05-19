@@ -10,7 +10,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   }
   
   const { data, error } = await supabase.rpc(
-    'get_dashboard_stats_with_payments_history', 
+    'get_dashboard_stats', 
     { user_id_param: currentUser.user.id }
   );
   

@@ -1,113 +1,141 @@
 
-import { Button } from "./ui/button";
+import { useState, useEffect } from "react";
+import { NavLink } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   LayoutDashboard,
+  UserPlus,
   Users,
-  DollarSign,
-  ListChecks,
+  CreditCard,
   Database,
-  ChevronRight,
-  ChevronLeft
+  Menu,
+  X,
+  LogOut,
+  ChevronLeft,
 } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
-import { useState } from "react";
 
-interface SidebarMenuProps {
+interface SidebarProps {
+  className?: string;
   onCollapseChange?: (collapsed: boolean) => void;
 }
 
-export const SidebarMenu = ({ onCollapseChange }: SidebarMenuProps) => {
-  const location = useLocation();
-  const pathname = location.pathname;
+export function SidebarMenu({ className, onCollapseChange }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
-  
-  // Function to toggle sidebar collapse state
-  const toggleCollapse = () => {
-    const newState = !collapsed;
-    setCollapsed(newState);
-    if (onCollapseChange) {
-      onCollapseChange(newState);
-    }
+  const { user, signOut } = useAuth();
+  const isMobile = useIsMobile();
+
+  const toggleSidebar = () => {
+    const newCollapsedState = !collapsed;
+    setCollapsed(newCollapsedState);
+    // Notify parent component about state change
+    onCollapseChange?.(newCollapsedState);
   };
-  
-  // Function to check if the route is active
-  const isPathActive = (path: string) => {
-    if (path === "/dashboard") {
-      return pathname === "/dashboard";
-    }
-    // Check if the current path starts with the provided path for sub-routes
-    return pathname.startsWith(path);
-  };
+
+  // Ensure parent component is notified of initial state
+  useEffect(() => {
+    onCollapseChange?.(collapsed);
+  }, []);
+
+  // Don't render the sidebar at all on mobile
+  if (isMobile) {
+    return null;
+  }
+
+  const navItems = [
+    {
+      name: "Dashboard",
+      href: "/dashboard",
+      icon: <LayoutDashboard size={20} />,
+    },
+    {
+      name: "Cadastrar Cliente",
+      href: "/clientes/cadastrar",
+      icon: <UserPlus size={20} />,
+    },
+    {
+      name: "Lista de Clientes",
+      href: "/clientes",
+      icon: <Users size={20} />,
+    },
+    {
+      name: "Gestão de Pagamentos",
+      href: "/pagamentos",
+      icon: <CreditCard size={20} />,
+    },
+    {
+      name: "Banco de Dados",
+      href: "/banco-dados",
+      icon: <Database size={20} />,
+    },
+  ];
 
   return (
-    <div className={`bg-sidebar h-full flex flex-col transition-all duration-300 ${collapsed ? 'w-[70px]' : 'w-64'}`}>
+    <div
+      className={cn(
+        "flex flex-col h-screen bg-sidebar fixed z-20 transition-all duration-300 shadow-lg",
+        collapsed ? "w-[70px]" : "w-64",
+        className
+      )}
+    >
       <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
-        {!collapsed && <div className="text-white font-bold">Gestão de Clientes</div>}
+        {!collapsed && (
+          <div className="text-white font-bold">
+            Gestão de Clientes
+          </div>
+        )}
         <Button
-          onClick={toggleCollapse}
           variant="ghost"
           size="icon"
-          className="text-white hover:bg-sidebar-accent ml-auto"
+          className="text-white hover:bg-sidebar-accent"
+          onClick={toggleSidebar}
         >
-          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          {collapsed ? <ChevronLeft size={20} /> : <X size={20} />}
         </Button>
       </div>
-      <div className="space-y-1 p-2 flex-grow">
-        <Button
-          variant={isPathActive("/dashboard") ? "default" : "ghost"}
-          className={`w-full justify-${collapsed ? 'center' : 'start'}`}
-          asChild
-        >
-          <Link to="/dashboard">
-            <LayoutDashboard className={`${collapsed ? '' : 'mr-2'} h-5 w-5`} />
-            {!collapsed && "Dashboard"}
-          </Link>
-        </Button>
 
-        <Button
-          variant={isPathActive("/clientes/cadastrar") ? "default" : "ghost"}
-          className={`w-full justify-${collapsed ? 'center' : 'start'}`}
-          asChild
-        >
-          <Link to="/clientes/cadastrar">
-            <Users className={`${collapsed ? '' : 'mr-2'} h-5 w-5`} />
-            {!collapsed && "Cadastrar Cliente"}
-          </Link>
-        </Button>
-
-        <Button
-          variant={isPathActive("/clientes") ? "default" : "ghost"}
-          className={`w-full justify-${collapsed ? 'center' : 'start'}`}
-          asChild
-        >
-          <Link to="/clientes">
-            <ListChecks className={`${collapsed ? '' : 'mr-2'} h-5 w-5`} />
-            {!collapsed && "Lista de Clientes"}
-          </Link>
-        </Button>
-
-        <Button
-          variant={isPathActive("/pagamentos") ? "default" : "ghost"}
-          className={`w-full justify-${collapsed ? 'center' : 'start'}`}
-          asChild
-        >
-          <Link to="/pagamentos">
-            <DollarSign className={`${collapsed ? '' : 'mr-2'} h-5 w-5`} />
-            {!collapsed && "Gestão de Pagamentos"}
-          </Link>
-        </Button>
-
-        <Button
-          variant={isPathActive("/banco-dados") ? "default" : "ghost"}
-          className={`w-full justify-${collapsed ? 'center' : 'start'}`}
-          asChild
-        >
-          <Link to="/banco-dados">
-            <Database className={`${collapsed ? '' : 'mr-2'} h-5 w-5`} />
-            {!collapsed && "Banco de Dados"}
-          </Link>
-        </Button>
+      <div className="flex flex-col flex-grow pt-4 overflow-y-auto">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.href}
+            to={item.href}
+            className={({ isActive }) =>
+              cn(
+                "flex items-center px-4 py-3 my-1 mx-2 rounded-md text-sm font-medium transition-colors",
+                isActive
+                  ? "bg-sidebar-primary text-white"
+                  : "text-white hover:bg-sidebar-accent hover:text-white"
+              )
+            }
+          >
+            <span className="mr-3 text-white">{item.icon}</span>
+            {!collapsed && <span className="text-white">{item.name}</span>}
+          </NavLink>
+        ))}
       </div>
+
+      {user && (
+        <div className="p-4 border-t border-sidebar-border mt-auto">
+          <div className="flex items-center justify-between">
+            {!collapsed && (
+              <div className="text-white text-sm truncate">
+                {user.nome || user.email}
+              </div>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-sidebar-accent"
+              onClick={signOut}
+              title="Sair"
+            >
+              <LogOut size={20} />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
-};
+}

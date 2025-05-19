@@ -1,117 +1,119 @@
 
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import { Cliente } from "@/types";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
-import { Button } from "../ui/button";
-import { MoreHorizontal } from "lucide-react";
-import { Table, TableBody, TableCell, TableRow } from "../ui/table";
-import { ClienteListHeader } from "./ClienteListHeader";
 import { formatDate } from "@/utils/dateUtils";
 import { ClienteStatusBadge } from "./ClienteStatusBadge";
-import { Skeleton } from "../ui/skeleton";
-import { useNavigate } from "react-router-dom";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ClienteTableProps {
   clientes: Cliente[];
-  onSortChange: (column: string) => void;
-  sortColumn: string;
-  sortDirection: "asc" | "desc";
-  onDelete: (id: string) => void;
+  verDetalhes: (cliente: Cliente) => void;
+  verTelaAdicional: (cliente: Cliente) => void;
+  verObservacoes: (cliente: Cliente) => void;
+  confirmarExclusao: (clienteId: string) => void;
 }
 
 export const ClienteTable = ({
   clientes,
-  onSortChange,
-  sortColumn,
-  sortDirection,
-  onDelete,
+  verDetalhes,
+  verTelaAdicional,
+  verObservacoes,
+  confirmarExclusao
 }: ClienteTableProps) => {
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
-
-  const handleViewAndEdit = (id: string) => {
-    navigate(`/editar-cliente/${id}`);
-  };
-
-  const handleDelete = (id: string) => {
-    onDelete(id);
-  };
-
-  if (clientes.length === 0) {
-    return (
-      <Table>
-        <ClienteListHeader
-          onSortChange={onSortChange}
-          sortColumn={sortColumn}
-          sortDirection={sortDirection}
-          isMobile={isMobile}
-        />
-        <TableBody>
-          <TableRow>
-            <TableCell colSpan={isMobile ? 5 : 6} className="h-24 text-center">
-              <Skeleton className="h-6 w-full max-w-[500px] mx-auto" />
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
-    );
-  }
-
+  
   return (
-    <Table>
-      <ClienteListHeader
-        onSortChange={onSortChange}
-        sortColumn={sortColumn}
-        sortDirection={sortDirection}
-        isMobile={isMobile}
-      />
-      <TableBody>
-        {clientes.map((cliente) => (
-          <TableRow key={cliente.id} className="cursor-pointer hover:bg-muted/50">
-            {!isMobile && (
-              <TableCell
-                className="font-medium"
-                onClick={() => handleViewAndEdit(cliente.id)}
-              >
-                {formatDate(cliente.created_at)}
-              </TableCell>
-            )}
-            <TableCell onClick={() => handleViewAndEdit(cliente.id)}>
-              {cliente.nome}
-            </TableCell>
-            <TableCell onClick={() => handleViewAndEdit(cliente.id)}>
-              {cliente.dia_vencimento}
-            </TableCell>
-            <TableCell onClick={() => handleViewAndEdit(cliente.id)}>
-              {cliente.valor_plano ? `R$ ${cliente.valor_plano.toString().replace(".", ",")}` : "-"}
-            </TableCell>
-            <TableCell onClick={() => handleViewAndEdit(cliente.id)}>
-              <ClienteStatusBadge status={cliente.status || "inativo"} />
-            </TableCell>
-            <TableCell className="text-right">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-8 w-8 p-0">
-                    <span className="sr-only">Abrir menu</span>
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => handleViewAndEdit(cliente.id)}>
-                    Visualizar/Editar
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleDelete(cliente.id)}
-                    className="text-destructive focus:text-destructive"
+    <div className="border rounded-md overflow-hidden">
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Data de Cadastro</TableHead>
+              <TableHead>Nome</TableHead>
+              <TableHead>Telefone</TableHead>
+              <TableHead>UF</TableHead>
+              <TableHead>Servidor</TableHead>
+              <TableHead>Dia de Venc.</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Tela Principal</TableHead>
+              <TableHead>Tela Adicional</TableHead>
+              <TableHead>Obs.</TableHead>
+              <TableHead>Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {clientes.map((cliente) => (
+              <TableRow key={cliente.id}>
+                <TableCell>{formatDate(cliente.created_at)}</TableCell>
+                <TableCell className="font-medium">{cliente.nome}</TableCell>
+                <TableCell>{cliente.telefone || "-"}</TableCell>
+                <TableCell>{cliente.uf || "-"}</TableCell>
+                <TableCell>{cliente.servidor}</TableCell>
+                <TableCell>{cliente.dia_vencimento}</TableCell>
+                <TableCell>
+                  <ClienteStatusBadge status={cliente.status} />
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => verDetalhes(cliente)}
                   >
-                    Excluir
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+                <TableCell>
+                  {cliente.possui_tela_adicional ? (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => verTelaAdicional(cliente)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    "-"
+                  )}
+                </TableCell>
+                <TableCell>
+                  {cliente.observacoes ? (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => verObservacoes(cliente)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    "-"
+                  )}
+                </TableCell>
+                <TableCell>
+                  <div className="flex space-x-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => navigate(`/clientes/editar/${cliente.id}`)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => confirmarExclusao(cliente.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
   );
 };

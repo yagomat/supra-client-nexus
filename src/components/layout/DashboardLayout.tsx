@@ -1,5 +1,5 @@
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { SidebarMenu } from "@/components/SidebarMenu";
 import { MobileMenu } from "@/components/MobileMenu";
 import { cn } from "@/lib/utils";
@@ -21,7 +21,7 @@ export function DashboardLayout({ children, className }: DashboardLayoutProps) {
 
   return (
     <div className="flex h-screen bg-background">
-      {!isMobile && <SidebarMenu onCollapseChange={handleSidebarStateChange} />}
+      <SidebarMenu onCollapseChange={handleSidebarStateChange} />
       <main className={cn(
         "flex-1 overflow-auto transition-all duration-300", 
         isMobile ? "w-full px-3 py-2" : 

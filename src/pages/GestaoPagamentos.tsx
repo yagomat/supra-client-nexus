@@ -26,16 +26,15 @@ const GestaoPagamentos = () => {
     handleChangeStatus,
     handleLimparFiltro,
     meses,
-    anos,
-    reloadData
+    anos
   } = usePagamentos();
   
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
-  // Set up Supabase subscription for real-time updates
+  // Configurar subscription do Supabase para atualizações em tempo real
   useEffect(() => {
-    // Subscribe to real-time updates for clients
+    // Inscrever-se para atualizações em tempo real dos clientes
     const clienteSubscription = supabase
       .channel('cliente-status-changes')
       .on('postgres_changes', 
@@ -43,44 +42,23 @@ const GestaoPagamentos = () => {
           event: 'UPDATE', 
           schema: 'public', 
           table: 'clientes',
+          filter: 'status=eq.ativo OR status=eq.inativo'
         }, 
         (payload) => {
-          // Reload data when a client's status changes
-          reloadData(anoAtual, mesAtual);
-          
           toast({
             title: "Status do cliente atualizado",
-            description: `O status do cliente foi atualizado.`,
+            description: `O status do cliente ${payload.new.nome} foi atualizado para ${payload.new.status}.`,
           });
+          // Não precisamos fazer nada aqui já que o componente será atualizado na próxima renderização
         }
       )
       .subscribe();
 
-    // Subscribe to real-time updates for payments
-    const pagamentoSubscription = supabase
-      .channel('pagamento-changes')
-      .on('postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'pagamentos',
-        },
-        () => {
-          // Reload data when payments change
-          reloadData(anoAtual, mesAtual);
-        }
-      )
-      .subscribe();
-
-    // Load initial data
-    reloadData();
-
-    // Clean up subscriptions when component unmounts
+    // Limpar subscription quando o componente for desmontado
     return () => {
       supabase.removeChannel(clienteSubscription);
-      supabase.removeChannel(pagamentoSubscription);
     };
-  }, [anoAtual, mesAtual, toast, reloadData]);
+  }, [toast]);
 
   return (
     <DashboardLayout>
