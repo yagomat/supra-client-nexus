@@ -112,7 +112,7 @@ export const ClienteExcelButtons = ({ clientes, onImportSuccess }: ClienteExcelB
         ) : (
           <FileUp className="h-4 w-4 mr-2" />
         )}
-        Exportar para Excel
+        Exportar
       </Button>
       
       <Button
@@ -126,7 +126,7 @@ export const ClienteExcelButtons = ({ clientes, onImportSuccess }: ClienteExcelB
         ) : (
           <Import className="h-4 w-4 mr-2" />
         )}
-        Importar de Excel
+        Importar
       </Button>
       
       {/* Input de arquivo oculto */}
