@@ -93,6 +93,7 @@ export type Database = {
           id: string
           mes: number
           status: string
+          updated_at: string | null
         }
         Insert: {
           ano: number
@@ -102,6 +103,7 @@ export type Database = {
           id?: string
           mes: number
           status: string
+          updated_at?: string | null
         }
         Update: {
           ano?: number
@@ -111,6 +113,7 @@ export type Database = {
           id?: string
           mes?: number
           status?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -209,9 +212,14 @@ export type Database = {
           id: string
           mes: number
           status: string
+          updated_at: string | null
         }[]
       }
       get_dashboard_stats: {
+        Args: { user_id_param: string }
+        Returns: Json
+      }
+      get_dashboard_stats_with_payments_history: {
         Args: { user_id_param: string }
         Returns: Json
       }

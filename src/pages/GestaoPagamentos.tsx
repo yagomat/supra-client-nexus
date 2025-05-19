@@ -27,7 +27,7 @@ const GestaoPagamentos = () => {
     handleLimparFiltro,
     meses,
     anos,
-    reloadData // Certifique-se de que o hook usePagamentos exporta esta função
+    reloadData // Agora este método está sendo exportado do hook
   } = usePagamentos();
   
   const isMobile = useIsMobile();
