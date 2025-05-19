@@ -27,29 +27,8 @@ export const usePaymentStatus = (
     setupRealtime();
   }, []);
 
-  // Subscribe to real-time client status changes
+  // Subscribe to real-time payment changes
   useEffect(() => {
-    // Subscribe to changes on the clientes table
-    const clientesChannel = supabase
-      .channel('cliente-status-changes')
-      .on('postgres_changes', 
-        { 
-          event: 'UPDATE', 
-          schema: 'public', 
-          table: 'clientes',
-          filter: 'status=eq.ativo OR status=eq.inativo'
-        }, 
-        (payload) => {
-          // Just display a toast notification to inform the user
-          const newStatus = payload.new.status;
-          toast({
-            title: `Status do cliente atualizado`,
-            description: `Cliente "${payload.new.nome}" agora está ${newStatus === 'ativo' ? 'ativo' : 'inativo'}.`,
-          });
-        }
-      )
-      .subscribe();
-
     // Subscribe to changes on the pagamentos table
     const pagamentosChannel = supabase
       .channel('pagamentos-changes')
@@ -60,11 +39,9 @@ export const usePaymentStatus = (
           table: 'pagamentos'
         },
         (payload) => {
-          // When payment changes happen, we sync our local state with the database
           if (payload.eventType === 'INSERT') {
             // Create a new array with all existing payments plus the new one
-            const updatedPagamentos = [...pagamentos, payload.new as Pagamento];
-            setPagamentos(updatedPagamentos);
+            setPagamentos([...pagamentos, payload.new as Pagamento]);
             
             toast({
               title: "Novo pagamento registrado",
@@ -72,10 +49,9 @@ export const usePaymentStatus = (
             });
           } else if (payload.eventType === 'UPDATE') {
             // Create a new array by replacing the updated payment
-            const updatedPagamentos = pagamentos.map(p => 
+            setPagamentos(pagamentos.map(p => 
               p.id === payload.new.id ? (payload.new as Pagamento) : p
-            );
-            setPagamentos(updatedPagamentos);
+            ));
             
             toast({
               title: "Status de pagamento atualizado",
@@ -86,8 +62,8 @@ export const usePaymentStatus = (
       )
       .subscribe();
 
+    // Cleanup subscription
     return () => {
-      supabase.removeChannel(clientesChannel);
       supabase.removeChannel(pagamentosChannel);
     };
   }, [pagamentos, toast, setPagamentos]);
