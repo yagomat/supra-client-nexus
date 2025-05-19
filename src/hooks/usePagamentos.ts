@@ -1,16 +1,39 @@
 
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ClientePagamento, Pagamento } from "@/types";
-import { toast } from "@/components/ui/use-toast";
+import { ClienteComPagamentos, Pagamento } from "@/types";
+import { useToast } from "@/components/ui/use-toast";
 import { format, isValid, parse } from "date-fns";
-import { clientStatusService } from "@/services/clientStatusService";
+import * as clientStatusService from "@/services/clientStatusService";
 
 export const usePagamentos = () => {
   const [loading, setLoading] = useState(false);
-  const [pagamentos, setPagamentos] = useState<ClientePagamento[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [pagamentos, setPagamentos] = useState<ClienteComPagamentos[]>([]);
+  const [mesAtual, setMesAtual] = useState(new Date().getMonth() + 1);
+  const [anoAtual, setAnoAtual] = useState(new Date().getFullYear());
+  const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast();
+  
+  // Define arrays for filters
+  const meses = [
+    { value: 1, label: "Janeiro" },
+    { value: 2, label: "Fevereiro" },
+    { value: 3, label: "Março" },
+    { value: 4, label: "Abril" },
+    { value: 5, label: "Maio" },
+    { value: 6, label: "Junho" },
+    { value: 7, label: "Julho" },
+    { value: 8, label: "Agosto" },
+    { value: 9, label: "Setembro" },
+    { value: 10, label: "Outubro" },
+    { value: 11, label: "Novembro" },
+    { value: 12, label: "Dezembro" },
+  ];
+  
+  const anos = [2023, 2024, 2025, 2026, 2027];
 
-  // Função para carregar pagamentos do mês atual
+  // Function to load payments for a specific month and year
   const loadPagamentos = async (ano: number, mes: number, 
     plano?: string, status?: "ativo" | "inativo", search?: string) => {
     try {
@@ -28,7 +51,7 @@ export const usePagamentos = () => {
         .eq('pagamentos.ano', ano)
         .order('nome', { ascending: true });
 
-      // Filtros adicionais
+      // Additional filters
       if (plano) {
         query = query.eq('plano', plano);
       }
@@ -48,7 +71,7 @@ export const usePagamentos = () => {
       }
 
       if (clientesComPagamentos) {
-        setPagamentos(clientesComPagamentos as ClientePagamento[]);
+        setPagamentos(clientesComPagamentos as ClienteComPagamentos[]);
       }
     } catch (error) {
       console.error("Erro ao carregar pagamentos:", error);
@@ -62,21 +85,17 @@ export const usePagamentos = () => {
     }
   };
 
-  // Função para carregar clientes sem pagamento no mês
+  // Function to load clients without payment for the month
   const loadClientesSemPagamento = async (ano: number, mes: number,
     plano?: string, status?: "ativo" | "inativo", search?: string) => {
     try {
       setLoading(true);
 
-      // Primeiro, obtemos todos os clientes que correspondem aos filtros
+      // First, get all clients that match the filters
       let queryClientes = supabase
         .from('clientes')
-        .select('id, nome, telefone, plano, status')
+        .select('id, nome, telefone, status')
         .order('nome', { ascending: true });
-
-      if (plano) {
-        queryClientes = queryClientes.eq('plano', plano);
-      }
 
       if (status) {
         queryClientes = queryClientes.eq('status', status);
@@ -97,7 +116,7 @@ export const usePagamentos = () => {
         return;
       }
 
-      // Agora, obtemos todos os pagamentos para o mês e ano específicos
+      // Now, get all payments for the specific month and year
       const { data: pagamentosExistentes, error: errorPagamentos } = await supabase
         .from('pagamentos')
         .select('cliente_id')
@@ -108,23 +127,23 @@ export const usePagamentos = () => {
         throw errorPagamentos;
       }
 
-      // Criamos um conjunto (Set) com os IDs dos clientes que já têm pagamentos
+      // Create a Set with IDs of clients that already have payments
       const clientesComPagamento = new Set(
         pagamentosExistentes?.map((p) => p.cliente_id) || []
       );
 
-      // Filtramos os clientes que não têm pagamentos
+      // Filter clients that don't have payments
       const clientesSemPagamento = todosClientes.filter(
         (cliente) => !clientesComPagamento.has(cliente.id)
       );
 
-      // Transformamos os clientes em objetos ClientePagamento sem pagamentos
-      const result: ClientePagamento[] = clientesSemPagamento.map((cliente) => ({
+      // Transform clients into ClienteComPagamentos objects without payments
+      const result = clientesSemPagamento.map((cliente) => ({
         ...cliente,
         pagamentos: [],
       }));
 
-      setPagamentos(result);
+      setPagamentos(result as ClienteComPagamentos[]);
     } catch (error) {
       console.error("Erro ao carregar clientes sem pagamento:", error);
       toast({
@@ -137,29 +156,29 @@ export const usePagamentos = () => {
     }
   };
 
-  // Função para salvar o status do pagamento
+  // Function to save payment status
   const savePaymentStatus = async (
-    cliente: ClientePagamento,
+    cliente: ClienteComPagamentos,
     ano: number,
     mes: number,
-    status: string,
-    valor?: number
+    status: string
   ) => {
     try {
-      // Vamos criar ou atualizar o pagamento conforme necessário
-      let pagamento: Pagamento = {
+      setSubmitting(true);
+      
+      // Create or update the payment as needed
+      let pagamento: Partial<Pagamento> = {
         cliente_id: cliente.id,
         ano,
         mes,
         status,
-        valor: valor || 0,
       };
 
-      if (cliente.pagamentos?.[0]?.id) {
+      if (cliente.pagamentos && cliente.pagamentos.length > 0) {
         pagamento.id = cliente.pagamentos[0].id;
       }
       
-      // Se tem ID, é um pagamento existente que precisa ser atualizado
+      // If it has an ID, it's an existing payment that needs to be updated
       if (pagamento.id) {
         const { error } = await supabase
           .from("pagamentos")
@@ -174,9 +193,7 @@ export const usePagamentos = () => {
 
         if (error) throw error;
       } else {
-        // Se não existe, crie um novo pagamento
-        // Vai usar a nova função RPC handle_payment_status_update implementada no backend
-        // que vai cuidar de criar ou atualizar e também de atualizar o status do cliente
+        // If it doesn't exist, create a new payment
         const { data, error } = await supabase.rpc(
           'handle_payment_status_update', 
           { 
@@ -191,40 +208,37 @@ export const usePagamentos = () => {
           throw error;
         }
         
-        if (data && typeof data === 'object' && 'pagamento' in data) {
-          const pagamentoData = data.pagamento as any;
-          pagamento.id = pagamentoData.id;
-          pagamento.status = pagamentoData.status;
-          pagamento.data_pagamento = pagamentoData.data_pagamento;
-          
-          // Atualizar status do cliente se ele tiver sido alterado
-          if ('cliente_status' in data && data.cliente_status !== cliente.status) {
-            cliente.status = data.cliente_status as 'ativo' | 'inativo';
+        if (data) {
+          const paymentData = data.pagamento;
+          if (paymentData) {
+            pagamento.id = paymentData.id;
+            pagamento.status = paymentData.status;
+            pagamento.data_pagamento = paymentData.data_pagamento;
           }
         }
       }
 
-      // Atualizar a lista local
-      setPagamentos(prev => {
-        return prev.map(c => {
+      // Update the local list
+      setPagamentos(prev => 
+        prev.map(c => {
           if (c.id === cliente.id) {
             return {
               ...c,
               pagamentos: c.pagamentos?.length 
-                ? [{ ...c.pagamentos[0], ...pagamento }] 
-                : [pagamento]
+                ? [{ ...c.pagamentos[0], ...pagamento } as Pagamento] 
+                : [pagamento as Pagamento]
             };
           }
           return c;
-        });
-      });
+        })
+      );
 
       toast({
         title: "Status atualizado",
         description: `O pagamento de ${cliente.nome} foi ${status === "pago" ? "confirmado" : status === "pago_confianca" ? "marcado como pago por confiança" : "marcado como não pago"}.`,
       });
 
-      // Se o status do cliente precisar ser atualizado com base no pagamento
+      // If client status needs to be updated based on the payment
       if (status === "pago" || status === "pago_confianca") {
         try {
           await clientStatusService.updateClientStatus(cliente.id);
@@ -239,13 +253,34 @@ export const usePagamentos = () => {
         description: "Não foi possível atualizar o status do pagamento.",
         variant: "destructive",
       });
+    } finally {
+      setSubmitting(false);
     }
   };
+  
+  // Filter clients based on search term
+  const filteredClientes = searchTerm.trim() === ""
+    ? pagamentos
+    : pagamentos.filter(
+        (cliente) =>
+          cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (cliente.telefone && cliente.telefone.includes(searchTerm))
+      );
+  
+  // Function to clear search filter
+  const handleLimparFiltro = () => {
+    setSearchTerm("");
+  };
+  
+  // Function to handle status change
+  const handleChangeStatus = async (cliente: ClienteComPagamentos, mes: number, ano: number, status: string) => {
+    await savePaymentStatus(cliente, ano, mes, status);
+  };
 
-  // Função para recarregar os dados
+  // Function to reload data
   const reloadData = (
-    ano: number, 
-    mes: number, 
+    ano: number = anoAtual, 
+    mes: number = mesAtual, 
     plano?: string, 
     status?: "ativo" | "inativo", 
     search?: string,
@@ -260,10 +295,22 @@ export const usePagamentos = () => {
 
   return {
     pagamentos,
+    filteredClientes,
     loading,
+    submitting,
+    mesAtual,
+    setMesAtual,
+    anoAtual,
+    setAnoAtual,
+    searchTerm, 
+    setSearchTerm,
+    meses,
+    anos,
     loadPagamentos,
     loadClientesSemPagamento,
     savePaymentStatus,
+    handleLimparFiltro,
+    handleChangeStatus,
     reloadData
   };
 };
