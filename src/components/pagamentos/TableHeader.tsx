@@ -1,50 +1,56 @@
 
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-interface TableHeaderComponentProps {
+interface TableHeaderProps {
   isMobile?: boolean;
   sortOrder?: 'nome' | 'data';
   onSortChange?: (sortOrder: 'nome' | 'data') => void;
 }
 
-export const TableHeaderComponent = ({ 
+export const TableHeaderComponent = ({
   isMobile = false,
   sortOrder = 'data',
   onSortChange
-}: TableHeaderComponentProps) => {
-  const handleSortChange = (field: 'nome' | 'data') => {
+}: TableHeaderProps) => {
+  const handleSortToggle = (field: 'nome' | 'data') => {
     if (onSortChange) {
       onSortChange(field);
     }
   };
-
+  
   return (
     <TableHeader>
       <TableRow>
         {!isMobile && (
-          <TableHead 
-            onClick={() => handleSortChange('data')} 
-            className={onSortChange ? "cursor-pointer" : ""}
-          >
-            <div className="flex items-center">
+          <TableHead className="w-32">
+            <Button
+              variant="ghost"
+              className="flex items-center"
+              onClick={() => handleSortToggle('data')}
+            >
               Data de Cadastro
-              {onSortChange && <ArrowUpDown className="ml-1 h-4 w-4" />}
-              {sortOrder === 'data' && <span className="ml-1 text-primary">•</span>}
-            </div>
+              {sortOrder === 'data' ? (
+                <ArrowDownIcon className="ml-2 h-4 w-4" />
+              ) : null}
+            </Button>
           </TableHead>
         )}
-        <TableHead 
-          onClick={() => handleSortChange('nome')} 
-          className={onSortChange ? "cursor-pointer" : ""}
-        >
-          <div className="flex items-center">
-            Nome
-            {onSortChange && <ArrowUpDown className="ml-1 h-4 w-4" />}
-            {sortOrder === 'nome' && <span className="ml-1 text-primary">•</span>}
-          </div>
+        <TableHead>
+          <Button
+            variant="ghost"
+            className="flex items-center"
+            onClick={() => handleSortToggle('nome')}
+          >
+            Cliente
+            {sortOrder === 'nome' ? (
+              <ArrowDownIcon className="ml-2 h-4 w-4" />
+            ) : null}
+          </Button>
         </TableHead>
-        <TableHead>Dia de Venc.</TableHead>
+        <TableHead>Vencimento</TableHead>
+        <TableHead>Plano</TableHead>
         <TableHead>Status</TableHead>
         <TableHead>Pagamento</TableHead>
       </TableRow>

@@ -55,8 +55,8 @@ export const MainScreenSection: React.FC<MainScreenSectionProps> = ({
         <InputField
           name="data_licenca_aplicativo"
           control={control}
-          label="Data da Licença"
-          placeholder="Data da licença"
+          label="Vencimento da Licença do App"
+          placeholder="Data de vencimento"
           type="date"
           disabled={disabled}
         />
@@ -66,17 +66,19 @@ export const MainScreenSection: React.FC<MainScreenSectionProps> = ({
         <InputField
           name="usuario_aplicativo"
           control={control}
-          label="Usuário"
-          placeholder="Usuário do aplicativo (opcional)"
+          label="Usuário (MAC)"
+          placeholder="Endereço MAC do dispositivo"
           disabled={disabled}
+          maxLength={50}
         />
 
         <InputField
           name="senha_aplicativo"
           control={control}
-          label="Senha"
-          placeholder="Senha do aplicativo (opcional)"
+          label="Senha (Id)"
+          placeholder="Identificação do dispositivo"
           disabled={disabled}
+          maxLength={50}
         />
       </div>
     </div>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -13,6 +14,17 @@ import { createCliente } from "@/services/clienteService";
 import { getValoresPredefinidos } from "@/services/valoresPredefinidosService";
 import { ValoresPredefinidos } from "@/types";
 import { PlusCircle, Loader2 } from "lucide-react";
+
+// Definir limites de caracteres para cada campo
+const LIMITES_CARACTERES = {
+  nome: 100,
+  telefone: 20,
+  usuario_aplicativo: 50,
+  senha_aplicativo: 50,
+  observacoes: 500,
+  usuario_2: 50,
+  senha_2: 50
+};
 
 const CadastrarCliente = () => {
   const [loading, setLoading] = useState(false);
@@ -71,6 +83,13 @@ const CadastrarCliente = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    
+    // Verificar se o campo tem limite de caracteres
+    if (name in LIMITES_CARACTERES) {
+      const limite = LIMITES_CARACTERES[name as keyof typeof LIMITES_CARACTERES];
+      if (value.length > limite) return;
+    }
+    
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -175,7 +194,11 @@ const CadastrarCliente = () => {
                       value={formData.nome}
                       onChange={handleChange}
                       placeholder="Nome completo do cliente"
+                      maxLength={LIMITES_CARACTERES.nome}
                     />
+                    <div className="text-xs text-gray-500 text-right">
+                      {formData.nome.length}/{LIMITES_CARACTERES.nome}
+                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -188,7 +211,11 @@ const CadastrarCliente = () => {
                       value={formData.telefone}
                       onChange={handleChange}
                       placeholder="(00) 00000-0000"
+                      maxLength={LIMITES_CARACTERES.telefone}
                     />
+                    <div className="text-xs text-gray-500 text-right">
+                      {formData.telefone.length}/{LIMITES_CARACTERES.telefone}
+                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -328,20 +355,24 @@ const CadastrarCliente = () => {
 
                   <div className="space-y-2">
                     <label htmlFor="usuario_aplicativo" className="text-sm font-medium">
-                      Usuário do Aplicativo
+                      Usuário (MAC)
                     </label>
                     <Input
                       id="usuario_aplicativo"
                       name="usuario_aplicativo"
                       value={formData.usuario_aplicativo}
                       onChange={handleChange}
-                      placeholder="Nome de usuário (opcional)"
+                      placeholder="Endereço MAC do dispositivo"
+                      maxLength={LIMITES_CARACTERES.usuario_aplicativo}
                     />
+                    <div className="text-xs text-gray-500 text-right">
+                      {formData.usuario_aplicativo.length}/{LIMITES_CARACTERES.usuario_aplicativo}
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     <label htmlFor="senha_aplicativo" className="text-sm font-medium">
-                      Senha do Aplicativo
+                      Senha (Id)
                     </label>
                     <Input
                       id="senha_aplicativo"
@@ -349,13 +380,17 @@ const CadastrarCliente = () => {
                       type="password"
                       value={formData.senha_aplicativo}
                       onChange={handleChange}
-                      placeholder="Senha do aplicativo (opcional)"
+                      placeholder="Identificação do dispositivo"
+                      maxLength={LIMITES_CARACTERES.senha_aplicativo}
                     />
+                    <div className="text-xs text-gray-500 text-right">
+                      {formData.senha_aplicativo.length}/{LIMITES_CARACTERES.senha_aplicativo}
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     <label htmlFor="data_licenca_aplicativo" className="text-sm font-medium">
-                      Data da Licença
+                      Vencimento da Licença do App
                     </label>
                     <Input
                       id="data_licenca_aplicativo"
@@ -436,20 +471,24 @@ const CadastrarCliente = () => {
 
                     <div className="space-y-2">
                       <label htmlFor="usuario_2" className="text-sm font-medium">
-                        Usuário 2
+                        Usuário (MAC) 2
                       </label>
                       <Input
                         id="usuario_2"
                         name="usuario_2"
                         value={formData.usuario_2}
                         onChange={handleChange}
-                        placeholder="Nome de usuário"
+                        placeholder="Endereço MAC do dispositivo 2"
+                        maxLength={LIMITES_CARACTERES.usuario_2}
                       />
+                      <div className="text-xs text-gray-500 text-right">
+                        {formData.usuario_2.length}/{LIMITES_CARACTERES.usuario_2}
+                      </div>
                     </div>
 
                     <div className="space-y-2">
                       <label htmlFor="senha_2" className="text-sm font-medium">
-                        Senha 2
+                        Senha (Id) 2
                       </label>
                       <Input
                         id="senha_2"
@@ -457,13 +496,17 @@ const CadastrarCliente = () => {
                         type="password"
                         value={formData.senha_2}
                         onChange={handleChange}
-                        placeholder="Senha do aplicativo"
+                        placeholder="Identificação do dispositivo 2"
+                        maxLength={LIMITES_CARACTERES.senha_2}
                       />
+                      <div className="text-xs text-gray-500 text-right">
+                        {formData.senha_2.length}/{LIMITES_CARACTERES.senha_2}
+                      </div>
                     </div>
 
                     <div className="space-y-2">
                       <label htmlFor="data_licenca_2" className="text-sm font-medium">
-                        Data da Licença 2
+                        Vencimento da Licença do App 2
                       </label>
                       <Input
                         id="data_licenca_2"
@@ -490,7 +533,11 @@ const CadastrarCliente = () => {
                   onChange={handleChange}
                   placeholder="Observações sobre o cliente"
                   className="min-h-[100px]"
+                  maxLength={LIMITES_CARACTERES.observacoes}
                 />
+                <div className="text-xs text-gray-500 text-right mt-1">
+                  {formData.observacoes.length}/{LIMITES_CARACTERES.observacoes}
+                </div>
               </CardContent>
             </Card>
 

@@ -50,11 +50,17 @@ export const ClienteRow = ({
     };
   }, [cliente.id]);
 
+  // Formatar valor do plano para exibição
+  const valorPlanoFormatado = cliente.valor_plano 
+    ? `R$ ${cliente.valor_plano.toFixed(2).replace('.', ',')}`
+    : "-";
+
   return (
     <TableRow>
       {!isMobile && <TableCell>{formatDate(cliente.created_at)}</TableCell>}
       <TableCell className="font-medium">{cliente.nome}</TableCell>
       <TableCell>{cliente.dia_vencimento}</TableCell>
+      <TableCell>{valorPlanoFormatado}</TableCell>
       <TableCell>
         <ClientStatusBadge status={clienteStatus} />
       </TableCell>

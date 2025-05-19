@@ -17,6 +17,7 @@ interface TextareaFieldProps {
   placeholder: string;
   className?: string;
   disabled?: boolean;
+  maxLength?: number;
 }
 
 export const TextareaField: React.FC<TextareaFieldProps> = ({
@@ -26,6 +27,7 @@ export const TextareaField: React.FC<TextareaFieldProps> = ({
   placeholder,
   className,
   disabled = false,
+  maxLength,
 }) => {
   return (
     <FormField
@@ -35,13 +37,21 @@ export const TextareaField: React.FC<TextareaFieldProps> = ({
         <FormItem>
           <FormLabel>{label}</FormLabel>
           <FormControl>
-            <Textarea
-              placeholder={placeholder}
-              className={className}
-              {...field}
-              value={field.value || ""}
-              disabled={disabled}
-            />
+            <div>
+              <Textarea
+                placeholder={placeholder}
+                className={className}
+                {...field}
+                value={field.value || ""}
+                disabled={disabled}
+                maxLength={maxLength}
+              />
+              {maxLength && (
+                <div className="text-xs text-gray-500 text-right mt-0.5">
+                  {field.value?.length || 0}/{maxLength}
+                </div>
+              )}
+            </div>
           </FormControl>
           <FormMessage />
         </FormItem>

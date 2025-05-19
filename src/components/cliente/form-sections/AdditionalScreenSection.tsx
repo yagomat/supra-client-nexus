@@ -73,8 +73,8 @@ export const AdditionalScreenSection: React.FC<AdditionalScreenSectionProps> = (
             <InputField
               name="data_licenca_2"
               control={control}
-              label="Data da Licença"
-              placeholder="Data da licença"
+              label="Vencimento da Licença do App 2"
+              placeholder="Data de vencimento"
               type="date"
               disabled={disabled}
             />
@@ -84,17 +84,19 @@ export const AdditionalScreenSection: React.FC<AdditionalScreenSectionProps> = (
             <InputField
               name="usuario_2"
               control={control}
-              label="Usuário"
-              placeholder="Usuário do aplicativo"
+              label="Usuário (MAC) 2"
+              placeholder="Endereço MAC do dispositivo"
               disabled={disabled}
+              maxLength={50}
             />
 
             <InputField
               name="senha_2"
               control={control}
-              label="Senha"
-              placeholder="Senha do aplicativo"
+              label="Senha (Id) 2"
+              placeholder="Identificação do dispositivo"
               disabled={disabled}
+              maxLength={50}
             />
           </div>
         </div>

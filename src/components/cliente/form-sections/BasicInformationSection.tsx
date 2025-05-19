@@ -28,6 +28,7 @@ export const BasicInformationSection: React.FC<BasicInformationSectionProps> = (
           label="Nome"
           placeholder="Nome do cliente"
           disabled={disabled}
+          maxLength={100}
         />
 
         <InputField
@@ -36,6 +37,7 @@ export const BasicInformationSection: React.FC<BasicInformationSectionProps> = (
           label="Telefone"
           placeholder="(00) 00000-0000"
           disabled={disabled}
+          maxLength={20}
         />
       </div>
 

@@ -17,6 +17,7 @@ interface InputFieldProps {
   placeholder: string;
   type?: string;
   disabled?: boolean;
+  maxLength?: number;
 }
 
 export const InputField: React.FC<InputFieldProps> = ({
@@ -26,6 +27,7 @@ export const InputField: React.FC<InputFieldProps> = ({
   placeholder,
   type = "text",
   disabled = false,
+  maxLength,
 }) => {
   return (
     <FormField
@@ -35,13 +37,21 @@ export const InputField: React.FC<InputFieldProps> = ({
         <FormItem>
           <FormLabel>{label}</FormLabel>
           <FormControl>
-            <Input 
-              type={type} 
-              placeholder={placeholder} 
-              {...field} 
-              value={field.value || ""} 
-              disabled={disabled}
-            />
+            <div>
+              <Input 
+                type={type} 
+                placeholder={placeholder} 
+                {...field} 
+                value={field.value || ""} 
+                disabled={disabled}
+                maxLength={maxLength}
+              />
+              {maxLength && (
+                <div className="text-xs text-gray-500 text-right mt-0.5">
+                  {field.value?.length || 0}/{maxLength}
+                </div>
+              )}
+            </div>
           </FormControl>
           <FormMessage />
         </FormItem>
