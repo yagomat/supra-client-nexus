@@ -62,7 +62,7 @@ export const ClienteExcelButtons = ({ clientes, onImportSuccess }: ClienteExcelB
     if (!file) return;
 
     try {
-      setImporting(true);
+      setIsImporting(true);
       setImportErrors([]);
       const result = await importClientesFromExcel(file);
       
@@ -104,7 +104,7 @@ export const ClienteExcelButtons = ({ clientes, onImportSuccess }: ClienteExcelB
       if (event.target) {
         event.target.value = "";
       }
-      setImporting(false);
+      setIsImporting(false);
     }
   };
 
