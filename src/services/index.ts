@@ -4,3 +4,4 @@ export * from './clienteService';
 export * from './pagamentoService';
 export * from './dashboardService';
 export * from './valoresPredefinidosService';
+export * from './userRoleService';

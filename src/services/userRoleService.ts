@@ -18,17 +18,14 @@ export async function getUserRoles(userId?: string): Promise<UserRole[]> {
     
     // Use raw SQL to query the user_roles table
     const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId)
-      .returns<{role: UserRole}[]>();
+      .rpc('get_user_roles', { user_id_param: userId });
       
     if (error) {
       console.error("Erro ao buscar papéis do usuário:", error);
       throw error;
     }
     
-    return (data || []).map(row => row.role);
+    return (data || []) as UserRole[];
   } catch (error) {
     console.error("Erro ao verificar papéis do usuário:", error);
     return [];
@@ -55,13 +52,12 @@ export async function addUserRole(userId: string, role: UserRole): Promise<void>
     throw new Error("Permissão negada: Apenas administradores podem modificar papéis de usuários");
   }
   
-  // Insert role using custom SQL
+  // Insert role using RPC function
   const { error } = await supabase
-    .from('user_roles')
-    .insert({
-      user_id: userId,
-      role: role as string // Type cast to avoid TypeScript errors
-    } as any); // Use 'any' to bypass type checking
+    .rpc('add_user_role', { 
+      user_id_param: userId, 
+      role_param: role 
+    });
     
   if (error) {
     if (error.code === '23505') { // Código para unique violation
@@ -79,13 +75,12 @@ export async function removeUserRole(userId: string, role: UserRole): Promise<vo
     throw new Error("Permissão negada: Apenas administradores podem modificar papéis de usuários");
   }
   
-  // Remove role using custom SQL
+  // Remove role using RPC function
   const { error } = await supabase
-    .from('user_roles')
-    .delete()
-    .eq('user_id', userId)
-    .eq('role', role as string)
-    .returns<any>();
+    .rpc('remove_user_role', { 
+      user_id_param: userId, 
+      role_param: role 
+    });
     
   if (error) {
     console.error("Erro ao remover papel do usuário:", error);
