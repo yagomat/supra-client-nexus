@@ -5,6 +5,7 @@ import { getDashboardStats } from "@/services/dashboardService";
 import { DashboardStats } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
 import { DashboardContent } from "@/components/dashboard/DashboardContent";
+import { supabase } from "@/integrations/supabase/client";
 
 const Dashboard = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -30,6 +31,27 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchStats();
+    
+    // Subscribe to realtime changes on pagamentos table
+    const channel = supabase
+      .channel('dashboard-updates')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'pagamentos',
+        }, 
+        () => {
+          // Refresh dashboard data when payments change
+          fetchStats();
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return (

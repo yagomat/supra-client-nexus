@@ -170,6 +170,15 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: Json
       }
+      handle_payment_status_update: {
+        Args: {
+          p_cliente_id: string
+          p_mes: number
+          p_ano: number
+          p_status: string
+        }
+        Returns: Json
+      }
       recalculate_all_client_status: {
         Args: Record<PropertyKey, never>
         Returns: undefined

@@ -1,8 +1,8 @@
 
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { createPagamento, updatePagamento } from "@/services/pagamentoService";
-import { ClienteComPagamentos, Pagamento } from "@/types";
+import { Pagamento, ClienteComPagamentos } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
 import { meses } from "./usePaymentFilters";
 
 export const usePaymentStatus = (
@@ -16,50 +16,49 @@ export const usePaymentStatus = (
     try {
       setSubmitting(true);
       
-      const chave = `${mes}-${ano}`;
-      const pagamentoExistente = cliente.pagamentos[chave];
+      // Call our new Supabase function to handle the payment status update
+      const { data, error } = await supabase.rpc(
+        'handle_payment_status_update', 
+        { 
+          p_cliente_id: cliente.id,
+          p_mes: mes,
+          p_ano: ano,
+          p_status: status
+        }
+      );
       
-      let updatedPagamento: Pagamento;
+      if (error) {
+        throw error;
+      }
       
-      if (pagamentoExistente) {
-        // Atualizar pagamento existente
-        updatedPagamento = await updatePagamento(pagamentoExistente.id, status);
-        
-        // Atualizar estado local dos pagamentos
-        const updatedPagamentosArray = pagamentos.map((p) => 
-          (p.id === pagamentoExistente.id ? updatedPagamento : p)
-        );
-        setPagamentos(updatedPagamentosArray);
-        
-        toast({
-          title: "Status atualizado",
-          description: `Pagamento de ${meses.find((m) => m.value === mes)?.label} atualizado com sucesso.`,
-        });
-      } else {
-        // Criar novo pagamento
-        const novoPagamento = {
-          cliente_id: cliente.id,
-          mes,
-          ano,
-          status,
-          data_pagamento: status !== "nao_pago" ? new Date().toISOString() : null,
-        };
-        
-        const pagamentoCriado = await createPagamento(novoPagamento);
-        updatedPagamento = pagamentoCriado;
-        
-        // Atualizar estado local dos pagamentos
-        const updatedPagamentosArray = [...pagamentos, pagamentoCriado];
-        setPagamentos(updatedPagamentosArray);
+      // Extract the payment data from the function result
+      const updatedPagamento = data.pagamento as Pagamento;
+      
+      // Update local state based on whether it was a new record or an update
+      let updatedPagamentosArray: Pagamento[];
+      
+      if (data.action === 'created') {
+        // Add the new payment to the array
+        updatedPagamentosArray = [...pagamentos, updatedPagamento];
         
         toast({
           title: "Pagamento registrado",
           description: `Pagamento de ${meses.find((m) => m.value === mes)?.label} registrado com sucesso.`,
         });
+      } else {
+        // Update existing payment
+        updatedPagamentosArray = pagamentos.map((p) => 
+          (p.id === updatedPagamento.id ? updatedPagamento : p)
+        );
+        
+        toast({
+          title: "Status atualizado",
+          description: `Pagamento de ${meses.find((m) => m.value === mes)?.label} atualizado com sucesso.`,
+        });
       }
       
-      // O status do cliente agora é atualizado automaticamente pelo trigger no banco de dados
-      // portanto não precisamos mais fazer isso manualmente aqui
+      // Update the local pagamentos state
+      setPagamentos(updatedPagamentosArray);
       
     } catch (error) {
       console.error("Erro ao atualizar status de pagamento", error);
