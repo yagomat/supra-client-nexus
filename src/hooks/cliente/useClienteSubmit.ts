@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { updateCliente } from "@/services/clienteService";
-import { ClienteFormValues } from "@/types";
+import { ClienteFormValues } from "./clienteFormSchema";
 
 export const useClienteSubmit = (clienteId: string | undefined) => {
   const navigate = useNavigate();

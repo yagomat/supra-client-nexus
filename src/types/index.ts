@@ -121,5 +121,6 @@ export interface UserRoleRecord {
   created_at: string;
 }
 
-// Exportação do ClienteFormValues do esquema de formulário
-export type { ClienteFormValues } from "./cliente/clienteFormSchema";
+// Import ClienteFormValues type from the schema file
+import { ClienteFormValues } from "@/hooks/cliente/clienteFormSchema";
+export type { ClienteFormValues };
