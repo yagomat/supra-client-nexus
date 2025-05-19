@@ -111,7 +111,7 @@ export const usePagamentos = () => {
         // Se não existe, crie um novo pagamento
         // Vai usar a nova função RPC handle_payment_status_update implementada no backend
         // que vai cuidar de criar ou atualizar e também de atualizar o status do cliente
-        const { data } = await supabase.rpc(
+        const { data, error } = await supabase.rpc(
           'handle_payment_status_update', 
           { 
             p_cliente_id: cliente.id, 
@@ -121,10 +121,20 @@ export const usePagamentos = () => {
           }
         );
         
-        if (data && data.pagamento) {
-          pagamento.id = data.pagamento.id;
-          pagamento.status = data.pagamento.status;
-          pagamento.data_pagamento = data.pagamento.data_pagamento;
+        if (error) {
+          throw error;
+        }
+        
+        if (data && typeof data === 'object' && 'pagamento' in data) {
+          const pagamentoData = data.pagamento as any;
+          pagamento.id = pagamentoData.id;
+          pagamento.status = pagamentoData.status;
+          pagamento.data_pagamento = pagamentoData.data_pagamento;
+          
+          // Atualizar status do cliente se ele tiver sido alterado
+          if ('cliente_status' in data && data.cliente_status !== cliente.status) {
+            cliente.status = data.cliente_status as 'ativo' | 'inativo';
+          }
         }
       }
       
