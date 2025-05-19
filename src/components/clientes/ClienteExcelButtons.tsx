@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Import, FileUp, Loader2 } from "lucide-react";
@@ -15,7 +15,7 @@ export const ClienteExcelButtons = ({ clientes, onImportSuccess }: ClienteExcelB
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const { toast } = useToast();
-  const fileInputRef = useState<HTMLInputElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = async () => {
     if (clientes.length === 0) {
