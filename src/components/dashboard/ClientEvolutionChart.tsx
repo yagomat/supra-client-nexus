@@ -32,6 +32,8 @@ export const ClientEvolutionChart = ({ data, loading }: ClientEvolutionChartProp
                 left: isMobile ? 0 : 0,
                 bottom: isMobile ? 60 : 40,
               }}
+              barSize={isMobile ? 15 : 30} // Controle explícito do tamanho da barra
+              barGap={2} // Espaço entre as barras
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
@@ -40,6 +42,7 @@ export const ClientEvolutionChart = ({ data, loading }: ClientEvolutionChartProp
                 textAnchor="end"
                 height={60}
                 tick={{ fontSize: isMobile ? 10 : 12 }}
+                interval={0} // Garantir que todos os rótulos sejam exibidos
               />
               <YAxis 
                 width={isMobile ? 30 : 40}
