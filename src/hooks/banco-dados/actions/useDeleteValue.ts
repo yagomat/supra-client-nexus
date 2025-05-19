@@ -19,7 +19,7 @@ export const useDeleteValue = (
       setSaving(true);
       
       const result = await deleteValorPredefinido(type, value);
-      const typedResult = result as ValorPredefinidoResponse;
+      const typedResult = result as unknown as ValorPredefinidoResponse;
       
       if (!typedResult.success) {
         toast({

@@ -19,7 +19,7 @@ export const useAddValue = (
       setSaving(true);
       
       const result = await addValorPredefinido(activeTab, newValueOrNumber);
-      const typedResult = result as ValorPredefinidoResponse;
+      const typedResult = result as unknown as ValorPredefinidoResponse;
       
       if (!typedResult.success) {
         toast({

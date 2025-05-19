@@ -21,7 +21,7 @@ export const useImportExport = (
       
       const items = importText.split("\n").map((item) => item.trim()).filter((item) => item.length > 0);
       const result = await importValoresPredefinidos(activeTab, items);
-      const typedResult = result as ImportValoresPredefinidosResponse;
+      const typedResult = result as unknown as ImportValoresPredefinidosResponse;
       
       if (!typedResult.success) {
         toast({
@@ -35,7 +35,7 @@ export const useImportExport = (
       // Recarregar valores predefinidos após importação
       const updatedData = await getValoresPredefinidos();
       if (updatedData) {
-        setValoresPredefinidos(updatedData as ValoresPredefinidos);
+        setValoresPredefinidos(updatedData as unknown as ValoresPredefinidos);
       }
       
       toast({
