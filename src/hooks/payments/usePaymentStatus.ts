@@ -6,12 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { meses } from "./usePaymentFilters";
 import { enableRealtimeForTable } from "@/services/clientStatusService";
 
-// Define the response type from our Supabase function
-interface PaymentStatusUpdateResponse {
-  action: 'created' | 'updated';
-  pagamento: Pagamento;
-}
-
 export const usePaymentStatus = (
   pagamentos: Pagamento[],
   setPagamentos: (pagamentos: Pagamento[]) => void
@@ -19,7 +13,7 @@ export const usePaymentStatus = (
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
 
-  // Enable realtime for clientes table on component mount
+  // Enable realtime for clientes and pagamentos tables on component mount
   useEffect(() => {
     const setupRealtime = async () => {
       try {
@@ -68,7 +62,7 @@ export const usePaymentStatus = (
         (payload) => {
           // When payment changes happen, we sync our local state with the database
           if (payload.eventType === 'INSERT') {
-            // Fix: Create a new array by spreading the existing pagamentos and adding the new one
+            // Create a new array with all existing payments plus the new one
             const updatedPagamentos = [...pagamentos, payload.new as Pagamento];
             setPagamentos(updatedPagamentos);
             
@@ -77,7 +71,7 @@ export const usePaymentStatus = (
               description: `Pagamento de ${meses.find((m) => m.value === payload.new.mes)?.label} registrado com sucesso.`,
             });
           } else if (payload.eventType === 'UPDATE') {
-            // Fix: Create a new array by mapping through the existing pagamentos and replacing the updated one
+            // Create a new array by replacing the updated payment
             const updatedPagamentos = pagamentos.map(p => 
               p.id === payload.new.id ? (payload.new as Pagamento) : p
             );
@@ -105,7 +99,7 @@ export const usePaymentStatus = (
       // Call our Supabase function to handle the payment status update
       // This function already handles both creation and update of payments
       // and automatically triggers the update_cliente_status trigger
-      const { data, error } = await supabase.rpc(
+      const { error } = await supabase.rpc(
         'handle_payment_status_update', 
         { 
           p_cliente_id: cliente.id,
