@@ -12,6 +12,21 @@ interface ValuesTableProps {
 }
 
 export const ValuesTable = ({ values, type, onDelete, isNumeric = false, isPlano = false }: ValuesTableProps) => {
+  // Format the value display based on type
+  const formatValue = (value: string | number) => {
+    if (isPlano && typeof value === 'number') {
+      // Format as currency if it's a plan value
+      return new Intl.NumberFormat('pt-BR', { 
+        style: 'currency', 
+        currency: 'BRL',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(value);
+    }
+    
+    return value.toString();
+  };
+
   return (
     <div className="border rounded-md overflow-hidden">
       <Table>
@@ -32,7 +47,7 @@ export const ValuesTable = ({ values, type, onDelete, isNumeric = false, isPlano
             values.map((value, index) => (
               <TableRow key={index}>
                 <TableCell>
-                  {value.toString()}
+                  {formatValue(value)}
                 </TableCell>
                 <TableCell className="text-right">
                   <Button
