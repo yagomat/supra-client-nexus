@@ -9,6 +9,7 @@ import { Cliente } from "@/types";
 interface ClienteListContentProps {
   loading: boolean;
   filteredClientes: Cliente[];
+  allClientes: Cliente[];  // Adicionado para exportação completa
   searchTerm: string;
   setSearchTerm: (value: string) => void;
   statusFilter: "todos" | "ativo" | "inativo";
@@ -20,11 +21,13 @@ interface ClienteListContentProps {
   confirmarExclusao: (clienteId: string) => void;
   sortOrder: 'nome' | 'data';
   onSortChange: (order: 'nome' | 'data') => void;
+  onImportSuccess: () => void;  // Adicionado para atualizar após importação
 }
 
 export const ClienteListContent = ({
   loading,
   filteredClientes,
+  allClientes,  // Nova prop
   searchTerm,
   setSearchTerm,
   statusFilter,
@@ -35,11 +38,15 @@ export const ClienteListContent = ({
   verObservacoes,
   confirmarExclusao,
   sortOrder,
-  onSortChange
+  onSortChange,
+  onImportSuccess  // Nova prop
 }: ClienteListContentProps) => {
   return (
     <div className="flex flex-col space-y-4">
-      <ClienteListHeader />
+      <ClienteListHeader 
+        clientes={allClientes} // Passamos todos os clientes para exportação
+        onImportSuccess={onImportSuccess}
+      />
 
       <ClienteFilters 
         searchTerm={searchTerm}

@@ -4,6 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { getClientes, deleteCliente } from "@/services/clienteService";
 import { Cliente } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
+import { verificarLicencasCliente } from "@/services/clienteService/clienteLicencaService";
 
 export const useClienteList = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -106,9 +107,25 @@ export const useClienteList = () => {
     setStatusFilter("todos");
   };
 
-  const verDetalhes = (cliente: Cliente) => {
-    setClienteDetalhes(cliente);
-    setIsViewModalOpen(true);
+  const verDetalhes = async (cliente: Cliente) => {
+    try {
+      // Verificar licenças ao abrir detalhes
+      const licencasResult = await verificarLicencasCliente(cliente.id);
+      
+      // Adicionar informações de licença ao cliente para exibição
+      const clienteComLicencas = {
+        ...cliente,
+        licencaInfo: licencasResult
+      };
+      
+      setClienteDetalhes(clienteComLicencas as any);
+      setIsViewModalOpen(true);
+    } catch (error) {
+      console.error("Erro ao verificar licenças:", error);
+      // Se falhar a verificação de licenças, continua exibindo os detalhes normalmente
+      setClienteDetalhes(cliente);
+      setIsViewModalOpen(true);
+    }
   };
 
   const verTelaAdicional = (cliente: Cliente) => {
@@ -133,6 +150,7 @@ export const useClienteList = () => {
       
       // Atualizar a lista de clientes
       setClientes((prev) => prev.filter((cliente) => cliente.id !== clienteParaExcluir));
+      setFilteredClientes((prev) => prev.filter((cliente) => cliente.id !== clienteParaExcluir));
       
       toast({
         title: "Cliente excluído",
@@ -175,5 +193,6 @@ export const useClienteList = () => {
     verObservacoes,
     confirmarExclusao,
     handleExcluir,
+    fetchClientes  // Exportamos a função para uso externo
   };
 };
