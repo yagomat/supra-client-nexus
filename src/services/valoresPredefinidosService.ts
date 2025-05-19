@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { ValoresPredefinidos } from "@/types";
 
@@ -29,6 +28,25 @@ export async function getValoresPredefinidos(): Promise<ValoresPredefinidos> {
     dispositivos_smart: [],
     aplicativos: []
   };
+  
+  // If there's no data, initialize with default values
+  if (!data || data.length === 0) {
+    await initializeDefaultValues(currentUser.user.id);
+    
+    // Fetch the newly created default values
+    const { data: defaultData, error: defaultError } = await supabase
+      .from('valores_predefinidos')
+      .select('tipo, valor')
+      .eq('user_id', currentUser.user.id);
+      
+    if (defaultError) {
+      console.error("Erro ao buscar valores predefinidos padrão:", defaultError);
+      throw defaultError;
+    }
+    
+    // Use the default data
+    data = defaultData;
+  }
   
   // Populate the different types of predefined values
   data?.forEach((item) => {
@@ -137,5 +155,52 @@ export async function updateValoresPredefinidos(tipo: keyof ValoresPredefinidos,
   if (insertError) {
     console.error("Erro ao inserir novos valores:", insertError);
     throw insertError;
+  }
+}
+
+async function initializeDefaultValues(userId: string): Promise<void> {
+  // UF values for all Brazilian states
+  const ufs = [
+    "AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", 
+    "MA", "MG", "MS", "MT", "PA", "PB", "PE", "PI", "PR", 
+    "RJ", "RN", "RO", "RR", "RS", "SC", "SE", "SP", "TO"
+  ];
+  
+  // Server values
+  const servidores = ["Servidor 1", "Servidor 2", "Servidor 3"];
+  
+  // Due dates (all days of the month)
+  const diasVencimento = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
+  
+  // Plan values
+  const valoresPlano = ["25.00", "30.00", "35.00", "40.00", "50.00", "60.00"];
+  
+  // Smart devices
+  const dispositivosSmart = [
+    "Tv Samsung", "Tv LG", "Tv Android", "Tv Roku", 
+    "Tv Box", "Celular Android", "Celular Iphone"
+  ];
+  
+  // Applications
+  const aplicativos = ["Aplicativo 1", "Aplicativo 2", "Aplicativo 3"];
+  
+  // Prepare all the insert data
+  const insertData = [
+    ...ufs.map(valor => ({ user_id: userId, tipo: 'uf', valor })),
+    ...servidores.map(valor => ({ user_id: userId, tipo: 'servidor', valor })),
+    ...diasVencimento.map(valor => ({ user_id: userId, tipo: 'dia_vencimento', valor })),
+    ...valoresPlano.map(valor => ({ user_id: userId, tipo: 'valor_plano', valor })),
+    ...dispositivosSmart.map(valor => ({ user_id: userId, tipo: 'dispositivo_smart', valor })),
+    ...aplicativos.map(valor => ({ user_id: userId, tipo: 'aplicativo', valor }))
+  ];
+  
+  // Insert all the default values
+  const { error } = await supabase
+    .from('valores_predefinidos')
+    .insert(insertData);
+    
+  if (error) {
+    console.error("Erro ao inserir valores predefinidos padrão:", error);
+    throw error;
   }
 }
