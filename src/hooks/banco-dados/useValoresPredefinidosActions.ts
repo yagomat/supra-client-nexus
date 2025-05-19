@@ -61,7 +61,63 @@ export const useValoresPredefinidosActions = ({
           ...valoresPredefinidos,
           [activeTab]: uniqueSorted,
         });
+      } else if (isPlano) {
+        // Para valores de plano, garantir que sejam tratados como números
+        let valorPlano: number;
+        
+        if (typeof newValueOrNumber === 'string') {
+          // Converter string para número de forma segura, aceitando formatos como "25,99"
+          const normalizedValue = newValueOrNumber.replace(',', '.');
+          valorPlano = parseFloat(normalizedValue);
+          
+          if (isNaN(valorPlano)) {
+            toast({
+              title: "Valor inválido",
+              description: "O valor do plano deve ser um número válido.",
+              variant: "destructive",
+            });
+            return;
+          }
+        } else if (typeof newValueOrNumber === 'number') {
+          valorPlano = newValueOrNumber;
+        } else {
+          toast({
+            title: "Valor inválido",
+            description: "O valor do plano deve ser um número válido.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        // Validar o valor do plano
+        if (valorPlano <= 0) {
+          toast({
+            title: "Valor inválido",
+            description: "O valor do plano deve ser maior que zero.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        // Arredondar para duas casas decimais
+        valorPlano = parseFloat(valorPlano.toFixed(2));
+        
+        const currentValues = valoresPredefinidos.valores_plano;
+        const updatedValues = [...currentValues, valorPlano];
+        
+        // Remove duplicates and sort
+        const uniqueSorted = Array.from(new Set(updatedValues)).sort((a, b) => a - b);
+        
+        // Update backend
+        await updateValoresPredefinidos("valores_plano", uniqueSorted);
+        
+        // Update local state
+        setValoresPredefinidos({
+          ...valoresPredefinidos,
+          valores_plano: uniqueSorted,
+        });
       } else {
+        // Para valores de texto
         if (typeof newValueOrNumber !== 'string') {
           toast({
             title: "Valor inválido",
@@ -83,13 +139,6 @@ export const useValoresPredefinidosActions = ({
           toast({
             title: "Valor inválido",
             description: "O valor deve ter no máximo 25 caracteres.",
-            variant: "destructive",
-          });
-          return;
-        } else if (isPlano && newValueOrNumber.length > 4) {
-          toast({
-            title: "Valor inválido",
-            description: "O valor do plano deve ter no máximo 4 caracteres.",
             variant: "destructive",
           });
           return;

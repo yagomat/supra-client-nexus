@@ -61,10 +61,18 @@ export async function getValoresPredefinidos(): Promise<ValoresPredefinidos> {
         valoresPredefinidos.servidores.push(valor);
         break;
       case 'dia_vencimento':
-        valoresPredefinidos.dias_vencimento.push(parseInt(valor));
+        // Garantir que os dias de vencimento sejam números inteiros válidos
+        const diaVencimento = parseInt(valor);
+        if (!isNaN(diaVencimento) && diaVencimento >= 1 && diaVencimento <= 31) {
+          valoresPredefinidos.dias_vencimento.push(diaVencimento);
+        }
         break;
       case 'valor_plano':
-        valoresPredefinidos.valores_plano.push(parseFloat(valor));
+        // Garantir que os valores de plano sejam números de ponto flutuante válidos
+        const valorPlano = parseFloat(valor);
+        if (!isNaN(valorPlano) && valorPlano > 0) {
+          valoresPredefinidos.valores_plano.push(valorPlano);
+        }
         break;
       case 'dispositivo_smart':
         valoresPredefinidos.dispositivos_smart.push(valor);
@@ -141,12 +149,26 @@ export async function updateValoresPredefinidos(tipo: keyof ValoresPredefinidos,
     return;
   }
   
-  // Convert values to strings for the insert operation
-  const insertData = valores.map(valor => ({
-    user_id,
-    tipo: tipoSingular,
-    valor: valor.toString()
-  }));
+  // Validar e formatar valores antes de inserir
+  const insertData = valores.map(valor => {
+    // Garantir que os valores numéricos são armazenados corretamente
+    let valorFormatado = valor;
+    
+    // Converter para o formato correto com base no tipo
+    if (tipoSingular === 'valor_plano' && typeof valor === 'number') {
+      // Armazenar valores de plano com até 2 casas decimais
+      valorFormatado = parseFloat(valor.toFixed(2));
+    } else if (tipoSingular === 'dia_vencimento' && typeof valor === 'number') {
+      // Garantir que dias de vencimento são números inteiros
+      valorFormatado = Math.round(valor);
+    }
+    
+    return {
+      user_id,
+      tipo: tipoSingular,
+      valor: valorFormatado.toString()
+    };
+  });
   
   // Insert new values
   const { error: insertError } = await supabase
