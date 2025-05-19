@@ -12,12 +12,23 @@ interface ClientEvolutionChartProps {
 export const ClientEvolutionChart = ({ data, loading }: ClientEvolutionChartProps) => {
   const isMobile = useIsMobile();
   
-  // Certifique-se de que temos dados para todos os 12 meses
+  // Ensure we have data for all 12 months
   const ensureAllMonths = (originalData: { mes: string; quantidade: number }[]) => {
-    // Se não tivermos dados, retorna um array vazio
+    // If we don't have data, return an empty array
     if (!originalData || originalData.length === 0) return [];
     
-    // Último ano de dados (12 meses)
+    // Define month name format for consistent comparison
+    const formatMonthKey = (monthStr: string): string => {
+      return monthStr.toLowerCase().replace('.', '');
+    };
+
+    // Create a map of existing data for faster lookup
+    const dataMap = new Map<string, number>();
+    originalData.forEach(item => {
+      dataMap.set(formatMonthKey(item.mes), item.quantidade);
+    });
+
+    // Last 12 months
     const last12Months = [];
     const today = new Date();
     
@@ -26,28 +37,47 @@ export const ClientEvolutionChart = ({ data, loading }: ClientEvolutionChartProp
       const monthName = date.toLocaleDateString('pt-BR', { month: 'short' });
       const yearShort = date.getFullYear().toString().slice(-2);
       const formattedMonth = `${monthName}/${yearShort}`;
+      const monthKey = formatMonthKey(formattedMonth);
       
-      // Procurar este mês nos dados existentes
-      const existingData = originalData.find(item => 
-        item.mes.toLowerCase() === formattedMonth.toLowerCase()
-      );
-      
-      if (existingData) {
-        last12Months.push(existingData);
+      // Check if we have data for this month
+      if (dataMap.has(monthKey)) {
+        const quantity = dataMap.get(monthKey);
+        last12Months.push({ 
+          mes: formattedMonth, 
+          quantidade: quantity 
+        });
       } else {
-        last12Months.push({ mes: formattedMonth, quantidade: 0 });
+        // Check alternative format (e.g., Jan/25 vs jan./25)
+        // This is a fallback for format differences
+        let found = false;
+        originalData.forEach(item => {
+          // Try to match month regardless of format differences
+          const itemMonth = item.mes.split('/')[0].toLowerCase().replace('.', '');
+          const currentMonth = formattedMonth.split('/')[0].toLowerCase().replace('.', '');
+          const itemYear = item.mes.split('/')[1];
+          const currentYear = formattedMonth.split('/')[1];
+          
+          if (itemMonth === currentMonth && itemYear === currentYear) {
+            last12Months.push(item);
+            found = true;
+          }
+        });
+        
+        if (!found) {
+          last12Months.push({ mes: formattedMonth, quantidade: 0 });
+        }
       }
     }
     
     return last12Months;
   };
   
-  // Aplicar a função para garantir todos os meses
+  // Apply the function to ensure all months
   const completeData = ensureAllMonths(data);
   
-  // Debug para verificar os dados
-  console.log('Client Evolution Chart - Original Data:', data);
-  console.log('Client Evolution Chart - Complete Data:', completeData);
+  // Debug to verify the data
+  console.log('Client Evolution Chart - Original Data:', JSON.stringify(data, null, 2));
+  console.log('Client Evolution Chart - Complete Data:', JSON.stringify(completeData, null, 2));
   
   return (
     <Card className="w-full">
@@ -83,7 +113,7 @@ export const ClientEvolutionChart = ({ data, loading }: ClientEvolutionChartProp
                 tick={{ fontSize: isMobile ? 10 : 12 }}
               />
               <Tooltip />
-              <Bar dataKey="quantidade" fill="#3b82f6" />
+              <Bar dataKey="quantidade" name="Clientes Ativos" fill="#3b82f6" />
             </BarChart>
           </ResponsiveContainer>
         ) : (

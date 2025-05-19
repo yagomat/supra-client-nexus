@@ -12,45 +12,71 @@ interface PaymentEvolutionChartProps {
 export const PaymentEvolutionChart = ({ data, loading }: PaymentEvolutionChartProps) => {
   const isMobile = useIsMobile();
   
-  // Certifique-se de que temos dados para todos os 12 meses
+  // Ensure we have data for all 12 months
   const ensureAllMonths = (originalData: { mes: string; valor: number }[]) => {
-    // Se não tivermos dados, retorna um array vazio
+    // If we don't have data, return an empty array
     if (!originalData || originalData.length === 0) return [];
     
-    // Extrair os meses dos dados existentes
-    const existingMonths = originalData.map(item => item.mes);
+    // Define month name format for consistent comparison
+    const formatMonthKey = (monthStr: string): string => {
+      return monthStr.toLowerCase().replace('.', '');
+    };
+
+    // Create a map of existing data for faster lookup
+    const dataMap = new Map<string, number>();
+    originalData.forEach(item => {
+      dataMap.set(formatMonthKey(item.mes), item.valor);
+    });
     
-    // Verificar se temos exatamente 12 meses
-    if (existingMonths.length === 12) return originalData;
-    
-    // Último ano de dados (12 meses)
+    // Last 12 months
     const last12Months = [];
     const today = new Date();
+    
     for (let i = 11; i >= 0; i--) {
       const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
       const monthName = date.toLocaleDateString('pt-BR', { month: 'short' });
       const yearShort = date.getFullYear().toString().slice(-2);
       const formattedMonth = `${monthName}/${yearShort}`;
+      const monthKey = formatMonthKey(formattedMonth);
       
-      // Procurar este mês nos dados existentes
-      const existingData = originalData.find(item => item.mes === formattedMonth);
-      
-      if (existingData) {
-        last12Months.push(existingData);
+      // Check if we have data for this month
+      if (dataMap.has(monthKey)) {
+        const value = dataMap.get(monthKey);
+        last12Months.push({ 
+          mes: formattedMonth, 
+          valor: value 
+        });
       } else {
-        last12Months.push({ mes: formattedMonth, valor: 0 });
+        // Check alternative format (e.g., Jan/25 vs jan./25)
+        let found = false;
+        originalData.forEach(item => {
+          // Try to match month regardless of format differences
+          const itemMonth = item.mes.split('/')[0].toLowerCase().replace('.', '');
+          const currentMonth = formattedMonth.split('/')[0].toLowerCase().replace('.', '');
+          const itemYear = item.mes.split('/')[1];
+          const currentYear = formattedMonth.split('/')[1];
+          
+          if (itemMonth === currentMonth && itemYear === currentYear) {
+            last12Months.push(item);
+            found = true;
+          }
+        });
+        
+        if (!found) {
+          last12Months.push({ mes: formattedMonth, valor: 0 });
+        }
       }
     }
     
     return last12Months;
   };
   
-  // Aplicar a função para garantir todos os meses
+  // Apply the function to ensure all months
   const completeData = ensureAllMonths(data);
   
-  // Debug para verificar os dados
-  console.log('Payment Evolution Chart - Original Data:', data);
-  console.log('Payment Evolution Chart - Complete Data:', completeData);
+  // Debug to verify the data
+  console.log('Payment Evolution Chart - Original Data:', JSON.stringify(data, null, 2));
+  console.log('Payment Evolution Chart - Complete Data:', JSON.stringify(completeData, null, 2));
   
   const formatCurrency = (value: number) => {
     return `R$ ${value.toFixed(2)}`.replace('.', ',');

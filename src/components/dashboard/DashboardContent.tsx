@@ -25,6 +25,8 @@ export const DashboardContent = ({ stats, loading }: DashboardContentProps) => {
   // Create a safe version of payment evolution data
   const safePagamentosPorMes = stats?.pagamentos_por_mes ? getSafeData(stats.pagamentos_por_mes) : [];
 
+  console.log("DashboardContent - Clientes evolution data:", safeEvolucaoClientes);
+
   return (
     <div className="flex flex-col space-y-4 w-full">
       <p className="text-muted-foreground">
