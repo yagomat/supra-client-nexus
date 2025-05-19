@@ -16,11 +16,12 @@ export async function getUserRoles(userId?: string): Promise<UserRole[]> {
       userId = currentUser.user.id;
     }
     
-    // Use a direct query with type assertion to bypass TypeScript limitations
+    // Use direct query with any type to bypass TypeScript limitations
+    // Since the RPC methods aren't in the TypeScript definitions, we'll use a workaround
     const { data, error } = await supabase.rpc(
-      'get_user_roles',
+      'get_user_roles' as any,
       { user_id_param: userId }
-    ) as { data: { role: UserRole }[] | null, error: any };
+    ) as any;
       
     if (error) {
       console.error("Erro ao buscar papéis do usuário:", error);
@@ -28,7 +29,7 @@ export async function getUserRoles(userId?: string): Promise<UserRole[]> {
     }
     
     // Extract roles from the response
-    return data ? data.map(item => item.role) : [];
+    return data ? data.map((item: any) => item.role) : [];
   } catch (error) {
     console.error("Erro ao verificar papéis do usuário:", error);
     return [];
@@ -57,12 +58,12 @@ export async function addUserRole(userId: string, role: UserRole): Promise<void>
   
   // Insert role using RPC function with type assertion
   const { error } = await supabase.rpc(
-    'add_user_role',
+    'add_user_role' as any,
     { 
       user_id_param: userId,
       role_param: role 
     }
-  ) as { data: null, error: any };
+  ) as any;
     
   if (error) {
     if (error.code === '23505') { // Código para unique violation
@@ -82,12 +83,12 @@ export async function removeUserRole(userId: string, role: UserRole): Promise<vo
   
   // Remove role using RPC function with type assertion
   const { error } = await supabase.rpc(
-    'remove_user_role',
+    'remove_user_role' as any,
     {
       user_id_param: userId,
       role_param: role
     }
-  ) as { data: null, error: any };
+  ) as any;
     
   if (error) {
     console.error("Erro ao remover papel do usuário:", error);
