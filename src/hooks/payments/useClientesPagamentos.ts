@@ -58,9 +58,30 @@ export const useClientesPagamentos = () => {
       )
       .subscribe();
       
+    // Inscrever-se para atualizações em tempo real dos clientes
+    const clientesChannel = supabase
+      .channel('clientes-changes')
+      .on('postgres_changes', 
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'clientes',
+        }, 
+        (payload) => {
+          // Atualizar o cliente no estado local
+          setClientes(currentClientes => 
+            currentClientes.map(cliente => 
+              cliente.id === payload.new.id ? { ...cliente, ...payload.new } : cliente
+            )
+          );
+        }
+      )
+      .subscribe();
+      
     // Cleanup subscription
     return () => {
       supabase.removeChannel(pagamentosChannel);
+      supabase.removeChannel(clientesChannel);
     };
   }, [fetchData]);
 

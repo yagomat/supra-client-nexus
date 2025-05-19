@@ -1,9 +1,11 @@
 
+import { useState, useEffect } from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { ClienteComPagamentos } from "@/types";
 import { formatDate } from "@/utils/dateUtils";
 import { PaymentStatusCell } from "./PaymentStatusCell";
 import { ClientStatusBadge } from "./ClientStatusBadge";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ClienteRowProps {
   cliente: ClienteComPagamentos;
@@ -22,13 +24,37 @@ export const ClienteRow = ({
   onChangeStatus,
   isMobile = false
 }: ClienteRowProps) => {
+  const [clienteStatus, setClienteStatus] = useState(cliente.status);
+
+  // Subscribe to changes for this specific client
+  useEffect(() => {
+    const clienteChannel = supabase
+      .channel(`cliente-${cliente.id}`)
+      .on('postgres_changes', 
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'clientes',
+          filter: `id=eq.${cliente.id}`
+        }, 
+        (payload) => {
+          setClienteStatus(payload.new.status);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(clienteChannel);
+    };
+  }, [cliente.id]);
+
   return (
     <TableRow>
       {!isMobile && <TableCell>{formatDate(cliente.created_at)}</TableCell>}
       <TableCell className="font-medium">{cliente.nome}</TableCell>
       <TableCell>{cliente.dia_vencimento}</TableCell>
       <TableCell>
-        <ClientStatusBadge status={cliente.status} />
+        <ClientStatusBadge status={clienteStatus} />
       </TableCell>
       <TableCell>
         <PaymentStatusCell

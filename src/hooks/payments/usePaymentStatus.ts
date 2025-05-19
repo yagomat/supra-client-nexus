@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Pagamento, ClienteComPagamentos } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +17,46 @@ export const usePaymentStatus = (
 ) => {
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
+
+  // Subscribe to real-time client status changes
+  useEffect(() => {
+    // Enable real-time updates for the clientes table by setting REPLICA IDENTITY
+    const setupRealtimeForClients = async () => {
+      try {
+        await supabase.rpc('enable_realtime_for_clients');
+      } catch (error) {
+        console.error("Error setting up realtime for clients:", error);
+      }
+    };
+    
+    setupRealtimeForClients();
+
+    // Subscribe to changes on the clientes table
+    const clientesChannel = supabase
+      .channel('cliente-status-changes')
+      .on('postgres_changes', 
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'clientes',
+          filter: 'status=eq.ativo OR status=eq.inativo'
+        }, 
+        (payload) => {
+          // We don't need to modify the pagamentos array here
+          // Just display a toast notification to inform the user
+          const newStatus = payload.new.status;
+          toast({
+            title: `Status do cliente atualizado`,
+            description: `Cliente "${payload.new.nome}" agora está ${newStatus === 'ativo' ? 'ativo' : 'inativo'}.`,
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(clientesChannel);
+    };
+  }, [toast]);
 
   const handleChangeStatus = async (cliente: ClienteComPagamentos, mes: number, ano: number, status: string) => {
     try {
@@ -72,6 +112,10 @@ export const usePaymentStatus = (
       
       // Update the local pagamentos state
       setPagamentos(updatedPagamentosArray);
+      
+      // Update cliente status in real-time in the UI
+      // The backend will update the status automatically, but we need to update the UI
+      // This will be handled by the real-time subscription we set up above
       
     } catch (error) {
       console.error("Erro ao atualizar status de pagamento", error);

@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/clientes/EmptyState";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { enableRealtimeForClients } from "@/services/clientStatusService";
 
 const GestaoPagamentos = () => {
   const {
@@ -32,9 +33,20 @@ const GestaoPagamentos = () => {
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
-  // Configurar subscription do Supabase para atualizações em tempo real
+  // Setup realtime updates
   useEffect(() => {
-    // Inscrever-se para atualizações em tempo real dos clientes
+    // Enable realtime updates for the clientes table
+    const setupRealtime = async () => {
+      try {
+        await enableRealtimeForClients();
+      } catch (error) {
+        console.error("Error setting up realtime:", error);
+      }
+    };
+    
+    setupRealtime();
+    
+    // Configurar subscription do Supabase para atualizações em tempo real
     const clienteSubscription = supabase
       .channel('cliente-status-changes')
       .on('postgres_changes', 
@@ -49,7 +61,6 @@ const GestaoPagamentos = () => {
             title: "Status do cliente atualizado",
             description: `O status do cliente ${payload.new.nome} foi atualizado para ${payload.new.status}.`,
           });
-          // Não precisamos fazer nada aqui já que o componente será atualizado na próxima renderização
         }
       )
       .subscribe();
