@@ -50,8 +50,6 @@ const BancoDados = () => {
                 <CardTitle>Valores Predefinidos</CardTitle>
                 <ValueManagerToolbar 
                   onAddClick={() => setIsAddDialogOpen(true)}
-                  onImportClick={() => setIsImportDialogOpen(true)}
-                  onExportClick={handleExport}
                 />
               </div>
             </CardHeader>
