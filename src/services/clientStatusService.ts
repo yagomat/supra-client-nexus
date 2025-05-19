@@ -1,15 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-export async function enableRealtimeForClients(): Promise<void> {
-  try {
-    await supabase.rpc('enable_realtime_for_clients');
-  } catch (error) {
-    console.error("Error enabling real-time for clients:", error);
-    throw error;
-  }
-}
-
 export async function updateClientStatus(clientId: string, status: string): Promise<void> {
   try {
     const { error } = await supabase

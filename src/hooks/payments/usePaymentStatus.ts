@@ -20,17 +20,6 @@ export const usePaymentStatus = (
 
   // Subscribe to real-time client status changes
   useEffect(() => {
-    // Enable real-time updates for the clientes table by setting REPLICA IDENTITY
-    const setupRealtimeForClients = async () => {
-      try {
-        await supabase.rpc('enable_realtime_for_clients');
-      } catch (error) {
-        console.error("Error setting up realtime for clients:", error);
-      }
-    };
-    
-    setupRealtimeForClients();
-
     // Subscribe to changes on the clientes table
     const clientesChannel = supabase
       .channel('cliente-status-changes')
