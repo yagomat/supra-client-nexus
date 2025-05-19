@@ -15,7 +15,7 @@ export const DashboardContent = ({ stats, loading }: DashboardContentProps) => {
   const isMobile = useIsMobile();
   
   // Safe getter function to handle potential null values
-  const getSafeData = (dataArray: any[] | null | undefined, defaultValue: any[] = []) => {
+  const getSafeData = <T extends any>(dataArray: T[] | null | undefined, defaultValue: T[] = []) => {
     return Array.isArray(dataArray) ? dataArray : defaultValue;
   };
 

@@ -17,15 +17,10 @@ export const ClientEvolutionChart = ({ data, loading }: ClientEvolutionChartProp
     // Se não tivermos dados, retorna um array vazio
     if (!originalData || originalData.length === 0) return [];
     
-    // Extrair os meses dos dados existentes
-    const existingMonths = originalData.map(item => item.mes);
-    
-    // Verificar se temos exatamente 12 meses
-    if (existingMonths.length === 12) return originalData;
-    
     // Último ano de dados (12 meses)
     const last12Months = [];
     const today = new Date();
+    
     for (let i = 11; i >= 0; i--) {
       const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
       const monthName = date.toLocaleDateString('pt-BR', { month: 'short' });
@@ -33,7 +28,9 @@ export const ClientEvolutionChart = ({ data, loading }: ClientEvolutionChartProp
       const formattedMonth = `${monthName}/${yearShort}`;
       
       // Procurar este mês nos dados existentes
-      const existingData = originalData.find(item => item.mes === formattedMonth);
+      const existingData = originalData.find(item => 
+        item.mes.toLowerCase() === formattedMonth.toLowerCase()
+      );
       
       if (existingData) {
         last12Months.push(existingData);
