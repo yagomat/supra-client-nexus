@@ -7,38 +7,64 @@ import { formatDate } from '@/utils/dateUtils';
 
 // Define a interface para os dados do Excel/CSV
 interface ClienteExcel {
-  'Data de cadastro': string;
+  'Data de cadastro': string | number;
   'Nome': string;
-  'Telefone': string;
+  'Telefone': string | number;
   'UF': string;
   'Servidor': string;
   'Dia de Vencimento': number;
   'Plano': string;
   'Dispositivo smart': string;
   'Aplicativo': string;
-  'Usuário': string;
-  'Senha': string;
-  'Vencimento da licença do app': string;
+  'Usuário': string | number;
+  'Senha': string | number;
+  'Vencimento da licença do app': string | number;
   'Dispositivo smart 2': string;
   'Aplicativo 2': string;
-  'Usuário 2': string;
-  'Senha 2': string;
-  'Vencimento da licença do app 2': string;
+  'Usuário 2': string | number;
+  'Senha 2': string | number;
+  'Vencimento da licença do app 2': string | number;
   'Observações': string;
 }
 
 // Função para converter data do formato BR (DD/MM/YYYY) para ISO (YYYY-MM-DD)
-const convertDateBrToIso = (dateBr: string): string | null => {
-  if (!dateBr || dateBr === '') return null;
+const convertDateBrToIso = (dateBr: string | number | null): string | null => {
+  if (!dateBr) return null;
   
-  const parts = dateBr.split('/');
-  if (parts.length !== 3) return null;
+  // Se for um número (formato de data do Excel), converter usando XLSX
+  if (typeof dateBr === 'number') {
+    try {
+      // Converter o número de dias do Excel para data JavaScript
+      const excelDate = XLSX.SSF.parse_date_code(dateBr);
+      const year = excelDate.y;
+      const month = String(excelDate.m).padStart(2, '0');
+      const day = String(excelDate.d).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch (error) {
+      console.error("Erro ao converter número de data Excel:", dateBr, error);
+      return null;
+    }
+  }
   
-  const day = parts[0];
-  const month = parts[1];
-  const year = parts[2];
+  // Se for string, processar como DD/MM/YYYY
+  if (typeof dateBr === 'string') {
+    const parts = dateBr.split('/');
+    if (parts.length !== 3) return null;
+    
+    const day = parts[0];
+    const month = parts[1];
+    const year = parts[2];
+    
+    return `${year}-${month}-${day}`;
+  }
   
-  return `${year}-${month}-${day}`;
+  return null;
+};
+
+// Função para converter valores numéricos em strings
+const convertToString = (value: any): string => {
+  if (value === null || value === undefined) return '';
+  return String(value);
 };
 
 // Função para exportar clientes para CSV
@@ -135,25 +161,26 @@ export async function importClientesFromExcel(file: File): Promise<{ success: bo
             // Converter dados do Excel/CSV para o formato do cliente
             const cliente = {
               nome: row['Nome'],
-              telefone: row['Telefone'],
-              uf: row['UF'],
+              telefone: row['Telefone'] ? convertToString(row['Telefone']) : null,
+              uf: row['UF'] || null,
               servidor: row['Servidor'],
               dia_vencimento: Number(row['Dia de Vencimento']),
-              valor_plano: row['Plano'] ? Number(row['Plano'].replace('R$', '').trim()) : null,
-              dispositivo_smart: row['Dispositivo smart'],
+              valor_plano: row['Plano'] ? 
+                Number(String(row['Plano']).replace('R$', '').trim()) : null,
+              dispositivo_smart: row['Dispositivo smart'] || null,
               aplicativo: row['Aplicativo'],
-              usuario_aplicativo: row['Usuário'],
-              senha_aplicativo: row['Senha'],
+              usuario_aplicativo: row['Usuário'] ? convertToString(row['Usuário']) : '',
+              senha_aplicativo: row['Senha'] ? convertToString(row['Senha']) : '',
               data_licenca_aplicativo: row['Vencimento da licença do app'] ? 
                 convertDateBrToIso(row['Vencimento da licença do app']) : null,
               possui_tela_adicional: !!row['Aplicativo 2'],
-              dispositivo_smart_2: row['Dispositivo smart 2'],
-              aplicativo_2: row['Aplicativo 2'],
-              usuario_2: row['Usuário 2'],
-              senha_2: row['Senha 2'],
+              dispositivo_smart_2: row['Dispositivo smart 2'] || null,
+              aplicativo_2: row['Aplicativo 2'] || null,
+              usuario_2: row['Usuário 2'] ? convertToString(row['Usuário 2']) : null,
+              senha_2: row['Senha 2'] ? convertToString(row['Senha 2']) : null,
               data_licenca_2: row['Vencimento da licença do app 2'] ? 
                 convertDateBrToIso(row['Vencimento da licença do app 2']) : null,
-              observacoes: row['Observações'],
+              observacoes: row['Observações'] || null,
               status: 'ativo' // Status padrão para novos clientes
             };
             
