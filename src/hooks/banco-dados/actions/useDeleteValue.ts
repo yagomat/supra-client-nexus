@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { ValoresPredefinidos } from "@/types";
 import { ValorPredefinidoResponse } from "@/types/supabase-responses";
-import { deleteValorPredefinido } from "@/services/valoresPredefinidosService/valoresPredefinidosActions";
+import { deleteValorPredefinido, getValoresPredefinidosOrdered } from "@/services/valoresPredefinidosService/valoresPredefinidosActions";
 
 export const useDeleteValue = (
   valoresPredefinidos: ValoresPredefinidos | null,
@@ -30,13 +30,13 @@ export const useDeleteValue = (
         return false;
       }
       
-      // Atualizar estado local após sucesso
-      const currentValues = valoresPredefinidos[type as keyof ValoresPredefinidos];
-      const updatedValues = (currentValues as any[]).filter(item => item !== value);
+      // Buscar valores atualizados diretamente do servidor (já ordenados)
+      const updatedValues = await getValoresPredefinidosOrdered(type);
       
+      // Atualizar estado local com os valores ordenados do servidor
       setValoresPredefinidos({
         ...valoresPredefinidos,
-        [type]: updatedValues,
+        [type]: updatedValues || [],
       });
       
       toast({

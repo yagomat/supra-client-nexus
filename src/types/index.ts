@@ -1,4 +1,3 @@
-
 export type PaymentStatus = "pago" | "pago_confianca" | "nao_pago";
 
 export interface Cliente {
@@ -119,6 +118,19 @@ export interface UserRoleRecord {
   user_id: string;
   role: UserRole;
   created_at: string;
+}
+
+// Adicionar interfaces para licenças
+export interface LicencaStatus {
+  status: 'válida' | 'atenção' | 'vencida' | 'n/a';
+  diasRestantes: number | null;
+  vencida: boolean;
+}
+
+export interface ClienteLicencas {
+  licencaPrincipal: LicencaStatus;
+  licencaAdicional?: LicencaStatus;
+  possuiLicencaVencida: boolean;
 }
 
 // Import ClienteFormValues type from the schema file

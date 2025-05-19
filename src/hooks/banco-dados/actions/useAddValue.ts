@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { ValoresPredefinidos } from "@/types";
 import { ValorPredefinidoResponse } from "@/types/supabase-responses";
-import { addValorPredefinido } from "@/services/valoresPredefinidosService/valoresPredefinidosActions";
+import { addValorPredefinido, getValoresPredefinidosOrdered } from "@/services/valoresPredefinidosService/valoresPredefinidosActions";
 
 export const useAddValue = (
   valoresPredefinidos: ValoresPredefinidos | null,
@@ -30,18 +30,13 @@ export const useAddValue = (
         return false;
       }
       
-      // Atualizar estado local após sucesso
-      const updatedValues = [...(valoresPredefinidos[activeTab as keyof ValoresPredefinidos] as any[])];
-      updatedValues.push(activeTab === "valores_plano" || activeTab === "dias_vencimento" 
-        ? Number(typedResult.valor) 
-        : typedResult.valor
-      );
+      // Buscar valores atualizados diretamente do servidor (já ordenados)
+      const updatedValues = await getValoresPredefinidosOrdered(activeTab);
       
+      // Atualizar estado local com os valores ordenados do servidor
       setValoresPredefinidos({
         ...valoresPredefinidos,
-        [activeTab]: updatedValues.sort((a, b) => 
-          typeof a === 'number' ? a - b : String(a).localeCompare(String(b))
-        ),
+        [activeTab]: updatedValues || [],
       });
       
       toast({

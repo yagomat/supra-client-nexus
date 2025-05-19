@@ -177,6 +177,14 @@ export type Database = {
         Args: { p_user_id: string; p_tipo: string; p_valor: string }
         Returns: Json
       }
+      check_cliente_licencas: {
+        Args: { p_cliente_id: string }
+        Returns: Json
+      }
+      check_licenca_status: {
+        Args: { p_data_licenca: string }
+        Returns: Json
+      }
       delete_valor_predefinido: {
         Args: { p_user_id: string; p_tipo: string; p_valor: string }
         Returns: Json
@@ -244,6 +252,10 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
+      get_valores_predefinidos_ordered: {
+        Args: { p_user_id: string; p_tipo?: string }
+        Returns: Json
+      }
       handle_payment_status_update: {
         Args: {
           p_cliente_id: string
@@ -260,6 +272,20 @@ export type Database = {
       recalculate_all_client_status: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      validate_cliente_data: {
+        Args: {
+          p_nome: string
+          p_telefone: string
+          p_uf: string
+          p_servidor: string
+          p_dia_vencimento: number
+          p_valor_plano: number
+          p_aplicativo: string
+          p_usuario_aplicativo: string
+          p_senha_aplicativo: string
+        }
+        Returns: Json
       }
       validate_valor_predefinido: {
         Args: { p_tipo: string; p_valor: string }
