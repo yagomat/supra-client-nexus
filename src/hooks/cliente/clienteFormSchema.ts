@@ -4,7 +4,7 @@ import { z } from "zod";
 // Definição do esquema do formulário
 export const formSchema = z.object({
   nome: z.string().min(1, { message: "Nome é obrigatório" }).max(100),
-  telefone: z.string().max(20).optional(),
+  telefone: z.string().max(11).optional(),
   uf: z.string().optional(),
   servidor: z.string().min(1, { message: "Servidor é obrigatório" }),
   dia_vencimento: z.coerce.number().min(1).max(31),

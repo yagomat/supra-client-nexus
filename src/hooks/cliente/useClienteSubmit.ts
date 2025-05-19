@@ -16,10 +16,11 @@ export const useClienteSubmit = (clienteId: string | undefined) => {
     try {
       setSubmitting(true);
       
-      // Atualizar cliente
+      // Atualizar cliente - assegurar que apenas dígitos são enviados para o telefone
       await updateCliente(clienteId, {
         ...data,
-        telefone: data.telefone || null,
+        // Remover qualquer formatação, armazenar apenas os dígitos do telefone
+        telefone: data.telefone ? data.telefone.replace(/\D/g, '') : null,
         uf: data.uf || null,
         valor_plano: data.valor_plano || null,
         dispositivo_smart: data.dispositivo_smart || null,

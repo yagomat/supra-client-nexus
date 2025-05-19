@@ -19,6 +19,7 @@ interface InputFieldProps {
   disabled?: boolean;
   maxLength?: number;
   pattern?: string;
+  isPhoneNumber?: boolean;
 }
 
 export const InputField: React.FC<InputFieldProps> = ({
@@ -30,7 +31,23 @@ export const InputField: React.FC<InputFieldProps> = ({
   disabled = false,
   maxLength,
   pattern,
+  isPhoneNumber = false,
 }) => {
+  // Format phone number as user types
+  const formatPhoneNumber = (value: string) => {
+    // Remove all non-digit characters
+    const digits = value.replace(/\D/g, '');
+    
+    // Format based on length
+    if (digits.length <= 2) {
+      return digits;
+    } else if (digits.length <= 7) {
+      return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    } else {
+      return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
+    }
+  };
+
   return (
     <FormField
       control={control}
@@ -44,7 +61,18 @@ export const InputField: React.FC<InputFieldProps> = ({
                 type={type} 
                 placeholder={placeholder} 
                 {...field} 
-                value={field.value || ""} 
+                value={isPhoneNumber ? formatPhoneNumber(field.value || '') : (field.value || "")} 
+                onChange={(e) => {
+                  if (isPhoneNumber) {
+                    // For phone numbers, only allow digits and limit to 11 characters
+                    const digits = e.target.value.replace(/\D/g, '');
+                    if (digits.length <= 11) {
+                      field.onChange(digits);
+                    }
+                  } else {
+                    field.onChange(e.target.value);
+                  }
+                }}
                 disabled={disabled}
                 maxLength={maxLength}
                 pattern={pattern}

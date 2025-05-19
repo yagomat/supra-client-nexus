@@ -37,7 +37,7 @@ export const BasicInformationSection: React.FC<BasicInformationSectionProps> = (
           label="Telefone"
           placeholder="(00) 00000-0000"
           disabled={disabled}
-          maxLength={20}
+          isPhoneNumber={true}
         />
       </div>
 

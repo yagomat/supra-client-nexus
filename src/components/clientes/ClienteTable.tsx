@@ -35,6 +35,20 @@ export const ClienteTable = ({
     }
   };
   
+  // Format phone number for display
+  const formatPhoneNumber = (phone: string | null) => {
+    if (!phone) return "-";
+    
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length <= 2) {
+      return digits;
+    } else if (digits.length <= 7) {
+      return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    } else {
+      return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
+    }
+  };
+  
   return (
     <div className="border rounded-md overflow-hidden">
       <div className="overflow-x-auto">
@@ -72,7 +86,7 @@ export const ClienteTable = ({
               <TableRow key={cliente.id}>
                 <TableCell>{formatDate(cliente.created_at)}</TableCell>
                 <TableCell className="font-medium">{cliente.nome}</TableCell>
-                <TableCell>{cliente.telefone || "-"}</TableCell>
+                <TableCell>{formatPhoneNumber(cliente.telefone)}</TableCell>
                 <TableCell>{cliente.uf || "-"}</TableCell>
                 <TableCell>{cliente.servidor}</TableCell>
                 <TableCell>{cliente.dia_vencimento}</TableCell>
