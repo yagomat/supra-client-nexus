@@ -1,48 +1,37 @@
 
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { useParams } from "react-router-dom";
+import { Cliente, Pagamento } from "@/types";
 import { getCliente } from "@/services/clienteService";
 import { getPagamentos } from "@/services/pagamentoService";
-import { getValoresPredefinidos } from "@/services/valoresPredefinidosService";
-import { Cliente, ValoresPredefinidos, Pagamento } from "@/types";
 
-export const useClienteData = (clienteId: string | undefined) => {
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
+export const useClienteData = () => {
+  const { id } = useParams<{ id: string }>();
   const [cliente, setCliente] = useState<Cliente | null>(null);
-  const [valoresPredefinidos, setValoresPredefinidos] = useState<ValoresPredefinidos | null>(null);
-  const [clientePagamentos, setClientePagamentos] = useState<Pagamento[]>([]);
-  const [originalVencimento, setOriginalVencimento] = useState<number>(1);
+  const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!clienteId) {
-        setLoading(false);
-        return;
-      }
-
+    const fetchClienteData = async () => {
       try {
         setLoading(true);
-
+        
         // Buscar dados do cliente
-        const cliente = await getCliente(clienteId);
-        setCliente(cliente);
-        
-        // Salvar o dia de vencimento original para comparação posterior
-        setOriginalVencimento(cliente.dia_vencimento);
-        
-        // Buscar pagamentos do cliente para determinar o status
-        const pagamentos = await getPagamentos(clienteId);
-        setClientePagamentos(pagamentos);
-        
-        // Buscar valores predefinidos
-        const predefinidos = await getValoresPredefinidos();
-        setValoresPredefinidos(predefinidos);
+        if (id) {
+          const clienteData = await getCliente(id);
+          setCliente(clienteData);
+          
+          // Buscar pagamentos relacionados a este cliente
+          const pagamentosData = await getPagamentos(id);
+          setPagamentos(pagamentosData);
+        }
       } catch (error) {
-        console.error("Erro ao carregar dados:", error);
+        console.error("Erro ao buscar dados do cliente:", error);
         toast({
-          title: "Erro ao carregar dados",
-          description: "Não foi possível carregar os dados do cliente.",
+          title: "Erro ao carregar cliente",
+          description: "Não foi possível carregar os dados do cliente. Por favor, tente novamente.",
           variant: "destructive",
         });
       } finally {
@@ -50,14 +39,15 @@ export const useClienteData = (clienteId: string | undefined) => {
       }
     };
 
-    fetchData();
-  }, [clienteId, toast]);
+    fetchClienteData();
+  }, [id, toast]);
 
   return {
-    loading,
     cliente,
-    valoresPredefinidos,
-    clientePagamentos,
-    originalVencimento,
+    setCliente,
+    pagamentos,
+    setPagamentos,
+    loading,
+    clienteId: id
   };
 };

@@ -5,6 +5,7 @@ import { getClientes } from "@/services/clienteService";
 import { getPagamentos } from "@/services/pagamentoService";
 import { Cliente, Pagamento, ClienteComPagamentos } from "@/types";
 import { meses } from "./usePaymentFilters";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useClientesPagamentos = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -19,7 +20,8 @@ export const useClientesPagamentos = () => {
     try {
       setLoading(true);
       const clientesData = await getClientes();
-      const pagamentosData = await getPagamentos();
+      // Usar a função getPagamentos com filtro por ano
+      const pagamentosData = await getPagamentos(undefined, undefined, anoAtual);
       
       setClientes(clientesData);
       setPagamentos(pagamentosData);
@@ -34,11 +36,32 @@ export const useClientesPagamentos = () => {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, anoAtual]);
 
   // Carregar clientes e pagamentos inicialmente
   useEffect(() => {
     fetchData();
+    
+    // Inscrever-se para atualizações em tempo real dos pagamentos
+    const pagamentosChannel = supabase
+      .channel('pagamentos-changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'pagamentos',
+        }, 
+        () => {
+          // Recarregar dados quando houver alterações
+          fetchData();
+        }
+      )
+      .subscribe();
+      
+    // Cleanup subscription
+    return () => {
+      supabase.removeChannel(pagamentosChannel);
+    };
   }, [fetchData]);
 
   // Processar clientes e pagamentos

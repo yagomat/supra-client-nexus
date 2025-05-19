@@ -10,6 +10,7 @@ import { ClienteListHeader } from "@/components/clientes/ClienteListHeader";
 import { ClienteModals } from "@/components/clientes/ClienteModals";
 import { EmptyState } from "@/components/clientes/EmptyState";
 import { LoadingState } from "@/components/clientes/LoadingState";
+import { supabase } from "@/integrations/supabase/client";
 
 const ListaClientes = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -25,34 +26,55 @@ const ListaClientes = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchClientes = async () => {
-      try {
-        setLoading(true);
-        const data = await getClientes();
-        setClientes(data);
-        setFilteredClientes(data);
-      } catch (error) {
-        console.error("Erro ao buscar clientes", error);
-        toast({
-          title: "Erro ao carregar clientes",
-          description: "Ocorreu um erro ao buscar a lista de clientes.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Buscar clientes baseado no filtro de status
+  const fetchClientes = async () => {
+    try {
+      setLoading(true);
+      // Usar a função getClientes com o filtro de status
+      const data = await getClientes(statusFilter);
+      setClientes(data);
+      setFilteredClientes(data);
+    } catch (error) {
+      console.error("Erro ao buscar clientes", error);
+      toast({
+        title: "Erro ao carregar clientes",
+        description: "Ocorreu um erro ao buscar a lista de clientes.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchClientes();
-  }, [toast]);
+    
+    // Inscrever-se para atualizações em tempo real dos clientes
+    const clientesChannel = supabase
+      .channel('clientes-changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'clientes',
+        }, 
+        () => {
+          // Recarregar dados quando houver alterações
+          fetchClientes();
+        }
+      )
+      .subscribe();
+      
+    // Cleanup subscription
+    return () => {
+      supabase.removeChannel(clientesChannel);
+    };
+  }, [toast, statusFilter]);
 
   useEffect(() => {
-    // Aplicar filtros
-    let results = [...clientes];
-    
+    // Aplicar filtro de pesquisa
     if (searchTerm) {
-      results = results.filter(
+      const results = clientes.filter(
         (cliente) =>
           cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
           (cliente.telefone && cliente.telefone.includes(searchTerm)) ||
@@ -60,14 +82,11 @@ const ListaClientes = () => {
           cliente.servidor.toLowerCase().includes(searchTerm.toLowerCase()) ||
           (cliente.observacoes && cliente.observacoes.toLowerCase().includes(searchTerm.toLowerCase()))
       );
+      setFilteredClientes(results);
+    } else {
+      setFilteredClientes(clientes);
     }
-    
-    if (statusFilter !== "todos") {
-      results = results.filter((cliente) => cliente.status === statusFilter);
-    }
-    
-    setFilteredClientes(results);
-  }, [searchTerm, statusFilter, clientes]);
+  }, [searchTerm, clientes]);
 
   const handleLimparFiltros = () => {
     setSearchTerm("");

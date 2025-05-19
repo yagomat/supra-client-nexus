@@ -32,9 +32,9 @@ const Dashboard = () => {
   useEffect(() => {
     fetchStats();
     
-    // Subscribe to realtime changes on pagamentos table
-    const channel = supabase
-      .channel('dashboard-updates')
+    // Subscribe to realtime changes on both pagamentos and clientes tables
+    const pagamentosChannel = supabase
+      .channel('pagamentos-dashboard-updates')
       .on('postgres_changes', 
         { 
           event: '*', 
@@ -47,10 +47,26 @@ const Dashboard = () => {
         }
       )
       .subscribe();
+    
+    const clientesChannel = supabase
+      .channel('clientes-dashboard-updates')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'clientes',
+        }, 
+        () => {
+          // Refresh dashboard data when clients change
+          fetchStats();
+        }
+      )
+      .subscribe();
 
-    // Cleanup subscription
+    // Cleanup subscriptions
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(pagamentosChannel);
+      supabase.removeChannel(clientesChannel);
     };
   }, []);
 

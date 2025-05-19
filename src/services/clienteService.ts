@@ -2,18 +2,40 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Cliente } from "@/types";
 
-export async function getClientes(): Promise<Cliente[]> {
-  const { data, error } = await supabase
-    .from('clientes')
-    .select('*')
-    .order('nome');
-    
-  if (error) {
-    console.error("Erro ao buscar clientes:", error);
-    throw error;
-  }
+export async function getClientes(status?: "todos" | "ativo" | "inativo"): Promise<Cliente[]> {
+  // Usar nossa nova função RPC filter_clientes_by_status
+  const { data: currentUser } = await supabase.auth.getUser();
+  const userId = currentUser.user?.id;
   
-  return data as Cliente[] || [];
+  if (status) {
+    const { data, error } = await supabase.rpc(
+      'filter_clientes_by_status',
+      {
+        p_status: status,
+        p_user_id: userId || null
+      }
+    );
+    
+    if (error) {
+      console.error("Erro ao buscar clientes:", error);
+      throw error;
+    }
+    
+    return data as Cliente[] || [];
+  } else {
+    // Caso não seja passado status, busca todos os clientes
+    const { data, error } = await supabase
+      .from('clientes')
+      .select('*')
+      .order('nome');
+      
+    if (error) {
+      console.error("Erro ao buscar clientes:", error);
+      throw error;
+    }
+    
+    return data as Cliente[] || [];
+  }
 }
 
 export async function getCliente(id: string): Promise<Cliente> {

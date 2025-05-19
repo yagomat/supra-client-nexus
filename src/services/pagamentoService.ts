@@ -1,14 +1,22 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Pagamento } from "@/types";
 
-export async function getPagamentos(clienteId?: string): Promise<Pagamento[]> {
-  let query = supabase.from('pagamentos').select('*');
+export async function getPagamentos(clienteId?: string, mes?: number, ano?: number, status?: string): Promise<Pagamento[]> {
+  // Usar nossa nova função RPC filter_pagamentos
+  const { data: currentUser } = await supabase.auth.getUser();
+  const userId = currentUser.user?.id;
   
-  if (clienteId) {
-    query = query.eq('cliente_id', clienteId);
-  }
-  
-  const { data, error } = await query;
+  const { data, error } = await supabase.rpc(
+    'filter_pagamentos', 
+    { 
+      p_cliente_id: clienteId || null,
+      p_mes: mes || null,
+      p_ano: ano || null,
+      p_status: status || null,
+      p_user_id: userId || null
+    }
+  );
   
   if (error) {
     console.error("Erro ao buscar pagamentos:", error);
