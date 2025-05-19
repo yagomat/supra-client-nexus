@@ -13,7 +13,7 @@ export const useValoresPredefinidosData = () => {
     try {
       setLoading(true);
       const data = await getValoresPredefinidos();
-      setValoresPredefinidos(data);
+      setValoresPredefinidos(data as ValoresPredefinidos);
     } catch (error) {
       console.error("Erro ao buscar valores predefinidos", error);
       toast({

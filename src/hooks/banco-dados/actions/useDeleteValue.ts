@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { ValoresPredefinidos } from "@/types";
+import { ValorPredefinidoResponse } from "@/types/supabase-responses";
 import { deleteValorPredefinido } from "@/services/valoresPredefinidosService/valoresPredefinidosActions";
 
 export const useDeleteValue = (
@@ -18,11 +19,12 @@ export const useDeleteValue = (
       setSaving(true);
       
       const result = await deleteValorPredefinido(type, value);
+      const typedResult = result as ValorPredefinidoResponse;
       
-      if (!result.success) {
+      if (!typedResult.success) {
         toast({
           title: "Erro ao excluir valor",
-          description: result.message,
+          description: typedResult.message,
           variant: "destructive",
         });
         return false;

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { ValoresPredefinidos } from "@/types";
+import { ValorPredefinidoResponse } from "@/types/supabase-responses";
 import { addValorPredefinido } from "@/services/valoresPredefinidosService/valoresPredefinidosActions";
 
 export const useAddValue = (
@@ -18,11 +19,12 @@ export const useAddValue = (
       setSaving(true);
       
       const result = await addValorPredefinido(activeTab, newValueOrNumber);
+      const typedResult = result as ValorPredefinidoResponse;
       
-      if (!result.success) {
+      if (!typedResult.success) {
         toast({
           title: "Erro ao adicionar valor",
-          description: result.message,
+          description: typedResult.message,
           variant: "destructive",
         });
         return false;
@@ -31,8 +33,8 @@ export const useAddValue = (
       // Atualizar estado local após sucesso
       const updatedValues = [...(valoresPredefinidos[activeTab as keyof ValoresPredefinidos] as any[])];
       updatedValues.push(activeTab === "valores_plano" || activeTab === "dias_vencimento" 
-        ? Number(result.valor) 
-        : result.valor
+        ? Number(typedResult.valor) 
+        : typedResult.valor
       );
       
       setValoresPredefinidos({

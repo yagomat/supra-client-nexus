@@ -2,7 +2,9 @@
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { ValoresPredefinidos } from "@/types";
+import { ImportValoresPredefinidosResponse } from "@/types/supabase-responses";
 import { importValoresPredefinidos } from "@/services/valoresPredefinidosService/valoresPredefinidosActions";
+import { getValoresPredefinidos } from "@/services/valoresPredefinidosService/valoresPredefinidosActions";
 
 export const useImportExport = (
   valoresPredefinidos: ValoresPredefinidos | null,
@@ -19,22 +21,26 @@ export const useImportExport = (
       
       const items = importText.split("\n").map((item) => item.trim()).filter((item) => item.length > 0);
       const result = await importValoresPredefinidos(activeTab, items);
+      const typedResult = result as ImportValoresPredefinidosResponse;
       
-      if (!result.success) {
+      if (!typedResult.success) {
         toast({
           title: "Erro na importação",
-          description: `Nenhum valor foi importado. ${result.invalid_values?.length ? `Valores inválidos: ${result.invalid_values.join(", ")}` : ""}`,
+          description: `Nenhum valor foi importado. ${typedResult.valores_invalidos?.length ? `Valores inválidos: ${typedResult.valores_invalidos.join(", ")}` : ""}`,
           variant: "destructive",
         });
         return false;
       }
       
       // Recarregar valores predefinidos após importação
-      await refreshValoresPredefinidos();
+      const updatedData = await getValoresPredefinidos();
+      if (updatedData) {
+        setValoresPredefinidos(updatedData as ValoresPredefinidos);
+      }
       
       toast({
         title: "Importação concluída",
-        description: `Foram importados ${result.importados} valores. ${result.duplicados} duplicados, ${result.invalidos} inválidos.`,
+        description: `Foram importados ${typedResult.importados} valores. ${typedResult.duplicados} duplicados, ${typedResult.invalidos} inválidos.`,
       });
       
       return true;
