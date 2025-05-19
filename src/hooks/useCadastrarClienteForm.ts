@@ -25,7 +25,7 @@ export const useCadastrarClienteForm = () => {
       uf: "",
       servidor: "",
       dia_vencimento: 1,
-      valor_plano: undefined,
+      valor_plano: "",
       
       dispositivo_smart: "",
       aplicativo: "",

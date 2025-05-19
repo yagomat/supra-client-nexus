@@ -26,7 +26,7 @@ export const useClienteForm = (clienteId: string | undefined) => {
       uf: "",
       servidor: "",
       dia_vencimento: 1,
-      valor_plano: 0,
+      valor_plano: "",
       
       dispositivo_smart: "",
       aplicativo: "",
@@ -69,7 +69,7 @@ export const useClienteForm = (clienteId: string | undefined) => {
         uf: cliente.uf || "",
         servidor: cliente.servidor,
         dia_vencimento: cliente.dia_vencimento,
-        valor_plano: cliente.valor_plano || undefined,
+        valor_plano: cliente.valor_plano?.toString() || "",
         
         dispositivo_smart: cliente.dispositivo_smart || "",
         aplicativo: cliente.aplicativo,

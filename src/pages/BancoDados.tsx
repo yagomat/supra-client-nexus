@@ -134,7 +134,11 @@ const BancoDados = () => {
       }
       
       // Remover duplicatas
-      updatedValues = Array.from(new Set(updatedValues));
+      if (isNumeric) {
+        updatedValues = Array.from(new Set(updatedValues as number[]));
+      } else {
+        updatedValues = Array.from(new Set(updatedValues as string[]));
+      }
       
       // Ordenar valores
       updatedValues = isNumeric
@@ -252,9 +256,11 @@ const BancoDados = () => {
       }
       
       // Remover duplicatas
-      values = isNumeric
-        ? Array.from(new Set(values as number[]))
-        : Array.from(new Set(values as string[]));
+      if (isNumeric) {
+        values = Array.from(new Set(values as number[]));
+      } else {
+        values = Array.from(new Set(values as string[]));
+      }
       
       // Ordenar valores
       values = isNumeric
