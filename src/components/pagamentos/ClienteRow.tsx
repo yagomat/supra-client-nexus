@@ -60,7 +60,7 @@ export const ClienteRow = ({
       {!isMobile && <TableCell>{formatDate(cliente.created_at)}</TableCell>}
       <TableCell className="font-medium">{cliente.nome}</TableCell>
       <TableCell>{cliente.dia_vencimento}</TableCell>
-      <TableCell>{valorPlanoFormatado}</TableCell>
+      {!isMobile && <TableCell>{valorPlanoFormatado}</TableCell>}
       <TableCell>
         <ClientStatusBadge status={clienteStatus} />
       </TableCell>

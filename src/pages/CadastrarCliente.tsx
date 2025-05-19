@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -19,11 +18,11 @@ import { PlusCircle, Loader2 } from "lucide-react";
 const LIMITES_CARACTERES = {
   nome: 100,
   telefone: 20,
-  usuario_aplicativo: 50,
-  senha_aplicativo: 50,
-  observacoes: 500,
-  usuario_2: 50,
-  senha_2: 50
+  usuario_aplicativo: 25,
+  senha_aplicativo: 25,
+  observacoes: 300,
+  usuario_2: 25,
+  senha_2: 25
 };
 
 const CadastrarCliente = () => {

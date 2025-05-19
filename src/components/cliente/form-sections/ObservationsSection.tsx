@@ -23,6 +23,7 @@ export const ObservationsSection: React.FC<ObservationsSectionProps> = ({
         placeholder="Observações sobre o cliente"
         className="min-h-[100px]"
         disabled={disabled}
+        maxLength={300}
       />
     </div>
   );

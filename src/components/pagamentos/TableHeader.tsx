@@ -49,8 +49,13 @@ export const TableHeaderComponent = ({
             ) : null}
           </Button>
         </TableHead>
-        <TableHead>Vencimento</TableHead>
-        <TableHead>Plano</TableHead>
+        <TableHead>
+          <div className="leading-tight">
+            <div>Dia de</div>
+            <div>Venc.</div>
+          </div>
+        </TableHead>
+        {!isMobile && <TableHead>Plano</TableHead>}
         <TableHead>Status</TableHead>
         <TableHead>Pagamento</TableHead>
       </TableRow>

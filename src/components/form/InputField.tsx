@@ -18,6 +18,7 @@ interface InputFieldProps {
   type?: string;
   disabled?: boolean;
   maxLength?: number;
+  pattern?: string;
 }
 
 export const InputField: React.FC<InputFieldProps> = ({
@@ -28,6 +29,7 @@ export const InputField: React.FC<InputFieldProps> = ({
   type = "text",
   disabled = false,
   maxLength,
+  pattern,
 }) => {
   return (
     <FormField
@@ -45,6 +47,7 @@ export const InputField: React.FC<InputFieldProps> = ({
                 value={field.value || ""} 
                 disabled={disabled}
                 maxLength={maxLength}
+                pattern={pattern}
               />
               {maxLength && (
                 <div className="text-xs text-gray-500 text-right mt-0.5">
