@@ -29,7 +29,7 @@ export const usePagamentos = () => {
     anos
   } = usePaymentFilters(clientesComPagamentos);
 
-  // Gerenciamento de status de pagamento - Agora sem a lógica de atualização de status do cliente
+  // Gerenciamento de status de pagamento
   const { submitting, handleChangeStatus } = usePaymentStatus(
     pagamentos, 
     setPagamentos

@@ -8,8 +8,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { getCliente, updateCliente } from "@/services/clienteService";
 import { getPagamentos } from "@/services/pagamentoService";
 import { getValoresPredefinidos } from "@/services/valoresPredefinidosService";
+import { recalculateClientStatus } from "@/services/clientStatusService";
 import { Cliente, ValoresPredefinidos, Pagamento } from "@/types";
-import { determineClientStatus } from "./payments/useClientStatus";
 
 // Form schema definition
 const formSchema = z.object({
@@ -140,26 +140,29 @@ export const useClienteForm = (clienteId: string | undefined) => {
 
   // Efeito para monitorar alterações no dia de vencimento
   useEffect(() => {
-    const subscription = form.watch((value, { name }) => {
+    const subscription = form.watch(async (value, { name }) => {
       // Se o dia de vencimento foi alterado
       if (name === "dia_vencimento" && clienteId && clientePagamentos.length > 0) {
         const newVencimento = Number(value.dia_vencimento);
         
         // Verificar se o vencimento foi realmente alterado
         if (newVencimento !== originalVencimento) {
-          // Criar um objeto cliente temporário para passar para determineClientStatus
-          const clienteTemp = {
-            id: clienteId,
-            dia_vencimento: newVencimento,
-            status: form.getValues("status"),
-            pagamentos: {}
-          } as any;
-          
-          // Determinar o novo status com base no dia de vencimento alterado
-          const newStatus = determineClientStatus(clienteTemp, clientePagamentos);
-          
-          // Atualizar o campo status no formulário
-          form.setValue("status", newStatus);
+          try {
+            // Primeiro atualiza o dia de vencimento temporariamente no backend
+            await updateCliente(clienteId, { dia_vencimento: newVencimento });
+            
+            // Em seguida, aciona a recalculação de status que usa a lógica do backend
+            await recalculateClientStatus(clienteId);
+            
+            // Busca o cliente atualizado para obter o novo status
+            const clienteAtualizado = await getCliente(clienteId);
+            
+            // Atualiza o campo status no formulário
+            form.setValue("status", clienteAtualizado.status);
+          } catch (error) {
+            console.error("Erro ao recalcular status do cliente:", error);
+            // Em caso de erro, não alteramos o status
+          }
         }
       }
     });
