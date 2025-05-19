@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Eye, Pencil, Trash2, ArrowUpDown } from "lucide-react";
 import { Cliente } from "@/types";
 import { formatDate } from "@/utils/dateUtils";
 import { ClienteStatusBadge } from "./ClienteStatusBadge";
@@ -14,6 +14,8 @@ interface ClienteTableProps {
   verTelaAdicional: (cliente: Cliente) => void;
   verObservacoes: (cliente: Cliente) => void;
   confirmarExclusao: (clienteId: string) => void;
+  sortOrder?: 'nome' | 'data';
+  onSortChange?: (sortOrder: 'nome' | 'data') => void;
 }
 
 export const ClienteTable = ({
@@ -21,9 +23,17 @@ export const ClienteTable = ({
   verDetalhes,
   verTelaAdicional,
   verObservacoes,
-  confirmarExclusao
+  confirmarExclusao,
+  sortOrder = 'data',
+  onSortChange
 }: ClienteTableProps) => {
   const navigate = useNavigate();
+  
+  const handleSortChange = (field: 'nome' | 'data') => {
+    if (onSortChange) {
+      onSortChange(field);
+    }
+  };
   
   return (
     <div className="border rounded-md overflow-hidden">
@@ -31,12 +41,24 @@ export const ClienteTable = ({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Data de Cadastro</TableHead>
-              <TableHead>Nome</TableHead>
+              <TableHead onClick={() => handleSortChange('data')} className="cursor-pointer">
+                <div className="flex items-center">
+                  Data de Cadastro
+                  {onSortChange && <ArrowUpDown className="ml-1 h-4 w-4" />}
+                  {sortOrder === 'data' && <span className="ml-1">•</span>}
+                </div>
+              </TableHead>
+              <TableHead onClick={() => handleSortChange('nome')} className="cursor-pointer">
+                <div className="flex items-center">
+                  Nome
+                  {onSortChange && <ArrowUpDown className="ml-1 h-4 w-4" />}
+                  {sortOrder === 'nome' && <span className="ml-1">•</span>}
+                </div>
+              </TableHead>
               <TableHead>Telefone</TableHead>
               <TableHead>UF</TableHead>
               <TableHead>Servidor</TableHead>
-              <TableHead className="whitespace-pre-line">Dia de<br/>Venc.</TableHead>
+              <TableHead className="whitespace-pre-line">Dia de{'\n'}Venc.</TableHead>
               <TableHead>Plano</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Tela Principal</TableHead>

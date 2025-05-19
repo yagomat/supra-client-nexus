@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -23,6 +24,7 @@ const ListaClientes = () => {
   const [isTelaAdicionaModalOpen, setIsTelaAdicionaModalOpen] = useState(false);
   const [isObservacoesModalOpen, setIsObservacoesModalOpen] = useState(false);
   const [clienteParaExcluir, setClienteParaExcluir] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<'nome' | 'data'>('data');
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -33,7 +35,17 @@ const ListaClientes = () => {
       // Usar a função getClientes com o filtro de status
       const data = await getClientes(statusFilter);
       setClientes(data);
-      setFilteredClientes(data);
+      
+      // Apply sorting to the fetched data
+      const sortedData = [...data].sort((a, b) => {
+        if (sortOrder === 'nome') {
+          return a.nome.localeCompare(b.nome);
+        } else {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }
+      });
+      
+      setFilteredClientes(sortedData);
     } catch (error) {
       console.error("Erro ao buscar clientes", error);
       toast({
@@ -69,12 +81,15 @@ const ListaClientes = () => {
     return () => {
       supabase.removeChannel(clientesChannel);
     };
-  }, [toast, statusFilter]);
+  }, [toast, statusFilter, sortOrder]);
 
   useEffect(() => {
-    // Aplicar filtro de pesquisa
+    // Apply sorting and filtering
+    let results = [...clientes];
+    
+    // Apply search filter
     if (searchTerm) {
-      const results = clientes.filter(
+      results = results.filter(
         (cliente) =>
           cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
           (cliente.telefone && cliente.telefone.includes(searchTerm)) ||
@@ -82,11 +97,23 @@ const ListaClientes = () => {
           cliente.servidor.toLowerCase().includes(searchTerm.toLowerCase()) ||
           (cliente.observacoes && cliente.observacoes.toLowerCase().includes(searchTerm.toLowerCase()))
       );
-      setFilteredClientes(results);
-    } else {
-      setFilteredClientes(clientes);
     }
-  }, [searchTerm, clientes]);
+    
+    // Apply sorting
+    results.sort((a, b) => {
+      if (sortOrder === 'nome') {
+        return a.nome.localeCompare(b.nome);
+      } else {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+    
+    setFilteredClientes(results);
+  }, [searchTerm, clientes, sortOrder]);
+
+  const handleSortChange = (order: 'nome' | 'data') => {
+    setSortOrder(order);
+  };
 
   const handleLimparFiltros = () => {
     setSearchTerm("");
@@ -161,6 +188,8 @@ const ListaClientes = () => {
             verTelaAdicional={verTelaAdicional}
             verObservacoes={verObservacoes}
             confirmarExclusao={confirmarExclusao}
+            sortOrder={sortOrder}
+            onSortChange={handleSortChange}
           />
         )}
       </div>

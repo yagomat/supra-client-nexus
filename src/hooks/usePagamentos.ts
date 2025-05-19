@@ -24,6 +24,7 @@ export const usePagamentos = () => {
     searchTerm,
     setSearchTerm,
     filteredClientes,
+    setFilteredClientes,
     handleLimparFiltro,
     meses,
     anos
@@ -37,6 +38,8 @@ export const usePagamentos = () => {
 
   return {
     filteredClientes,
+    setFilteredClientes,
+    clientes,
     mesAtual,
     setMesAtual,
     anoAtual,

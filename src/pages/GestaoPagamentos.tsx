@@ -16,6 +16,8 @@ import { enableRealtimeForTable } from "@/services/clientStatusService";
 const GestaoPagamentos = () => {
   const {
     filteredClientes,
+    setFilteredClientes,
+    clientes,
     mesAtual,
     setMesAtual,
     anoAtual,
@@ -30,8 +32,29 @@ const GestaoPagamentos = () => {
     anos
   } = usePagamentos();
   
+  const [sortOrder, setSortOrder] = useState<'nome' | 'data'>('data');
   const isMobile = useIsMobile();
   const { toast } = useToast();
+
+  // Apply sorting when clients or sort order changes
+  useEffect(() => {
+    if (clientes && clientes.length > 0) {
+      const sorted = [...clientes].sort((a, b) => {
+        if (sortOrder === 'nome') {
+          return a.nome.localeCompare(b.nome);
+        } else {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }
+      });
+      
+      setFilteredClientes(sorted);
+    }
+  }, [clientes, sortOrder, setFilteredClientes]);
+
+  // Handle sort order change
+  const handleSortChange = (order: 'nome' | 'data') => {
+    setSortOrder(order);
+  };
 
   // Setup realtime updates
   useEffect(() => {
@@ -117,6 +140,8 @@ const GestaoPagamentos = () => {
                       submitting={submitting}
                       onChangeStatus={handleChangeStatus}
                       isMobile={isMobile}
+                      sortOrder={sortOrder}
+                      onSortChange={handleSortChange}
                     />
                   )}
                 </div>

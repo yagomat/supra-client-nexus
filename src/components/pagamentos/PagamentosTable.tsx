@@ -11,6 +11,8 @@ interface PagamentosTableProps {
   submitting: boolean;
   onChangeStatus: (cliente: ClienteComPagamentos, mes: number, ano: number, status: string) => void;
   isMobile?: boolean;
+  sortOrder?: 'nome' | 'data';
+  onSortChange?: (sortOrder: 'nome' | 'data') => void;
 }
 
 export const PagamentosTable = ({ 
@@ -19,12 +21,18 @@ export const PagamentosTable = ({
   anoAtual, 
   submitting,
   onChangeStatus,
-  isMobile = false
+  isMobile = false,
+  sortOrder = 'data',
+  onSortChange
 }: PagamentosTableProps) => {
   return (
     <div className="overflow-x-auto">
       <Table>
-        <TableHeaderComponent isMobile={isMobile} />
+        <TableHeaderComponent 
+          isMobile={isMobile} 
+          sortOrder={sortOrder}
+          onSortChange={onSortChange}
+        />
         <TableBody>
           {clientes.map((cliente) => (
             <ClienteRow
