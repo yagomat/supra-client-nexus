@@ -1,112 +1,178 @@
 
-import { useState, useEffect, useCallback } from "react";
-import { Cliente, ClienteComPagamentos, Pagamento } from "@/types";
-import { getClientes } from "@/services/clienteService";
-import { getPagamentos, updatePagamento } from "@/services/pagamentoService";
-import { useToast } from "./use-toast";
-import { updateClienteStatus } from "@/services/clientStatusService";
-import { meses } from "./payments/usePaymentFilters";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ClientePagamento, Pagamento } from "@/types";
+import { toast } from "@/components/ui/use-toast";
+import { format, isValid, parse } from "date-fns";
+import { clientStatusService } from "@/services/clientStatusService";
 
 export const usePagamentos = () => {
-  const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [clientesComPagamentos, setClientesComPagamentos] = useState<ClienteComPagamentos[]>([]);
-  const [filteredClientes, setFilteredClientes] = useState<ClienteComPagamentos[]>([]);
-  const [mesAtual, setMesAtual] = useState<number>(new Date().getMonth() + 1);
-  const [anoAtual, setAnoAtual] = useState<number>(new Date().getFullYear());
-  const [searchTerm, setSearchTerm] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
-  
-  // Lista de anos para o filtro (ano atual - 2 até ano atual + 1)
-  const anos = Array.from(
-    { length: 4 },
-    (_, i) => new Date().getFullYear() - 2 + i
-  );
-  
-  // Função para carregar dados que pode ser chamada quando necessário
-  const reloadData = useCallback(async () => {
+  const [loading, setLoading] = useState(false);
+  const [pagamentos, setPagamentos] = useState<ClientePagamento[]>([]);
+
+  // Função para carregar pagamentos do mês atual
+  const loadPagamentos = async (ano: number, mes: number, 
+    plano?: string, status?: "ativo" | "inativo", search?: string) => {
     try {
       setLoading(true);
-      const clientesData = await getClientes();
-      const pagamentosData = await getPagamentos(undefined, mesAtual, anoAtual);
-      
-      // Processar dados para criar clientesComPagamentos
-      const clientesPagamentos = clientesData.map((cliente) => {
-        const pagamento = pagamentosData.find(
-          (p) => 
-            p.cliente_id === cliente.id && 
-            p.mes === mesAtual && 
-            p.ano === anoAtual
-        );
-        
-        // Criar objeto de pagamentos para o cliente
-        const pagamentosObj = {} as Record<string, Pagamento>;
-        const chave = `${mesAtual}-${anoAtual}`;
-        
-        pagamentosObj[chave] = pagamento || {
-          id: "",
-          cliente_id: cliente.id,
-          mes: mesAtual,
-          ano: anoAtual,
-          status: "nao_pago",
-          data_pagamento: null,
-          created_at: new Date().toISOString()
-        };
-        
-        return {
-          ...cliente,
-          pagamentos: pagamentosObj,
-        } as ClienteComPagamentos;
-      });
-      
-      setClientes(clientesData);
-      setClientesComPagamentos(clientesPagamentos);
-      setFilteredClientes(clientesPagamentos);
+
+      let query = supabase
+        .from('clientes')
+        .select(`
+          id, nome, telefone, plano, status,
+          pagamentos:pagamentos!inner(
+            id, cliente_id, mes, ano, valor, status, data_pagamento
+          )
+        `)
+        .eq('pagamentos.mes', mes)
+        .eq('pagamentos.ano', ano)
+        .order('nome', { ascending: true });
+
+      // Filtros adicionais
+      if (plano) {
+        query = query.eq('plano', plano);
+      }
+
+      if (status) {
+        query = query.eq('status', status);
+      }
+
+      if (search) {
+        query = query.ilike('nome', `%${search}%`);
+      }
+
+      const { data: clientesComPagamentos, error } = await query;
+
+      if (error) {
+        throw error;
+      }
+
+      if (clientesComPagamentos) {
+        setPagamentos(clientesComPagamentos as ClientePagamento[]);
+      }
     } catch (error) {
-      console.error("Erro ao buscar dados", error);
+      console.error("Erro ao carregar pagamentos:", error);
       toast({
-        title: "Erro ao carregar dados",
-        description: "Ocorreu um erro ao buscar clientes e pagamentos.",
+        title: "Erro ao carregar pagamentos",
+        description: "Não foi possível carregar os pagamentos.",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
-  }, [mesAtual, anoAtual, toast]);
+  };
 
-  // Efeito para carregar dados iniciais
-  useEffect(() => {
-    reloadData();
-  }, [reloadData]);
-  
-  // Efeito para filtrar clientes conforme pesquisa
-  useEffect(() => {
-    if (searchTerm.trim() === "") {
-      setFilteredClientes(clientesComPagamentos);
-    } else {
-      const filtered = clientesComPagamentos.filter((cliente) =>
-        cliente.nome.toLowerCase().includes(searchTerm.toLowerCase())
+  // Função para carregar clientes sem pagamento no mês
+  const loadClientesSemPagamento = async (ano: number, mes: number,
+    plano?: string, status?: "ativo" | "inativo", search?: string) => {
+    try {
+      setLoading(true);
+
+      // Primeiro, obtemos todos os clientes que correspondem aos filtros
+      let queryClientes = supabase
+        .from('clientes')
+        .select('id, nome, telefone, plano, status')
+        .order('nome', { ascending: true });
+
+      if (plano) {
+        queryClientes = queryClientes.eq('plano', plano);
+      }
+
+      if (status) {
+        queryClientes = queryClientes.eq('status', status);
+      }
+
+      if (search) {
+        queryClientes = queryClientes.ilike('nome', `%${search}%`);
+      }
+
+      const { data: todosClientes, error: errorClientes } = await queryClientes;
+
+      if (errorClientes) {
+        throw errorClientes;
+      }
+
+      if (!todosClientes || todosClientes.length === 0) {
+        setPagamentos([]);
+        return;
+      }
+
+      // Agora, obtemos todos os pagamentos para o mês e ano específicos
+      const { data: pagamentosExistentes, error: errorPagamentos } = await supabase
+        .from('pagamentos')
+        .select('cliente_id')
+        .eq('mes', mes)
+        .eq('ano', ano);
+
+      if (errorPagamentos) {
+        throw errorPagamentos;
+      }
+
+      // Criamos um conjunto (Set) com os IDs dos clientes que já têm pagamentos
+      const clientesComPagamento = new Set(
+        pagamentosExistentes?.map((p) => p.cliente_id) || []
       );
-      setFilteredClientes(filtered);
+
+      // Filtramos os clientes que não têm pagamentos
+      const clientesSemPagamento = todosClientes.filter(
+        (cliente) => !clientesComPagamento.has(cliente.id)
+      );
+
+      // Transformamos os clientes em objetos ClientePagamento sem pagamentos
+      const result: ClientePagamento[] = clientesSemPagamento.map((cliente) => ({
+        ...cliente,
+        pagamentos: [],
+      }));
+
+      setPagamentos(result);
+    } catch (error) {
+      console.error("Erro ao carregar clientes sem pagamento:", error);
+      toast({
+        title: "Erro ao carregar clientes",
+        description: "Não foi possível carregar os clientes sem pagamento.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-  }, [searchTerm, clientesComPagamentos]);
-  
-  const handleChangeStatus = async (
-    cliente: ClienteComPagamentos,
-    mes: number,
+  };
+
+  // Função para salvar o status do pagamento
+  const savePaymentStatus = async (
+    cliente: ClientePagamento,
     ano: number,
-    status: string
+    mes: number,
+    status: string,
+    valor?: number
   ) => {
     try {
-      setSubmitting(true);
-      const chave = `${mes}-${ano}`;
-      const pagamento = cliente.pagamentos[chave];
+      // Vamos criar ou atualizar o pagamento conforme necessário
+      let pagamento: Pagamento = {
+        cliente_id: cliente.id,
+        ano,
+        mes,
+        status,
+        valor: valor || 0,
+      };
+
+      if (cliente.pagamentos?.[0]?.id) {
+        pagamento.id = cliente.pagamentos[0].id;
+      }
       
-      // Se o pagamento já existe (tem ID), atualize-o
+      // Se tem ID, é um pagamento existente que precisa ser atualizado
       if (pagamento.id) {
-        await updatePagamento(pagamento.id, status);
+        const { error } = await supabase
+          .from("pagamentos")
+          .update({
+            status: pagamento.status,
+            data_pagamento: 
+              pagamento.status === "pago" || pagamento.status === "pago_confianca" 
+                ? new Date().toISOString()
+                : null
+          })
+          .eq("id", pagamento.id);
+
+        if (error) throw error;
       } else {
         // Se não existe, crie um novo pagamento
         // Vai usar a nova função RPC handle_payment_status_update implementada no backend
@@ -115,8 +181,8 @@ export const usePagamentos = () => {
           'handle_payment_status_update', 
           { 
             p_cliente_id: cliente.id, 
-            p_mes: mes, 
             p_ano: ano, 
+            p_mes: mes, 
             p_status: status 
           }
         );
@@ -137,60 +203,67 @@ export const usePagamentos = () => {
           }
         }
       }
-      
-      // Atualizar o estado local do pagamento
-      cliente.pagamentos[chave] = {
-        ...pagamento,
-        status,
-        data_pagamento: status !== "nao_pago" ? new Date().toISOString() : null,
-      };
-      
-      // Atualizar estado local dos clientes
-      const updatedClientes = [...clientesComPagamentos];
-      setClientesComPagamentos(updatedClientes);
-      setFilteredClientes(
-        searchTerm.trim() === "" 
-          ? updatedClientes 
-          : updatedClientes.filter((c) => 
-              c.nome.toLowerCase().includes(searchTerm.toLowerCase())
-            )
-      );
-      
-      toast({
-        title: "Pagamento atualizado",
-        description: `O status do pagamento foi atualizado para ${status}.`,
+
+      // Atualizar a lista local
+      setPagamentos(prev => {
+        return prev.map(c => {
+          if (c.id === cliente.id) {
+            return {
+              ...c,
+              pagamentos: c.pagamentos?.length 
+                ? [{ ...c.pagamentos[0], ...pagamento }] 
+                : [pagamento]
+            };
+          }
+          return c;
+        });
       });
-      
-    } catch (error) {
-      console.error("Erro ao atualizar pagamento", error);
+
       toast({
-        title: "Erro ao atualizar pagamento",
+        title: "Status atualizado",
+        description: `O pagamento de ${cliente.nome} foi ${status === "pago" ? "confirmado" : status === "pago_confianca" ? "marcado como pago por confiança" : "marcado como não pago"}.`,
+      });
+
+      // Se o status do cliente precisar ser atualizado com base no pagamento
+      if (status === "pago" || status === "pago_confianca") {
+        try {
+          await clientStatusService.updateClientStatus(cliente.id);
+        } catch (error) {
+          console.error("Erro ao atualizar status do cliente:", error);
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao salvar status do pagamento:", error);
+      toast({
+        title: "Erro ao salvar",
         description: "Não foi possível atualizar o status do pagamento.",
         variant: "destructive",
       });
-    } finally {
-      setSubmitting(false);
     }
   };
-  
-  const handleLimparFiltro = () => {
-    setSearchTerm("");
+
+  // Função para recarregar os dados
+  const reloadData = (
+    ano: number, 
+    mes: number, 
+    plano?: string, 
+    status?: "ativo" | "inativo", 
+    search?: string,
+    onlyWithoutPayment?: boolean
+  ) => {
+    if (onlyWithoutPayment) {
+      return loadClientesSemPagamento(ano, mes, plano, status, search);
+    } else {
+      return loadPagamentos(ano, mes, plano, status, search);
+    }
   };
-  
+
   return {
-    filteredClientes,
-    mesAtual,
-    setMesAtual,
-    anoAtual,
-    setAnoAtual,
-    searchTerm,
-    setSearchTerm,
+    pagamentos,
     loading,
-    submitting,
-    handleChangeStatus,
-    handleLimparFiltro,
-    meses,
-    anos,
+    loadPagamentos,
+    loadClientesSemPagamento,
+    savePaymentStatus,
     reloadData
   };
 };
