@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -147,10 +148,10 @@ export const useClienteForm = (clienteId: string | undefined) => {
         // Verificar se o vencimento foi realmente alterado
         if (newVencimento !== originalVencimento) {
           try {
-            // Primeiro atualiza o dia de vencimento temporariamente no backend
+            // Primeiro atualiza o dia de vencimento no backend
             await updateCliente(clienteId, { dia_vencimento: newVencimento });
             
-            // Em seguida, aciona a recalculação de status usando nossa função atualizada
+            // Em seguida, aciona a recalculação de status usando a função simplificada
             await recalculateClientStatus(clienteId);
             
             // Busca o cliente atualizado para obter o novo status
@@ -160,7 +161,6 @@ export const useClienteForm = (clienteId: string | undefined) => {
             form.setValue("status", clienteAtualizado.status);
           } catch (error) {
             console.error("Erro ao recalcular status do cliente:", error);
-            // Em caso de erro, não alteramos o status
           }
         }
       }
