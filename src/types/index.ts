@@ -120,3 +120,6 @@ export interface UserRoleRecord {
   role: UserRole;
   created_at: string;
 }
+
+// Exportação do ClienteFormValues do esquema de formulário
+export type { ClienteFormValues } from "./cliente/clienteFormSchema";
