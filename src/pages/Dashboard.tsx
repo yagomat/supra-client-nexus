@@ -33,7 +33,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchStats();
-  }, [toast]);
+  }, []);
 
   const handleRecalculateStatus = async () => {
     try {

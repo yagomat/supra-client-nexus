@@ -24,14 +24,20 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
 export async function recalculateAllClientStatus(): Promise<void> {
   try {
-    const { data, error } = await supabase.rpc('recalcular_status_clientes');
+    // Since we can't use the recalcular_status_clientes function directly due to typing issues
+    // We'll use a raw query with the function we created
+    const { error } = await supabase.rpc('recalculate_all_client_status');
     
     if (error) {
+      // Check if it's a permission error (this part is still useful)
+      if (error.message.includes("Sem permissão")) {
+        throw new Error("Sem permissão para recalcular status dos clientes");
+      }
       console.error("Erro ao recalcular status dos clientes:", error);
       throw error;
     }
     
-    console.log("Resultado da recalculação:", data);
+    console.log("Clientes recalculados com sucesso");
   } catch (error) {
     console.error("Erro ao chamar função RPC:", error);
     throw error;

@@ -112,3 +112,11 @@ export interface AuditoriaRecord {
   usuario_id: string | null;
   data_hora: string;
 }
+
+// Interface para a tabela de papéis de usuário
+export interface UserRoleRecord {
+  id: string;
+  user_id: string;
+  role: UserRole;
+  created_at: string;
+}
