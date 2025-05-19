@@ -169,6 +169,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      enable_realtime_for_clients: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       filter_clientes_by_status: {
         Args: { p_status?: string; p_user_id?: string }
         Returns: {
