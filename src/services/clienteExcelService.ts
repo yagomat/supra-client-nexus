@@ -1,4 +1,3 @@
-
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { Cliente } from '@/types';
@@ -184,13 +183,11 @@ export async function importClientesFromExcel(file: File): Promise<{ success: bo
               status: 'ativo' // Status padrão para novos clientes
             };
             
-            // Validar campos específicos obrigatórios
+            // Validar campos específicos obrigatórios - removido Usuário e Senha da validação
             const camposFaltantes = [];
             if (!cliente.nome) camposFaltantes.push('Nome');
             if (!cliente.servidor) camposFaltantes.push('Servidor');
             if (!cliente.aplicativo) camposFaltantes.push('Aplicativo');
-            if (!cliente.usuario_aplicativo) camposFaltantes.push('Usuário');
-            if (!cliente.senha_aplicativo) camposFaltantes.push('Senha');
             if (isNaN(cliente.dia_vencimento)) camposFaltantes.push('Dia de Vencimento');
             
             // Se houver campos faltantes, adicionar erro detalhado
