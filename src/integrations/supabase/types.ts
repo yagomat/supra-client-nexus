@@ -219,10 +219,6 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: Json
       }
-      get_dashboard_stats_with_payments_history: {
-        Args: { user_id_param: string }
-        Returns: Json
-      }
       handle_payment_status_update: {
         Args: {
           p_cliente_id: string
