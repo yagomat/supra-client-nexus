@@ -50,6 +50,9 @@ export interface DashboardStats {
   clientes_ativos: number;
   clientes_inativos: number;
   clientes_novos: number;
+  clientes_total: number;
+  pagamentos_pendentes: number;
+  valor_recebido_mes: number;
   evolucao_clientes: {
     mes: string;
     quantidade: number;
@@ -70,6 +73,10 @@ export interface DashboardStats {
     servidor: string;
     quantidade: number;
   }[];
+  pagamentos_por_mes?: {
+    mes: string;
+    valor: number;
+  }[];
 }
 
 export interface ValoresPredefinidos {
@@ -85,4 +92,23 @@ export interface User {
   id: string;
   email: string;
   nome?: string;
+}
+
+// Definição dos papéis de usuário
+export type UserRole = 'admin' | 'gerente' | 'operador';
+
+export interface UserWithRole extends User {
+  roles: UserRole[];
+}
+
+// Interface para registros de auditoria
+export interface AuditoriaRecord {
+  id: string;
+  tabela: string;
+  operacao: string;
+  registro_id: string;
+  dados_antigos: any;
+  dados_novos: any;
+  usuario_id: string | null;
+  data_hora: string;
 }

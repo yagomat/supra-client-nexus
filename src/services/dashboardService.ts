@@ -23,10 +23,17 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 }
 
 export async function recalculateAllClientStatus(): Promise<void> {
-  const { error } = await supabase.rpc('recalculate_all_client_status');
-  
-  if (error) {
-    console.error("Erro ao recalcular status dos clientes:", error);
+  try {
+    const { data, error } = await supabase.rpc('recalcular_status_clientes');
+    
+    if (error) {
+      console.error("Erro ao recalcular status dos clientes:", error);
+      throw error;
+    }
+    
+    console.log("Resultado da recalculação:", data);
+  } catch (error) {
+    console.error("Erro ao chamar função RPC:", error);
     throw error;
   }
 }

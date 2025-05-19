@@ -47,11 +47,17 @@ const Dashboard = () => {
       
       // Recarregar estatísticas
       fetchStats();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao recalcular status", error);
+      
+      // Verifica se é um erro de permissão
+      const errorMessage = error?.message?.includes("Sem permissão") 
+        ? "Você não tem permissão para realizar esta ação. Apenas administradores e gerentes podem recalcular o status de todos os clientes."
+        : "Não foi possível recalcular o status dos clientes. Por favor, tente novamente mais tarde.";
+      
       toast({
         title: "Erro ao recalcular status",
-        description: "Não foi possível recalcular o status dos clientes. Por favor, tente novamente mais tarde.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

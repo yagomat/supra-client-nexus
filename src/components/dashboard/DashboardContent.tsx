@@ -1,5 +1,6 @@
 
 import { ClientEvolutionChart } from "./ClientEvolutionChart";
+import { PaymentEvolutionChart } from "./PaymentEvolutionChart";
 import { StatsCards } from "./StatsCards";
 import { DistributionCharts } from "./DistributionCharts";
 import { DashboardStats } from "@/types";
@@ -20,6 +21,9 @@ export const DashboardContent = ({ stats, loading }: DashboardContentProps) => {
 
   // Create a safe version of evolution data
   const safeEvolucaoClientes = stats?.evolucao_clientes ? getSafeData(stats.evolucao_clientes) : [];
+  
+  // Create a safe version of payment evolution data
+  const safePagamentosPorMes = stats?.pagamentos_por_mes ? getSafeData(stats.pagamentos_por_mes) : [];
 
   return (
     <div className="flex flex-col space-y-4 w-full">
@@ -31,6 +35,10 @@ export const DashboardContent = ({ stats, loading }: DashboardContentProps) => {
 
       <div className="w-full">
         <ClientEvolutionChart data={safeEvolucaoClientes} loading={loading} />
+      </div>
+      
+      <div className="w-full">
+        <PaymentEvolutionChart data={safePagamentosPorMes} loading={loading} />
       </div>
 
       <DistributionCharts stats={stats} loading={loading} />
