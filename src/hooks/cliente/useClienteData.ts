@@ -5,18 +5,28 @@ import { useParams } from "react-router-dom";
 import { Cliente, Pagamento } from "@/types";
 import { getCliente } from "@/services/clienteService";
 import { getPagamentos } from "@/services/pagamentoService";
+import { getValoresPredefinidos } from "@/services/valoresPredefinidosService";
+import { ValoresPredefinidos } from "@/types";
 
 export const useClienteData = () => {
   const { id } = useParams<{ id: string }>();
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
   const [loading, setLoading] = useState(true);
+  const [valoresPredefinidos, setValoresPredefinidos] = useState<ValoresPredefinidos | null>(null);
   const { toast } = useToast();
+
+  // Armazenar o dia de vencimento original para comparações
+  const originalVencimento = cliente?.dia_vencimento || 0;
 
   useEffect(() => {
     const fetchClienteData = async () => {
       try {
         setLoading(true);
+        
+        // Buscar predefinições
+        const predefinidos = await getValoresPredefinidos();
+        setValoresPredefinidos(predefinidos);
         
         // Buscar dados do cliente
         if (id) {
@@ -48,6 +58,9 @@ export const useClienteData = () => {
     pagamentos,
     setPagamentos,
     loading,
-    clienteId: id
+    clienteId: id,
+    valoresPredefinidos,
+    clientePagamentos: pagamentos, // Alias para compatibilidade
+    originalVencimento
   };
 };

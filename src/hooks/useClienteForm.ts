@@ -9,13 +9,14 @@ import { useClienteSubmit } from "./cliente/useClienteSubmit";
 export type { ClienteFormValues } from "./cliente/clienteFormSchema";
 
 export const useClienteForm = (clienteId: string | undefined) => {
+  // Agora useClienteData é chamado sem argumentos, conforme esperado
   const { 
     loading, 
     cliente, 
     valoresPredefinidos, 
     clientePagamentos, 
     originalVencimento 
-  } = useClienteData(clienteId);
+  } = useClienteData();
 
   const form = useForm<ClienteFormValues>({
     resolver: zodResolver(formSchema),
