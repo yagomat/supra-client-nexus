@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { ValoresPredefinidos } from "@/types";
 
@@ -8,18 +9,7 @@ export async function getValoresPredefinidos(): Promise<ValoresPredefinidos> {
     throw new Error("Usuário não autenticado");
   }
   
-  // Get all predefined values for the current user
-  const { data, error } = await supabase
-    .from('valores_predefinidos')
-    .select('tipo, valor')
-    .eq('user_id', currentUser.user.id);
-    
-  if (error) {
-    console.error("Erro ao buscar valores predefinidos:", error);
-    throw error;
-  }
-  
-  // Transform the data into the ValoresPredefinidos structure
+  // Transform data into the ValoresPredefinidos structure
   const valoresPredefinidos: ValoresPredefinidos = {
     ufs: [],
     servidores: [],
@@ -28,6 +18,17 @@ export async function getValoresPredefinidos(): Promise<ValoresPredefinidos> {
     dispositivos_smart: [],
     aplicativos: []
   };
+  
+  // Get all predefined values for the current user
+  let { data, error } = await supabase
+    .from('valores_predefinidos')
+    .select('tipo, valor')
+    .eq('user_id', currentUser.user.id);
+    
+  if (error) {
+    console.error("Erro ao buscar valores predefinidos:", error);
+    throw error;
+  }
   
   // If there's no data, initialize with default values
   if (!data || data.length === 0) {
