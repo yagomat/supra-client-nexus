@@ -32,38 +32,40 @@ const Dashboard = () => {
   useEffect(() => {
     fetchStats();
     
-    // Subscribe to realtime changes on both pagamentos and clientes tables
+    // Configurar canais para atualizações em tempo real
     const pagamentosChannel = supabase
-      .channel('pagamentos-dashboard-updates')
+      .channel('pagamentos-dashboard-changes')
       .on('postgres_changes', 
         { 
           event: '*', 
           schema: 'public', 
           table: 'pagamentos',
         }, 
-        () => {
-          // Refresh dashboard data when payments change
+        (payload) => {
+          // Atualizar o dashboard quando qualquer alteração ocorrer em pagamentos
+          console.log('Pagamento alterado, atualizando dashboard:', payload);
           fetchStats();
         }
       )
       .subscribe();
     
     const clientesChannel = supabase
-      .channel('clientes-dashboard-updates')
+      .channel('clientes-dashboard-changes')
       .on('postgres_changes', 
         { 
           event: '*', 
           schema: 'public', 
           table: 'clientes',
         }, 
-        () => {
-          // Refresh dashboard data when clients change
+        (payload) => {
+          // Atualizar o dashboard quando qualquer alteração ocorrer em clientes
+          console.log('Cliente alterado, atualizando dashboard:', payload);
           fetchStats();
         }
       )
       .subscribe();
 
-    // Cleanup subscriptions
+    // Limpar as inscrições
     return () => {
       supabase.removeChannel(pagamentosChannel);
       supabase.removeChannel(clientesChannel);

@@ -22,7 +22,7 @@ export const ClientEvolutionChart = ({ data, loading }: ClientEvolutionChartProp
           <div className="flex items-center justify-center h-full">
             <Skeleton className="h-full w-full" />
           </div>
-        ) : data.length > 0 ? (
+        ) : data && data.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={data}
@@ -45,8 +45,12 @@ export const ClientEvolutionChart = ({ data, loading }: ClientEvolutionChartProp
                 width={isMobile ? 30 : 40}
                 tick={{ fontSize: isMobile ? 10 : 12 }}
               />
-              <Tooltip />
-              <Bar dataKey="quantidade" fill="#3b82f6" />
+              <Tooltip formatter={(value: number) => [value, "Clientes ativos"]} />
+              <Bar 
+                dataKey="quantidade" 
+                fill="#3b82f6" 
+                name="Clientes ativos"
+              />
             </BarChart>
           </ResponsiveContainer>
         ) : (
