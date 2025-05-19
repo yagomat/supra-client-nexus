@@ -68,16 +68,20 @@ export const usePaymentStatus = (
         (payload) => {
           // When payment changes happen, we sync our local state with the database
           if (payload.eventType === 'INSERT') {
-            setPagamentos(prev => [...prev, payload.new as Pagamento]);
+            // Fix: Create a new array by spreading the existing pagamentos and adding the new one
+            const updatedPagamentos = [...pagamentos, payload.new as Pagamento];
+            setPagamentos(updatedPagamentos);
             
             toast({
               title: "Novo pagamento registrado",
               description: `Pagamento de ${meses.find((m) => m.value === payload.new.mes)?.label} registrado com sucesso.`,
             });
           } else if (payload.eventType === 'UPDATE') {
-            setPagamentos(prev => 
-              prev.map(p => p.id === payload.new.id ? (payload.new as Pagamento) : p)
+            // Fix: Create a new array by mapping through the existing pagamentos and replacing the updated one
+            const updatedPagamentos = pagamentos.map(p => 
+              p.id === payload.new.id ? (payload.new as Pagamento) : p
             );
+            setPagamentos(updatedPagamentos);
             
             toast({
               title: "Status de pagamento atualizado",
@@ -92,7 +96,7 @@ export const usePaymentStatus = (
       supabase.removeChannel(clientesChannel);
       supabase.removeChannel(pagamentosChannel);
     };
-  }, [toast, setPagamentos]);
+  }, [pagamentos, toast, setPagamentos]);
 
   const handleChangeStatus = async (cliente: ClienteComPagamentos, mes: number, ano: number, status: string) => {
     try {
