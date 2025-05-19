@@ -4,12 +4,14 @@ import { useValoresPredefinidosUI } from "./useValoresPredefinidosUI";
 import { useValoresPredefinidosActions } from "./useValoresPredefinidosActions";
 
 export const useBancoDados = () => {
+  // Get data from the data hook
   const { 
     loading, 
     valoresPredefinidos, 
     setValoresPredefinidos 
   } = useValoresPredefinidosData();
   
+  // Get UI state from the UI hook
   const { 
     activeTab,
     setActiveTab,
@@ -23,6 +25,7 @@ export const useBancoDados = () => {
     setSaving 
   } = useValoresPredefinidosUI();
   
+  // Get actions from the actions hook
   const { 
     saving: actionSaving,
     handleAddValue: baseHandleAddValue,
@@ -31,7 +34,7 @@ export const useBancoDados = () => {
     handleExport: baseHandleExport
   } = useValoresPredefinidosActions({ valoresPredefinidos, setValoresPredefinidos });
   
-  // Wrapper functions to simplify component usage
+  // Wrapper functions to simplify component usage and handle dialog state
   const handleAddValue = async (value: string | number) => {
     const result = await baseHandleAddValue(value, activeTab);
     if (result) {
