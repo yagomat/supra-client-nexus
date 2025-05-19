@@ -24,8 +24,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
 export async function recalculateAllClientStatus(): Promise<void> {
   try {
-    // Since we can't use the recalcular_status_clientes function directly due to typing issues
-    // We'll use a raw query with the function we created
+    // Since we can only use the functions defined in the Supabase type
     const { error } = await supabase.rpc('recalculate_all_client_status');
     
     if (error) {
