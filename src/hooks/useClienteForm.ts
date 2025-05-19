@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -151,7 +150,7 @@ export const useClienteForm = (clienteId: string | undefined) => {
             // Primeiro atualiza o dia de vencimento no backend
             await updateCliente(clienteId, { dia_vencimento: newVencimento });
             
-            // Em seguida, aciona a recalculação de status usando a função simplificada
+            // Em seguida, aciona a recalculação de status no Supabase
             await recalculateClientStatus(clienteId);
             
             // Busca o cliente atualizado para obter o novo status

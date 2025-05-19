@@ -8,7 +8,7 @@ import { Cliente } from "@/types";
  */
 export async function recalculateClientStatus(clientId: string): Promise<void> {
   try {
-    // Primeiro, recuperamos os pagamentos do cliente
+    // Buscar o último pagamento do cliente
     const { data: pagamentos, error: pagamentosError } = await supabase
       .from('pagamentos')
       .select('*')
@@ -22,11 +22,10 @@ export async function recalculateClientStatus(clientId: string): Promise<void> {
       throw pagamentosError;
     }
     
-    // Se existe pelo menos um pagamento, atualizamos para acionar o trigger
     if (pagamentos && pagamentos.length > 0) {
+      // Se existe pagamento, atualizamos o status dele para acionar o trigger
       const ultimoPagamento = pagamentos[0];
       
-      // Atualizar o último pagamento para acionar o trigger update_cliente_status
       const { error: updateError } = await supabase
         .from('pagamentos')
         .update({ status: ultimoPagamento.status })
