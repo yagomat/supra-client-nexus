@@ -2,9 +2,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ValoresPredefinidos } from "@/types";
 import { initializeDefaultValues } from "./defaultValues";
+import { processValoresPredefinidos } from "./utils";
 
 /**
- * Fetches all predefined values for the current user
+ * Busca todos os valores predefinidos para o usuário atual
  */
 export async function getValoresPredefinidos(): Promise<ValoresPredefinidos> {
   const { data: currentUser } = await supabase.auth.getUser();
@@ -13,7 +14,7 @@ export async function getValoresPredefinidos(): Promise<ValoresPredefinidos> {
     throw new Error("Usuário não autenticado");
   }
   
-  // Initialize the ValoresPredefinidos structure
+  // Inicializar a estrutura ValoresPredefinidos
   const valoresPredefinidos: ValoresPredefinidos = {
     ufs: [],
     servidores: [],
@@ -23,7 +24,7 @@ export async function getValoresPredefinidos(): Promise<ValoresPredefinidos> {
     aplicativos: []
   };
   
-  // Get all predefined values for the current user
+  // Obter todos os valores predefinidos para o usuário atual
   let { data, error } = await supabase
     .from('valores_predefinidos')
     .select('tipo, valor')
@@ -34,11 +35,11 @@ export async function getValoresPredefinidos(): Promise<ValoresPredefinidos> {
     throw error;
   }
   
-  // If there's no data, initialize with default values
+  // Se não houver dados, inicializar com valores padrão
   if (!data || data.length === 0) {
     await initializeDefaultValues(currentUser.user.id);
     
-    // Fetch the newly created default values
+    // Buscar os valores padrão recém-criados
     const { data: defaultData, error: defaultError } = await supabase
       .from('valores_predefinidos')
       .select('tipo, valor')
@@ -49,66 +50,10 @@ export async function getValoresPredefinidos(): Promise<ValoresPredefinidos> {
       throw defaultError;
     }
     
-    // Use the default data
+    // Usar os dados padrão
     data = defaultData;
   }
   
-  // Process and populate the different types of predefined values
+  // Processar e popular os diferentes tipos de valores predefinidos
   return processValoresPredefinidos(data || [], valoresPredefinidos);
-}
-
-/**
- * Process raw database values into the ValoresPredefinidos structure
- */
-function processValoresPredefinidos(
-  data: { tipo: string; valor: string }[], 
-  valoresPredefinidos: ValoresPredefinidos
-): ValoresPredefinidos {
-  // Populate the different types of predefined values
-  data.forEach((item) => {
-    const { tipo, valor } = item;
-    
-    switch (tipo) {
-      case 'uf':
-        valoresPredefinidos.ufs.push(valor);
-        break;
-      case 'servidor':
-        valoresPredefinidos.servidores.push(valor);
-        break;
-      case 'dia_vencimento':
-        valoresPredefinidos.dias_vencimento.push(parseInt(valor));
-        break;
-      case 'valor_plano':
-        valoresPredefinidos.valores_plano.push(parseFloat(valor));
-        break;
-      case 'dispositivo_smart':
-        valoresPredefinidos.dispositivos_smart.push(valor);
-        break;
-      case 'aplicativo':
-        valoresPredefinidos.aplicativos.push(valor);
-        break;
-      default:
-        break;
-    }
-  });
-  
-  // Sort arrays
-  sortValoresPredefinidos(valoresPredefinidos);
-  
-  return valoresPredefinidos;
-}
-
-/**
- * Sort all arrays in the ValoresPredefinidos object
- */
-function sortValoresPredefinidos(valoresPredefinidos: ValoresPredefinidos): void {
-  // Sort numeric arrays
-  valoresPredefinidos.dias_vencimento.sort((a, b) => a - b);
-  valoresPredefinidos.valores_plano.sort((a, b) => a - b);
-  
-  // Sort string arrays alphabetically
-  valoresPredefinidos.ufs.sort();
-  valoresPredefinidos.servidores.sort();
-  valoresPredefinidos.dispositivos_smart.sort();
-  valoresPredefinidos.aplicativos.sort();
 }

@@ -1,14 +1,12 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { ValoresPredefinidos } from "@/types";
+import { convertToSingularType } from "./utils";
 
 /**
- * Updates a specific type of predefined values for the current user
+ * Atualiza os valores predefinidos para um determinado tipo
  */
-export async function updateValoresPredefinidos(
-  tipo: keyof ValoresPredefinidos, 
-  valores: string[] | number[]
-): Promise<void> {
+export async function updateValoresPredefinidos(tipo: keyof ValoresPredefinidos, valores: string[] | number[]): Promise<void> {
   const { data: currentUser } = await supabase.auth.getUser();
   
   if (!currentUser.user) {
@@ -17,76 +15,54 @@ export async function updateValoresPredefinidos(
   
   const user_id = currentUser.user.id;
   
-  // Convert tipo to singular form as stored in the database
+  // Converter tipo para forma singular conforme armazenado no banco de dados
   const tipoSingular = convertToSingularType(tipo);
   
-  // Delete existing values
-  await deleteExistingValues(user_id, tipoSingular);
+  // Excluir todos os valores existentes para este tipo e usuário
+  const { error: deleteError } = await supabase
+    .from('valores_predefinidos')
+    .delete()
+    .eq('user_id', user_id)
+    .eq('tipo', tipoSingular);
+    
+  if (deleteError) {
+    console.error("Erro ao excluir valores existentes:", deleteError);
+    throw deleteError;
+  }
   
-  // If there are no values to insert, we're done
+  // Se não houver valores para inserir, terminamos
   if (valores.length === 0) {
     return;
   }
   
-  // Insert new values
-  await insertNewValues(user_id, tipoSingular, valores);
-}
-
-/**
- * Converts the plural type name to singular as stored in the database
- */
-function convertToSingularType(tipo: keyof ValoresPredefinidos): string {
-  switch (tipo) {
-    case 'ufs':
-      return 'uf';
-    case 'servidores':
-      return 'servidor';
-    case 'dias_vencimento':
-      return 'dia_vencimento';
-    case 'valores_plano':
-      return 'valor_plano';
-    case 'dispositivos_smart':
-      return 'dispositivo_smart';
-    case 'aplicativos':
-      return 'aplicativo';
-    default:
-      throw new Error(`Tipo inválido: ${tipo}`);
-  }
-}
-
-/**
- * Deletes all existing values for a specific type and user
- */
-async function deleteExistingValues(userId: string, tipo: string): Promise<void> {
-  const { error } = await supabase
-    .from('valores_predefinidos')
-    .delete()
-    .eq('user_id', userId)
-    .eq('tipo', tipo);
+  // Validar e formatar valores antes de inserir
+  const insertData = valores.map(valor => {
+    // Garantir que os valores numéricos são armazenados corretamente
+    let valorFormatado = valor;
     
-  if (error) {
-    console.error("Erro ao excluir valores existentes:", error);
-    throw error;
-  }
-}
-
-/**
- * Inserts new values for a specific type and user
- */
-async function insertNewValues(userId: string, tipo: string, valores: string[] | number[]): Promise<void> {
-  // Convert values to strings for the insert operation
-  const insertData = valores.map(valor => ({
-    user_id: userId,
-    tipo: tipo,
-    valor: valor.toString()
-  }));
+    // Converter para o formato correto com base no tipo
+    if (tipoSingular === 'valor_plano' && typeof valor === 'number') {
+      // Armazenar valores de plano com até 2 casas decimais
+      valorFormatado = parseFloat(valor.toFixed(2));
+    } else if (tipoSingular === 'dia_vencimento' && typeof valor === 'number') {
+      // Garantir que dias de vencimento são números inteiros
+      valorFormatado = Math.round(valor);
+    }
+    
+    return {
+      user_id,
+      tipo: tipoSingular,
+      valor: valorFormatado.toString()
+    };
+  });
   
-  const { error } = await supabase
+  // Inserir novos valores
+  const { error: insertError } = await supabase
     .from('valores_predefinidos')
     .insert(insertData);
     
-  if (error) {
-    console.error("Erro ao inserir novos valores:", error);
-    throw error;
+  if (insertError) {
+    console.error("Erro ao inserir novos valores:", insertError);
+    throw insertError;
   }
 }
