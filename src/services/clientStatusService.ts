@@ -17,3 +17,20 @@ export async function updateClientStatus(clientId: string, status: string): Prom
     throw error;
   }
 }
+
+export async function enableRealtimeForTable(tableName: string): Promise<void> {
+  try {
+    // Adicionar a tabela à publicação supabase_realtime
+    const { error } = await supabase.rpc('add_table_to_publication', {
+      table_name: tableName
+    });
+    
+    if (error) {
+      console.error(`Error enabling realtime for ${tableName}:`, error);
+      throw error;
+    }
+  } catch (error) {
+    console.error(`Error in enableRealtimeForTable for ${tableName}:`, error);
+    throw error;
+  }
+}

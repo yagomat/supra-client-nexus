@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/clientes/EmptyState";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { enableRealtimeForTable } from "@/services/clientStatusService";
 
 const GestaoPagamentos = () => {
   const {
@@ -34,6 +35,17 @@ const GestaoPagamentos = () => {
 
   // Setup realtime updates
   useEffect(() => {
+    // Habilitar realtime para a tabela clientes
+    const setupRealtime = async () => {
+      try {
+        await enableRealtimeForTable('clientes');
+      } catch (error) {
+        console.error("Error enabling realtime for clientes:", error);
+      }
+    };
+    
+    setupRealtime();
+    
     // Configurar subscription do Supabase para atualizações em tempo real
     const clienteSubscription = supabase
       .channel('cliente-status-changes')

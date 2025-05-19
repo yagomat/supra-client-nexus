@@ -4,6 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Pagamento, ClienteComPagamentos } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { meses } from "./usePaymentFilters";
+import { enableRealtimeForTable } from "@/services/clientStatusService";
 
 // Define the response type from our Supabase function
 interface PaymentStatusUpdateResponse {
@@ -17,6 +18,19 @@ export const usePaymentStatus = (
 ) => {
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
+
+  // Enable realtime for clientes table on component mount
+  useEffect(() => {
+    const setupRealtime = async () => {
+      try {
+        await enableRealtimeForTable('clientes');
+      } catch (error) {
+        console.error("Error enabling realtime for clientes:", error);
+      }
+    };
+    
+    setupRealtime();
+  }, []);
 
   // Subscribe to real-time client status changes
   useEffect(() => {
@@ -101,10 +115,6 @@ export const usePaymentStatus = (
       
       // Update the local pagamentos state
       setPagamentos(updatedPagamentosArray);
-      
-      // Update cliente status in real-time in the UI
-      // The backend will update the status automatically, but we need to update the UI
-      // This will be handled by the real-time subscription we set up above
       
     } catch (error) {
       console.error("Erro ao atualizar status de pagamento", error);

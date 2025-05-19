@@ -28,6 +28,7 @@ export const ClienteRow = ({
 
   // Subscribe to changes for this specific client
   useEffect(() => {
+    // Enable subscription to the cliente table for this specific client
     const clienteChannel = supabase
       .channel(`cliente-${cliente.id}`)
       .on('postgres_changes', 
@@ -38,6 +39,7 @@ export const ClienteRow = ({
           filter: `id=eq.${cliente.id}`
         }, 
         (payload) => {
+          console.log(`Cliente ${cliente.id} status updated:`, payload.new.status);
           setClienteStatus(payload.new.status);
         }
       )
