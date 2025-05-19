@@ -71,7 +71,24 @@ export const usePagamentos = () => {
       }
 
       if (clientesComPagamentos) {
-        setPagamentos(clientesComPagamentos as ClienteComPagamentos[]);
+        // Safely cast the data to our expected type after validation
+        const validClientes = clientesComPagamentos.map((cliente: any) => {
+          // Transform the array of pagamentos into the expected object format
+          const pagamentosObj: Record<string, Pagamento> = {};
+          if (Array.isArray(cliente.pagamentos)) {
+            cliente.pagamentos.forEach((pagamento: Pagamento) => {
+              const key = `${pagamento.mes}-${pagamento.ano}`;
+              pagamentosObj[key] = pagamento;
+            });
+          }
+          
+          return {
+            ...cliente,
+            pagamentos: pagamentosObj
+          };
+        }) as ClienteComPagamentos[];
+        
+        setPagamentos(validClientes);
       }
     } catch (error) {
       console.error("Erro ao carregar pagamentos:", error);
@@ -138,12 +155,38 @@ export const usePagamentos = () => {
       );
 
       // Transform clients into ClienteComPagamentos objects without payments
-      const result = clientesSemPagamento.map((cliente) => ({
-        ...cliente,
-        pagamentos: [],
-      }));
+      const result = clientesSemPagamento.map((cliente) => {
+        // Create empty pagamentos object
+        const pagamentosObj: Record<string, Pagamento> = {};
+        
+        // Add all the required fields for ClienteComPagamentos type
+        const clienteComPagamentos: ClienteComPagamentos = {
+          ...cliente,
+          // Add all required fields with default values if not present
+          pagamentos: pagamentosObj,
+          created_at: cliente.created_at || new Date().toISOString(),
+          uf: cliente.uf || null,
+          servidor: cliente.servidor || '',
+          dia_vencimento: cliente.dia_vencimento || 1,
+          valor_plano: cliente.valor_plano || null,
+          dispositivo_smart: cliente.dispositivo_smart || null,
+          aplicativo: cliente.aplicativo || '',
+          usuario_aplicativo: cliente.usuario_aplicativo || '',
+          senha_aplicativo: cliente.senha_aplicativo || '',
+          data_licenca_aplicativo: cliente.data_licenca_aplicativo || null,
+          possui_tela_adicional: cliente.possui_tela_adicional || false,
+          dispositivo_smart_2: cliente.dispositivo_smart_2 || null,
+          aplicativo_2: cliente.aplicativo_2 || null,
+          usuario_2: cliente.usuario_2 || null,
+          senha_2: cliente.senha_2 || null,
+          data_licenca_2: cliente.data_licenca_2 || null,
+          observacoes: cliente.observacoes || null
+        };
+        
+        return clienteComPagamentos;
+      });
 
-      setPagamentos(result as ClienteComPagamentos[]);
+      setPagamentos(result);
     } catch (error) {
       console.error("Erro ao carregar clientes sem pagamento:", error);
       toast({
@@ -174,8 +217,12 @@ export const usePagamentos = () => {
         status,
       };
 
-      if (cliente.pagamentos && cliente.pagamentos.length > 0) {
-        pagamento.id = cliente.pagamentos[0].id;
+      // Check if client has pagamentos for this month and year
+      const pagamentoKey = `${mes}-${ano}`;
+      const existingPagamento = cliente.pagamentos[pagamentoKey];
+      
+      if (existingPagamento && existingPagamento.id) {
+        pagamento.id = existingPagamento.id;
       }
       
       // If it has an ID, it's an existing payment that needs to be updated
@@ -209,24 +256,30 @@ export const usePagamentos = () => {
         }
         
         if (data) {
-          const paymentData = data.pagamento;
-          if (paymentData) {
-            pagamento.id = paymentData.id;
-            pagamento.status = paymentData.status;
-            pagamento.data_pagamento = paymentData.data_pagamento;
+          // Safely cast and access the data
+          const responseData = data as { action: string; pagamento: Pagamento };
+          if (responseData.pagamento) {
+            pagamento.id = responseData.pagamento.id;
+            pagamento.status = responseData.pagamento.status;
+            pagamento.data_pagamento = responseData.pagamento.data_pagamento;
           }
         }
       }
 
-      // Update the local list
+      // Update the local list with a properly typed update function
       setPagamentos(prev => 
         prev.map(c => {
           if (c.id === cliente.id) {
+            // Create a deep copy of the existing pagamentos
+            const updatedPagamentos = { ...c.pagamentos };
+            
+            // Add or update the specific payment
+            const key = `${mes}-${ano}`;
+            updatedPagamentos[key] = pagamento as Pagamento;
+            
             return {
               ...c,
-              pagamentos: c.pagamentos?.length 
-                ? [{ ...c.pagamentos[0], ...pagamento } as Pagamento] 
-                : [pagamento as Pagamento]
+              pagamentos: updatedPagamentos
             };
           }
           return c;
