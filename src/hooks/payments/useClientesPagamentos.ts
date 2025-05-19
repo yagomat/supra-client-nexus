@@ -44,9 +44,8 @@ export const useClientesPagamentos = () => {
     const setupRealtime = async () => {
       try {
         await enableRealtimeForTable('clientes');
-        await enableRealtimeForTable('pagamentos');
       } catch (error) {
-        console.error("Error enabling realtime:", error);
+        console.error("Error enabling realtime for clientes:", error);
       }
     };
     
@@ -59,7 +58,7 @@ export const useClientesPagamentos = () => {
     
     // Inscrever-se para atualizações em tempo real dos pagamentos
     const pagamentosChannel = supabase
-      .channel('pagamentos-changes')
+      .channel('pagamentos-changes-clientespagamentos')
       .on('postgres_changes', 
         { 
           event: '*', 
@@ -89,6 +88,14 @@ export const useClientesPagamentos = () => {
               cliente.id === payload.new.id ? { ...cliente, ...payload.new } : cliente
             )
           );
+          
+          // Notificar sobre alterações de status
+          if (payload.old.status !== payload.new.status) {
+            toast({
+              title: "Status do cliente atualizado",
+              description: `Cliente "${payload.new.nome}" agora está ${payload.new.status === 'ativo' ? 'ativo' : 'inativo'}.`,
+            });
+          }
         }
       )
       .subscribe();

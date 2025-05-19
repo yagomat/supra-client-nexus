@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePagamentos } from "@/hooks/usePagamentos";
@@ -9,10 +9,6 @@ import { PagamentosFiltros } from "@/components/pagamentos/PagamentosFiltros";
 import { LoadingState } from "@/components/clientes/LoadingState";
 import { EmptyState } from "@/components/clientes/EmptyState";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { enableRealtimeForTable } from "@/services/clientStatusService";
-import { ClienteComPagamentos } from "@/types";
 
 const GestaoPagamentos = () => {
   const {
@@ -36,50 +32,11 @@ const GestaoPagamentos = () => {
   } = usePagamentos();
   
   const isMobile = useIsMobile();
-  const { toast } = useToast();
 
   // Handle sort order change
   const handleSortChange = (order: 'nome' | 'data') => {
     setSortOrder(order);
   };
-
-  // Setup realtime updates
-  useEffect(() => {
-    // Habilitar realtime para a tabela clientes
-    const setupRealtime = async () => {
-      try {
-        await enableRealtimeForTable('clientes');
-      } catch (error) {
-        console.error("Error enabling realtime for clientes:", error);
-      }
-    };
-    
-    setupRealtime();
-    
-    // Configurar subscription do Supabase para atualizações em tempo real
-    const clienteSubscription = supabase
-      .channel('cliente-status-changes')
-      .on('postgres_changes', 
-        { 
-          event: 'UPDATE', 
-          schema: 'public', 
-          table: 'clientes',
-          filter: 'status=eq.ativo OR status=eq.inativo'
-        }, 
-        (payload) => {
-          toast({
-            title: "Status do cliente atualizado",
-            description: `O status do cliente ${payload.new.nome} foi atualizado para ${payload.new.status}.`,
-          });
-        }
-      )
-      .subscribe();
-
-    // Limpar subscription quando o componente for desmontado
-    return () => {
-      supabase.removeChannel(clienteSubscription);
-    };
-  }, [toast]);
 
   return (
     <DashboardLayout>

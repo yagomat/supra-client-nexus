@@ -13,14 +13,13 @@ export const usePaymentStatus = (
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
 
-  // Enable realtime for clientes and pagamentos tables on component mount
+  // Enable realtime for pagamentos table on component mount
   useEffect(() => {
     const setupRealtime = async () => {
       try {
-        await enableRealtimeForTable('clientes');
         await enableRealtimeForTable('pagamentos');
       } catch (error) {
-        console.error("Error enabling realtime:", error);
+        console.error("Error enabling realtime for pagamentos:", error);
       }
     };
     
