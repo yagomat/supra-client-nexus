@@ -52,10 +52,11 @@ const BancoDados = () => {
     try {
       setSaving(true);
       
-      const isNumeric = ["dias_vencimento", "valores_plano"].includes(activeTab);
+      const isNumeric = ["dias_vencimento"].includes(activeTab);
+      const isPlano = activeTab === "valores_plano";
       let updatedValues: string[] | number[] = [];
       
-      if (isNumeric) {
+      if (isNumeric || isPlano) {
         if (!newNumericValue.trim()) {
           toast({
             title: "Valor inválido",
@@ -65,29 +66,42 @@ const BancoDados = () => {
           return;
         }
         
-        const numValue = parseFloat(newNumericValue);
-        if (isNaN(numValue)) {
-          toast({
-            title: "Valor inválido",
-            description: "Por favor, informe um valor numérico válido.",
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        // Validação adicional para dia_vencimento
-        if (activeTab === "dias_vencimento" && (numValue < 1 || numValue > 31 || !Number.isInteger(numValue))) {
-          toast({
-            title: "Valor inválido",
-            description: "O dia de vencimento deve ser um número inteiro entre 1 e 31.",
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        updatedValues = [...valoresPredefinidos[activeTab as keyof ValoresPredefinidos] as number[], numValue];
-        if (activeTab === "dias_vencimento") {
-          updatedValues = (updatedValues as number[]).map(v => Math.round(v));
+        if (isPlano) {
+          // Validação para valores_plano - máximo 4 caracteres
+          if (newNumericValue.length > 4) {
+            toast({
+              title: "Valor inválido",
+              description: "O valor do plano deve ter no máximo 4 caracteres.",
+              variant: "destructive",
+            });
+            return;
+          }
+          updatedValues = [...valoresPredefinidos[activeTab as keyof ValoresPredefinidos] as string[], newNumericValue];
+        } else {
+          const numValue = parseFloat(newNumericValue);
+          if (isNaN(numValue)) {
+            toast({
+              title: "Valor inválido",
+              description: "Por favor, informe um valor numérico válido.",
+              variant: "destructive",
+            });
+            return;
+          }
+          
+          // Validação adicional para dia_vencimento
+          if (activeTab === "dias_vencimento" && (numValue < 1 || numValue > 31 || !Number.isInteger(numValue))) {
+            toast({
+              title: "Valor inválido",
+              description: "O dia de vencimento deve ser um número inteiro entre 1 e 31.",
+              variant: "destructive",
+            });
+            return;
+          }
+          
+          updatedValues = [...valoresPredefinidos[activeTab as keyof ValoresPredefinidos] as number[], numValue];
+          if (activeTab === "dias_vencimento") {
+            updatedValues = (updatedValues as number[]).map(v => Math.round(v));
+          }
         }
       } else {
         if (!newValue.trim()) {
@@ -120,9 +134,7 @@ const BancoDados = () => {
       }
       
       // Remover duplicatas
-      updatedValues = isNumeric
-        ? Array.from(new Set(updatedValues as number[]))
-        : Array.from(new Set(updatedValues as string[]));
+      updatedValues = Array.from(new Set(updatedValues));
       
       // Ordenar valores
       updatedValues = isNumeric
@@ -304,7 +316,8 @@ const BancoDados = () => {
     if (!valoresPredefinidos) return null;
     
     const values = valoresPredefinidos[type];
-    const isNumeric = ["dias_vencimento", "valores_plano"].includes(type);
+    const isNumeric = ["dias_vencimento"].includes(type);
+    const isPlano = type === "valores_plano";
     
     return (
       <div className="border rounded-md overflow-hidden">
@@ -326,7 +339,7 @@ const BancoDados = () => {
               values.map((value, index) => (
                 <TableRow key={index}>
                   <TableCell>
-                    {isNumeric && type === "valores_plano" ? `R$ ${(value as number).toFixed(2)}` : value}
+                    {isNumeric ? value : isPlano ? value : value}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button
@@ -430,21 +443,38 @@ const BancoDados = () => {
             <DialogTitle>Adicionar Valor</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            {["dias_vencimento", "valores_plano"].includes(activeTab) ? (
+            {["dias_vencimento"].includes(activeTab) ? (
               <div className="space-y-2">
                 <label htmlFor="newNumericValue" className="text-sm font-medium">
-                  {activeTab === "dias_vencimento" ? "Dia de Vencimento" : "Valor do Plano"}
+                  {activeTab === "dias_vencimento" ? "Dia de Vencimento" : ""}
                 </label>
                 <Input
                   id="newNumericValue"
                   type="number"
-                  step={activeTab === "valores_plano" ? "0.01" : "1"}
+                  step="1"
                   min={activeTab === "dias_vencimento" ? "1" : "0"}
                   max={activeTab === "dias_vencimento" ? "31" : undefined}
                   value={newNumericValue}
                   onChange={(e) => setNewNumericValue(e.target.value)}
-                  placeholder={activeTab === "dias_vencimento" ? "Ex: 10 (entre 1 e 31)" : "Ex: 49.90"}
+                  placeholder={activeTab === "dias_vencimento" ? "Ex: 10 (entre 1 e 31)" : ""}
                 />
+              </div>
+            ) : activeTab === "valores_plano" ? (
+              <div className="space-y-2">
+                <label htmlFor="newNumericValue" className="text-sm font-medium">
+                  Valor do Plano
+                </label>
+                <Input
+                  id="newNumericValue"
+                  type="text"
+                  value={newNumericValue}
+                  onChange={(e) => setNewNumericValue(e.target.value)}
+                  placeholder="Ex: 49.9"
+                  maxLength={4}
+                />
+                <div className="text-xs text-gray-500 text-right mt-0.5">
+                  {newNumericValue?.length || 0}/4
+                </div>
               </div>
             ) : (
               <div className="space-y-2">
