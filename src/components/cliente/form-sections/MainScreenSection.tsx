@@ -67,7 +67,7 @@ export const MainScreenSection: React.FC<MainScreenSectionProps> = ({
           name="usuario_aplicativo"
           control={control}
           label="Usuário"
-          placeholder="Usuário do aplicativo"
+          placeholder="Usuário do aplicativo (opcional)"
           disabled={disabled}
         />
 
@@ -75,7 +75,7 @@ export const MainScreenSection: React.FC<MainScreenSectionProps> = ({
           name="senha_aplicativo"
           control={control}
           label="Senha"
-          placeholder="Senha do aplicativo"
+          placeholder="Senha do aplicativo (opcional)"
           disabled={disabled}
         />
       </div>

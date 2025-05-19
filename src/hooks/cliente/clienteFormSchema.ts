@@ -13,8 +13,8 @@ export const formSchema = z.object({
   // Tela principal
   dispositivo_smart: z.string().optional(),
   aplicativo: z.string().min(1, { message: "Aplicativo é obrigatório" }),
-  usuario_aplicativo: z.string().min(1, { message: "Usuário é obrigatório" }),
-  senha_aplicativo: z.string().min(1, { message: "Senha é obrigatória" }),
+  usuario_aplicativo: z.string().optional(),
+  senha_aplicativo: z.string().optional(),
   data_licenca_aplicativo: z.string().optional(),
   
   // Tela adicional

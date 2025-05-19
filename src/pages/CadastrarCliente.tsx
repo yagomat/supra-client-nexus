@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -82,8 +81,8 @@ const CadastrarCliente = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validar campos obrigatórios
-    const requiredFields = ['nome', 'servidor', 'aplicativo', 'usuario_aplicativo', 'senha_aplicativo'];
+    // Validar campos obrigatórios - removing usuario_aplicativo and senha_aplicativo
+    const requiredFields = ['nome', 'servidor', 'aplicativo'];
     const missingFields = requiredFields.filter((field) => !formData[field as keyof typeof formData]);
 
     if (missingFields.length > 0) {
@@ -329,20 +328,20 @@ const CadastrarCliente = () => {
 
                   <div className="space-y-2">
                     <label htmlFor="usuario_aplicativo" className="text-sm font-medium">
-                      Usuário do Aplicativo <span className="text-destructive">*</span>
+                      Usuário do Aplicativo
                     </label>
                     <Input
                       id="usuario_aplicativo"
                       name="usuario_aplicativo"
                       value={formData.usuario_aplicativo}
                       onChange={handleChange}
-                      placeholder="Nome de usuário"
+                      placeholder="Nome de usuário (opcional)"
                     />
                   </div>
 
                   <div className="space-y-2">
                     <label htmlFor="senha_aplicativo" className="text-sm font-medium">
-                      Senha do Aplicativo <span className="text-destructive">*</span>
+                      Senha do Aplicativo
                     </label>
                     <Input
                       id="senha_aplicativo"
@@ -350,7 +349,7 @@ const CadastrarCliente = () => {
                       type="password"
                       value={formData.senha_aplicativo}
                       onChange={handleChange}
-                      placeholder="Senha do aplicativo"
+                      placeholder="Senha do aplicativo (opcional)"
                     />
                   </div>
 
