@@ -134,8 +134,7 @@ export const useClientesPagamentos = () => {
           ano: anoAtual,
           status: "nao_pago",
           data_pagamento: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          created_at: new Date().toISOString()
         };
       });
       
