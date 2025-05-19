@@ -75,15 +75,42 @@ const BancoDados = () => {
           return;
         }
         
+        // Validação adicional para dia_vencimento
+        if (activeTab === "dias_vencimento" && (numValue < 1 || numValue > 31 || !Number.isInteger(numValue))) {
+          toast({
+            title: "Valor inválido",
+            description: "O dia de vencimento deve ser um número inteiro entre 1 e 31.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
         updatedValues = [...valoresPredefinidos[activeTab as keyof ValoresPredefinidos] as number[], numValue];
         if (activeTab === "dias_vencimento") {
-          updatedValues = (updatedValues as number[]).map(v => Math.round(v)); // Garantir que dias de vencimento sejam inteiros
+          updatedValues = (updatedValues as number[]).map(v => Math.round(v));
         }
       } else {
         if (!newValue.trim()) {
           toast({
             title: "Valor inválido",
             description: "Por favor, informe um valor válido.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        // Validações adicionais
+        if (activeTab === "ufs" && newValue.length > 2) {
+          toast({
+            title: "UF inválida",
+            description: "A UF deve ter no máximo 2 caracteres.",
+            variant: "destructive",
+          });
+          return;
+        } else if (["servidores", "dispositivos_smart", "aplicativos"].includes(activeTab) && newValue.length > 25) {
+          toast({
+            title: "Valor inválido",
+            description: "O valor deve ter no máximo 25 caracteres.",
             variant: "destructive",
           });
           return;
@@ -189,9 +216,26 @@ const BancoDados = () => {
           if (isNaN(num)) {
             throw new Error(`Valor inválido: ${item}`);
           }
-          return activeTab === "dias_vencimento" ? Math.round(num) : num;
+          
+          // Validação adicional para dia_vencimento
+          if (activeTab === "dias_vencimento") {
+            if (num < 1 || num > 31 || !Number.isInteger(num)) {
+              throw new Error(`Dia de vencimento inválido (deve ser entre 1 e 31): ${item}`);
+            }
+            return Math.round(num);
+          }
+          
+          return num;
         });
       } else {
+        // Validar tamanho dos valores
+        for (const item of items) {
+          if (activeTab === "ufs" && item.length > 2) {
+            throw new Error(`UF inválida (máximo 2 caracteres): ${item}`);
+          } else if (["servidores", "dispositivos_smart", "aplicativos"].includes(activeTab) && item.length > 25) {
+            throw new Error(`Valor inválido (máximo 25 caracteres): ${item}`);
+          }
+        }
         values = items;
       }
       
@@ -395,10 +439,11 @@ const BancoDados = () => {
                   id="newNumericValue"
                   type="number"
                   step={activeTab === "valores_plano" ? "0.01" : "1"}
-                  min="0"
+                  min={activeTab === "dias_vencimento" ? "1" : "0"}
+                  max={activeTab === "dias_vencimento" ? "31" : undefined}
                   value={newNumericValue}
                   onChange={(e) => setNewNumericValue(e.target.value)}
-                  placeholder={activeTab === "dias_vencimento" ? "Ex: 10" : "Ex: 49.90"}
+                  placeholder={activeTab === "dias_vencimento" ? "Ex: 10 (entre 1 e 31)" : "Ex: 49.90"}
                 />
               </div>
             ) : (
@@ -416,8 +461,19 @@ const BancoDados = () => {
                   id="newValue"
                   value={newValue}
                   onChange={(e) => setNewValue(e.target.value)}
-                  placeholder="Digite o valor"
+                  placeholder={activeTab === "ufs" ? "Digite a UF (máx. 2 caracteres)" : "Digite o valor (máx. 25 caracteres)"}
+                  maxLength={activeTab === "ufs" ? 2 : 25}
                 />
+                {activeTab !== "ufs" && (
+                  <div className="text-xs text-gray-500 text-right mt-0.5">
+                    {newValue?.length || 0}/25
+                  </div>
+                )}
+                {activeTab === "ufs" && (
+                  <div className="text-xs text-gray-500 text-right mt-0.5">
+                    {newValue?.length || 0}/2
+                  </div>
+                )}
               </div>
             )}
           </div>
