@@ -16,14 +16,6 @@ const Dashboard = () => {
     try {
       setLoading(true);
       const data = await getDashboardStats();
-      console.log("Dashboard stats data:", JSON.stringify(data, null, 2));
-      
-      // Log specific parts for debugging
-      if (data?.evolucao_clientes) {
-        console.log("Evolution data format check:", 
-          data.evolucao_clientes.map(item => `${item.mes} (${typeof item.mes}): ${item.quantidade}`));
-      }
-      
       setStats(data);
     } catch (error) {
       console.error("Erro ao buscar estatísticas", error);

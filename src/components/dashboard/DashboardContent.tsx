@@ -15,7 +15,7 @@ export const DashboardContent = ({ stats, loading }: DashboardContentProps) => {
   const isMobile = useIsMobile();
   
   // Safe getter function to handle potential null values
-  const getSafeData = <T extends any>(dataArray: T[] | null | undefined, defaultValue: T[] = []) => {
+  const getSafeData = (dataArray: any[] | null | undefined, defaultValue: any[] = []) => {
     return Array.isArray(dataArray) ? dataArray : defaultValue;
   };
 
@@ -24,8 +24,6 @@ export const DashboardContent = ({ stats, loading }: DashboardContentProps) => {
   
   // Create a safe version of payment evolution data
   const safePagamentosPorMes = stats?.pagamentos_por_mes ? getSafeData(stats.pagamentos_por_mes) : [];
-
-  console.log("DashboardContent - Clientes evolution data:", safeEvolucaoClientes);
 
   return (
     <div className="flex flex-col space-y-4 w-full">
