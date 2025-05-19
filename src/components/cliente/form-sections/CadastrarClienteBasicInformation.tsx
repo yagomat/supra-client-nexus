@@ -45,7 +45,7 @@ export const CadastrarClienteBasicInformation: React.FC<BasicInformationProps> =
           label="Nome"
           placeholder="Nome completo do cliente"
           disabled={disabled}
-          maxLength={100}
+          maxLength={40}
         />
 
         <InputField

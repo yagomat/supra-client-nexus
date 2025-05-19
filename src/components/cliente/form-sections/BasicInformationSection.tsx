@@ -28,7 +28,7 @@ export const BasicInformationSection: React.FC<BasicInformationSectionProps> = (
           label="Nome"
           placeholder="Nome do cliente"
           disabled={disabled}
-          maxLength={100}
+          maxLength={40}
         />
 
         <InputField
