@@ -37,8 +37,12 @@ export const usePaymentStatus = (
         throw error;
       }
       
-      // Properly cast the response to our interface
-      const response = data as PaymentStatusUpdateResponse;
+      if (!data) {
+        throw new Error("No data returned from payment status update");
+      }
+      
+      // First cast to unknown, then to our interface type for safety
+      const response = data as unknown as PaymentStatusUpdateResponse;
       
       // Extract the payment data from the function result
       const updatedPagamento = response.pagamento;
