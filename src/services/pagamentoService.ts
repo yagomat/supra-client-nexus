@@ -2,8 +2,14 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Pagamento } from "@/types";
 
-export async function getPagamentos(clienteId?: string, mes?: number, ano?: number, status?: string): Promise<Pagamento[]> {
-  // Usar nossa nova função RPC filter_pagamentos
+export async function getPagamentos(
+  clienteId?: string, 
+  mes?: number, 
+  ano?: number, 
+  status?: string,
+  ordenacao: 'nome' | 'data' = 'data'
+): Promise<Pagamento[]> {
+  // Usar nossa função RPC filter_pagamentos com suporte à ordenação
   const { data: currentUser } = await supabase.auth.getUser();
   const userId = currentUser.user?.id;
   
@@ -14,7 +20,8 @@ export async function getPagamentos(clienteId?: string, mes?: number, ano?: numb
       p_mes: mes || null,
       p_ano: ano || null,
       p_status: status || null,
-      p_user_id: userId || null
+      p_user_id: userId || null,
+      p_ordem: ordenacao || 'data'
     }
   );
   

@@ -15,14 +15,15 @@ export const useClientesPagamentos = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const [anoAtual, setAnoAtual] = useState(new Date().getFullYear());
+  const [sortOrder, setSortOrder] = useState<'nome' | 'data'>('data');
 
   // Função para carregar dados que pode ser chamada quando necessário
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const clientesData = await getClientes();
-      // Usar a função getPagamentos com filtro por ano
-      const pagamentosData = await getPagamentos(undefined, undefined, anoAtual);
+      // Usar a função getPagamentos com filtro por ano e ordenação
+      const pagamentosData = await getPagamentos(undefined, undefined, anoAtual, undefined, sortOrder);
       
       setClientes(clientesData);
       setPagamentos(pagamentosData);
@@ -37,7 +38,7 @@ export const useClientesPagamentos = () => {
     } finally {
       setLoading(false);
     }
-  }, [toast, anoAtual]);
+  }, [toast, anoAtual, sortOrder]);
 
   // Configurar realtime para as tabelas relevantes
   useEffect(() => {
@@ -165,6 +166,8 @@ export const useClientesPagamentos = () => {
     loading,
     anoAtual,
     setAnoAtual,
+    sortOrder,
+    setSortOrder,
     reloadData: fetchData // Exportar a função para permitir recarregar dados quando necessário
   };
 };

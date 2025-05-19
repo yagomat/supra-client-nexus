@@ -26,12 +26,11 @@ export const usePaymentFilters = (clientesComPagamentos: ClienteComPagamentos[])
   const [anoAtual, setAnoAtual] = useState<number>(currentYear);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filteredClientes, setFilteredClientes] = useState<ClienteComPagamentos[]>([]);
-  const [sortOrder, setSortOrder] = useState<'nome' | 'data'>('data');
   
   // Anos para os selects
   const anos = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
   
-  // Filter and sort clients based on search term and sort order
+  // Filter clients based on search term only (ordenação agora é feita no backend)
   useEffect(() => {
     let results = [...clientesComPagamentos];
     
@@ -43,15 +42,8 @@ export const usePaymentFilters = (clientesComPagamentos: ClienteComPagamentos[])
       );
     }
     
-    // Apply sorting
-    if (sortOrder === 'nome') {
-      results.sort((a, b) => a.nome.localeCompare(b.nome));
-    } else {
-      results.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    }
-    
     setFilteredClientes(results);
-  }, [clientesComPagamentos, searchTerm, sortOrder]);
+  }, [clientesComPagamentos, searchTerm]);
   
   // Function to clear search filter
   const handleLimparFiltro = () => {
@@ -68,8 +60,6 @@ export const usePaymentFilters = (clientesComPagamentos: ClienteComPagamentos[])
     filteredClientes,
     setFilteredClientes,
     handleLimparFiltro,
-    sortOrder,
-    setSortOrder,
     meses,
     anos
   };

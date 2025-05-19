@@ -13,7 +13,9 @@ export const usePagamentos = () => {
     clientesComPagamentos,
     loading,
     anoAtual,
-    setAnoAtual
+    setAnoAtual,
+    sortOrder,
+    setSortOrder
   } = useClientesPagamentos();
 
   // Filtros e pesquisa
@@ -25,14 +27,11 @@ export const usePagamentos = () => {
     filteredClientes,
     setFilteredClientes,
     handleLimparFiltro,
-    sortOrder,
-    setSortOrder,
     meses,
     anos
   } = usePaymentFilters(clientesComPagamentos);
 
   // Gerenciamento de status de pagamento
-  // No longer need to pass pagamentos and setPagamentos
   const { submitting, handleChangeStatus } = usePaymentStatus();
 
   return {
