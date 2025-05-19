@@ -173,6 +173,14 @@ export type Database = {
         Args: { table_name: string }
         Returns: undefined
       }
+      add_valor_predefinido: {
+        Args: { p_user_id: string; p_tipo: string; p_valor: string }
+        Returns: Json
+      }
+      delete_valor_predefinido: {
+        Args: { p_user_id: string; p_tipo: string; p_valor: string }
+        Returns: Json
+      }
       filter_clientes_by_status: {
         Args: { p_status?: string; p_user_id?: string }
         Returns: {
@@ -232,6 +240,10 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: Json
       }
+      get_valores_predefinidos: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       handle_payment_status_update: {
         Args: {
           p_cliente_id: string
@@ -241,9 +253,17 @@ export type Database = {
         }
         Returns: Json
       }
+      import_valores_predefinidos: {
+        Args: { p_user_id: string; p_tipo: string; p_valores: string[] }
+        Returns: Json
+      }
       recalculate_all_client_status: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      validate_valor_predefinido: {
+        Args: { p_tipo: string; p_valor: string }
+        Returns: boolean
       }
     }
     Enums: {

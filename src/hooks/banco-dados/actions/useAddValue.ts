@@ -2,8 +2,7 @@
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { ValoresPredefinidos } from "@/types";
-import { updateValoresPredefinidos } from "@/services/valoresPredefinidosService";
-import { validateNumericValue, validatePlanoValue, validateTextValue } from "../utils/valueValidations";
+import { addValorPredefinido } from "@/services/valoresPredefinidosService/valoresPredefinidosActions";
 
 export const useAddValue = (
   valoresPredefinidos: ValoresPredefinidos | null,
@@ -18,69 +17,30 @@ export const useAddValue = (
     try {
       setSaving(true);
       
-      const isNumeric = ["dias_vencimento"].includes(activeTab);
-      const isPlano = activeTab === "valores_plano";
+      const result = await addValorPredefinido(activeTab, newValueOrNumber);
       
-      if (isNumeric) {
-        // Validação para valores numéricos
-        const validationResult = validateNumericValue(newValueOrNumber, activeTab);
-        if (!validationResult.isValid) return false;
-        
-        const currentValues = valoresPredefinidos[activeTab as keyof ValoresPredefinidos] as number[];
-        const updatedValues = [...currentValues, validationResult.value!];
-        
-        // Remove duplicates and sort
-        const uniqueSorted = Array.from(new Set(updatedValues)).sort((a, b) => a - b);
-        
-        // Update backend with the correct numeric type
-        await updateValoresPredefinidos(activeTab as keyof ValoresPredefinidos, uniqueSorted);
-        
-        // Update local state
-        setValoresPredefinidos({
-          ...valoresPredefinidos,
-          [activeTab]: uniqueSorted,
+      if (!result.success) {
+        toast({
+          title: "Erro ao adicionar valor",
+          description: result.message,
+          variant: "destructive",
         });
-      } else if (isPlano) {
-        // Para valores de plano
-        const validationResult = validatePlanoValue(newValueOrNumber);
-        if (!validationResult.isValid) return false;
-        
-        const valorPlano = validationResult.value!;
-        const currentValues = valoresPredefinidos.valores_plano;
-        const updatedValues = [...currentValues, valorPlano];
-        
-        // Remove duplicates and sort
-        const uniqueSorted = Array.from(new Set(updatedValues)).sort((a, b) => a - b);
-        
-        // Update backend
-        await updateValoresPredefinidos("valores_plano", uniqueSorted);
-        
-        // Update local state
-        setValoresPredefinidos({
-          ...valoresPredefinidos,
-          valores_plano: uniqueSorted,
-        });
-      } else {
-        // Para valores de texto
-        const validationResult = validateTextValue(newValueOrNumber, activeTab);
-        if (!validationResult.isValid) return false;
-        
-        const textValue = validationResult.value!;
-        const currentValues = valoresPredefinidos[activeTab as keyof ValoresPredefinidos] as string[];
-        const updatedValues = [...currentValues, textValue];
-        
-        // Remove duplicates and sort
-        const uniqueSorted = Array.from(new Set(updatedValues)).sort();
-        
-        // Update backend with the correct string type
-        await updateValoresPredefinidos(activeTab as keyof ValoresPredefinidos, uniqueSorted);
-        
-        // Update local state
-        setValoresPredefinidos({
-          ...valoresPredefinidos,
-          [activeTab]: uniqueSorted,
-        });
+        return false;
       }
+      
+      // Atualizar estado local após sucesso
+      const updatedValues = [...(valoresPredefinidos[activeTab as keyof ValoresPredefinidos] as any[])];
+      updatedValues.push(activeTab === "valores_plano" || activeTab === "dias_vencimento" 
+        ? Number(result.valor) 
+        : result.valor
+      );
+      
+      setValoresPredefinidos({
+        ...valoresPredefinidos,
+        [activeTab]: updatedValues.sort((a, b) => 
+          typeof a === 'number' ? a - b : String(a).localeCompare(String(b))
+        ),
+      });
       
       toast({
         title: "Valor adicionado",

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { ValoresPredefinidos } from "@/types";
-import { updateValoresPredefinidos } from "@/services/valoresPredefinidosService";
+import { deleteValorPredefinido } from "@/services/valoresPredefinidosService/valoresPredefinidosActions";
 
 export const useDeleteValue = (
   valoresPredefinidos: ValoresPredefinidos | null,
@@ -17,17 +17,21 @@ export const useDeleteValue = (
     try {
       setSaving(true);
       
-      const isNumeric = ["dias_vencimento"].includes(type);
+      const result = await deleteValorPredefinido(type, value);
+      
+      if (!result.success) {
+        toast({
+          title: "Erro ao excluir valor",
+          description: result.message,
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      // Atualizar estado local após sucesso
       const currentValues = valoresPredefinidos[type as keyof ValoresPredefinidos];
+      const updatedValues = (currentValues as any[]).filter(item => item !== value);
       
-      let updatedValues = isNumeric
-        ? (currentValues as number[]).filter((item) => item !== value)
-        : (currentValues as string[]).filter((item) => item !== value);
-      
-      // Update backend
-      await updateValoresPredefinidos(type as keyof ValoresPredefinidos, updatedValues);
-      
-      // Update local state
       setValoresPredefinidos({
         ...valoresPredefinidos,
         [type]: updatedValues,

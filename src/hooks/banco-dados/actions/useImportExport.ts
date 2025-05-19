@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { ValoresPredefinidos } from "@/types";
-import { updateValoresPredefinidos } from "@/services/valoresPredefinidosService";
+import { importValoresPredefinidos } from "@/services/valoresPredefinidosService/valoresPredefinidosActions";
 
 export const useImportExport = (
   valoresPredefinidos: ValoresPredefinidos | null,
@@ -17,71 +17,24 @@ export const useImportExport = (
     try {
       setSaving(true);
       
-      const isNumeric = ["dias_vencimento"].includes(activeTab);
-      const isPlano = activeTab === "valores_plano";
-      
-      // Process imported text
       const items = importText.split("\n").map((item) => item.trim()).filter((item) => item.length > 0);
+      const result = await importValoresPredefinidos(activeTab, items);
       
-      if (isNumeric) {
-        // For numeric values (dias_vencimento)
-        const numericValues: number[] = items.map((item) => {
-          const num = parseFloat(item);
-          if (isNaN(num)) {
-            throw new Error(`Valor inválido: ${item}`);
-          }
-          
-          // Validation for dia_vencimento
-          if (activeTab === "dias_vencimento") {
-            if (num < 1 || num > 31 || !Number.isInteger(num)) {
-              throw new Error(`Dia de vencimento inválido (deve ser entre 1 e 31): ${item}`);
-            }
-            return Math.round(num);
-          }
-          
-          return num;
+      if (!result.success) {
+        toast({
+          title: "Erro na importação",
+          description: `Nenhum valor foi importado. ${result.invalid_values?.length ? `Valores inválidos: ${result.invalid_values.join(", ")}` : ""}`,
+          variant: "destructive",
         });
-        
-        // Remove duplicates and sort numerically
-        const uniqueSorted = Array.from(new Set(numericValues)).sort((a, b) => a - b);
-        
-        // Update backend with the correct type
-        await updateValoresPredefinidos(activeTab as keyof ValoresPredefinidos, uniqueSorted);
-        
-        // Update local state
-        setValoresPredefinidos({
-          ...valoresPredefinidos,
-          [activeTab]: uniqueSorted,
-        });
-      } else {
-        // For string values (ufs, servidores, valores_plano, etc.)
-        // Validate value lengths
-        for (const item of items) {
-          if (activeTab === "ufs" && item.length > 2) {
-            throw new Error(`UF inválida (máximo 2 caracteres): ${item}`);
-          } else if (["servidores", "dispositivos_smart", "aplicativos"].includes(activeTab) && item.length > 25) {
-            throw new Error(`Valor inválido (máximo 25 caracteres): ${item}`);
-          } else if (isPlano && item.length > 4) {
-            throw new Error(`Valor do plano inválido (máximo 4 caracteres): ${item}`);
-          }
-        }
-        
-        // Remove duplicates and sort alphabetically
-        const uniqueSorted = Array.from(new Set(items)).sort();
-        
-        // Update backend with the correct type
-        await updateValoresPredefinidos(activeTab as keyof ValoresPredefinidos, uniqueSorted);
-        
-        // Update local state
-        setValoresPredefinidos({
-          ...valoresPredefinidos,
-          [activeTab]: uniqueSorted,
-        });
+        return false;
       }
+      
+      // Recarregar valores predefinidos após importação
+      await refreshValoresPredefinidos();
       
       toast({
         title: "Importação concluída",
-        description: `Foram importados ${items.length} valores com sucesso.`,
+        description: `Foram importados ${result.importados} valores. ${result.duplicados} duplicados, ${result.invalidos} inválidos.`,
       });
       
       return true;
@@ -89,7 +42,7 @@ export const useImportExport = (
       console.error("Erro ao importar valores", error);
       toast({
         title: "Erro ao importar valores",
-        description: error instanceof Error ? error.message : "Ocorreu um erro ao importar os valores. Verifique se o formato está correto.",
+        description: "Ocorreu um erro ao importar os valores. Por favor, tente novamente.",
         variant: "destructive",
       });
       return false;
