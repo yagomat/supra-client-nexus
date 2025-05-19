@@ -95,7 +95,7 @@ export const useCadastrarClienteForm = () => {
         uf: data.uf || null,
         servidor: data.servidor,
         dia_vencimento: data.dia_vencimento || 1,
-        valor_plano: data.valor_plano || null,
+        valor_plano: data.valor_plano ? Number(data.valor_plano) : null,
         
         dispositivo_smart: data.dispositivo_smart || null,
         aplicativo: data.aplicativo,

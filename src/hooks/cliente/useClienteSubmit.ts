@@ -22,7 +22,8 @@ export const useClienteSubmit = (clienteId: string | undefined) => {
         // Remover qualquer formatação, armazenar apenas os dígitos do telefone
         telefone: data.telefone ? data.telefone.replace(/\D/g, '') : null,
         uf: data.uf || null,
-        valor_plano: data.valor_plano || null,
+        // Convert string to number or null
+        valor_plano: data.valor_plano ? Number(data.valor_plano) : null,
         dispositivo_smart: data.dispositivo_smart || null,
         data_licenca_aplicativo: data.data_licenca_aplicativo || null,
         dispositivo_smart_2: data.possui_tela_adicional ? data.dispositivo_smart_2 || null : null,
