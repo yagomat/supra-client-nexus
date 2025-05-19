@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePagamentos } from "@/hooks/usePagamentos";
@@ -9,6 +9,8 @@ import { PagamentosFiltros } from "@/components/pagamentos/PagamentosFiltros";
 import { LoadingState } from "@/components/clientes/LoadingState";
 import { EmptyState } from "@/components/clientes/EmptyState";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const GestaoPagamentos = () => {
   const {
@@ -28,6 +30,35 @@ const GestaoPagamentos = () => {
   } = usePagamentos();
   
   const isMobile = useIsMobile();
+  const { toast } = useToast();
+
+  // Configurar subscription do Supabase para atualizações em tempo real
+  useEffect(() => {
+    // Inscrever-se para atualizações em tempo real dos clientes
+    const clienteSubscription = supabase
+      .channel('cliente-status-changes')
+      .on('postgres_changes', 
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'clientes',
+          filter: 'status=eq.ativo OR status=eq.inativo'
+        }, 
+        (payload) => {
+          toast({
+            title: "Status do cliente atualizado",
+            description: `O status do cliente ${payload.new.nome} foi atualizado para ${payload.new.status}.`,
+          });
+          // Não precisamos fazer nada aqui já que o componente será atualizado na próxima renderização
+        }
+      )
+      .subscribe();
+
+    // Limpar subscription quando o componente for desmontado
+    return () => {
+      supabase.removeChannel(clienteSubscription);
+    };
+  }, [toast]);
 
   return (
     <DashboardLayout>

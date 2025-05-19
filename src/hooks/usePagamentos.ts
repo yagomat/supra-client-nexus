@@ -29,29 +29,10 @@ export const usePagamentos = () => {
     anos
   } = usePaymentFilters(clientesComPagamentos);
 
-  // Função auxiliar para atualizar status dos clientes em todos os estados relevantes
-  const updateClientesStatus = (clienteId: string, newStatus: string) => {
-    // Atualizar o cliente na lista de clientes
-    setClientes((prev) =>
-      prev.map((c) => 
-        c.id === clienteId ? { ...c, status: newStatus } : c
-      )
-    );
-    
-    // Atualizar o cliente na lista filtrada e na lista completa
-    const updateClienteList = (clienteList: typeof clientesComPagamentos) => 
-      clienteList.map((c) => 
-        c.id === clienteId ? { ...c, status: newStatus } : c
-      );
-    
-    setClientesComPagamentos(updateClienteList(clientesComPagamentos));
-  };
-
-  // Gerenciamento de status de pagamento
+  // Gerenciamento de status de pagamento - Agora sem a lógica de atualização de status do cliente
   const { submitting, handleChangeStatus } = usePaymentStatus(
     pagamentos, 
-    setPagamentos,
-    updateClientesStatus
+    setPagamentos
   );
 
   return {

@@ -3,13 +3,11 @@ import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { createPagamento, updatePagamento } from "@/services/pagamentoService";
 import { ClienteComPagamentos, Pagamento } from "@/types";
-import { determineClientStatus } from "./useClientStatus";
 import { meses } from "./usePaymentFilters";
 
 export const usePaymentStatus = (
   pagamentos: Pagamento[],
-  setPagamentos: (pagamentos: Pagamento[]) => void,
-  updateClientesState: (clienteId: string, newStatus: string) => void
+  setPagamentos: (pagamentos: Pagamento[]) => void
 ) => {
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
@@ -27,7 +25,7 @@ export const usePaymentStatus = (
         // Atualizar pagamento existente
         updatedPagamento = await updatePagamento(pagamentoExistente.id, status);
         
-        // Atualizar estado local dos pagamentos - FIX: Create a new array instead of using a callback
+        // Atualizar estado local dos pagamentos
         const updatedPagamentosArray = pagamentos.map((p) => 
           (p.id === pagamentoExistente.id ? updatedPagamento : p)
         );
@@ -50,7 +48,7 @@ export const usePaymentStatus = (
         const pagamentoCriado = await createPagamento(novoPagamento);
         updatedPagamento = pagamentoCriado;
         
-        // Atualizar estado local dos pagamentos - FIX: Create a new array instead of using a callback
+        // Atualizar estado local dos pagamentos
         const updatedPagamentosArray = [...pagamentos, pagamentoCriado];
         setPagamentos(updatedPagamentosArray);
         
@@ -60,19 +58,8 @@ export const usePaymentStatus = (
         });
       }
       
-      // Atualizar o status do cliente em tempo real
-      // 1. Criar uma cópia atualizada dos pagamentos
-      const updatedPagamentos = pagamentoExistente
-        ? pagamentos.map((p) => (p.id === pagamentoExistente.id ? updatedPagamento : p))
-        : [...pagamentos, updatedPagamento];
-      
-      // 2. Determinar o novo status
-      const newStatus = determineClientStatus(cliente, updatedPagamentos);
-      
-      // 3. Atualizar o status local do cliente
-      if (cliente.status !== newStatus) {
-        updateClientesState(cliente.id, newStatus);
-      }
+      // O status do cliente agora é atualizado automaticamente pelo trigger no banco de dados
+      // portanto não precisamos mais fazer isso manualmente aqui
       
     } catch (error) {
       console.error("Erro ao atualizar status de pagamento", error);

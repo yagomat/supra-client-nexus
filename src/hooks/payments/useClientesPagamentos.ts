@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { getClientes } from "@/services/clienteService";
 import { getPagamentos } from "@/services/pagamentoService";
@@ -14,41 +14,50 @@ export const useClientesPagamentos = () => {
   const { toast } = useToast();
   const [anoAtual, setAnoAtual] = useState(new Date().getFullYear());
 
-  // Carregar clientes e pagamentos
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const clientesData = await getClientes();
-        const pagamentosData = await getPagamentos();
-        
-        setClientes(clientesData);
-        setPagamentos(pagamentosData);
-        
-      } catch (error) {
-        console.error("Erro ao buscar dados", error);
-        toast({
-          title: "Erro ao carregar dados",
-          description: "Ocorreu um erro ao buscar clientes e pagamentos.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+  // Função para carregar dados que pode ser chamada quando necessário
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const clientesData = await getClientes();
+      const pagamentosData = await getPagamentos();
+      
+      setClientes(clientesData);
+      setPagamentos(pagamentosData);
+      
+    } catch (error) {
+      console.error("Erro ao buscar dados", error);
+      toast({
+        title: "Erro ao carregar dados",
+        description: "Ocorreu um erro ao buscar clientes e pagamentos.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [toast]);
+
+  // Carregar clientes e pagamentos inicialmente
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // Processar clientes e pagamentos
   useEffect(() => {
     const clientesPagamentos = clientes.map((cliente) => {
-      const clientePagamentos: Record<string, Pagamento | undefined> = {};
+      const clientePagamentos: Record<string, Pagamento> = {};
       
       // Inicializar todos os meses do ano atual
       meses.forEach((mes) => {
         const chave = `${mes.value}-${anoAtual}`;
-        clientePagamentos[chave] = undefined;
+        clientePagamentos[chave] = {
+          id: "",
+          cliente_id: cliente.id,
+          mes: mes.value,
+          ano: anoAtual,
+          status: "nao_pago",
+          data_pagamento: null,
+          created_at: new Date().toISOString()
+        };
       });
       
       // Adicionar pagamentos existentes
@@ -77,6 +86,7 @@ export const useClientesPagamentos = () => {
     setClientesComPagamentos,
     loading,
     anoAtual,
-    setAnoAtual
+    setAnoAtual,
+    reloadData: fetchData // Exportar a função para permitir recarregar dados quando necessário
   };
 };
