@@ -9,8 +9,62 @@ interface ClientEvolutionChartProps {
   loading: boolean;
 }
 
+// Helper function to get month name from number
+const getMonthName = (monthNumber: number): string => {
+  const date = new Date();
+  date.setMonth(monthNumber - 1);
+  return date.toLocaleString('pt-BR', { month: 'short' }).charAt(0).toUpperCase() + date.toLocaleString('pt-BR', { month: 'short' }).slice(1);
+};
+
+// Generate last 12 months data
+const generateLast12Months = () => {
+  const months = [];
+  const currentDate = new Date();
+  
+  for (let i = 11; i >= 0; i--) {
+    const date = new Date();
+    date.setMonth(currentDate.getMonth() - i);
+    
+    const monthNumber = date.getMonth() + 1;
+    const monthName = getMonthName(monthNumber);
+    
+    months.push({
+      monthNumber,
+      monthName,
+      mes: monthName,
+      quantidade: 0
+    });
+  }
+  
+  return months;
+};
+
 export const ClientEvolutionChart = ({ data, loading }: ClientEvolutionChartProps) => {
   const isMobile = useIsMobile();
+  
+  // Create complete dataset with all 12 months
+  const completeData = () => {
+    const last12Months = generateLast12Months();
+    
+    // Merge existing data with the 12 month template
+    if (data && data.length > 0) {
+      data.forEach(item => {
+        // Find the matching month in our template
+        const monthIndex = last12Months.findIndex(m => 
+          m.mes.toLowerCase() === item.mes.toLowerCase()
+        );
+        
+        if (monthIndex !== -1) {
+          // Update the quantity if the month is found
+          last12Months[monthIndex].quantidade = item.quantidade;
+        }
+      });
+    }
+    
+    return last12Months;
+  };
+  
+  const chartData = completeData();
   
   return (
     <Card className="w-full">
@@ -22,10 +76,10 @@ export const ClientEvolutionChart = ({ data, loading }: ClientEvolutionChartProp
           <div className="flex items-center justify-center h-full">
             <Skeleton className="h-full w-full" />
           </div>
-        ) : data.length > 0 ? (
+        ) : chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={data}
+              data={chartData}
               margin={{
                 top: 10,
                 right: isMobile ? 10 : 20,
