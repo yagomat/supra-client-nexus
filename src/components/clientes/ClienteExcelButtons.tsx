@@ -129,10 +129,10 @@ export const ClienteExcelButtons = ({ clientes, onImportSuccess }: ClienteExcelB
         Importar
       </Button>
       
-      {/* Input de arquivo oculto */}
+      {/* Input de arquivo oculto - agora aceita arquivos CSV */}
       <input
         type="file"
-        accept=".xlsx,.xls"
+        accept=".csv,.xlsx,.xls"
         onChange={handleFileChange}
         ref={fileInputRef}
         className="hidden"
