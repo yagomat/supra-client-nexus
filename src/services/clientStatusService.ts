@@ -20,7 +20,7 @@ export async function updateClientStatus(clientId: string, status: string): Prom
 
 export async function enableRealtimeForTable(tableName: string): Promise<void> {
   try {
-    // Adicionar a tabela à publicação supabase_realtime
+    // Set REPLICA IDENTITY to FULL for the table
     const { error } = await supabase.rpc('add_table_to_publication', {
       table_name: tableName
     });
