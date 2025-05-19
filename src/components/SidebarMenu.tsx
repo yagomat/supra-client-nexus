@@ -10,7 +10,11 @@ import {
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
-export const SidebarMenu = () => {
+interface SidebarMenuProps {
+  onCollapseChange?: (collapsed: boolean) => void;
+}
+
+export const SidebarMenu = ({ onCollapseChange }: SidebarMenuProps) => {
   const location = useLocation();
   const pathname = location.pathname;
   

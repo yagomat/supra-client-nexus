@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -11,6 +12,7 @@ import { ClienteModals } from "@/components/clientes/ClienteModals";
 import { EmptyState } from "@/components/clientes/EmptyState";
 import { LoadingState } from "@/components/clientes/LoadingState";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const ListaClientes = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -23,8 +25,11 @@ const ListaClientes = () => {
   const [isTelaAdicionaModalOpen, setIsTelaAdicionaModalOpen] = useState(false);
   const [isObservacoesModalOpen, setIsObservacoesModalOpen] = useState(false);
   const [clienteParaExcluir, setClienteParaExcluir] = useState<string | null>(null);
+  const [sortColumn, setSortColumn] = useState<string>("nome"); // Set default sort column
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc"); // Set default sort direction
   const { toast } = useToast();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   // Buscar clientes baseado no filtro de status
   const fetchClientes = async () => {
@@ -137,10 +142,24 @@ const ListaClientes = () => {
     }
   };
 
+  const handleSortChange = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="flex flex-col space-y-4">
-        <ClienteListHeader />
+        <ClienteListHeader 
+          onSortChange={handleSortChange}
+          sortColumn={sortColumn}
+          sortDirection={sortDirection}
+          isMobile={isMobile}
+        />
 
         <ClienteFilters 
           searchTerm={searchTerm}
@@ -157,10 +176,10 @@ const ListaClientes = () => {
         ) : (
           <ClienteTable 
             clientes={filteredClientes}
-            verDetalhes={verDetalhes}
-            verTelaAdicional={verTelaAdicional}
-            verObservacoes={verObservacoes}
-            confirmarExclusao={confirmarExclusao}
+            onSortChange={handleSortChange}
+            sortColumn={sortColumn}
+            sortDirection={sortDirection}
+            onDelete={confirmarExclusao}
           />
         )}
       </div>

@@ -6,6 +6,7 @@ import { getPagamentos, updatePagamento } from "@/services/pagamentoService";
 import { useToast } from "./use-toast";
 import { updateClienteStatus } from "@/services/clientStatusService";
 import { meses } from "./payments/usePaymentFilters";
+import { supabase } from "@/integrations/supabase/client";
 
 export const usePagamentos = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
