@@ -219,6 +219,22 @@ export type Database = {
         Args: { p_user_id: string; p_tipo: string; p_valor: string }
         Returns: Json
       }
+      filter_audit_logs: {
+        Args: {
+          p_event_type?: string
+          p_start_date?: string
+          p_end_date?: string
+        }
+        Returns: {
+          created_at: string
+          details: Json | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string | null
+        }[]
+      }
       filter_clientes_by_status: {
         Args: { p_status?: string; p_user_id?: string }
         Returns: {
@@ -278,6 +294,18 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: Json
       }
+      get_user_audit_logs: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          details: Json | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string | null
+        }[]
+      }
       get_valores_predefinidos: {
         Args: { p_user_id: string }
         Returns: Json
@@ -298,6 +326,16 @@ export type Database = {
       import_valores_predefinidos: {
         Args: { p_user_id: string; p_tipo: string; p_valores: string[] }
         Returns: Json
+      }
+      log_audit_event: {
+        Args: {
+          p_user_id: string
+          p_event_type: string
+          p_details: Json
+          p_ip_address?: string
+          p_user_agent?: string
+        }
+        Returns: undefined
       }
       recalculate_all_client_status: {
         Args: Record<PropertyKey, never>

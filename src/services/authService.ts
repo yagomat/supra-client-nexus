@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -206,7 +205,7 @@ export const secureSignOut = async (): Promise<boolean> => {
   }
 };
 
-// Verificar força da senha (para uso no frontend)
+// Função para verificar força da senha (para uso no frontend)
 export const checkPasswordStrength = (password: string): {
   strength: 'fraca' | 'média' | 'forte';
   feedback: string;
