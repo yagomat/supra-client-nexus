@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, AlertCircle, Check, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { checkPasswordStrength, emailSchema, passwordSchema } from "@/services/authService";
+import { checkPasswordStrength } from "@/services/auth/passwordUtils";
+import { emailSchema, passwordSchema } from "@/services/auth/schemas";
 import { z } from "zod";
 
 const Cadastro = () => {

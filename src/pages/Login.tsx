@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,7 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { z } from "zod";
-import { emailSchema } from "@/services/authService";
+import { emailSchema } from "@/services/auth/schemas";
 
 const Login = () => {
   const [email, setEmail] = useState("");
