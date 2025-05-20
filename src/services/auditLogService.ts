@@ -1,12 +1,13 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
 // Tipos para os logs de auditoria
 export type AuditLogRecord = {
   id: string;
   user_id: string;
   event_type: string;
-  details: Record<string, any>;
+  details: Json;  // Changed from Record<string, any> to Json to match Supabase's return type
   ip_address?: string;
   user_agent?: string;
   created_at: string;

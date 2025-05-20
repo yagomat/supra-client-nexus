@@ -1,3 +1,4 @@
+
 export type PaymentStatus = "pago" | "pago_confianca" | "nao_pago";
 
 export interface Cliente {
@@ -136,3 +137,6 @@ export interface ClienteLicencas {
 // Import ClienteFormValues type from the schema file
 import { ClienteFormValues } from "@/hooks/cliente/clienteFormSchema";
 export type { ClienteFormValues };
+
+// Export AuditLogRecord from auditLogService
+export { type AuditLogRecord } from "@/services/auditLogService";
