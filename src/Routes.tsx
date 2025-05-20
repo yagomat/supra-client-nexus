@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
+import AlterarSenha from "./pages/AlterarSenha";
 import Dashboard from "./pages/Dashboard";
 import CadastrarCliente from "./pages/CadastrarCliente";
 import EditarCliente from "./pages/EditarCliente";
@@ -10,6 +11,7 @@ import ListaClientes from "./pages/ListaClientes";
 import GestaoPagamentos from "./pages/GestaoPagamentos";
 import BancoDados from "./pages/BancoDados";
 import NotFound from "./pages/NotFound";
+import { SessionExpireAlert } from "./components/SessionExpireAlert";
 
 interface PrivateRouteProps {
   children: React.ReactNode;
@@ -32,7 +34,12 @@ const PrivateRoute = ({ children }: PrivateRouteProps) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
   
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <SessionExpireAlert />
+    </>
+  );
 };
 
 export const AppRoutes = () => {
@@ -44,6 +51,7 @@ export const AppRoutes = () => {
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
       <Route path="/cadastro" element={user ? <Navigate to="/dashboard" replace /> : <Cadastro />} />
       
+      <Route path="/alterar-senha" element={<PrivateRoute><AlterarSenha /></PrivateRoute>} />
       <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
       <Route path="/clientes" element={<PrivateRoute><ListaClientes /></PrivateRoute>} />
       <Route path="/clientes/cadastrar" element={<PrivateRoute><CadastrarCliente /></PrivateRoute>} />

@@ -1,24 +1,61 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { z } from "zod";
+import { emailSchema } from "@/services/authService";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [generalError, setGeneralError] = useState("");
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Limpar erros quando o usuário digita
+  useEffect(() => {
+    if (emailError && email) setEmailError("");
+    if (generalError) setGeneralError("");
+  }, [email, password]);
+
+  const validateForm = (): boolean => {
+    let isValid = true;
+
+    // Validar email
+    try {
+      emailSchema.parse(email);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setEmailError(error.errors[0].message);
+        isValid = false;
+      }
+    }
+
+    // Validar se a senha foi fornecida
+    if (!password) {
+      setGeneralError("Por favor, informe sua senha.");
+      isValid = false;
+    }
+
+    return isValid;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
+    
+    setGeneralError("");
+    setEmailError("");
+
+    if (!validateForm()) return;
 
     try {
       setIsLoading(true);
@@ -27,11 +64,7 @@ const Login = () => {
       navigate("/dashboard");
     } catch (error) {
       console.error("Erro ao fazer login", error);
-      toast({
-        title: "Erro de autenticação",
-        description: "Verifique seu e-mail e senha e tente novamente.",
-        variant: "destructive",
-      });
+      setGeneralError("Verifique seu e-mail e senha e tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -48,6 +81,12 @@ const Login = () => {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {generalError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{generalError}</AlertDescription>
+              </Alert>
+            )}
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium">
                 Email
@@ -59,7 +98,11 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className={emailError ? "border-destructive" : ""}
               />
+              {emailError && (
+                <p className="text-sm text-destructive">{emailError}</p>
+              )}
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">

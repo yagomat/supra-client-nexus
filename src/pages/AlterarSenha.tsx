@@ -1,72 +1,60 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, AlertCircle, Check, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { checkPasswordStrength, emailSchema, passwordSchema } from "@/services/authService";
+import { checkPasswordStrength, passwordSchema } from "@/services/authService";
 import { z } from "zod";
 
-const Cadastro = () => {
-  const [nome, setNome] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+const AlterarSenha = () => {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [nomeError, setNomeError] = useState("");
   const [generalError, setGeneralError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [passwordStrength, setPasswordStrength] = useState<'fraca' | 'média' | 'forte' | null>(null);
   const [passwordFeedback, setPasswordFeedback] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { signUp } = useAuth();
+  const { changePassword } = useAuth();
   const navigate = useNavigate();
 
   // Limpar erros quando o usuário digita
   useEffect(() => {
-    if (emailError && email) setEmailError("");
-    if (nomeError && nome) setNomeError("");
-    if (passwordError && password) setPasswordError("");
+    if (passwordError && newPassword) setPasswordError("");
     if (generalError) setGeneralError("");
-  }, [email, nome, password, confirmPassword]);
+    if (successMessage) setSuccessMessage("");
+  }, [currentPassword, newPassword, confirmPassword]);
 
   // Verificar força da senha quando ela muda
   useEffect(() => {
-    if (password) {
-      const { strength, feedback } = checkPasswordStrength(password);
+    if (newPassword) {
+      const { strength, feedback } = checkPasswordStrength(newPassword);
       setPasswordStrength(strength);
       setPasswordFeedback(feedback);
     } else {
       setPasswordStrength(null);
       setPasswordFeedback("");
     }
-  }, [password]);
+  }, [newPassword]);
 
   const validateForm = (): boolean => {
     let isValid = true;
 
-    // Validar nome
-    if (!nome.trim()) {
-      setNomeError("Nome é obrigatório");
+    // Validar senha atual
+    if (!currentPassword) {
+      setGeneralError("Por favor, informe sua senha atual");
       isValid = false;
+      return isValid;
     }
 
-    // Validar email
+    // Validar nova senha
     try {
-      emailSchema.parse(email);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        setEmailError(error.errors[0].message);
-        isValid = false;
-      }
-    }
-
-    // Validar senha
-    try {
-      passwordSchema.parse(password);
+      passwordSchema.parse(newPassword);
     } catch (error) {
       if (error instanceof z.ZodError) {
         setPasswordError(error.errors[0].message);
@@ -75,7 +63,7 @@ const Cadastro = () => {
     }
 
     // Validar confirmação de senha
-    if (password !== confirmPassword) {
+    if (newPassword !== confirmPassword) {
       setPasswordError("As senhas não coincidem");
       isValid = false;
     }
@@ -87,19 +75,28 @@ const Cadastro = () => {
     e.preventDefault();
     
     setGeneralError("");
-    setEmailError("");
-    setNomeError("");
     setPasswordError("");
+    setSuccessMessage("");
 
     if (!validateForm()) return;
 
     try {
       setIsLoading(true);
-      await signUp(email, password, nome);
-      navigate("/dashboard");
+      await changePassword(currentPassword, newPassword);
+      setSuccessMessage("Senha alterada com sucesso!");
+      
+      // Limpar campos após o sucesso
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      
+      // Redirecionar após 2 segundos
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 2000);
     } catch (error: any) {
-      console.error("Erro ao criar conta", error);
-      setGeneralError(error.message || "Ocorreu um erro ao criar sua conta.");
+      console.error("Erro ao alterar senha", error);
+      setGeneralError(error.message || "Ocorreu um erro ao alterar sua senha.");
     } finally {
       setIsLoading(false);
     }
@@ -109,9 +106,9 @@ const Cadastro = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Criar Conta</CardTitle>
+          <CardTitle className="text-2xl font-bold">Alterar Senha</CardTitle>
           <CardDescription>
-            Preencha os campos abaixo para criar sua conta
+            Escolha uma nova senha para sua conta
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -122,55 +119,42 @@ const Cadastro = () => {
                 <AlertDescription>{generalError}</AlertDescription>
               </Alert>
             )}
+            
+            {successMessage && (
+              <Alert variant="default" className="bg-green-50 border-green-500">
+                <Check className="h-4 w-4 text-green-500" />
+                <AlertDescription className="text-green-700">{successMessage}</AlertDescription>
+              </Alert>
+            )}
+            
             <div className="space-y-2">
-              <label htmlFor="nome" className="text-sm font-medium">
-                Nome
+              <label htmlFor="currentPassword" className="text-sm font-medium">
+                Senha Atual
               </label>
               <Input
-                id="nome"
-                placeholder="Seu nome completo"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                required
-                className={nomeError ? "border-destructive" : ""}
-              />
-              {nomeError && (
-                <p className="text-sm text-destructive">{nomeError}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email
-              </label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="nome@exemplo.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className={emailError ? "border-destructive" : ""}
-              />
-              {emailError && (
-                <p className="text-sm text-destructive">{emailError}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
-                Senha
-              </label>
-              <Input
-                id="password"
+                id="currentPassword"
                 type="password"
                 placeholder="••••••••"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                }}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="newPassword" className="text-sm font-medium">
+                Nova Senha
+              </label>
+              <Input
+                id="newPassword"
+                type="password"
+                placeholder="••••••••"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
                 required
                 className={passwordError ? "border-destructive" : ""}
               />
-              {password && passwordStrength && (
+              {newPassword && passwordStrength && (
                 <div className="flex items-center space-x-2 text-sm">
                   <div 
                     className={`h-2 w-full rounded ${
@@ -186,7 +170,7 @@ const Cadastro = () => {
               )}
               <div className="space-y-1">
                 <div className="flex items-center space-x-2 text-sm">
-                  {/[A-Z]/.test(password) ? (
+                  {/[A-Z]/.test(newPassword) ? (
                     <Check size={16} className="text-green-500" />
                   ) : (
                     <X size={16} className="text-gray-300" />
@@ -194,7 +178,7 @@ const Cadastro = () => {
                   <span>Pelo menos uma letra maiúscula</span>
                 </div>
                 <div className="flex items-center space-x-2 text-sm">
-                  {/[a-z]/.test(password) ? (
+                  {/[a-z]/.test(newPassword) ? (
                     <Check size={16} className="text-green-500" />
                   ) : (
                     <X size={16} className="text-gray-300" />
@@ -202,7 +186,7 @@ const Cadastro = () => {
                   <span>Pelo menos uma letra minúscula</span>
                 </div>
                 <div className="flex items-center space-x-2 text-sm">
-                  {/[0-9]/.test(password) ? (
+                  {/[0-9]/.test(newPassword) ? (
                     <Check size={16} className="text-green-500" />
                   ) : (
                     <X size={16} className="text-gray-300" />
@@ -210,7 +194,7 @@ const Cadastro = () => {
                   <span>Pelo menos um número</span>
                 </div>
                 <div className="flex items-center space-x-2 text-sm">
-                  {/[^A-Za-z0-9]/.test(password) ? (
+                  {/[^A-Za-z0-9]/.test(newPassword) ? (
                     <Check size={16} className="text-green-500" />
                   ) : (
                     <X size={16} className="text-gray-300" />
@@ -218,7 +202,7 @@ const Cadastro = () => {
                   <span>Pelo menos um caractere especial</span>
                 </div>
                 <div className="flex items-center space-x-2 text-sm">
-                  {password.length >= 8 ? (
+                  {newPassword.length >= 8 ? (
                     <Check size={16} className="text-green-500" />
                   ) : (
                     <X size={16} className="text-gray-300" />
@@ -227,18 +211,17 @@ const Cadastro = () => {
                 </div>
               </div>
             </div>
+            
             <div className="space-y-2">
               <label htmlFor="confirmPassword" className="text-sm font-medium">
-                Confirmar Senha
+                Confirmar Nova Senha
               </label>
               <Input
                 id="confirmPassword"
                 type="password"
                 placeholder="••••••••"
                 value={confirmPassword}
-                onChange={(e) => {
-                  setConfirmPassword(e.target.value);
-                }}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 className={passwordError ? "border-destructive" : ""}
               />
@@ -247,17 +230,21 @@ const Cadastro = () => {
               )}
             </div>
           </CardContent>
+          
           <CardFooter className="flex flex-col space-y-4">
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Criar Conta
+              Alterar Senha
             </Button>
-            <div className="text-center text-sm">
-              Já possui uma conta?{" "}
-              <Link to="/login" className="text-primary hover:underline">
-                Fazer login
-              </Link>
-            </div>
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="w-full" 
+              onClick={() => navigate("/dashboard")}
+              disabled={isLoading}
+            >
+              Cancelar
+            </Button>
           </CardFooter>
         </form>
       </Card>
@@ -265,4 +252,4 @@ const Cadastro = () => {
   );
 };
 
-export default Cadastro;
+export default AlterarSenha;
