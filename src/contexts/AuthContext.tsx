@@ -11,7 +11,7 @@ import {
   signOutAll,
   updatePassword,
   logAuditEvent
-} from "@/services/authService";
+} from "@/services/auth";
 
 interface AuthContextType {
   user: User | null;
