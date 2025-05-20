@@ -48,7 +48,7 @@ const checkRateLimit = (email: string): boolean => {
   return true;
 };
 
-// Registrar evento de auditoria
+// Registrar evento de auditoria usando uma função customizada
 export const logAuditEvent = async (
   event: string,
   details: Record<string, any>,
@@ -60,17 +60,15 @@ export const logAuditEvent = async (
     
     if (!userIdToLog) return;
 
-    const { error } = await supabase.from("audit_logs").insert({
-      user_id: userIdToLog,
-      event_type: event,
-      details,
-      ip_address: "client-side", // Em produção, isso seria capturado pelo Edge Function
-      user_agent: navigator.userAgent,
-    });
-
-    if (error) {
-      console.error("Erro ao registrar evento de auditoria:", error);
-    }
+    // Usar a função rpc do Supabase para inserir, já que o TypeScript não reconhece a tabela automaticamente
+    await supabase.rpc('log_audit_event', {
+      p_user_id: userIdToLog,
+      p_event_type: event,
+      p_details: details,
+      p_ip_address: "client-side", // Em produção, isso seria capturado pelo Edge Function
+      p_user_agent: navigator.userAgent
+    }).throwOnError();
+    
   } catch (error) {
     console.error("Erro ao registrar evento de auditoria:", error);
   }
@@ -213,7 +211,7 @@ export const checkPasswordStrength = (password: string): {
   strength: 'fraca' | 'média' | 'forte';
   feedback: string;
 } => {
-  let strength = 'fraca';
+  let strength: 'fraca' | 'média' | 'forte' = 'fraca';
   let feedback = '';
 
   // Verificar comprimento

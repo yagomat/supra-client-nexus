@@ -8,4 +8,4 @@ export * from './userRoleService';
 export * from './clientStatusService';
 export * from './clienteExcel';
 export * from './authService';
-
+export * from './auditLogService';
