@@ -5,6 +5,7 @@ import { emailSchema, passwordSchema } from "./schemas";
 import { checkRateLimit, clearLoginAttempts } from "./rateLimit";
 import { logAuditEvent } from "./auditLog";
 import { setupSessionExpiration } from "./sessionUtils";
+import { sanitizeLoginData, sanitizeSignupData, sanitizeObject } from "./dataSanitization";
 
 // Login seguro com validações
 export const secureSignIn = async (email: string, password: string): Promise<boolean> => {
@@ -27,10 +28,13 @@ export const secureSignIn = async (email: string, password: string): Promise<boo
       return false;
     }
 
+    // Sanitizar os dados antes de enviar
+    const sanitizedData = sanitizeLoginData(email, password);
+
     // Autenticar com Supabase
     const { error, data } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+      email: sanitizedData.email || "",
+      password: sanitizedData.password,
     });
 
     if (error) {
@@ -86,12 +90,15 @@ export const secureSignUp = async (email: string, password: string, nome: string
       return false;
     }
 
+    // Sanitizar os dados antes de enviar
+    const sanitizedData = sanitizeSignupData(email, password, nome);
+
     // Registrar com Supabase
     const { error, data } = await supabase.auth.signUp({
-      email,
-      password,
+      email: sanitizedData.email || "",
+      password: sanitizedData.password,
       options: {
-        data: { nome }
+        data: { nome: sanitizedData.nome }
       }
     });
 
@@ -173,6 +180,8 @@ export const updatePassword = async (currentPassword: string, newPassword: strin
       return false;
     }
 
+    // Sanitizar a nova senha antes de enviar
+    // Não sanitizamos a senha para não interferir no hash, mas aplicamos validação
     const { data, error } = await supabase.auth.updateUser({ 
       password: newPassword 
     });

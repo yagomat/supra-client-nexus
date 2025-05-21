@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { Loader2, AlertCircle, Check, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { checkPasswordStrength } from "@/services/auth/passwordUtils";
 import { emailSchema, passwordSchema } from "@/services/auth/schemas";
+import { sanitizeInput } from "@/services/auth/dataSanitization";
 import { z } from "zod";
 
 const Cadastro = () => {
@@ -96,7 +96,14 @@ const Cadastro = () => {
 
     try {
       setIsLoading(true);
-      await signUp(email, password, nome);
+
+      // Sanitizando os dados antes de enviar
+      const sanitizedEmail = sanitizeInput(email);
+      const sanitizedNome = sanitizeInput(nome);
+      
+      // Não sanitizamos a senha para não interferir no hash
+      await signUp(sanitizedEmail || "", password, sanitizedNome || "");
+      
       navigate("/dashboard");
     } catch (error: any) {
       console.error("Erro ao criar conta", error);

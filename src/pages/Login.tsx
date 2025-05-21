@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { z } from "zod";
 import { emailSchema } from "@/services/auth/schemas";
+import { sanitizeInput } from "@/services/auth/dataSanitization";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -58,7 +60,13 @@ const Login = () => {
 
     try {
       setIsLoading(true);
-      await signIn(email, password);
+      
+      // Sanitizando os dados antes de enviar
+      const sanitizedEmail = sanitizeInput(email);
+      
+      // Não sanitizamos a senha para não interferir no hash
+      await signIn(sanitizedEmail || "", password);
+      
       // Usar navigate em vez de window.location para evitar recarregar a página
       navigate("/dashboard");
     } catch (error) {

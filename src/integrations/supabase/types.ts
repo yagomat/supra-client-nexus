@@ -215,6 +215,10 @@ export type Database = {
         Args: { p_data_licenca: string }
         Returns: Json
       }
+      cliente_pertence_ao_usuario: {
+        Args: { cliente_id_param: string }
+        Returns: boolean
+      }
       delete_valor_predefinido: {
         Args: { p_user_id: string; p_tipo: string; p_valor: string }
         Returns: Json
