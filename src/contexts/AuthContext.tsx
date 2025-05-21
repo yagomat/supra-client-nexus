@@ -12,6 +12,11 @@ import {
   updatePassword,
   logAuditEvent
 } from "@/services/auth";
+import { setupTokenRotation } from "@/services/auth/tokenRotation";
+import { setupRefreshTokenManager } from "@/services/auth/refreshTokenManager";
+import { generateCSRFToken } from "@/services/auth/csrfProtection";
+import { sanitizeObject } from "@/services/auth/dataSanitization";
+import { checkSuspiciousActivity } from "@/services/auth/securityMonitoring";
 
 interface AuthContextType {
   user: User | null;
@@ -23,6 +28,7 @@ interface AuthContextType {
   signOutAllDevices: () => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   sessionExpiresAt: Date | null;
+  revokeOtherSessions: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,19 +45,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [sessionExpiresAt, setSessionExpiresAt] = useState<Date | null>(null);
   const { toast } = useToast();
 
+  // Gerar CSRF token na inicialização
   useEffect(() => {
+    generateCSRFToken();
+  }, []);
+
+  useEffect(() => {
+    // Configurar gerenciadores de token
+    const cleanupTokenRotation = setupTokenRotation();
+    const cleanupRefreshToken = setupRefreshTokenManager();
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         setSession(currentSession);
         if (currentSession && currentSession.user) {
-          setUser({
+          const sanitizedUserData = sanitizeObject({
             id: currentSession.user.id,
             email: currentSession.user.email || "",
             nome: currentSession.user.user_metadata.nome
           });
+          
+          setUser(sanitizedUserData);
           // Atualizar tempo de expiração da sessão
           setSessionExpiresAt(calculateExpiryTime());
+          
+          // Verificar atividades suspeitas (com um pequeno delay)
+          setTimeout(() => {
+            checkSuspiciousActivity(currentSession.user.id);
+          }, 1000);
         } else {
           setUser(null);
           setSessionExpiresAt(null);
@@ -64,19 +86,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       if (currentSession && currentSession.user) {
-        setUser({
+        const sanitizedUserData = sanitizeObject({
           id: currentSession.user.id,
           email: currentSession.user.email || "",
           nome: currentSession.user.user_metadata.nome
         });
+        
+        setUser(sanitizedUserData);
         // Atualizar tempo de expiração da sessão
         setSessionExpiresAt(calculateExpiryTime());
+        
+        // Verificar atividades suspeitas
+        checkSuspiciousActivity(currentSession.user.id);
       }
       setLoading(false);
     });
 
     return () => {
       subscription.unsubscribe();
+      cleanupTokenRotation();
+      cleanupRefreshToken();
     };
   }, []);
 
@@ -160,6 +189,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     }
   };
+  
+  const revokeOtherSessions = async () => {
+    try {
+      setLoading(true);
+      const result = await import('@/services/auth/refreshTokenManager')
+        .then(module => module.revokeOtherSessions());
+      return result;
+    } catch (error: any) {
+      toast({
+        title: "Erro ao revogar sessões",
+        description: error.message || "Ocorreu um erro ao revogar outras sessões",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <AuthContext.Provider
@@ -173,6 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signOutAllDevices,
         changePassword,
         sessionExpiresAt,
+        revokeOtherSessions,
       }}
     >
       {children}
