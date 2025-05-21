@@ -1,28 +1,28 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.0";
-import DOMPurify from "https://esm.sh/dompurify@3.0.13";
-import { JSDOM } from "https://esm.sh/jsdom@22.1.0";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
 const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// Configurar DOMPurify com JSDOM para ambiente Node/Deno
-const window = new JSDOM("").window;
-const purify = DOMPurify(window);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Função de sanitização para strings
+// Função de sanitização para strings sem depender de DOMPurify
 function sanitizeString(input: string | null | undefined): string | null | undefined {
   if (!input) return input;
-  return purify.sanitize(input, {
-    USE_PROFILES: { html: false }
-  });
+  
+  // Implementação simples de sanitização
+  return input
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+    .replace(/\//g, '&#x2F;');
 }
 
 // Função de sanitização para objetos completos
