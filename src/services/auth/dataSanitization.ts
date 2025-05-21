@@ -12,8 +12,8 @@ export const sanitizeInput = (input: string | null | undefined): string | null |
 };
 
 // Sanitizar objeto inteiro
-export const sanitizeObject = <T extends Record<string, any>>(obj: T): T => {
-    const result = { ...obj };
+export const sanitizeObject = <T extends Record<string, any>>(obj: T): Record<string, any> => {
+    const result: Record<string, any> = { ...obj };
 
     Object.keys(result).forEach((key) => {
         const value = result[key];
@@ -32,7 +32,7 @@ export const sanitizeObject = <T extends Record<string, any>>(obj: T): T => {
         }
     });
 
-    return result;
+    return result as T;
 };
 
 // Sanitizar corpo de requisição específico para login
