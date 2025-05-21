@@ -17,6 +17,7 @@ import {
   CreditCard,
   Database,
   LogOut,
+  MessageSquare
 } from "lucide-react";
 
 export function MobileMenu() {
@@ -43,6 +44,11 @@ export function MobileMenu() {
       name: "Gestão de Pagamentos",
       href: "/pagamentos",
       icon: <CreditCard size={20} />,
+    },
+    {
+      name: "WhatsApp",
+      href: "/whatsapp",
+      icon: <MessageSquare size={20} />,
     },
     {
       name: "Banco de Dados",

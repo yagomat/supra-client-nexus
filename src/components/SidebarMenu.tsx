@@ -15,6 +15,7 @@ import {
   X,
   LogOut,
   ChevronLeft,
+  MessageSquare
 } from "lucide-react";
 
 interface SidebarProps {
@@ -65,6 +66,11 @@ export function SidebarMenu({ className, onCollapseChange }: SidebarProps) {
       name: "Gestão de Pagamentos",
       href: "/pagamentos",
       icon: <CreditCard size={20} />,
+    },
+    {
+      name: "WhatsApp",
+      href: "/whatsapp",
+      icon: <MessageSquare size={20} />,
     },
     {
       name: "Banco de Dados",
