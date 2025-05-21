@@ -1,1 +1,6 @@
+
+# This file is used by Supabase CLI to manage secrets
 project_id = "tmgofvlwnbsikvyaavgr"
+
+[functions.sanitize-input]
+verify_jwt = true

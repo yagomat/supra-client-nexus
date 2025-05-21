@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { emailSchema, passwordSchema } from "@/services/auth/schemas";
 import { checkPasswordStrength } from "@/services/auth/passwordUtils";
-import { sanitizeInput } from "@/services/auth/dataSanitization";
 
 export const useCadastroForm = () => {
   const [nome, setNome] = useState("");
@@ -92,13 +91,9 @@ export const useCadastroForm = () => {
 
     try {
       setIsLoading(true);
-
-      // Sanitizando os dados antes de enviar
-      const sanitizedEmail = sanitizeInput(email);
-      const sanitizedNome = sanitizeInput(nome);
       
-      // Não sanitizamos a senha para não interferir no hash
-      await signUp(sanitizedEmail || "", password, sanitizedNome || "");
+      // A sanitização agora ocorre no backend, via secureSignUp
+      await signUp(email, password, nome);
       
       navigate("/dashboard");
     } catch (error: any) {

@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { emailSchema } from "@/services/auth/schemas";
-import { sanitizeInput } from "@/services/auth/dataSanitization";
 import { useToast } from "@/components/ui/use-toast";
 
 export const useLoginForm = () => {
@@ -57,11 +56,8 @@ export const useLoginForm = () => {
     try {
       setIsLoading(true);
       
-      // Sanitizando os dados antes de enviar
-      const sanitizedEmail = sanitizeInput(email);
-      
-      // Não sanitizamos a senha para não interferir no hash
-      await signIn(sanitizedEmail || "", password);
+      // A sanitização agora ocorre no backend, via secureSignIn
+      await signIn(email, password);
       
       // Usar navigate em vez de window.location para evitar recarregar a página
       navigate("/dashboard");

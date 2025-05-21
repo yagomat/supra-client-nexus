@@ -6,6 +6,7 @@ import { checkRateLimit, clearLoginAttempts } from "./rateLimit";
 import { logAuditEvent } from "./auditLog";
 import { setupSessionExpiration } from "./sessionUtils";
 import { sanitizeLoginData, sanitizeSignupData, sanitizeObject } from "./dataSanitization";
+import { sanitizeLoginDataBackend, sanitizeSignupDataBackend } from "./backendSanitization";
 
 // Login seguro com validações
 export const secureSignIn = async (email: string, password: string): Promise<boolean> => {
@@ -28,8 +29,9 @@ export const secureSignIn = async (email: string, password: string): Promise<boo
       return false;
     }
 
-    // Sanitizar os dados antes de enviar
-    const sanitizedData = sanitizeLoginData(email, password);
+    // Sanitizar os dados no backend antes de enviar
+    // Isso acrescenta uma camada extra de proteção contra XSS
+    const sanitizedData = await sanitizeLoginDataBackend(email, password);
 
     // Autenticar com Supabase
     const { error, data } = await supabase.auth.signInWithPassword({
@@ -90,8 +92,8 @@ export const secureSignUp = async (email: string, password: string, nome: string
       return false;
     }
 
-    // Sanitizar os dados antes de enviar
-    const sanitizedData = sanitizeSignupData(email, password, nome);
+    // Sanitizar os dados no backend antes de enviar
+    const sanitizedData = await sanitizeSignupDataBackend(email, password, nome);
 
     // Registrar com Supabase
     const { error, data } = await supabase.auth.signUp({
