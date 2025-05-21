@@ -1,150 +1,37 @@
 
-import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, AlertCircle } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { z } from "zod";
-import { emailSchema } from "@/services/auth/schemas";
-import { sanitizeInput } from "@/services/auth/dataSanitization";
+import React from "react";
+import { Card } from "@/components/ui/card";
+import { LoginHeader } from "@/components/login/LoginHeader";
+import { LoginForm } from "@/components/login/LoginForm";
+import { LoginFooter } from "@/components/login/LoginFooter";
+import { useLoginForm } from "@/hooks/useLoginForm";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [emailError, setEmailError] = useState("");
-  const [generalError, setGeneralError] = useState("");
-  const { signIn } = useAuth();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  // Limpar erros quando o usuário digita
-  useEffect(() => {
-    if (emailError && email) setEmailError("");
-    if (generalError) setGeneralError("");
-  }, [email, password]);
-
-  const validateForm = (): boolean => {
-    let isValid = true;
-
-    // Validar email
-    try {
-      emailSchema.parse(email);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        setEmailError(error.errors[0].message);
-        isValid = false;
-      }
-    }
-
-    // Validar se a senha foi fornecida
-    if (!password) {
-      setGeneralError("Por favor, informe sua senha.");
-      isValid = false;
-    }
-
-    return isValid;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    setGeneralError("");
-    setEmailError("");
-
-    if (!validateForm()) return;
-
-    try {
-      setIsLoading(true);
-      
-      // Sanitizando os dados antes de enviar
-      const sanitizedEmail = sanitizeInput(email);
-      
-      // Não sanitizamos a senha para não interferir no hash
-      await signIn(sanitizedEmail || "", password);
-      
-      // Usar navigate em vez de window.location para evitar recarregar a página
-      navigate("/dashboard");
-    } catch (error) {
-      console.error("Erro ao fazer login", error);
-      setGeneralError("Verifique seu e-mail e senha e tente novamente.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    isLoading,
+    emailError,
+    generalError,
+    handleSubmit,
+  } = useLoginForm();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Login</CardTitle>
-          <CardDescription>
-            Entre com seu email e senha para acessar o sistema
-          </CardDescription>
-        </CardHeader>
+        <LoginHeader />
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            {generalError && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{generalError}</AlertDescription>
-              </Alert>
-            )}
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email
-              </label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="nome@exemplo.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className={emailError ? "border-destructive" : ""}
-              />
-              {emailError && (
-                <p className="text-sm text-destructive">{emailError}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label htmlFor="password" className="text-sm font-medium">
-                  Senha
-                </label>
-                <Link
-                  to="/recuperar-senha"
-                  className="text-sm text-primary hover:underline"
-                >
-                  Esqueceu a senha?
-                </Link>
-              </div>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Entrar
-            </Button>
-            <div className="text-center text-sm">
-              Não possui uma conta?{" "}
-              <Link to="/cadastro" className="text-primary hover:underline">
-                Cadastre-se
-              </Link>
-            </div>
-          </CardFooter>
+          <LoginForm
+            email={email}
+            setEmail={setEmail}
+            password={password}
+            setPassword={setPassword}
+            emailError={emailError}
+            generalError={generalError}
+          />
+          <LoginFooter isLoading={isLoading} />
         </form>
       </Card>
     </div>
