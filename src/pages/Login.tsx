@@ -1,17 +1,14 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, AlertCircle, Shield } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { z } from "zod";
 import { emailSchema } from "@/services/auth/schemas";
-import { getCSRFToken } from "@/services/auth/csrfProtection";
-import { sanitizeInput } from "@/services/auth/dataSanitization";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -19,15 +16,9 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [generalError, setGeneralError] = useState("");
-  const [csrfToken, setCsrfToken] = useState("");
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  // Obter CSRF token
-  useEffect(() => {
-    setCsrfToken(getCSRFToken());
-  }, []);
 
   // Limpar erros quando o usuário digita
   useEffect(() => {
@@ -67,12 +58,7 @@ const Login = () => {
 
     try {
       setIsLoading(true);
-      
-      // Sanitizar email antes de enviar
-      const sanitizedEmail = sanitizeInput(email);
-      
-      await signIn(sanitizedEmail, password);
-      
+      await signIn(email, password);
       // Usar navigate em vez de window.location para evitar recarregar a página
       navigate("/dashboard");
     } catch (error) {
@@ -137,14 +123,6 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-            </div>
-            
-            {/* Campo oculto para CSRF */}
-            <input type="hidden" name="csrf_token" value={csrfToken} />
-            
-            <div className="flex items-center text-xs text-muted-foreground">
-              <Shield className="h-3 w-3 mr-1" />
-              <span>Login seguro com proteção contra CSRF</span>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
