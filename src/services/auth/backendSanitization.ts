@@ -10,8 +10,7 @@ interface SanitizationResponse<T> {
 
 /**
  * Sanitiza dados no backend antes de usá-los em outras operações
- * Esta função serve como uma camada intermediária para garantir
- * que todos os dados sejam sanitizados no servidor
+ * Esta função centraliza toda a sanitização no servidor para garantir consistência
  */
 export const sanitizeInBackend = async <T>(data: any): Promise<T> => {
   try {
@@ -35,7 +34,7 @@ export const sanitizeInBackend = async <T>(data: any): Promise<T> => {
   } catch (error) {
     console.error("Erro durante sanitização no backend:", error);
     // Em caso de falha na sanitização do backend, usamos o fallback do frontend
-    // Isso garante que pelo menos alguma sanitização seja aplicada
+    // Isso garante resiliência, mas mantém a centralização da lógica
     console.warn("Usando sanitização do frontend como fallback");
     const { sanitizeObject } = await import("./dataSanitization");
     return sanitizeObject(data) as T;
@@ -44,6 +43,7 @@ export const sanitizeInBackend = async <T>(data: any): Promise<T> => {
 
 /**
  * Sanitiza dados de login no backend e então passa para a função de autenticação
+ * Centraliza toda a lógica de sanitização para dados de autenticação
  */
 export const sanitizeLoginDataBackend = async (email: string, password: string): Promise<{ email: string | null | undefined; password: string }> => {
   try {
@@ -64,6 +64,7 @@ export const sanitizeLoginDataBackend = async (email: string, password: string):
 
 /**
  * Sanitiza dados de cadastro no backend e então passa para a função de autenticação
+ * Centraliza toda a lógica de sanitização para dados de cadastro
  */
 export const sanitizeSignupDataBackend = async (email: string, password: string, nome: string): Promise<{ 
   email: string | null | undefined; 
