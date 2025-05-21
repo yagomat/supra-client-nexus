@@ -6,3 +6,4 @@ export * from "./auditLog";
 export * from "./passwordUtils";
 export * from "./sessionUtils";
 export * from "./authCore";
+export * from "./dataSanitization";
