@@ -14,44 +14,44 @@ export const StatsCards = ({ stats, loading }: StatsCardsProps) => {
       <StatCard
         title="Total de Clientes"
         value={loading ? "" : stats?.clientes_total || "0"}
-        icon={<Users size={24} className="text-primary" />}
+        icon={<Users size={24} className="text-white" />}
         loading={loading}
-        className="border-l-4 border-primary"
+        className="bg-primary text-primary-foreground"
       />
       <StatCard
         title="Clientes Ativos"
         value={loading ? "" : stats?.clientes_ativos || "0"}
-        icon={<UserCheck size={24} className="text-success" />}
+        icon={<UserCheck size={24} className="text-white" />}
         loading={loading}
-        className="border-l-4 border-success"
+        className="bg-success text-success-foreground"
       />
       <StatCard
         title="Clientes Inativos"
         value={loading ? "" : stats?.clientes_inativos || "0"}
-        icon={<UserX size={24} className="text-danger" />}
+        icon={<UserX size={24} className="text-white" />}
         loading={loading}
-        className="border-l-4 border-danger"
+        className="bg-danger text-danger-foreground"
       />
       <StatCard
         title="Clientes Novos (30 dias)"
         value={loading ? "" : stats?.clientes_novos || "0"}
-        icon={<UserPlus size={24} className="text-warning" />}
+        icon={<UserPlus size={24} className="text-white" />}
         loading={loading}
-        className="border-l-4 border-warning"
+        className="bg-warning text-warning-foreground"
       />
       <StatCard
         title="Pagamentos Pendentes"
         value={loading ? "" : stats?.pagamentos_pendentes || "0"}
-        icon={<AlertCircle size={24} className="text-orange-500" />}
+        icon={<AlertCircle size={24} className="text-white" />}
         loading={loading}
-        className="border-l-4 border-orange-500"
+        className="bg-orange-500 text-white"
       />
       <StatCard
         title="Valor Recebido (Mês Atual)"
         value={loading ? "" : `R$ ${stats?.valor_recebido_mes?.toFixed(2) || "0,00"}`.replace('.', ',')}
-        icon={<DollarSign size={24} className="text-green-500" />}
+        icon={<DollarSign size={24} className="text-white" />}
         loading={loading}
-        className="border-l-4 border-green-500"
+        className="bg-green-500 text-white"
       />
     </div>
   );
