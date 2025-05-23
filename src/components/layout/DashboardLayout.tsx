@@ -5,6 +5,10 @@ import { MobileMenu } from "@/components/MobileMenu";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Settings, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -14,10 +18,17 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children, className }: DashboardLayoutProps) {
   const isMobile = useIsMobile();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
 
   // Listen for sidebar collapse state changes
   const handleSidebarStateChange = (collapsed: boolean) => {
     setSidebarCollapsed(collapsed);
+  };
+
+  // Navigate to settings page
+  const handleSettingsClick = () => {
+    navigate("/configuracoes");
   };
 
   return (
@@ -35,11 +46,51 @@ export function DashboardLayout({ children, className }: DashboardLayoutProps) {
               <MobileMenu />
               <h1 className="text-xl font-bold ml-4">Gestão de Clientes</h1>
             </div>
-            <ThemeToggle />
+            <div className="flex items-center gap-1">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={handleSettingsClick} 
+                title="Configurações"
+              >
+                <Settings className="h-[1.2rem] w-[1.2rem]" />
+                <span className="sr-only">Configurações</span>
+              </Button>
+              <ThemeToggle />
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={signOut} 
+                title="Sair"
+              >
+                <LogOut className="h-[1.2rem] w-[1.2rem]" />
+                <span className="sr-only">Sair</span>
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="flex justify-end container px-4 pt-2">
-            <ThemeToggle />
+            <div className="flex items-center gap-1">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={handleSettingsClick} 
+                title="Configurações"
+              >
+                <Settings className="h-[1.2rem] w-[1.2rem]" />
+                <span className="sr-only">Configurações</span>
+              </Button>
+              <ThemeToggle />
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={signOut} 
+                title="Sair"
+              >
+                <LogOut className="h-[1.2rem] w-[1.2rem]" />
+                <span className="sr-only">Sair</span>
+              </Button>
+            </div>
           </div>
         )}
         <div className={cn(
