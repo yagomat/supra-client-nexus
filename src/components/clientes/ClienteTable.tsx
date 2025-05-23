@@ -7,6 +7,7 @@ import { Eye, Pencil, Trash2, ArrowUpDown } from "lucide-react";
 import { Cliente } from "@/types";
 import { formatDate } from "@/utils/dateUtils";
 import { ClienteStatusBadge } from "./ClienteStatusBadge";
+import { TablePagination } from "../table/TablePagination";
 
 interface ClienteTableProps {
   clientes: Cliente[];
@@ -16,6 +17,10 @@ interface ClienteTableProps {
   confirmarExclusao: (clienteId: string) => void;
   sortOrder?: 'nome' | 'data';
   onSortChange?: (sortOrder: 'nome' | 'data') => void;
+  currentPage?: number;
+  itemsPerPage?: number;
+  onPageChange?: (page: number) => void;
+  onItemsPerPageChange?: (itemsPerPage: number) => void;
 }
 
 export const ClienteTable = ({
@@ -25,7 +30,11 @@ export const ClienteTable = ({
   verObservacoes,
   confirmarExclusao,
   sortOrder = 'data',
-  onSortChange
+  onSortChange,
+  currentPage = 1,
+  itemsPerPage = 10,
+  onPageChange,
+  onItemsPerPageChange
 }: ClienteTableProps) => {
   const navigate = useNavigate();
   
@@ -48,6 +57,15 @@ export const ClienteTable = ({
       return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
     }
   };
+
+  // Calcular o número total de páginas
+  const totalPages = Math.ceil(clientes.length / itemsPerPage);
+  
+  // Obter os clientes da página atual
+  const paginatedClientes = clientes.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
   
   return (
     <div className="border rounded-md overflow-hidden">
@@ -82,7 +100,7 @@ export const ClienteTable = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {clientes.map((cliente) => (
+            {paginatedClientes.map((cliente) => (
               <TableRow key={cliente.id}>
                 <TableCell>{formatDate(cliente.created_at)}</TableCell>
                 <TableCell className="font-medium">{cliente.nome}</TableCell>
@@ -154,6 +172,19 @@ export const ClienteTable = ({
           </TableBody>
         </Table>
       </div>
+      
+      {/* Componente de paginação */}
+      {onPageChange && onItemsPerPageChange && (
+        <div className="border-t p-2">
+          <TablePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            itemsPerPage={itemsPerPage}
+            onPageChange={onPageChange}
+            onItemsPerPageChange={onItemsPerPageChange}
+          />
+        </div>
+      )}
     </div>
   );
 };

@@ -1,9 +1,11 @@
 
+import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { PaymentStatusButton } from "./PaymentStatusButton";
 import { ClienteComPagamentos } from "@/types";
 import { ClientStatusBadge } from "./ClientStatusBadge";
+import { TablePagination } from "../table/TablePagination";
 
 interface MesData {
   value: number;
@@ -27,8 +29,26 @@ export const PagamentosMatriz = ({
   onChangeStatus,
   isMobile = false
 }: PagamentosMatrizProps) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  
   // Se for mobile, limitamos os meses exibidos para melhor visualização
   const displayMeses = isMobile ? meses.slice(0, 6) : meses;
+  
+  // Calcular o número total de páginas
+  const totalPages = Math.ceil(clientes.length / itemsPerPage);
+  
+  // Obter os clientes da página atual
+  const paginatedClientes = clientes.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+  
+  // Manipulador para mudar itens por página
+  const handleItemsPerPageChange = (value: number) => {
+    setItemsPerPage(value);
+    setCurrentPage(1); // Resetar para a primeira página quando mudar itens por página
+  };
   
   return (
     <div className="overflow-x-auto">
@@ -46,7 +66,7 @@ export const PagamentosMatriz = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {clientes.map((cliente) => (
+          {paginatedClientes.map((cliente) => (
             <TableRow key={cliente.id}>
               <TableCell className="font-medium">{cliente.nome}</TableCell>
               <TableCell>{cliente.dia_vencimento}</TableCell>
@@ -87,6 +107,17 @@ export const PagamentosMatriz = ({
           ))}
         </TableBody>
       </Table>
+      
+      {/* Componente de paginação */}
+      <div className="border-t p-2">
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={handleItemsPerPageChange}
+        />
+      </div>
     </div>
   );
 };

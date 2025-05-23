@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { ClienteTable } from "@/components/clientes/ClienteTable";
 import { EmptyState } from "@/components/clientes/EmptyState";
 import { LoadingState } from "@/components/clientes/LoadingState";
@@ -9,7 +10,7 @@ import { Cliente } from "@/types";
 interface ClienteListContentProps {
   loading: boolean;
   filteredClientes: Cliente[];
-  allClientes: Cliente[];  // Adicionado para exportação completa
+  allClientes: Cliente[];
   searchTerm: string;
   setSearchTerm: (value: string) => void;
   statusFilter: "todos" | "ativo" | "inativo";
@@ -21,13 +22,13 @@ interface ClienteListContentProps {
   confirmarExclusao: (clienteId: string) => void;
   sortOrder: 'nome' | 'data';
   onSortChange: (order: 'nome' | 'data') => void;
-  onImportSuccess: () => void;  // Adicionado para atualizar após importação
+  onImportSuccess: () => void;
 }
 
 export const ClienteListContent = ({
   loading,
   filteredClientes,
-  allClientes,  // Nova prop
+  allClientes,
   searchTerm,
   setSearchTerm,
   statusFilter,
@@ -39,21 +40,48 @@ export const ClienteListContent = ({
   confirmarExclusao,
   sortOrder,
   onSortChange,
-  onImportSuccess  // Nova prop
+  onImportSuccess
 }: ClienteListContentProps) => {
+  // Estado para controlar a paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  
+  // Resetar página atual quando os filtros mudam
+  const handleSearchOrFilterChange = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+  
+  const handleStatusFilterChange = (value: "todos" | "ativo" | "inativo") => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+  };
+  
+  // Manipulador para limpar filtros
+  const handleClearFilters = () => {
+    handleLimparFiltros();
+    setCurrentPage(1);
+  };
+  
+  // Manipulador para mudar itens por página
+  const handleItemsPerPageChange = (value: number) => {
+    setItemsPerPage(value);
+    setCurrentPage(1); // Resetar para a primeira página quando mudar itens por página
+  };
+
   return (
     <div className="flex flex-col space-y-4">
       <ClienteListHeader 
-        clientes={allClientes} // Passamos todos os clientes para exportação
+        clientes={allClientes}
         onImportSuccess={onImportSuccess}
       />
 
       <ClienteFilters 
         searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
+        setSearchTerm={handleSearchOrFilterChange}
         statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-        handleLimparFiltros={handleLimparFiltros}
+        setStatusFilter={handleStatusFilterChange}
+        handleLimparFiltros={handleClearFilters}
       />
 
       {loading ? (
@@ -69,6 +97,10 @@ export const ClienteListContent = ({
           confirmarExclusao={confirmarExclusao}
           sortOrder={sortOrder}
           onSortChange={onSortChange}
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={handleItemsPerPageChange}
         />
       )}
     </div>
