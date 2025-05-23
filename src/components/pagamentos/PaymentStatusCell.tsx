@@ -27,7 +27,6 @@ export const PaymentStatusCell = ({
   
   return (
     <div className="flex items-center space-x-2">
-      {!isMobile && <PaymentStatusBadge status={status} />}
       <PaymentStatusButton
         status={status}
         onStatusChange={(value) => 
@@ -37,6 +36,7 @@ export const PaymentStatusCell = ({
         minimal={isMobile}
         isList={true}
       />
+      {!isMobile && <PaymentStatusBadge status={status} />}
     </div>
   );
 };
