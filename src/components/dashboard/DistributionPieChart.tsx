@@ -3,6 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer, Tooltip } from "recharts";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
 
@@ -28,6 +29,8 @@ export const DistributionPieChart = ({
   valueKey = "quantidade" 
 }: DistributionPieChartProps) => {
   const isMobile = useIsMobile();
+  const { theme } = useTheme();
+  const isDarkMode = theme === "dark";
   
   // Custom label that only shows values, not percentages
   const renderCustomizedLabel = ({ x, y, cx, cy, name, value, index }: any) => {
@@ -65,11 +68,13 @@ export const DistributionPieChart = ({
   };
 
   // Custom tooltip that shows both name and quantity
-  const renderTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-2 border border-gray-200 shadow-md rounded text-xs">
-          <p className="font-medium">{`${payload[0].name}: ${payload[0].value}`}</p>
+        <div className={`rounded-md border p-2 shadow-sm ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-gray-200 text-gray-800'}`}>
+          <p className="font-medium">
+            {`${payload[0].name}: ${payload[0].value}`}
+          </p>
         </div>
       );
     }
@@ -112,11 +117,11 @@ export const DistributionPieChart = ({
                   const maxLength = isMobile ? 10 : 15;
                   const displayName = value.length > maxLength ? 
                     `${value.substring(0, maxLength)}...` : value;
-                  return <span className="text-xs">{displayName}</span>;
+                  return <span className={`text-xs ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>{displayName}</span>;
                 }}
                 wrapperStyle={{ fontSize: '10px' }}
               />
-              <Tooltip content={renderTooltip} />
+              <Tooltip content={<CustomTooltip />} />
             </PieChart>
           </ResponsiveContainer>
         ) : (

@@ -3,6 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 interface ClientEvolutionChartProps {
   data: { mes: string; quantidade: number }[];
@@ -11,6 +12,24 @@ interface ClientEvolutionChartProps {
 
 export const ClientEvolutionChart = ({ data, loading }: ClientEvolutionChartProps) => {
   const isMobile = useIsMobile();
+  const { theme } = useTheme();
+  const isDarkMode = theme === "dark";
+  
+  // Custom tooltip component for dark mode compatibility
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className={`rounded-md border p-2 shadow-sm ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-gray-200 text-gray-800'}`}>
+          <p className="font-medium">{`${label}`}</p>
+          <p className="text-sm">
+            <span>Clientes: </span>
+            <span className="font-medium">{payload[0].value}</span>
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
   
   return (
     <Card className="w-full">
@@ -33,19 +52,19 @@ export const ClientEvolutionChart = ({ data, loading }: ClientEvolutionChartProp
                 bottom: isMobile ? 60 : 40,
               }}
             >
-              <CartesianGrid strokeDasharray="3 3" />
+              <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? "#334155" : "#e2e8f0"} />
               <XAxis 
                 dataKey="mes" 
                 angle={-45} 
                 textAnchor="end"
                 height={60}
-                tick={{ fontSize: isMobile ? 10 : 12 }}
+                tick={{ fontSize: isMobile ? 10 : 12, fill: isDarkMode ? "#cbd5e1" : "#475569" }}
               />
               <YAxis 
                 width={isMobile ? 30 : 40}
-                tick={{ fontSize: isMobile ? 10 : 12 }}
+                tick={{ fontSize: isMobile ? 10 : 12, fill: isDarkMode ? "#cbd5e1" : "#475569" }}
               />
-              <Tooltip />
+              <Tooltip content={<CustomTooltip />} />
               <Line 
                 type="monotone" 
                 dataKey="quantidade" 
