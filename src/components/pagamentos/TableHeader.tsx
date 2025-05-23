@@ -24,7 +24,7 @@ export const TableHeaderComponent = ({
     <TableHeader>
       <TableRow>
         {!isMobile && (
-          <TableHead className="fixed-column-1 min-w-[130px]">
+          <TableHead className="w-32">
             <Button
               variant="ghost"
               className="flex items-center"
@@ -37,7 +37,7 @@ export const TableHeaderComponent = ({
             </Button>
           </TableHead>
         )}
-        <TableHead className={isMobile ? "min-w-[160px]" : "fixed-column-2 min-w-[160px]"}>
+        <TableHead>
           <Button
             variant="ghost"
             className="flex items-center"
@@ -49,15 +49,15 @@ export const TableHeaderComponent = ({
             ) : null}
           </Button>
         </TableHead>
-        <TableHead className="min-w-[80px]">
+        <TableHead>
           <div className="leading-tight">
             <div>Dia de</div>
             <div>Venc.</div>
           </div>
         </TableHead>
-        {!isMobile && <TableHead className="min-w-[100px]">Plano</TableHead>}
-        <TableHead className="min-w-[100px]">Status</TableHead>
-        <TableHead className="min-w-[150px]">Pagamento</TableHead>
+        {!isMobile && <TableHead>Plano</TableHead>}
+        <TableHead>Status</TableHead>
+        <TableHead>Pagamento</TableHead>
       </TableRow>
     </TableHeader>
   );
