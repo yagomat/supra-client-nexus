@@ -46,30 +46,33 @@ export const PagamentosTable = ({
   };
   
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeaderComponent 
-          isMobile={isMobile} 
-          sortOrder={sortOrder}
-          onSortChange={onSortChange}
-        />
-        <TableBody>
-          {paginatedClientes.map((cliente) => (
-            <ClienteRow
-              key={cliente.id}
-              cliente={cliente}
-              mesAtual={mesAtual}
-              anoAtual={anoAtual}
-              submitting={submitting}
-              onChangeStatus={onChangeStatus}
-              isMobile={isMobile}
-            />
-          ))}
-        </TableBody>
-      </Table>
+    <div className="rounded-lg shadow-sm overflow-hidden border border-border/50">
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeaderComponent 
+            isMobile={isMobile} 
+            sortOrder={sortOrder}
+            onSortChange={onSortChange}
+          />
+          <TableBody>
+            {paginatedClientes.map((cliente, index) => (
+              <ClienteRow
+                key={cliente.id}
+                cliente={cliente}
+                mesAtual={mesAtual}
+                anoAtual={anoAtual}
+                submitting={submitting}
+                onChangeStatus={onChangeStatus}
+                isMobile={isMobile}
+                isAlternate={index % 2 === 1}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
       
       {/* Componente de paginação */}
-      <div className="border-t p-2">
+      <div className="border-t p-2 bg-muted/10">
         <TablePagination
           currentPage={currentPage}
           totalPages={totalPages}

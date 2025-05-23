@@ -12,6 +12,7 @@ interface ClienteRowProps {
   submitting: boolean;
   onChangeStatus: (cliente: ClienteComPagamentos, mes: number, ano: number, status: string) => void;
   isMobile?: boolean;
+  isAlternate?: boolean;
 }
 
 export const ClienteRow = ({
@@ -20,7 +21,8 @@ export const ClienteRow = ({
   anoAtual,
   submitting,
   onChangeStatus,
-  isMobile = false
+  isMobile = false,
+  isAlternate = false
 }: ClienteRowProps) => {
   // Use the status directly from the cliente object that is updated by the parent component
   // through the centralized real-time subscription in useClientesPagamentos
@@ -32,7 +34,7 @@ export const ClienteRow = ({
     : "-";
 
   return (
-    <TableRow>
+    <TableRow className={isAlternate ? "bg-muted/10" : "bg-background"}>
       {!isMobile && <TableCell>{formatDate(cliente.created_at)}</TableCell>}
       <TableCell className="font-medium">{cliente.nome}</TableCell>
       <TableCell>{cliente.dia_vencimento}</TableCell>

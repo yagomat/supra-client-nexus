@@ -51,65 +51,67 @@ export const PagamentosMatriz = ({
   };
   
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nome</TableHead>
-            <TableHead>Dia de Venc.</TableHead>
-            <TableHead>Status</TableHead>
-            {displayMeses.map((mes) => (
-              <TableHead key={mes.value} className="text-center">
-                {isMobile ? mes.label.substring(0, 3) : mes.label.substring(0, 3)}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {paginatedClientes.map((cliente) => (
-            <TableRow key={cliente.id}>
-              <TableCell className="font-medium">{cliente.nome}</TableCell>
-              <TableCell>{cliente.dia_vencimento}</TableCell>
-              <TableCell>
-                <ClientStatusBadge status={cliente.status} />
-              </TableCell>
-              {displayMeses.map((mes) => {
-                const chave = `${mes.value}-${anoAtual}`;
-                const pagamento = cliente.pagamentos[chave];
-                // Default status is "nao_pago" (not paid)
-                const status = pagamento?.status || "nao_pago";
-                
-                let cellClass = "";
-                if (status === "pago") {
-                  cellClass = "bg-success/20";
-                } else if (status === "pago_confianca") {
-                  cellClass = "bg-warning/20";
-                } else if (status === "nao_pago") {
-                  cellClass = "bg-danger/20";
-                }
-                
-                return (
-                  <TableCell key={mes.value} className={cellClass}>
-                    <div className="flex justify-center">
-                      <PaymentStatusButton
-                        status={status}
-                        onStatusChange={(value) => 
-                          onChangeStatus(cliente, mes.value, anoAtual, value)
-                        }
-                        disabled={submitting}
-                        minimal={true}
-                      />
-                    </div>
-                  </TableCell>
-                );
-              })}
+    <div className="rounded-lg shadow-sm overflow-hidden border border-border/50">
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead className="font-medium">Nome</TableHead>
+              <TableHead className="font-medium">Dia de Venc.</TableHead>
+              <TableHead className="font-medium">Status</TableHead>
+              {displayMeses.map((mes) => (
+                <TableHead key={mes.value} className="text-center font-medium">
+                  {isMobile ? mes.label.substring(0, 3) : mes.label.substring(0, 3)}
+                </TableHead>
+              ))}
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {paginatedClientes.map((cliente, index) => (
+              <TableRow key={cliente.id} className={index % 2 === 1 ? "bg-muted/10" : "bg-background"}>
+                <TableCell className="font-medium">{cliente.nome}</TableCell>
+                <TableCell>{cliente.dia_vencimento}</TableCell>
+                <TableCell>
+                  <ClientStatusBadge status={cliente.status} />
+                </TableCell>
+                {displayMeses.map((mes) => {
+                  const chave = `${mes.value}-${anoAtual}`;
+                  const pagamento = cliente.pagamentos[chave];
+                  // Default status is "nao_pago" (not paid)
+                  const status = pagamento?.status || "nao_pago";
+                  
+                  let cellClass = "";
+                  if (status === "pago") {
+                    cellClass = "bg-success/20";
+                  } else if (status === "pago_confianca") {
+                    cellClass = "bg-warning/20";
+                  } else if (status === "nao_pago") {
+                    cellClass = "bg-danger/20";
+                  }
+                  
+                  return (
+                    <TableCell key={mes.value} className={cellClass}>
+                      <div className="flex justify-center">
+                        <PaymentStatusButton
+                          status={status}
+                          onStatusChange={(value) => 
+                            onChangeStatus(cliente, mes.value, anoAtual, value)
+                          }
+                          disabled={submitting}
+                          minimal={true}
+                        />
+                      </div>
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
       
       {/* Componente de paginação */}
-      <div className="border-t p-2">
+      <div className="border-t p-2 bg-muted/10">
         <TablePagination
           currentPage={currentPage}
           totalPages={totalPages}

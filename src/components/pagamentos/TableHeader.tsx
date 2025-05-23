@@ -22,17 +22,17 @@ export const TableHeaderComponent = ({
   
   return (
     <TableHeader>
-      <TableRow>
+      <TableRow className="bg-muted/50">
         {!isMobile && (
           <TableHead className="w-32">
             <Button
               variant="ghost"
-              className="flex items-center"
+              className="flex items-center font-medium -ml-2"
               onClick={() => handleSortToggle('data')}
             >
               Data de Cadastro
               {sortOrder === 'data' ? (
-                <ArrowDownIcon className="ml-2 h-4 w-4" />
+                <ArrowDownIcon className="ml-2 h-4 w-4 opacity-70" />
               ) : null}
             </Button>
           </TableHead>
@@ -40,24 +40,24 @@ export const TableHeaderComponent = ({
         <TableHead>
           <Button
             variant="ghost"
-            className="flex items-center"
+            className="flex items-center font-medium -ml-2"
             onClick={() => handleSortToggle('nome')}
           >
             Cliente
             {sortOrder === 'nome' ? (
-              <ArrowDownIcon className="ml-2 h-4 w-4" />
+              <ArrowDownIcon className="ml-2 h-4 w-4 opacity-70" />
             ) : null}
           </Button>
         </TableHead>
         <TableHead>
-          <div className="leading-tight">
+          <div className="leading-tight font-medium">
             <div>Dia de</div>
             <div>Venc.</div>
           </div>
         </TableHead>
-        {!isMobile && <TableHead>Plano</TableHead>}
-        <TableHead>Status</TableHead>
-        <TableHead>Pagamento</TableHead>
+        {!isMobile && <TableHead className="font-medium">Plano</TableHead>}
+        <TableHead className="font-medium">Status</TableHead>
+        <TableHead className="font-medium">Pagamento</TableHead>
       </TableRow>
     </TableHeader>
   );

@@ -68,40 +68,43 @@ export const ClienteTable = ({
   );
   
   return (
-    <div className="border rounded-md overflow-hidden">
+    <div className="rounded-md overflow-hidden border border-border/50 shadow-sm">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="bg-muted/50">
               <TableHead onClick={() => handleSortChange('data')} className="cursor-pointer">
-                <div className="flex items-center">
+                <div className="flex items-center font-medium">
                   Data de Cadastro
-                  {onSortChange && <ArrowUpDown className="ml-1 h-4 w-4" />}
+                  {onSortChange && <ArrowUpDown className="ml-1 h-4 w-4 opacity-70" />}
                   {sortOrder === 'data' && <span className="ml-1 text-primary">•</span>}
                 </div>
               </TableHead>
               <TableHead onClick={() => handleSortChange('nome')} className="cursor-pointer">
-                <div className="flex items-center">
+                <div className="flex items-center font-medium">
                   Nome
-                  {onSortChange && <ArrowUpDown className="ml-1 h-4 w-4" />}
+                  {onSortChange && <ArrowUpDown className="ml-1 h-4 w-4 opacity-70" />}
                   {sortOrder === 'nome' && <span className="ml-1 text-primary">•</span>}
                 </div>
               </TableHead>
-              <TableHead>Telefone</TableHead>
-              <TableHead>UF</TableHead>
-              <TableHead>Servidor</TableHead>
-              <TableHead className="whitespace-pre-line">Dia de{'\n'}Venc.</TableHead>
-              <TableHead>Plano</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Tela Principal</TableHead>
-              <TableHead>Tela Adicional</TableHead>
-              <TableHead>Obs.</TableHead>
-              <TableHead>Ações</TableHead>
+              <TableHead className="font-medium">Telefone</TableHead>
+              <TableHead className="font-medium">UF</TableHead>
+              <TableHead className="font-medium">Servidor</TableHead>
+              <TableHead className="whitespace-pre-line font-medium">Dia de{'\n'}Venc.</TableHead>
+              <TableHead className="font-medium">Plano</TableHead>
+              <TableHead className="font-medium">Status</TableHead>
+              <TableHead className="font-medium">Tela Principal</TableHead>
+              <TableHead className="font-medium">Tela Adicional</TableHead>
+              <TableHead className="font-medium">Obs.</TableHead>
+              <TableHead className="font-medium text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedClientes.map((cliente) => (
-              <TableRow key={cliente.id}>
+            {paginatedClientes.map((cliente, index) => (
+              <TableRow 
+                key={cliente.id}
+                className={index % 2 === 0 ? "bg-background" : "bg-muted/10"}
+              >
                 <TableCell>{formatDate(cliente.created_at)}</TableCell>
                 <TableCell className="font-medium">{cliente.nome}</TableCell>
                 <TableCell>{formatPhoneNumber(cliente.telefone)}</TableCell>
@@ -119,6 +122,7 @@ export const ClienteTable = ({
                     variant="ghost"
                     size="icon"
                     onClick={() => verDetalhes(cliente)}
+                    className="rounded-full hover:bg-primary/10"
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
@@ -129,6 +133,7 @@ export const ClienteTable = ({
                       variant="ghost"
                       size="icon"
                       onClick={() => verTelaAdicional(cliente)}
+                      className="rounded-full hover:bg-primary/10"
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -142,6 +147,7 @@ export const ClienteTable = ({
                       variant="ghost"
                       size="icon"
                       onClick={() => verObservacoes(cliente)}
+                      className="rounded-full hover:bg-primary/10"
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -149,12 +155,13 @@ export const ClienteTable = ({
                     "-"
                   )}
                 </TableCell>
-                <TableCell>
-                  <div className="flex space-x-1">
+                <TableCell className="text-right">
+                  <div className="flex justify-end space-x-1">
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => navigate(`/clientes/editar/${cliente.id}`)}
+                      className="rounded-full hover:bg-primary/10"
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -162,6 +169,7 @@ export const ClienteTable = ({
                       variant="ghost"
                       size="icon"
                       onClick={() => confirmarExclusao(cliente.id)}
+                      className="rounded-full hover:bg-destructive/10 hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -175,7 +183,7 @@ export const ClienteTable = ({
       
       {/* Componente de paginação */}
       {onPageChange && onItemsPerPageChange && (
-        <div className="border-t p-2">
+        <div className="border-t p-2 bg-muted/10">
           <TablePagination
             currentPage={currentPage}
             totalPages={totalPages}
