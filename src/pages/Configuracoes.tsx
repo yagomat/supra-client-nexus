@@ -62,6 +62,7 @@ const Configuracoes = () => {
             .single();
 
           if (data && !error) {
+            // Agora telefone existe no objeto data
             form.setValue("telefone", data.telefone || "");
           }
         }
