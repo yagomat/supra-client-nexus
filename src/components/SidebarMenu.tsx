@@ -1,166 +1,80 @@
 
 import { useState, useEffect } from "react";
-import { NavLink, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/AuthContext";
-import { useIsMobile } from "@/hooks/use-mobile";
-import {
-  LayoutDashboard,
-  UserPlus,
-  Users,
-  CreditCard,
-  Database,
-  Menu,
-  X,
-  LogOut,
-  ChevronLeft,
-  MessageSquare
+import { Link, useLocation } from "react-router-dom";
+import { 
+  LayoutDashboard, 
+  Users, 
+  CreditCard, 
+  Database, 
+  MessageSquare, 
+  Settings,
+  ChevronLeft, 
+  ChevronRight
 } from "lucide-react";
 
-interface SidebarProps {
-  className?: string;
-  onCollapseChange?: (collapsed: boolean) => void;
-}
-
-export function SidebarMenu({ className, onCollapseChange }: SidebarProps) {
-  const [collapsed, setCollapsed] = useState(false);
-  const { user, signOut } = useAuth();
-  const isMobile = useIsMobile();
+export function SidebarMenu({ onCollapseChange }: { onCollapseChange?: (collapsed: boolean) => void }) {
   const location = useLocation();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const toggleSidebar = () => {
-    const newCollapsedState = !collapsed;
-    setCollapsed(newCollapsedState);
-    // Notify parent component about state change
-    onCollapseChange?.(newCollapsedState);
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+    if (onCollapseChange) {
+      onCollapseChange(!isCollapsed);
+    }
   };
 
-  // Ensure parent component is notified of initial state
   useEffect(() => {
-    onCollapseChange?.(collapsed);
+    // Notificar o componente pai sobre o estado inicial
+    if (onCollapseChange) {
+      onCollapseChange(isCollapsed);
+    }
   }, []);
 
-  // Don't render the sidebar at all on mobile
-  if (isMobile) {
-    return null;
-  }
-
-  const navItems = [
-    {
-      name: "Dashboard",
-      href: "/dashboard",
-      icon: <LayoutDashboard size={20} />,
-    },
-    {
-      name: "Cadastrar Cliente",
-      href: "/clientes/cadastrar",
-      icon: <UserPlus size={20} />,
-    },
-    {
-      name: "Lista de Clientes",
-      href: "/clientes",
-      icon: <Users size={20} />,
-    },
-    {
-      name: "Gestão de Pagamentos",
-      href: "/pagamentos",
-      icon: <CreditCard size={20} />,
-    },
-    {
-      name: "WhatsApp",
-      href: "/whatsapp",
-      icon: <MessageSquare size={20} />,
-    },
-    {
-      name: "Banco de Dados",
-      href: "/banco-dados",
-      icon: <Database size={20} />,
-    },
+  const menuItems = [
+    { path: "/dashboard", icon: <LayoutDashboard />, text: "Dashboard" },
+    { path: "/clientes", icon: <Users />, text: "Clientes" },
+    { path: "/pagamentos", icon: <CreditCard />, text: "Pagamentos" },
+    { path: "/banco-dados", icon: <Database />, text: "Banco de Dados" },
+    { path: "/whatsapp", icon: <MessageSquare />, text: "WhatsApp" },
+    { path: "/configuracoes", icon: <Settings />, text: "Configurações" }
   ];
 
-  // Function to check if a specific route is active
-  const isRouteActive = (href: string) => {
-    // Exact match for paths like /dashboard, /pagamentos, etc.
-    if (href === location.pathname) return true;
-    
-    // Special case for /clientes/cadastrar - only match exact path
-    if (href === "/clientes/cadastrar") {
-      return location.pathname === "/clientes/cadastrar";
-    }
-    
-    // Special case for /clientes - only match exact path or editar route
-    if (href === "/clientes") {
-      return location.pathname === "/clientes" || location.pathname.startsWith("/clientes/editar");
-    }
-    
-    return false;
+  const isActive = (path: string) => {
+    return location.pathname === path;
   };
 
   return (
-    <div
-      className={cn(
-        "flex flex-col h-screen bg-sidebar fixed z-20 transition-all duration-300 shadow-lg",
-        collapsed ? "w-[70px]" : "w-64",
-        className
-      )}
-    >
-      <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
-        {!collapsed && (
-          <div className="text-white font-bold">
-            Gestão de Clientes
-          </div>
+    <aside className={`fixed inset-y-0 left-0 z-20 flex flex-col border-r shadow-sm transition-all duration-300 bg-background ${isCollapsed ? "w-[70px]" : "w-64"}`}>
+      <div className={`flex items-center p-4 ${isCollapsed ? "justify-center" : "justify-between"}`}>
+        {!isCollapsed && (
+          <span className="text-xl font-semibold">
+            Gerenciador
+          </span>
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-white hover:bg-sidebar-accent"
-          onClick={toggleSidebar}
+        <button 
+          onClick={toggleCollapse} 
+          className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700"
         >
-          {collapsed ? <ChevronLeft size={20} /> : <X size={20} />}
-        </Button>
+          {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
+        </button>
       </div>
-
-      <div className="flex flex-col flex-grow pt-4 overflow-y-auto">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.href}
-            to={item.href}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center px-4 py-3 my-1 mx-2 rounded-md text-sm font-medium transition-colors",
-                isRouteActive(item.href)
-                  ? "bg-sidebar-primary text-white"
-                  : "text-white hover:bg-sidebar-accent hover:text-white"
-              )
-            }
+      
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        {menuItems.map((item) => (
+          <Link
+            key={item.path}
+            to={item.path}
+            className={`flex items-center p-2 rounded-lg transition-colors ${
+              isActive(item.path)
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-accent hover:text-accent-foreground"
+            } ${isCollapsed ? "justify-center" : ""}`}
           >
-            <span className="mr-3 text-white">{item.icon}</span>
-            {!collapsed && <span className="text-white">{item.name}</span>}
-          </NavLink>
+            <div className="w-5 h-5">{item.icon}</div>
+            {!isCollapsed && <span className="ml-3">{item.text}</span>}
+          </Link>
         ))}
-      </div>
-
-      {user && (
-        <div className="p-4 border-t border-sidebar-border mt-auto">
-          <div className="flex items-center justify-between">
-            {!collapsed && (
-              <div className="text-white text-sm truncate">
-                {user.nome || user.email}
-              </div>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white hover:bg-sidebar-accent"
-              onClick={signOut}
-              title="Sair"
-            >
-              <LogOut size={20} />
-            </Button>
-          </div>
-        </div>
-      )}
-    </div>
+      </nav>
+    </aside>
   );
 }
