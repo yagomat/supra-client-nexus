@@ -2,6 +2,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import { SidebarMenu } from "@/components/SidebarMenu";
 import { MobileMenu } from "@/components/MobileMenu";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -28,10 +29,17 @@ export function DashboardLayout({ children, className }: DashboardLayoutProps) {
           sidebarCollapsed ? "ml-[70px]" : "ml-64", 
         className
       )}>
-        {isMobile && (
-          <div className="mb-4 flex items-center">
-            <MobileMenu />
-            <h1 className="text-xl font-bold ml-4">Gestão de Clientes</h1>
+        {isMobile ? (
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center">
+              <MobileMenu />
+              <h1 className="text-xl font-bold ml-4">Gestão de Clientes</h1>
+            </div>
+            <ThemeToggle />
+          </div>
+        ) : (
+          <div className="flex justify-end container px-4 pt-2">
+            <ThemeToggle />
           </div>
         )}
         <div className={cn(
