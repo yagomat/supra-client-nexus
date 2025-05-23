@@ -1,7 +1,7 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ClientEvolutionChartProps {
@@ -24,7 +24,7 @@ export const ClientEvolutionChart = ({ data, loading }: ClientEvolutionChartProp
           </div>
         ) : data.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
+            <LineChart
               data={data}
               margin={{
                 top: 10,
@@ -46,8 +46,15 @@ export const ClientEvolutionChart = ({ data, loading }: ClientEvolutionChartProp
                 tick={{ fontSize: isMobile ? 10 : 12 }}
               />
               <Tooltip />
-              <Bar dataKey="quantidade" fill="#3b82f6" />
-            </BarChart>
+              <Line 
+                type="monotone" 
+                dataKey="quantidade" 
+                stroke="#3b82f6" 
+                strokeWidth={2} 
+                dot={{ r: 3 }}
+                activeDot={{ r: 5 }}
+              />
+            </LineChart>
           </ResponsiveContainer>
         ) : (
           <div className="flex items-center justify-center h-full text-muted-foreground">

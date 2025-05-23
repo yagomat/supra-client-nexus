@@ -33,13 +33,27 @@ export const DashboardContent = ({ stats, loading }: DashboardContentProps) => {
 
       <StatsCards stats={stats} loading={loading} />
 
-      <div className="w-full">
-        <ClientEvolutionChart data={safeEvolucaoClientes} loading={loading} />
-      </div>
-      
-      <div className="w-full">
-        <PaymentEvolutionChart data={safePagamentosPorMes} loading={loading} />
-      </div>
+      {/* Para desktop: gráficos lado a lado */}
+      {!isMobile ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="w-full">
+            <ClientEvolutionChart data={safeEvolucaoClientes} loading={loading} />
+          </div>
+          <div className="w-full">
+            <PaymentEvolutionChart data={safePagamentosPorMes} loading={loading} />
+          </div>
+        </div>
+      ) : (
+        // Para mobile: gráficos empilhados
+        <>
+          <div className="w-full">
+            <ClientEvolutionChart data={safeEvolucaoClientes} loading={loading} />
+          </div>
+          <div className="w-full">
+            <PaymentEvolutionChart data={safePagamentosPorMes} loading={loading} />
+          </div>
+        </>
+      )}
 
       <DistributionCharts stats={stats} loading={loading} />
     </div>
