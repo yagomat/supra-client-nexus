@@ -1,9 +1,13 @@
 
+import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { PaymentStatusButton } from "./PaymentStatusButton";
 import { ClienteComPagamentos } from "@/types";
 import { ClientStatusBadge } from "./ClientStatusBadge";
+import { ScrollableTable } from "@/components/ui/scrollable-table";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { useTheme } from "next-themes";
 
 interface MesData {
   value: number;
@@ -27,30 +31,49 @@ export const PagamentosMatriz = ({
   onChangeStatus,
   isMobile = false
 }: PagamentosMatrizProps) => {
+  const { theme } = useTheme();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  
   // Se for mobile, limitamos os meses exibidos para melhor visualização
   const displayMeses = isMobile ? meses.slice(0, 6) : meses;
   
+  // Paginação
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedClientes = clientes.slice(startIndex, startIndex + pageSize);
+  
+  // Manipular mudança de página
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+  
+  // Manipular mudança de tamanho da página
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1); // Voltar para a primeira página ao mudar o tamanho
+  };
+  
   return (
     <div className="overflow-x-auto">
-      <Table>
+      <ScrollableTable fixedColumns={3} className={theme === 'dark' ? 'table-dark' : ''}>
         <TableHeader>
           <TableRow>
-            <TableHead>Nome</TableHead>
-            <TableHead>Dia de Venc.</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead className="fixed-column-1 min-w-[180px]">Nome</TableHead>
+            <TableHead className="fixed-column-2 min-w-[80px]">Dia de Venc.</TableHead>
+            <TableHead className="fixed-column-2 min-w-[100px]" style={{ '--left-offset': '260px' } as React.CSSProperties}>Status</TableHead>
             {displayMeses.map((mes) => (
-              <TableHead key={mes.value} className="text-center">
+              <TableHead key={mes.value} className="text-center min-w-[80px]">
                 {isMobile ? mes.label.substring(0, 3) : mes.label.substring(0, 3)}
               </TableHead>
             ))}
           </TableRow>
         </TableHeader>
         <TableBody>
-          {clientes.map((cliente) => (
+          {paginatedClientes.map((cliente) => (
             <TableRow key={cliente.id}>
-              <TableCell className="font-medium">{cliente.nome}</TableCell>
-              <TableCell>{cliente.dia_vencimento}</TableCell>
-              <TableCell>
+              <TableCell className="font-medium fixed-column-1">{cliente.nome}</TableCell>
+              <TableCell className="fixed-column-2">{cliente.dia_vencimento}</TableCell>
+              <TableCell className="fixed-column-2" style={{ '--left-offset': '260px' } as React.CSSProperties}>
                 <ClientStatusBadge status={cliente.status} />
               </TableCell>
               {displayMeses.map((mes) => {
@@ -86,7 +109,15 @@ export const PagamentosMatriz = ({
             </TableRow>
           ))}
         </TableBody>
-      </Table>
+      </ScrollableTable>
+      
+      <TablePagination
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={clientes.length}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+      />
     </div>
   );
 };

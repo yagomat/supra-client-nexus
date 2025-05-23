@@ -33,8 +33,8 @@ export const ClienteRow = ({
 
   return (
     <TableRow>
-      {!isMobile && <TableCell>{formatDate(cliente.created_at)}</TableCell>}
-      <TableCell className="font-medium">{cliente.nome}</TableCell>
+      {!isMobile && <TableCell className="fixed-column-1">{formatDate(cliente.created_at)}</TableCell>}
+      <TableCell className={isMobile ? "font-medium" : "font-medium fixed-column-2"}>{cliente.nome}</TableCell>
       <TableCell>{cliente.dia_vencimento}</TableCell>
       {!isMobile && <TableCell>{valorPlanoFormatado}</TableCell>}
       <TableCell>
