@@ -1,7 +1,7 @@
 
 import { ReactNode, useRef, useEffect, useState } from "react";
 import { Table } from "@/components/ui/table";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 interface ScrollableTableProps {
   children: ReactNode;
@@ -40,12 +40,12 @@ export const ScrollableTable = ({
     <div className={`w-full rounded-md border overflow-hidden ${className || ''}`}>
       {/* Barra de rolagem superior (visível apenas quando necessário) */}
       {showTopScroller && (
-        <ScrollArea 
-          className="h-2.5 border-b border-border/50"
-          orientation="horizontal"
-        >
-          <div style={{ width: tableRef.current?.scrollWidth || '100%', height: '1px' }} />
-        </ScrollArea>
+        <div className="h-2.5 border-b border-border/50">
+          <ScrollArea className="h-full">
+            <div style={{ width: tableRef.current?.scrollWidth || '100%', height: '1px' }} />
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
+        </div>
       )}
       
       {/* Conteúdo da tabela com scroll */}
@@ -55,7 +55,7 @@ export const ScrollableTable = ({
       >
         <Table>
           {fixedColumns > 0 && (
-            <style jsx global>{`
+            <style dangerouslySetInnerHTML={{ __html: `
               .fixed-column-1 {
                 position: sticky;
                 left: 0;
@@ -74,7 +74,7 @@ export const ScrollableTable = ({
               .table-dark .fixed-column-2 {
                 background-color: hsl(222.2, 84%, 4.9%);
               }
-            `}</style>
+            `}} />
           )}
           {children}
         </Table>
