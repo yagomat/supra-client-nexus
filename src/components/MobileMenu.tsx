@@ -1,15 +1,15 @@
 
-import { Menu, X } from "lucide-react";
+import { Menu } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import {
   LayoutDashboard,
   UserPlus,
@@ -17,7 +17,8 @@ import {
   CreditCard,
   Database,
   LogOut,
-  MessageSquare
+  MessageSquare,
+  X
 } from "lucide-react";
 
 export function MobileMenu() {
@@ -77,8 +78,8 @@ export function MobileMenu() {
 
   return (
     <div className="md:hidden">
-      <Sheet>
-        <SheetTrigger asChild>
+      <Drawer direction="left">
+        <DrawerTrigger asChild>
           <Button
             variant="ghost"
             size="icon"
@@ -87,14 +88,14 @@ export function MobileMenu() {
           >
             <Menu size={24} />
           </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="w-[80%] p-0">
+        </DrawerTrigger>
+        <DrawerContent side="left" className="w-[80%] p-0">
           <div className="flex h-full flex-col bg-sidebar">
             <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
               <div className="text-white font-bold">
                 Gestão de Clientes
               </div>
-              <SheetClose asChild>
+              <DrawerClose asChild>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -102,11 +103,11 @@ export function MobileMenu() {
                 >
                   <X size={20} />
                 </Button>
-              </SheetClose>
+              </DrawerClose>
             </div>
             <div className="flex flex-col flex-grow pt-4">
               {navItems.map((item) => (
-                <SheetClose key={item.href} asChild>
+                <DrawerClose key={item.href} asChild>
                   <NavLink
                     to={item.href}
                     className={
@@ -121,7 +122,7 @@ export function MobileMenu() {
                     <span className="mr-3 text-white">{item.icon}</span>
                     <span className="text-white">{item.name}</span>
                   </NavLink>
-                </SheetClose>
+                </DrawerClose>
               ))}
             </div>
             {user && (
@@ -143,8 +144,8 @@ export function MobileMenu() {
               </div>
             )}
           </div>
-        </SheetContent>
-      </Sheet>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }

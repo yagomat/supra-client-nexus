@@ -33,7 +33,9 @@ export function DashboardLayout({ children, className }: DashboardLayoutProps) {
 
   return (
     <div className="flex h-screen bg-background">
-      <SidebarMenu onCollapseChange={handleSidebarStateChange} />
+      {/* Only show sidebar in desktop mode */}
+      {!isMobile && <SidebarMenu onCollapseChange={handleSidebarStateChange} />}
+      
       <main className={cn(
         "flex-1 overflow-auto transition-all duration-300", 
         isMobile ? "w-full px-3 py-2" : 
