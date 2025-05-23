@@ -56,39 +56,66 @@ export const ScrollableTable = ({
         <Table>
           {fixedColumns > 0 && (
             <style dangerouslySetInnerHTML={{ __html: `
-              .fixed-column-1 {
-                position: sticky;
-                left: 0;
-                z-index: 10;
-                background-color: var(--background);
-                box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
-                /* Garantir que o fundo cubra completamente */
-                isolation: isolate;
-              }
+              /* Estilos base para colunas fixas */
+              .fixed-column-1,
               .fixed-column-2 {
                 position: sticky;
-                left: var(--left-offset, 130px);
-                z-index: 10;
-                background-color: var(--background);
+                z-index: 20;
                 box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
-                /* Garantir que o fundo cubra completamente */
                 isolation: isolate;
+                background-color: var(--background);
+                backdrop-filter: blur(8px);
               }
-              /* Deixando o fundo mais escuro nas colunas fixas no tema escuro */
+              
+              /* Posicionamento específico */
+              .fixed-column-1 {
+                left: 0;
+              }
+              
+              .fixed-column-2 {
+                left: var(--left-offset, 130px);
+              }
+              
+              /* Tema escuro - colunas fixas */
+              .dark .fixed-column-1,
+              .dark .fixed-column-2,
               .table-dark .fixed-column-1,
               .table-dark .fixed-column-2 {
                 background-color: hsl(222.2, 84%, 4.9%);
               }
               
-              /* Adicionar cores para os estados de hover para as colunas fixas para prevenir transparência */
+              /* Estilos de hover */
               tr:hover .fixed-column-1,
               tr:hover .fixed-column-2 {
                 background-color: var(--muted);
               }
               
+              /* Tema escuro - hover */
+              .dark tr:hover .fixed-column-1,
+              .dark tr:hover .fixed-column-2,
               .table-dark tr:hover .fixed-column-1,
               .table-dark tr:hover .fixed-column-2 {
                 background-color: hsl(222.2, 84%, 6%);
+              }
+              
+              /* Garantir que as bordas das linhas sejam contínuas */
+              tr {
+                position: relative;
+              }
+              
+              /* Reforçar a visibilidade da borda superior nas colunas fixas */
+              thead .fixed-column-1,
+              thead .fixed-column-2 {
+                box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+                background-color: var(--background);
+              }
+              
+              /* Tema escuro - cabeçalho */
+              .dark thead .fixed-column-1,
+              .dark thead .fixed-column-2,
+              .table-dark thead .fixed-column-1,
+              .table-dark thead .fixed-column-2 {
+                background-color: hsl(222.2, 84%, 4.9%);
               }
             `}} />
           )}
@@ -98,3 +125,4 @@ export const ScrollableTable = ({
     </div>
   );
 };
+
