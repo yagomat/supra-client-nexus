@@ -13,13 +13,13 @@ interface StatCardProps {
 
 export const StatCard = ({ title, value, icon, loading, className }: StatCardProps) => {
   return (
-    <Card className={`overflow-hidden ${className}`}>
-      <CardContent className="p-0">
-        <div className="flex items-center">
-          <div className={`flex items-center justify-center h-full p-6 ${className}`}>
+    <Card className={`shadow-sm hover:shadow transition-all ${className}`}>
+      <CardContent className="p-6">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-md bg-muted flex items-center justify-center">
             {icon}
           </div>
-          <div className="flex flex-col p-6 pl-3 flex-1">
+          <div className="flex-1">
             <p className="text-sm font-medium text-muted-foreground">{title}</p>
             {loading ? (
               <Skeleton className="h-8 w-24 mt-1" />
