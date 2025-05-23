@@ -1,5 +1,5 @@
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useState } from "react";
 import { SidebarMenu } from "@/components/SidebarMenu";
 import { MobileMenu } from "@/components/MobileMenu";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
