@@ -62,6 +62,8 @@ export const ScrollableTable = ({
                 z-index: 10;
                 background-color: var(--background);
                 box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+                /* Garantir que o fundo cubra completamente */
+                isolation: isolate;
               }
               .fixed-column-2 {
                 position: sticky;
@@ -69,10 +71,24 @@ export const ScrollableTable = ({
                 z-index: 10;
                 background-color: var(--background);
                 box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+                /* Garantir que o fundo cubra completamente */
+                isolation: isolate;
               }
+              /* Deixando o fundo mais escuro nas colunas fixas no tema escuro */
               .table-dark .fixed-column-1,
               .table-dark .fixed-column-2 {
                 background-color: hsl(222.2, 84%, 4.9%);
+              }
+              
+              /* Adicionar cores para os estados de hover para as colunas fixas para prevenir transparência */
+              tr:hover .fixed-column-1,
+              tr:hover .fixed-column-2 {
+                background-color: var(--muted);
+              }
+              
+              .table-dark tr:hover .fixed-column-1,
+              .table-dark tr:hover .fixed-column-2 {
+                background-color: hsl(222.2, 84%, 6%);
               }
             `}} />
           )}
