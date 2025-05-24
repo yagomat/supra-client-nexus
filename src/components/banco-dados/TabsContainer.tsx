@@ -1,3 +1,4 @@
+
 import { ValuesTable } from "./ValuesTable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ValoresPredefinidos } from "@/types";
@@ -46,7 +47,8 @@ export const TabsContainer = ({ activeTab, onTabChange, valoresPredefinidos, onD
             <TabsTrigger value="dispositivos_smart">Dispositivos</TabsTrigger>
             <TabsTrigger value="aplicativos">Aplicativos</TabsTrigger>
           </TabsList>
-          <div>
+          {/* Increased space between tabs and content */}
+          <div className="mt-10">
             <TabsContent value="ufs">{renderValues("ufs")}</TabsContent>
             <TabsContent value="servidores">{renderValues("servidores")}</TabsContent>
             <TabsContent value="dias_vencimento">{renderValues("dias_vencimento")}</TabsContent>
