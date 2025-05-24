@@ -3,17 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, Calendar } from "lucide-react";
-import { AppVencendo } from "@/types";
+import { AppVencendo, ClienteEmRisco } from "@/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface AlertCardsProps {
   clientesInativos: number;
+  clientesEmRiscoDetalhes: ClienteEmRisco[];
   appsVencendo: AppVencendo[];
   loading: boolean;
 }
 
-export const AlertCards = ({ clientesInativos, appsVencendo, loading }: AlertCardsProps) => {
+export const AlertCards = ({ clientesInativos, clientesEmRiscoDetalhes, appsVencendo, loading }: AlertCardsProps) => {
   // Format date to Brazilian format (day/month/year)
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -43,20 +44,42 @@ export const AlertCards = ({ clientesInativos, appsVencendo, loading }: AlertCar
           {loading ? (
             <Skeleton className="h-16 w-full" />
           ) : (
-            <Alert variant="warning" className="bg-amber-50 dark:bg-amber-950/20">
-              <AlertTitle className="text-amber-800 dark:text-amber-300">
-                {clientesInativos > 0 ? (
-                  <span className="font-bold">{clientesInativos} {getClientText(clientesInativos)} nos próximos 3 dias</span>
-                ) : (
-                  "Nenhum cliente ficará inativo nos próximos 3 dias"
-                )}
-              </AlertTitle>
-              <AlertDescription className="text-amber-700 dark:text-amber-400">
-                {clientesInativos > 0 ? 
-                  "Clientes que não pagaram o mês atual e se aproximam da data de vencimento." : 
-                  "Todos os clientes estão com os pagamentos em dia."}
-              </AlertDescription>
-            </Alert>
+            <div>
+              {clientesInativos > 0 && clientesEmRiscoDetalhes && clientesEmRiscoDetalhes.length > 0 ? (
+                <div>
+                  <p className="font-medium mb-2 text-amber-800 dark:text-amber-300">
+                    {clientesInativos} {getClientText(clientesInativos)} nos próximos 3 dias
+                  </p>
+                  <div className="text-sm space-y-1 max-h-32 overflow-y-auto pr-1">
+                    {clientesEmRiscoDetalhes.slice(0, 4).map((cliente, index) => (
+                      <div key={index} className="flex justify-between border-b pb-1">
+                        <span className="font-medium">{cliente.nome}</span>
+                        <div>
+                          <span className="text-muted-foreground">{cliente.servidor}</span>
+                          <span className="ml-2 text-amber-600 dark:text-amber-400">
+                            {cliente.dias_restantes} {cliente.dias_restantes === 1 ? 'dia' : 'dias'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    {clientesEmRiscoDetalhes.length > 4 && (
+                      <p className="text-center text-muted-foreground text-xs pt-1">
+                        + {clientesEmRiscoDetalhes.length - 4} {clientesEmRiscoDetalhes.length - 4 === 1 ? 'outro' : 'outros'}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <Alert variant="warning" className="bg-amber-50 dark:bg-amber-950/20">
+                  <AlertTitle className="text-amber-800 dark:text-amber-300">
+                    Nenhum cliente ficará inativo nos próximos 3 dias
+                  </AlertTitle>
+                  <AlertDescription className="text-amber-700 dark:text-amber-400">
+                    Todos os clientes estão com os pagamentos em dia.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>
