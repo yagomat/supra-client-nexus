@@ -1,4 +1,3 @@
-
 export type PaymentStatus = "pago" | "pago_confianca" | "nao_pago";
 
 export interface Cliente {
@@ -77,6 +76,17 @@ export interface DashboardStats {
     mes: string;
     valor: number;
   }[];
+  clientes_inativos_proximos_dias: number;
+  apps_vencendo_proximos_dias: AppVencendo[];
+}
+
+export interface AppVencendo {
+  id: string;
+  nome: string;
+  aplicativo: string;
+  data_vencimento: string;
+  tipo_tela: 'principal' | 'adicional';
+  dias_restantes: number;
 }
 
 export interface ValoresPredefinidos {

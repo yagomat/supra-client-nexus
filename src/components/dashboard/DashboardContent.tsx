@@ -3,6 +3,7 @@ import { ClientEvolutionChart } from "./ClientEvolutionChart";
 import { PaymentEvolutionChart } from "./PaymentEvolutionChart";
 import { StatsCards } from "./StatsCards";
 import { DistributionCharts } from "./DistributionCharts";
+import { AlertCards } from "./AlertCards";
 import { DashboardStats } from "@/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -25,6 +26,10 @@ export const DashboardContent = ({ stats, loading }: DashboardContentProps) => {
   // Create a safe version of payment evolution data
   const safePagamentosPorMes = stats?.pagamentos_por_mes ? getSafeData(stats.pagamentos_por_mes) : [];
 
+  // Create safe versions of new alert data
+  const safeClientesInativos = stats?.clientes_inativos_proximos_dias || 0;
+  const safeAppsVencendo = stats?.apps_vencendo_proximos_dias ? getSafeData(stats.apps_vencendo_proximos_dias) : [];
+
   return (
     <div className="flex flex-col space-y-4 w-full">
       <p className="text-muted-foreground">
@@ -32,6 +37,13 @@ export const DashboardContent = ({ stats, loading }: DashboardContentProps) => {
       </p>
 
       <StatsCards stats={stats} loading={loading} />
+
+      {/* New alert cards */}
+      <AlertCards 
+        clientesInativos={safeClientesInativos}
+        appsVencendo={safeAppsVencendo}
+        loading={loading}
+      />
 
       {/* Para desktop: gráficos lado a lado */}
       {!isMobile ? (
