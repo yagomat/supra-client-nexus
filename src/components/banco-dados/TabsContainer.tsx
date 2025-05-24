@@ -47,8 +47,8 @@ export const TabsContainer = ({ activeTab, onTabChange, valoresPredefinidos, onD
             <TabsTrigger value="dispositivos_smart">Dispositivos</TabsTrigger>
             <TabsTrigger value="aplicativos">Aplicativos</TabsTrigger>
           </TabsList>
-          {/* Increased space between tabs and content */}
-          <div className="mt-10">
+          {/* Significantly increased space between tabs and content */}
+          <div className="mt-16">
             <TabsContent value="ufs">{renderValues("ufs")}</TabsContent>
             <TabsContent value="servidores">{renderValues("servidores")}</TabsContent>
             <TabsContent value="dias_vencimento">{renderValues("dias_vencimento")}</TabsContent>
