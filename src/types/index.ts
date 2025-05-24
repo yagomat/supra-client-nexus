@@ -77,15 +77,7 @@ export interface DashboardStats {
     valor: number;
   }[];
   clientes_inativos_proximos_dias: number;
-  clientes_em_risco_detalhes: ClienteEmRisco[];
   apps_vencendo_proximos_dias: AppVencendo[];
-}
-
-export interface ClienteEmRisco {
-  id: string;
-  nome: string;
-  servidor: string;
-  dias_restantes: number;
 }
 
 export interface AppVencendo {

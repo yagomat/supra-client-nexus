@@ -85,10 +85,5 @@ function processDashboardData(data: any): any {
     data.distribuicao_aplicativos = aplicativosCombinados.sort((a, b) => b.quantidade - a.quantidade);
   }
   
-  // Garantir que clientes_em_risco_detalhes seja um array
-  if (!data.clientes_em_risco_detalhes) {
-    data.clientes_em_risco_detalhes = [];
-  }
-  
   return data;
 }
