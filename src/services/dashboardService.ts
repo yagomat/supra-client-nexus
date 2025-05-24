@@ -19,21 +19,38 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     throw error;
   }
   
-  // Processar os dados para combinar dispositivos e aplicativos das telas principal e adicional
+  // Process data for dashboard display
   const processedData = processDashboardData(data);
+  
+  // Process clients at risk data
+  const clientsAtRisk = processClientsAtRisk(data);
+  
+  // Add clients at risk data to the processed data
+  processedData.clientes_em_risco = clientsAtRisk;
   
   return processedData as unknown as DashboardStats;
 }
 
-// Nova função para processar e combinar os dados de dispositivos e aplicativos
+// Helper function to process clients at risk data
+function processClientsAtRisk(data: any): any {
+  // If the data contains individual client records that will become inactive
+  if (data.clientes_em_risco && Array.isArray(data.clientes_em_risco)) {
+    return data.clientes_em_risco;
+  }
+  
+  // If we only have count but no detailed data, return empty array
+  return [];
+}
+
+// Function to process and combine the data of devices and applications
 function processDashboardData(data: any): any {
   if (!data) return data;
   
-  // Processar distribuição de dispositivos
+  // Process device distribution
   if (data.distribuicao_dispositivos && Array.isArray(data.distribuicao_dispositivos)) {
     const dispositivosMap = new Map<string, number>();
     
-    // Combinar contagens de dispositivos iguais
+    // Combine counts of same devices
     data.distribuicao_dispositivos.forEach((item: any) => {
       if (item.dispositivo) {
         const dispositivo = item.dispositivo.trim();
@@ -47,21 +64,21 @@ function processDashboardData(data: any): any {
       }
     });
     
-    // Converter de volta para array
+    // Convert back to array
     const dispositivosCombinados = Array.from(dispositivosMap).map(([dispositivo, quantidade]) => ({
       dispositivo,
       quantidade
     }));
     
-    // Ordenar por quantidade (decrescente)
+    // Sort by quantity (descending)
     data.distribuicao_dispositivos = dispositivosCombinados.sort((a, b) => b.quantidade - a.quantidade);
   }
   
-  // Processar distribuição de aplicativos
+  // Process app distribution
   if (data.distribuicao_aplicativos && Array.isArray(data.distribuicao_aplicativos)) {
     const aplicativosMap = new Map<string, number>();
     
-    // Combinar contagens de aplicativos iguais
+    // Combine counts of same apps
     data.distribuicao_aplicativos.forEach((item: any) => {
       if (item.aplicativo) {
         const aplicativo = item.aplicativo.trim();
@@ -75,13 +92,13 @@ function processDashboardData(data: any): any {
       }
     });
     
-    // Converter de volta para array
+    // Convert back to array
     const aplicativosCombinados = Array.from(aplicativosMap).map(([aplicativo, quantidade]) => ({
       aplicativo,
       quantidade
     }));
     
-    // Ordenar por quantidade (decrescente)
+    // Sort by quantity (descending)
     data.distribuicao_aplicativos = aplicativosCombinados.sort((a, b) => b.quantidade - a.quantidade);
   }
   

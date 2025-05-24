@@ -29,6 +29,9 @@ export const DashboardContent = ({ stats, loading }: DashboardContentProps) => {
   // Create safe versions of new alert data
   const safeClientesInativos = stats?.clientes_inativos_proximos_dias || 0;
   const safeAppsVencendo = stats?.apps_vencendo_proximos_dias ? getSafeData(stats.apps_vencendo_proximos_dias) : [];
+  
+  // Create safe versions of clients at risk data
+  const safeClientesEmRisco = stats?.clientes_em_risco ? getSafeData(stats.clientes_em_risco) : [];
 
   return (
     <div className="flex flex-col space-y-4 w-full">
@@ -36,14 +39,15 @@ export const DashboardContent = ({ stats, loading }: DashboardContentProps) => {
         Bem-vindo ao seu painel de gestão de clientes. Aqui você encontra um resumo das suas estatísticas.
       </p>
 
-      <StatsCards stats={stats} loading={loading} />
-
-      {/* New alert cards */}
+      {/* Alert cards moved to top of dashboard */}
       <AlertCards 
         clientesInativos={safeClientesInativos}
         appsVencendo={safeAppsVencendo}
+        clientesEmRisco={safeClientesEmRisco}
         loading={loading}
       />
+
+      <StatsCards stats={stats} loading={loading} />
 
       {/* Para desktop: gráficos lado a lado */}
       {!isMobile ? (
