@@ -78,8 +78,6 @@ export interface DashboardStats {
   }[];
   clientes_inativos_proximos_dias: number;
   apps_vencendo_proximos_dias: AppVencendo[];
-  // New field: detailed information about clients at risk
-  clientes_em_risco?: ClienteEmRisco[];
 }
 
 export interface AppVencendo {
@@ -88,15 +86,6 @@ export interface AppVencendo {
   aplicativo: string;
   data_vencimento: string;
   tipo_tela: 'principal' | 'adicional';
-  dias_restantes: number;
-}
-
-// New interface for clients at risk of becoming inactive
-export interface ClienteEmRisco {
-  id: string;
-  nome: string;
-  servidor: string;
-  dia_vencimento: number;
   dias_restantes: number;
 }
 
