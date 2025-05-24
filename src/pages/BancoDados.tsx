@@ -8,8 +8,10 @@ import { TabsContainer } from "@/components/banco-dados/TabsContainer";
 import { AddValueDialog } from "@/components/banco-dados/AddValueDialog";
 import { ImportDialog } from "@/components/banco-dados/ImportDialog";
 import { DeleteConfirmationDialog } from "@/components/banco-dados/DeleteConfirmationDialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const BancoDados = () => {
+  const isMobile = useIsMobile();
   const {
     loading,
     saving,
@@ -44,8 +46,8 @@ const BancoDados = () => {
             <span className="text-lg">Carregando...</span>
           </div>
         ) : valoresPredefinidos ? (
-          <Card>
-            <CardHeader className="pb-0">
+          <Card className={isMobile ? "px-1" : ""}>
+            <CardHeader className={`${isMobile ? "px-3 pt-4 pb-0" : "pb-0"}`}>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                 <CardTitle>Valores Predefinidos</CardTitle>
                 <ValueManagerToolbar 
@@ -53,7 +55,7 @@ const BancoDados = () => {
                 />
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className={isMobile ? "px-2 pt-2" : ""}>
               <TabsContainer 
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
