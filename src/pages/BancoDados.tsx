@@ -46,8 +46,8 @@ const BancoDados = () => {
             <span className="text-lg">Carregando...</span>
           </div>
         ) : valoresPredefinidos ? (
-          <Card className={isMobile ? "px-1 pb-8" : ""}>
-            <CardHeader className={`${isMobile ? "px-3 pt-8 pb-6" : "pb-0"}`}>
+          <Card className={isMobile ? "px-1 pb-6" : ""}>
+            <CardHeader className={`${isMobile ? "px-3 pt-6 pb-4" : "pb-0"}`}>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                 <CardTitle>Valores Predefinidos</CardTitle>
                 <ValueManagerToolbar 
@@ -55,7 +55,7 @@ const BancoDados = () => {
                 />
               </div>
             </CardHeader>
-            <CardContent className={isMobile ? "px-2 py-6" : ""}>
+            <CardContent className={isMobile ? "px-2 py-4" : ""}>
               <TabsContainer 
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
