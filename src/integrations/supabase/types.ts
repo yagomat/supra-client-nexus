@@ -197,6 +197,75 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_commands: {
+        Row: {
+          command: string
+          created_at: string
+          error_message: string | null
+          id: string
+          message_received: string
+          response_sent: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          command: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_received: string
+          response_sent?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          command?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_received?: string
+          response_sent?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      whatsapp_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          last_connected: string | null
+          phone_number: string | null
+          qr_code: string | null
+          session_data: Json | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_connected?: string | null
+          phone_number?: string | null
+          qr_code?: string | null
+          session_data?: Json | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_connected?: string | null
+          phone_number?: string | null
+          qr_code?: string | null
+          session_data?: Json | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -343,6 +412,14 @@ export type Database = {
           p_user_agent?: string
         }
         Returns: undefined
+      }
+      process_whatsapp_command: {
+        Args: {
+          p_user_id: string
+          p_command: string
+          p_message_received: string
+        }
+        Returns: Json
       }
       recalculate_all_client_status: {
         Args: Record<PropertyKey, never>
