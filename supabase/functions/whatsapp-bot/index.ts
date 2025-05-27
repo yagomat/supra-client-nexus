@@ -7,9 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Global storage for WhatsApp clients
-const whatsappClients = new Map()
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -22,7 +19,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { action, userId, authToken } = await req.json()
+    const { action, userId, authToken, ...data } = await req.json()
 
     // Validate user authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser(authToken)
@@ -40,8 +37,8 @@ serve(async (req) => {
       case 'status':
         return await getStatus(supabase, user.id)
       
-      case 'getQR':
-        return await getQRCode(supabase, user.id)
+      case 'webhook':
+        return await handleWebhook(supabase, req)
 
       default:
         throw new Error('Invalid action')
@@ -61,120 +58,76 @@ serve(async (req) => {
 
 async function initializeWhatsApp(supabase: any, userId: string) {
   try {
-    // Import WhatsApp Web.js dynamically
-    const { Client, LocalAuth } = await import('whatsapp-web.js')
+    const evolutionApiUrl = Deno.env.get('EVOLUTION_API_URL')
+    const evolutionApiKey = Deno.env.get('EVOLUTION_API_KEY')
     
-    // Check if client already exists
-    if (whatsappClients.has(userId)) {
-      const existingClient = whatsappClients.get(userId)
-      if (existingClient.info) {
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            status: 'already_connected',
-            phoneNumber: existingClient.info.wid.user
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      }
+    if (!evolutionApiUrl || !evolutionApiKey) {
+      throw new Error('Evolution API não configurada. Configure EVOLUTION_API_URL e EVOLUTION_API_KEY.')
     }
 
-    // Create new WhatsApp client
-    const client = new Client({
-      authStrategy: new LocalAuth({ clientId: userId }),
-      puppeteer: {
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+    const instanceName = `whatsapp_${userId.replace(/-/g, '')}`
+
+    // Create or get instance
+    const createInstanceResponse = await fetch(`${evolutionApiUrl}/instance/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': evolutionApiKey
+      },
+      body: JSON.stringify({
+        instanceName: instanceName,
+        token: evolutionApiKey,
+        qrcode: true,
+        webhook: `${Deno.env.get('SUPABASE_URL')}/functions/v1/whatsapp-bot`,
+        webhook_by_events: false,
+        webhook_base64: false,
+        events: [
+          "APPLICATION_STARTUP",
+          "QRCODE_UPDATED", 
+          "CONNECTION_UPDATE",
+          "MESSAGES_UPSERT"
+        ]
+      })
+    })
+
+    if (!createInstanceResponse.ok) {
+      const errorData = await createInstanceResponse.text()
+      console.error('Failed to create instance:', errorData)
+      throw new Error('Falha ao criar instância do WhatsApp')
+    }
+
+    // Get QR Code
+    const connectResponse = await fetch(`${evolutionApiUrl}/instance/connect/${instanceName}`, {
+      method: 'GET',
+      headers: {
+        'apikey': evolutionApiKey
       }
     })
 
-    // Store client reference
-    whatsappClients.set(userId, client)
+    if (!connectResponse.ok) {
+      throw new Error('Falha ao obter QR Code')
+    }
 
-    // QR Code generation
-    client.on('qr', async (qr) => {
-      console.log('QR Code generated for user:', userId)
-      
-      // Update session with QR code
-      await supabase
-        .from('whatsapp_sessions')
-        .upsert({
-          user_id: userId,
-          status: 'qr_needed',
-          qr_code: qr,
-          updated_at: new Date().toISOString()
-        })
-    })
-
-    // Authentication success
-    client.on('authenticated', async () => {
-      console.log('WhatsApp authenticated for user:', userId)
-      
-      await supabase
-        .from('whatsapp_sessions')
-        .upsert({
-          user_id: userId,
-          status: 'authenticating',
-          qr_code: null,
-          updated_at: new Date().toISOString()
-        })
-    })
-
-    // Client ready
-    client.on('ready', async () => {
-      console.log('WhatsApp client ready for user:', userId)
-      
-      const clientInfo = client.info
-      
-      await supabase
-        .from('whatsapp_sessions')
-        .upsert({
-          user_id: userId,
-          status: 'connected',
-          phone_number: clientInfo.wid.user,
-          last_connected: new Date().toISOString(),
-          qr_code: null,
-          updated_at: new Date().toISOString()
-        })
-
-      // Setup heartbeat
-      setupHeartbeat(supabase, userId, client)
-    })
-
-    // Handle incoming messages
-    client.on('message', async (message) => {
-      // Only process messages from the authenticated user
-      if (message.from === client.info.wid._serialized && !message.fromMe) {
-        return
-      }
-
-      // Process messages sent by the user to themselves
-      if (message.fromMe && message.to === client.info.wid._serialized) {
-        await processCommand(supabase, userId, message.body, client)
-      }
-    })
-
-    // Handle disconnection
-    client.on('disconnected', async (reason) => {
-      console.log('WhatsApp disconnected for user:', userId, 'Reason:', reason)
-      
-      await supabase
-        .from('whatsapp_sessions')
-        .upsert({
-          user_id: userId,
-          status: 'disconnected',
-          updated_at: new Date().toISOString()
-        })
-
-      // Attempt reconnection
-      setTimeout(() => attemptReconnection(supabase, userId, client), 5000)
-    })
-
-    // Initialize client
-    await client.initialize()
+    const connectData = await connectResponse.json()
+    
+    // Update session in database
+    await supabase
+      .from('whatsapp_sessions')
+      .upsert({
+        user_id: userId,
+        status: 'qr_needed',
+        qr_code: connectData.base64 || connectData.code,
+        session_data: { instanceName },
+        updated_at: new Date().toISOString()
+      })
 
     return new Response(
-      JSON.stringify({ success: true, status: 'initializing' }),
+      JSON.stringify({ 
+        success: true, 
+        status: 'qr_needed',
+        qr_code: connectData.base64 || connectData.code,
+        instanceName
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
@@ -193,118 +146,33 @@ async function initializeWhatsApp(supabase: any, userId: string) {
   }
 }
 
-async function processCommand(supabase: any, userId: string, messageText: string, client: any) {
-  try {
-    console.log('Processing command from user:', userId, 'Message:', messageText)
-
-    // Call database function to process command
-    const { data, error } = await supabase.rpc('process_whatsapp_command', {
-      p_user_id: userId,
-      p_command: messageText,
-      p_message_received: messageText
-    })
-
-    if (error) {
-      console.error('Error processing command:', error)
-      await client.sendMessage(client.info.wid._serialized, '❌ Erro interno. Tente novamente.')
-      return
-    }
-
-    // Send response back to user
-    if (data && data.message) {
-      await client.sendMessage(client.info.wid._serialized, data.message)
-    }
-
-  } catch (error) {
-    console.error('Error in processCommand:', error)
-    await client.sendMessage(client.info.wid._serialized, '❌ Erro ao processar comando.')
-  }
-}
-
-async function setupHeartbeat(supabase: any, userId: string, client: any) {
-  setInterval(async () => {
-    try {
-      const state = await client.getState()
-      
-      if (state !== 'CONNECTED') {
-        console.log('Client disconnected, attempting reconnection for user:', userId)
-        await attemptReconnection(supabase, userId, client)
-      } else {
-        // Update last_connected timestamp
-        await supabase
-          .from('whatsapp_sessions')
-          .upsert({
-            user_id: userId,
-            status: 'connected',
-            last_connected: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-      }
-    } catch (error) {
-      console.error('Heartbeat error for user:', userId, error)
-      await attemptReconnection(supabase, userId, client)
-    }
-  }, 30000) // Check every 30 seconds
-}
-
-async function attemptReconnection(supabase: any, userId: string, client: any) {
-  let attempts = 0
-  const maxAttempts = 3
-
-  while (attempts < maxAttempts) {
-    try {
-      console.log(`Reconnection attempt ${attempts + 1} for user:`, userId)
-      
-      await supabase
-        .from('whatsapp_sessions')
-        .upsert({
-          user_id: userId,
-          status: 'reconnecting',
-          updated_at: new Date().toISOString()
-        })
-
-      await client.initialize()
-      
-      console.log('Reconnection successful for user:', userId)
-      return
-
-    } catch (error) {
-      attempts++
-      console.error(`Reconnection attempt ${attempts} failed for user:`, userId, error)
-      
-      if (attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, attempts * 5000))
-      }
-    }
-  }
-
-  // All reconnection attempts failed - require new QR
-  console.log('All reconnection attempts failed for user:', userId)
-  
-  await supabase
-    .from('whatsapp_sessions')
-    .upsert({
-      user_id: userId,
-      status: 'qr_needed',
-      updated_at: new Date().toISOString()
-    })
-}
-
 async function disconnectWhatsApp(supabase: any, userId: string) {
   try {
-    const client = whatsappClients.get(userId)
+    const evolutionApiUrl = Deno.env.get('EVOLUTION_API_URL')
+    const evolutionApiKey = Deno.env.get('EVOLUTION_API_KEY')
     
-    if (client) {
-      await client.destroy()
-      whatsappClients.delete(userId)
+    if (!evolutionApiUrl || !evolutionApiKey) {
+      throw new Error('Evolution API não configurada')
     }
 
+    const instanceName = `whatsapp_${userId.replace(/-/g, '')}`
+
+    // Disconnect instance
+    const disconnectResponse = await fetch(`${evolutionApiUrl}/instance/logout/${instanceName}`, {
+      method: 'DELETE',
+      headers: {
+        'apikey': evolutionApiKey
+      }
+    })
+
+    // Update session regardless of API response
     await supabase
       .from('whatsapp_sessions')
       .upsert({
         user_id: userId,
         status: 'disconnected',
         qr_code: null,
+        phone_number: null,
         updated_at: new Date().toISOString()
       })
 
@@ -345,29 +213,144 @@ async function getStatus(supabase: any, userId: string) {
   }
 }
 
-async function getQRCode(supabase: any, userId: string) {
+async function handleWebhook(supabase: any, req: Request) {
   try {
-    const { data, error } = await supabase
-      .from('whatsapp_sessions')
-      .select('qr_code, status')
-      .eq('user_id', userId)
-      .single()
+    const webhookData = await req.json()
+    console.log('Webhook received:', JSON.stringify(webhookData, null, 2))
 
-    if (error && error.code !== 'PGRST116') {
-      throw error
+    // Handle different event types
+    switch (webhookData.event) {
+      case 'qrcode.updated':
+        await handleQRCodeUpdate(supabase, webhookData)
+        break
+        
+      case 'connection.update':
+        await handleConnectionUpdate(supabase, webhookData)
+        break
+        
+      case 'messages.upsert':
+        await handleMessage(supabase, webhookData)
+        break
+        
+      default:
+        console.log('Unhandled webhook event:', webhookData.event)
     }
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        qrCode: data?.qr_code || null,
-        status: data?.status || 'disconnected'
-      }),
+      JSON.stringify({ success: true }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
-    console.error('Error getting QR code:', error)
-    throw error
+    console.error('Webhook error:', error)
+    return new Response(
+      JSON.stringify({ success: false, error: error.message }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
+  }
+}
+
+async function handleQRCodeUpdate(supabase: any, data: any) {
+  const instanceName = data.instance
+  const userId = instanceName.replace('whatsapp_', '').replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5')
+  
+  await supabase
+    .from('whatsapp_sessions')
+    .upsert({
+      user_id: userId,
+      status: 'qr_needed',
+      qr_code: data.data.qrcode,
+      updated_at: new Date().toISOString()
+    })
+}
+
+async function handleConnectionUpdate(supabase: any, data: any) {
+  const instanceName = data.instance
+  const userId = instanceName.replace('whatsapp_', '').replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5')
+  
+  let status = 'disconnected'
+  let phoneNumber = null
+  
+  if (data.data.state === 'open') {
+    status = 'connected'
+    phoneNumber = data.data.user?.id || null
+  } else if (data.data.state === 'connecting') {
+    status = 'connecting'
+  }
+  
+  await supabase
+    .from('whatsapp_sessions')
+    .upsert({
+      user_id: userId,
+      status: status,
+      phone_number: phoneNumber,
+      last_connected: status === 'connected' ? new Date().toISOString() : undefined,
+      qr_code: status === 'connected' ? null : undefined,
+      updated_at: new Date().toISOString()
+    })
+}
+
+async function handleMessage(supabase: any, data: any) {
+  try {
+    const message = data.data
+    const instanceName = data.instance
+    const userId = instanceName.replace('whatsapp_', '').replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5')
+    
+    // Only process text messages from the user to themselves
+    if (message.messageType === 'conversation' && message.fromMe) {
+      const messageText = message.message?.conversation || message.message?.extendedTextMessage?.text
+      
+      if (messageText) {
+        console.log('Processing command from user:', userId, 'Message:', messageText)
+
+        // Call database function to process command
+        const { data: commandResult, error } = await supabase.rpc('process_whatsapp_command', {
+          p_user_id: userId,
+          p_command: messageText,
+          p_message_received: messageText
+        })
+
+        if (error) {
+          console.error('Error processing command:', error)
+          await sendMessage(instanceName, message.key.remoteJid, '❌ Erro interno. Tente novamente.')
+          return
+        }
+
+        // Send response back to user
+        if (commandResult && commandResult.message) {
+          await sendMessage(instanceName, message.key.remoteJid, commandResult.message)
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error handling message:', error)
+  }
+}
+
+async function sendMessage(instanceName: string, remoteJid: string, text: string) {
+  try {
+    const evolutionApiUrl = Deno.env.get('EVOLUTION_API_URL')
+    const evolutionApiKey = Deno.env.get('EVOLUTION_API_KEY')
+    
+    const response = await fetch(`${evolutionApiUrl}/message/sendText/${instanceName}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': evolutionApiKey
+      },
+      body: JSON.stringify({
+        number: remoteJid.replace('@s.whatsapp.net', ''),
+        text: text
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to send message')
+    }
+  } catch (error) {
+    console.error('Error sending message:', error)
   }
 }

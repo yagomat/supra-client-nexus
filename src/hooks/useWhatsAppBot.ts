@@ -9,6 +9,7 @@ interface WhatsAppSession {
   phone_number?: string;
   qr_code?: string;
   last_connected?: string;
+  session_data?: any;
 }
 
 interface WhatsAppCommand {
@@ -84,19 +85,24 @@ export const useWhatsAppBot = () => {
   const initialize = async () => {
     try {
       setConnecting(true);
-      await callEdgeFunction('initialize');
+      const result = await callEdgeFunction('initialize');
       
-      toast({
-        title: "Conectando ao WhatsApp",
-        description: "Aguarde a geração do QR Code para escanear.",
-      });
+      if (result.success) {
+        toast({
+          title: "Conectando ao WhatsApp",
+          description: "Escaneie o QR Code com seu WhatsApp para conectar.",
+        });
 
-      // Poll for QR code
-      pollForUpdates();
+        // Refresh session to get QR code
+        await fetchSession();
+      } else {
+        throw new Error(result.error || 'Falha ao inicializar');
+      }
     } catch (error) {
+      console.error('Initialize error:', error);
       toast({
         title: "Erro ao conectar",
-        description: "Não foi possível conectar ao WhatsApp. Tente novamente.",
+        description: error instanceof Error ? error.message : "Erro desconhecido. Verifique a configuração da API.",
         variant: "destructive",
       });
     } finally {
@@ -121,20 +127,6 @@ export const useWhatsAppBot = () => {
         variant: "destructive",
       });
     }
-  };
-
-  const pollForUpdates = () => {
-    const interval = setInterval(async () => {
-      await fetchSession();
-      
-      // Stop polling if connected or disconnected
-      if (session?.status === 'connected' || session?.status === 'disconnected') {
-        clearInterval(interval);
-      }
-    }, 2000);
-
-    // Stop polling after 2 minutes
-    setTimeout(() => clearInterval(interval), 120000);
   };
 
   useEffect(() => {
