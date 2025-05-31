@@ -85,7 +85,7 @@ async function initializeWhatsApp(supabase: any, userId: string) {
       throw new Error('Evolution API não configurada. Configure EVOLUTION_API_URL e EVOLUTION_API_KEY.')
     }
 
-    const instanceName = `whatsapp_${userId.replace(/-/g, '')}`
+    const instanceName = `user_${userId.substring(0, 8)}`
 
     // Create instance with correct integration format (string, not object)
     console.log('Creating instance with correct integration format...')
@@ -173,7 +173,7 @@ async function disconnectWhatsApp(supabase: any, userId: string) {
       throw new Error('Evolution API não configurada')
     }
 
-    const instanceName = `whatsapp_${userId.replace(/-/g, '')}`
+    const instanceName = `user_${userId.substring(0, 8)}`
 
     // Disconnect instance
     const disconnectResponse = await fetch(`${evolutionApiUrl}/instance/logout/${instanceName}`, {
