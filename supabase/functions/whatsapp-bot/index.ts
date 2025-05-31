@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -21,9 +22,14 @@ serve(async (req) => {
     const requestBody = await req.json()
     console.log('Request received:', JSON.stringify(requestBody, null, 2))
 
-    // Check if this is a webhook from Evolution API
-    const isWebhook = requestBody.event || requestBody.instance || 
-                     (!requestBody.action && !requestBody.userId)
+    // Enhanced webhook detection - check for Evolution API webhook patterns
+    const isWebhook = !!(
+      requestBody.event || 
+      requestBody.instance || 
+      requestBody.data ||
+      (requestBody.destination && requestBody.destination.includes('whatsapp-bot')) ||
+      (!requestBody.action && !requestBody.userId && !requestBody.authToken)
+    )
 
     if (isWebhook) {
       // Handle webhook without authentication
@@ -227,22 +233,26 @@ async function handleWebhook(supabase: any, webhookData: any) {
   try {
     console.log('Webhook received:', JSON.stringify(webhookData, null, 2))
 
-    // Handle different event types
-    switch (webhookData.event) {
-      case 'qrcode.updated':
-        await handleQRCodeUpdate(supabase, webhookData)
-        break
-        
-      case 'connection.update':
-        await handleConnectionUpdate(supabase, webhookData)
-        break
-        
-      case 'messages.upsert':
-        await handleMessage(supabase, webhookData)
-        break
-        
-      default:
-        console.log('Unhandled webhook event:', webhookData.event)
+    // Handle different event types from Evolution API
+    if (webhookData.event) {
+      switch (webhookData.event) {
+        case 'qrcode.updated':
+          await handleQRCodeUpdate(supabase, webhookData)
+          break
+          
+        case 'connection.update':
+          await handleConnectionUpdate(supabase, webhookData)
+          break
+          
+        case 'messages.upsert':
+          await handleMessage(supabase, webhookData)
+          break
+          
+        default:
+          console.log('Unhandled webhook event:', webhookData.event)
+      }
+    } else {
+      console.log('Webhook received without event type, processing as generic webhook')
     }
 
     return new Response(
@@ -266,12 +276,16 @@ async function handleQRCodeUpdate(supabase: any, data: any) {
   const instanceName = data.instance
   const userId = instanceName.replace('whatsapp_', '').replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5')
   
+  const qrCode = data.data?.qrcode?.base64 || data.data?.qrcode?.code || data.data?.code
+  
+  console.log('Updating QR Code for user:', userId)
+  
   await supabase
     .from('whatsapp_sessions')
     .upsert({
       user_id: userId,
       status: 'qr_needed',
-      qr_code: data.data.qrcode,
+      qr_code: qrCode,
       updated_at: new Date().toISOString()
     })
 }
@@ -283,12 +297,14 @@ async function handleConnectionUpdate(supabase: any, data: any) {
   let status = 'disconnected'
   let phoneNumber = null
   
-  if (data.data.state === 'open') {
+  if (data.data?.state === 'open') {
     status = 'connected'
-    phoneNumber = data.data.user?.id || null
-  } else if (data.data.state === 'connecting') {
+    phoneNumber = data.data?.user?.id || null
+  } else if (data.data?.state === 'connecting') {
     status = 'connecting'
   }
+  
+  console.log('Updating connection status for user:', userId, 'Status:', status)
   
   await supabase
     .from('whatsapp_sessions')
