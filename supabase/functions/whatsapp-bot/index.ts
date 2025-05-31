@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -88,8 +87,8 @@ async function initializeWhatsApp(supabase: any, userId: string) {
 
     const instanceName = `whatsapp_${userId.replace(/-/g, '')}`
 
-    // Create instance with explicit integration configuration
-    console.log('Creating instance with explicit integration configuration...')
+    // Create instance with correct integration format (string, not object)
+    console.log('Creating instance with correct integration format...')
     const createInstanceResponse = await fetch(`${evolutionApiUrl}/instance/create`, {
       method: 'POST',
       headers: {
@@ -99,35 +98,14 @@ async function initializeWhatsApp(supabase: any, userId: string) {
       body: JSON.stringify({
         instanceName: instanceName,
         qrcode: true,
-        integration: {
-          type: "wpp"
-        }
+        integration: 'wpp'  // Formato correto: string simples
       })
     })
 
     if (!createInstanceResponse.ok) {
       const errorData = await createInstanceResponse.text()
       console.error('Failed to create instance:', errorData)
-      
-      // Try alternative approach without integration parameter
-      console.log('Trying alternative approach without integration parameter...')
-      const alternativeResponse = await fetch(`${evolutionApiUrl}/instance/create`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': evolutionApiKey
-        },
-        body: JSON.stringify({
-          instanceName: instanceName,
-          qrcode: true
-        })
-      })
-
-      if (!alternativeResponse.ok) {
-        const altErrorData = await alternativeResponse.text()
-        console.error('Alternative approach also failed:', altErrorData)
-        throw new Error('Falha ao criar instância do WhatsApp. Verifique a configuração da Evolution API.')
-      }
+      throw new Error('Falha ao criar instância do WhatsApp. Verifique a configuração da Evolution API.')
     }
 
     console.log('Instance created successfully')
