@@ -98,7 +98,6 @@ async function initializeWhatsApp(supabase: any, userId: string) {
       body: JSON.stringify({
         instanceName: instanceName,
         qrcode: true,
-        integration: 'wpp'  // Corrigido: usar 'wpp' em vez de 'whatsapp-web.js'
       })
     })
 
