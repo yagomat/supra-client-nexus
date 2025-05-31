@@ -76,6 +76,81 @@ serve(async (req) => {
   }
 })
 
+async function tryCreateInstance(evolutionApiUrl: string, evolutionApiKey: string, instanceName: string) {
+  const endpoints = [
+    {
+      url: `${evolutionApiUrl}/instance/create`,
+      method: 'POST',
+      body: {
+        instanceName: instanceName,
+        qrcode: true,
+      }
+    },
+    {
+      url: `${evolutionApiUrl}/instance/init/${instanceName}`,
+      method: 'POST',
+      body: {
+        qrcode: true,
+      }
+    },
+    {
+      url: `${evolutionApiUrl}/instance/create/${instanceName}`,
+      method: 'POST',
+      body: {
+        qrcode: true,
+      }
+    },
+    {
+      url: `${evolutionApiUrl}/instance/setup`,
+      method: 'POST',
+      body: {
+        instanceName: instanceName,
+        qrcode: true,
+      }
+    }
+  ]
+
+  for (let i = 0; i < endpoints.length; i++) {
+    const endpoint = endpoints[i]
+    console.log(`Trying endpoint ${i + 1}/${endpoints.length}: ${endpoint.url}`)
+    
+    try {
+      const response = await fetch(endpoint.url, {
+        method: endpoint.method,
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': evolutionApiKey
+        },
+        body: JSON.stringify(endpoint.body)
+      })
+
+      console.log(`Endpoint ${i + 1} response status:`, response.status)
+      
+      if (response.ok) {
+        console.log(`✅ Success with endpoint ${i + 1}: ${endpoint.url}`)
+        return { success: true, response }
+      } else {
+        const errorText = await response.text()
+        console.log(`❌ Endpoint ${i + 1} failed:`, errorText)
+        
+        // If this is the last endpoint, throw the error
+        if (i === endpoints.length - 1) {
+          throw new Error(`All endpoints failed. Last error: ${errorText}`)
+        }
+      }
+    } catch (error) {
+      console.log(`❌ Endpoint ${i + 1} error:`, error.message)
+      
+      // If this is the last endpoint, throw the error
+      if (i === endpoints.length - 1) {
+        throw new Error(`All endpoints failed. Last error: ${error.message}`)
+      }
+    }
+  }
+
+  throw new Error('All instance creation endpoints failed')
+}
+
 async function initializeWhatsApp(supabase: any, userId: string) {
   try {
     const evolutionApiUrl = Deno.env.get('EVOLUTION_API_URL')
@@ -87,24 +162,12 @@ async function initializeWhatsApp(supabase: any, userId: string) {
 
     const instanceName = `user_${userId.substring(0, 8)}`
 
-    // Create instance with correct integration format
-    console.log('Creating instance with correct integration format...')
-    const createInstanceResponse = await fetch(`${evolutionApiUrl}/instance/create`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': evolutionApiKey
-      },
-      body: JSON.stringify({
-        instanceName: instanceName,
-        qrcode: true,
-      })
-    })
+    // Try multiple endpoints for instance creation
+    console.log('Creating instance with fallback endpoints...')
+    const { success, response: createInstanceResponse } = await tryCreateInstance(evolutionApiUrl, evolutionApiKey, instanceName)
 
-    if (!createInstanceResponse.ok) {
-      const errorData = await createInstanceResponse.text()
-      console.error('Failed to create instance:', errorData)
-      throw new Error('Falha ao criar instância do WhatsApp. Verifique a configuração da Evolution API.')
+    if (!success) {
+      throw new Error('Falha ao criar instância do WhatsApp com todos os endpoints disponíveis.')
     }
 
     console.log('Instance created successfully')
