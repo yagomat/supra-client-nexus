@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -21,18 +22,18 @@ serve(async (req) => {
     const requestBody = await req.json()
     console.log('Request received:', JSON.stringify(requestBody, null, 2))
 
-    // Check if this is a webhook from Evolution API (no authentication needed)
+    // Check if this is a webhook from Evolution API
     const isWebhook = !!(
       requestBody.event || 
       requestBody.instance || 
       requestBody.data ||
-      (requestBody.destination && requestBody.destination.includes('whatsapp-bot')) ||
+      requestBody.destination ||
       requestBody.server_url ||
+      requestBody.apikey ||
       (!requestBody.action && !requestBody.userId && !requestBody.authToken)
     )
 
     if (isWebhook) {
-      // Handle webhook without authentication
       console.log('Processing webhook from Evolution API')
       return await handleWebhook(supabase, requestBody)
     }
@@ -87,7 +88,7 @@ async function initializeWhatsApp(supabase: any, userId: string) {
 
     const instanceName = `whatsapp_${userId.replace(/-/g, '')}`
 
-    // Create or get instance
+    // Create or get instance with simplified configuration
     const createInstanceResponse = await fetch(`${evolutionApiUrl}/instance/create`, {
       method: 'POST',
       headers: {
@@ -98,22 +99,44 @@ async function initializeWhatsApp(supabase: any, userId: string) {
         instanceName: instanceName,
         token: evolutionApiKey,
         qrcode: true,
-        webhook: `${Deno.env.get('SUPABASE_URL')}/functions/v1/whatsapp-bot`,
-        webhook_by_events: false,
-        webhook_base64: false,
-        events: [
-          "APPLICATION_STARTUP",
-          "QRCODE_UPDATED", 
-          "CONNECTION_UPDATE",
-          "MESSAGES_UPSERT"
-        ]
+        // Simplified webhook configuration
+        webhook_wa_business: {
+          url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/whatsapp-bot`,
+          enabled: true,
+          events: [
+            "QRCODE_UPDATED", 
+            "CONNECTION_UPDATE",
+            "MESSAGES_UPSERT"
+          ]
+        }
       })
     })
 
     if (!createInstanceResponse.ok) {
       const errorData = await createInstanceResponse.text()
       console.error('Failed to create instance:', errorData)
-      throw new Error('Falha ao criar instância do WhatsApp')
+      
+      // Try alternative configuration if first fails
+      console.log('Trying alternative instance configuration...')
+      const altResponse = await fetch(`${evolutionApiUrl}/instance/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': evolutionApiKey
+        },
+        body: JSON.stringify({
+          instanceName: instanceName,
+          qrcode: true,
+          // Minimal configuration
+          webhook: `${Deno.env.get('SUPABASE_URL')}/functions/v1/whatsapp-bot`
+        })
+      })
+
+      if (!altResponse.ok) {
+        const altErrorData = await altResponse.text()
+        console.error('Alternative configuration also failed:', altErrorData)
+        throw new Error('Falha ao criar instância do WhatsApp')
+      }
     }
 
     // Get QR Code
