@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -22,12 +21,13 @@ serve(async (req) => {
     const requestBody = await req.json()
     console.log('Request received:', JSON.stringify(requestBody, null, 2))
 
-    // Enhanced webhook detection - check for Evolution API webhook patterns
+    // Check if this is a webhook from Evolution API (no authentication needed)
     const isWebhook = !!(
       requestBody.event || 
       requestBody.instance || 
       requestBody.data ||
       (requestBody.destination && requestBody.destination.includes('whatsapp-bot')) ||
+      requestBody.server_url ||
       (!requestBody.action && !requestBody.userId && !requestBody.authToken)
     )
 
@@ -37,8 +37,12 @@ serve(async (req) => {
       return await handleWebhook(supabase, requestBody)
     }
 
-    // For non-webhook requests, require authentication
+    // For non-webhook requests (user actions), require authentication
     const { action, userId, authToken, ...data } = requestBody
+
+    if (!authToken) {
+      throw new Error('Missing authentication token for user action')
+    }
 
     // Validate user authentication for user actions
     const { data: { user }, error: authError } = await supabase.auth.getUser(authToken)
@@ -273,49 +277,76 @@ async function handleWebhook(supabase: any, webhookData: any) {
 }
 
 async function handleQRCodeUpdate(supabase: any, data: any) {
-  const instanceName = data.instance
-  const userId = instanceName.replace('whatsapp_', '').replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5')
-  
-  const qrCode = data.data?.qrcode?.base64 || data.data?.qrcode?.code || data.data?.code
-  
-  console.log('Updating QR Code for user:', userId)
-  
-  await supabase
-    .from('whatsapp_sessions')
-    .upsert({
-      user_id: userId,
-      status: 'qr_needed',
-      qr_code: qrCode,
-      updated_at: new Date().toISOString()
-    })
+  try {
+    const instanceName = data.instance
+    if (!instanceName) {
+      console.error('No instance name in QR code update')
+      return
+    }
+
+    const userId = instanceName.replace('whatsapp_', '').replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5')
+    
+    const qrCode = data.data?.qrcode?.base64 || data.data?.qrcode?.code || data.data?.code
+    
+    console.log('Updating QR Code for user:', userId, 'QR available:', !!qrCode)
+    
+    await supabase
+      .from('whatsapp_sessions')
+      .upsert({
+        user_id: userId,
+        status: 'qr_needed',
+        qr_code: qrCode,
+        updated_at: new Date().toISOString()
+      })
+
+    console.log('QR Code updated successfully for user:', userId)
+  } catch (error) {
+    console.error('Error handling QR code update:', error)
+  }
 }
 
 async function handleConnectionUpdate(supabase: any, data: any) {
-  const instanceName = data.instance
-  const userId = instanceName.replace('whatsapp_', '').replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5')
-  
-  let status = 'disconnected'
-  let phoneNumber = null
-  
-  if (data.data?.state === 'open') {
-    status = 'connected'
-    phoneNumber = data.data?.user?.id || null
-  } else if (data.data?.state === 'connecting') {
-    status = 'connecting'
-  }
-  
-  console.log('Updating connection status for user:', userId, 'Status:', status)
-  
-  await supabase
-    .from('whatsapp_sessions')
-    .upsert({
+  try {
+    const instanceName = data.instance
+    if (!instanceName) {
+      console.error('No instance name in connection update')
+      return
+    }
+
+    const userId = instanceName.replace('whatsapp_', '').replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5')
+    
+    let status = 'disconnected'
+    let phoneNumber = null
+    
+    if (data.data?.state === 'open') {
+      status = 'connected'
+      phoneNumber = data.data?.user?.id || null
+    } else if (data.data?.state === 'connecting') {
+      status = 'connecting'
+    }
+    
+    console.log('Updating connection status for user:', userId, 'Status:', status, 'Phone:', phoneNumber)
+    
+    const updateData: any = {
       user_id: userId,
       status: status,
       phone_number: phoneNumber,
-      last_connected: status === 'connected' ? new Date().toISOString() : undefined,
-      qr_code: status === 'connected' ? null : undefined,
       updated_at: new Date().toISOString()
-    })
+    }
+
+    if (status === 'connected') {
+      updateData.last_connected = new Date().toISOString()
+      updateData.qr_code = null
+    }
+    
+    await supabase
+      .from('whatsapp_sessions')
+      .upsert(updateData)
+
+    console.log('Connection status updated successfully for user:', userId)
+  } catch (error) {
+    console.error('Error handling connection update:', error)
+  }
 }
 
 async function handleMessage(supabase: any, data: any) {
