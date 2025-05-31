@@ -87,8 +87,8 @@ async function initializeWhatsApp(supabase: any, userId: string) {
 
     const instanceName = `whatsapp_${userId.replace(/-/g, '')}`
 
-    // Try most basic configuration first
-    console.log('Creating instance with basic configuration...')
+    // Create instance with minimal configuration - no webhook
+    console.log('Creating instance with minimal configuration...')
     const createInstanceResponse = await fetch(`${evolutionApiUrl}/instance/create`, {
       method: 'POST',
       headers: {
@@ -98,6 +98,7 @@ async function initializeWhatsApp(supabase: any, userId: string) {
       body: JSON.stringify({
         instanceName: instanceName,
         qrcode: true
+        // Removendo todas as configurações de webhook
       })
     })
 
@@ -107,35 +108,10 @@ async function initializeWhatsApp(supabase: any, userId: string) {
       throw new Error('Falha ao criar instância do WhatsApp')
     }
 
-    console.log('Instance created successfully, setting webhook...')
-
-    // Set webhook separately after instance creation
-    const webhookUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whatsapp-bot`
-    const setWebhookResponse = await fetch(`${evolutionApiUrl}/webhook/set/${instanceName}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': evolutionApiKey
-      },
-      body: JSON.stringify({
-        url: webhookUrl,
-        webhook_by_events: false,
-        webhook_base64: false,
-        events: [
-          "QRCODE_UPDATED", 
-          "CONNECTION_UPDATE",
-          "MESSAGES_UPSERT"
-        ]
-      })
-    })
-
-    if (!setWebhookResponse.ok) {
-      console.warn('Failed to set webhook, but continuing with instance creation')
-    } else {
-      console.log('Webhook set successfully')
-    }
+    console.log('Instance created successfully')
 
     // Get QR Code
+    console.log('Getting QR Code...')
     const connectResponse = await fetch(`${evolutionApiUrl}/instance/connect/${instanceName}`, {
       method: 'GET',
       headers: {
@@ -144,10 +120,13 @@ async function initializeWhatsApp(supabase: any, userId: string) {
     })
 
     if (!connectResponse.ok) {
+      const errorData = await connectResponse.text()
+      console.error('Failed to get QR Code:', errorData)
       throw new Error('Falha ao obter QR Code')
     }
 
     const connectData = await connectResponse.json()
+    console.log('QR Code obtained successfully')
     
     // Update session in database
     await supabase
