@@ -87,8 +87,8 @@ async function initializeWhatsApp(supabase: any, userId: string) {
 
     const instanceName = `whatsapp_${userId.replace(/-/g, '')}`
 
-    // Create instance with minimal configuration - no webhook
-    console.log('Creating instance with minimal configuration...')
+    // Create instance with integration parameter
+    console.log('Creating instance with integration parameter...')
     const createInstanceResponse = await fetch(`${evolutionApiUrl}/instance/create`, {
       method: 'POST',
       headers: {
@@ -97,8 +97,8 @@ async function initializeWhatsApp(supabase: any, userId: string) {
       },
       body: JSON.stringify({
         instanceName: instanceName,
-        qrcode: true
-        // Removendo todas as configurações de webhook
+        qrcode: true,
+        integration: "wpp"
       })
     })
 
