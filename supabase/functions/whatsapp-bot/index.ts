@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -19,9 +18,23 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { action, userId, authToken, ...data } = await req.json()
+    const requestBody = await req.json()
+    console.log('Request received:', JSON.stringify(requestBody, null, 2))
 
-    // Validate user authentication
+    // Check if this is a webhook from Evolution API
+    const isWebhook = requestBody.event || requestBody.instance || 
+                     (!requestBody.action && !requestBody.userId)
+
+    if (isWebhook) {
+      // Handle webhook without authentication
+      console.log('Processing webhook from Evolution API')
+      return await handleWebhook(supabase, requestBody)
+    }
+
+    // For non-webhook requests, require authentication
+    const { action, userId, authToken, ...data } = requestBody
+
+    // Validate user authentication for user actions
     const { data: { user }, error: authError } = await supabase.auth.getUser(authToken)
     if (authError || !user) {
       throw new Error('Unauthorized')
@@ -36,9 +49,6 @@ serve(async (req) => {
       
       case 'status':
         return await getStatus(supabase, user.id)
-      
-      case 'webhook':
-        return await handleWebhook(supabase, req)
 
       default:
         throw new Error('Invalid action')
@@ -213,9 +223,8 @@ async function getStatus(supabase: any, userId: string) {
   }
 }
 
-async function handleWebhook(supabase: any, req: Request) {
+async function handleWebhook(supabase: any, webhookData: any) {
   try {
-    const webhookData = await req.json()
     console.log('Webhook received:', JSON.stringify(webhookData, null, 2))
 
     // Handle different event types
