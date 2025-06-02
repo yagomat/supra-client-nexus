@@ -1,5 +1,4 @@
-
-import { create, Whatsapp } from 'venom-bot'
+import { create, Whatsapp } from 'https://esm.sh/venom-bot@5.0.8'
 
 // Store active sessions in memory
 const activeSessions = new Map<string, Whatsapp>()
