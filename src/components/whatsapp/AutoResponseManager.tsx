@@ -1,17 +1,13 @@
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Edit, Trash2, X } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AutoResponseForm } from "./auto-response/AutoResponseForm";
+import { AutoResponseCard } from "./auto-response/AutoResponseCard";
 
 interface AutoResponse {
   id: string;
@@ -37,13 +33,7 @@ export const AutoResponseManager = ({ autoResponses, onRefresh }: AutoResponseMa
     priority: 1,
     match_type: 'contains'
   });
-  const [newKeyword, setNewKeyword] = useState('');
   const { toast } = useToast();
-
-  const availablePlaceholders = [
-    '{nome}', '{telefone}', '{servidor}', '{valor_plano}', 
-    '{dia_vencimento}', '{dias_para_vencer}', '{data_vencimento}'
-  ];
 
   const handleSave = async () => {
     try {
@@ -94,7 +84,6 @@ export const AutoResponseManager = ({ autoResponses, onRefresh }: AutoResponseMa
         priority: 1,
         match_type: 'contains'
       });
-      setNewKeyword('');
       onRefresh();
     } catch (error) {
       console.error('Error saving auto-response:', error);
@@ -140,30 +129,6 @@ export const AutoResponseManager = ({ autoResponses, onRefresh }: AutoResponseMa
     }
   };
 
-  const addKeyword = () => {
-    if (newKeyword.trim() && !formData.trigger_keywords.includes(newKeyword.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        trigger_keywords: [...prev.trigger_keywords, newKeyword.trim()]
-      }));
-      setNewKeyword('');
-    }
-  };
-
-  const removeKeyword = (keyword: string) => {
-    setFormData(prev => ({
-      ...prev,
-      trigger_keywords: prev.trigger_keywords.filter(k => k !== keyword)
-    }));
-  };
-
-  const insertPlaceholder = (placeholder: string) => {
-    setFormData(prev => ({
-      ...prev,
-      response_template: prev.response_template + placeholder
-    }));
-  };
-
   const toggleActive = async (responseId: string, isActive: boolean) => {
     try {
       await supabase
@@ -177,23 +142,24 @@ export const AutoResponseManager = ({ autoResponses, onRefresh }: AutoResponseMa
     }
   };
 
+  const resetForm = () => {
+    setEditingResponse(null);
+    setFormData({
+      trigger_keywords: [],
+      response_template: '',
+      is_active: true,
+      priority: 1,
+      match_type: 'contains'
+    });
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Auto-Respostas</h3>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => {
-              setEditingResponse(null);
-              setFormData({
-                trigger_keywords: [],
-                response_template: '',
-                is_active: true,
-                priority: 1,
-                match_type: 'contains'
-              });
-              setNewKeyword('');
-            }}>
+            <Button onClick={resetForm}>
               <Plus className="h-4 w-4 mr-2" />
               Nova Auto-Resposta
             </Button>
@@ -204,164 +170,26 @@ export const AutoResponseManager = ({ autoResponses, onRefresh }: AutoResponseMa
                 {editingResponse ? 'Editar Auto-Resposta' : 'Criar Auto-Resposta'}
               </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label>Palavras-chave</Label>
-                <div className="flex space-x-2 mt-2">
-                  <Input
-                    value={newKeyword}
-                    onChange={(e) => setNewKeyword(e.target.value)}
-                    placeholder="Digite uma palavra-chave"
-                    onKeyPress={(e) => e.key === 'Enter' && addKeyword()}
-                  />
-                  <Button onClick={addKeyword} type="button">Adicionar</Button>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {formData.trigger_keywords.map(keyword => (
-                    <Badge key={keyword} variant="secondary" className="flex items-center gap-1">
-                      {keyword}
-                      <X 
-                        className="h-3 w-3 cursor-pointer" 
-                        onClick={() => removeKeyword(keyword)}
-                      />
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <Label>Tipo de Correspondência</Label>
-                <Select 
-                  value={formData.match_type} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, match_type: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="contains">Contém</SelectItem>
-                    <SelectItem value="exact">Exato</SelectItem>
-                    <SelectItem value="starts_with">Começa com</SelectItem>
-                    <SelectItem value="ends_with">Termina com</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Prioridade (1-10)</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="10"
-                  value={formData.priority}
-                  onChange={(e) => setFormData(prev => ({ 
-                    ...prev, 
-                    priority: parseInt(e.target.value) || 1 
-                  }))}
-                />
-                <p className="text-sm text-muted-foreground mt-1">
-                  Maior prioridade = processada primeiro
-                </p>
-              </div>
-
-              <div>
-                <Label htmlFor="response_template">Resposta</Label>
-                <Textarea
-                  id="response_template"
-                  value={formData.response_template}
-                  onChange={(e) => setFormData(prev => ({ ...prev, response_template: e.target.value }))}
-                  placeholder="Digite a resposta automática..."
-                  rows={4}
-                />
-              </div>
-
-              <div>
-                <Label>Placeholders Disponíveis</Label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {availablePlaceholders.map(placeholder => (
-                    <Badge 
-                      key={placeholder}
-                      variant="outline" 
-                      className="cursor-pointer hover:bg-primary hover:text-primary-foreground"
-                      onClick={() => insertPlaceholder(placeholder)}
-                    >
-                      {placeholder}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Switch
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) => 
-                    setFormData(prev => ({ ...prev, is_active: checked }))
-                  }
-                />
-                <Label>Ativar auto-resposta</Label>
-              </div>
-
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button onClick={handleSave}>
-                  {editingResponse ? 'Atualizar' : 'Criar'}
-                </Button>
-              </div>
-            </div>
+            <AutoResponseForm
+              editingResponse={editingResponse}
+              formData={formData}
+              onFormDataChange={setFormData}
+              onSave={handleSave}
+              onCancel={() => setIsDialogOpen(false)}
+            />
           </DialogContent>
         </Dialog>
       </div>
 
       <div className="grid gap-4">
         {autoResponses.map(response => (
-          <Card key={response.id}>
-            <CardContent className="p-4">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Badge variant="outline">Prioridade {response.priority}</Badge>
-                    <Badge variant="secondary">{response.match_type}</Badge>
-                    {!response.is_active && (
-                      <Badge variant="destructive">Inativo</Badge>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-1 mb-2">
-                    {response.trigger_keywords.map(keyword => (
-                      <Badge key={keyword} variant="outline" className="text-xs">
-                        {keyword}
-                      </Badge>
-                    ))}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {response.response_template.substring(0, 100)}
-                    {response.response_template.length > 100 ? '...' : ''}
-                  </p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={response.is_active}
-                    onCheckedChange={(checked) => toggleActive(response.id, checked)}
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEdit(response)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(response.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <AutoResponseCard
+            key={response.id}
+            response={response}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onToggleActive={toggleActive}
+          />
         ))}
         
         {autoResponses.length === 0 && (
