@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -21,7 +22,7 @@ serve(async (req) => {
     const requestBody = await req.json()
     console.log('Request received:', JSON.stringify(requestBody, null, 2))
 
-    // Check if this is a webhook from Evolution API
+    // Check if this is a webhook from Evolution API (via n8n)
     const isWebhook = !!(
       requestBody.event || 
       requestBody.instance || 
@@ -33,7 +34,7 @@ serve(async (req) => {
     )
 
     if (isWebhook) {
-      console.log('Processing webhook from Evolution API')
+      console.log('Processing webhook from Evolution API via n8n')
       return await handleWebhook(supabase, requestBody)
     }
 
@@ -76,119 +77,72 @@ serve(async (req) => {
   }
 })
 
-async function tryCreateInstance(evolutionApiUrl: string, evolutionApiKey: string, instanceName: string) {
-  const endpoints = [
-    {
-      url: `${evolutionApiUrl}/instance/create`,
+async function callN8nWebhook(webhookUrl: string, data: any) {
+  console.log('Calling n8n webhook:', webhookUrl)
+  
+  try {
+    const response = await fetch(webhookUrl, {
       method: 'POST',
-      body: {
-        instanceName: instanceName,
-        qrcode: true,
-      }
-    },
-    {
-      url: `${evolutionApiUrl}/instance/init/${instanceName}`,
-      method: 'POST',
-      body: {
-        qrcode: true,
-      }
-    },
-    {
-      url: `${evolutionApiUrl}/instance/create/${instanceName}`,
-      method: 'POST',
-      body: {
-        qrcode: true,
-      }
-    },
-    {
-      url: `${evolutionApiUrl}/instance/setup`,
-      method: 'POST',
-      body: {
-        instanceName: instanceName,
-        qrcode: true,
-      }
-    }
-  ]
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
 
-  for (let i = 0; i < endpoints.length; i++) {
-    const endpoint = endpoints[i]
-    console.log(`Trying endpoint ${i + 1}/${endpoints.length}: ${endpoint.url}`)
+    console.log('n8n webhook response status:', response.status)
     
-    try {
-      const response = await fetch(endpoint.url, {
-        method: endpoint.method,
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': evolutionApiKey
-        },
-        body: JSON.stringify(endpoint.body)
-      })
-
-      console.log(`Endpoint ${i + 1} response status:`, response.status)
-      
-      if (response.ok) {
-        console.log(`✅ Success with endpoint ${i + 1}: ${endpoint.url}`)
-        return { success: true, response }
-      } else {
-        const errorText = await response.text()
-        console.log(`❌ Endpoint ${i + 1} failed:`, errorText)
-        
-        // If this is the last endpoint, throw the error
-        if (i === endpoints.length - 1) {
-          throw new Error(`All endpoints failed. Last error: ${errorText}`)
-        }
-      }
-    } catch (error) {
-      console.log(`❌ Endpoint ${i + 1} error:`, error.message)
-      
-      // If this is the last endpoint, throw the error
-      if (i === endpoints.length - 1) {
-        throw new Error(`All endpoints failed. Last error: ${error.message}`)
-      }
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('n8n webhook error:', errorText)
+      throw new Error(`n8n webhook failed: ${errorText}`)
     }
-  }
 
-  throw new Error('All instance creation endpoints failed')
+    const result = await response.json()
+    console.log('n8n webhook success:', result)
+    return result
+  } catch (error) {
+    console.error('Error calling n8n webhook:', error)
+    throw error
+  }
 }
 
 async function initializeWhatsApp(supabase: any, userId: string) {
   try {
-    const evolutionApiUrl = Deno.env.get('EVOLUTION_API_URL')
-    const evolutionApiKey = Deno.env.get('EVOLUTION_API_KEY')
+    const n8nWebhookUrl = Deno.env.get('N8N_WEBHOOK_SUPABASE_TO_EVOLUTION')
     
-    if (!evolutionApiUrl || !evolutionApiKey) {
-      throw new Error('Evolution API não configurada. Configure EVOLUTION_API_URL e EVOLUTION_API_KEY.')
+    if (!n8nWebhookUrl) {
+      throw new Error('n8n webhook não configurado. Configure N8N_WEBHOOK_SUPABASE_TO_EVOLUTION.')
     }
 
     const instanceName = `user_${userId.substring(0, 8)}`
 
-    // Try multiple endpoints for instance creation
-    console.log('Creating instance with fallback endpoints...')
-    const { success, response: createInstanceResponse } = await tryCreateInstance(evolutionApiUrl, evolutionApiKey, instanceName)
-
-    if (!success) {
-      throw new Error('Falha ao criar instância do WhatsApp com todos os endpoints disponíveis.')
-    }
-
-    console.log('Instance created successfully')
-
-    // Get QR Code
-    console.log('Getting QR Code...')
-    const connectResponse = await fetch(`${evolutionApiUrl}/instance/connect/${instanceName}`, {
-      method: 'GET',
-      headers: {
-        'apikey': evolutionApiKey
-      }
+    // Call n8n webhook to create instance via Evolution API
+    console.log('Creating instance via n8n...')
+    const result = await callN8nWebhook(n8nWebhookUrl, {
+      action: 'create_instance',
+      instanceName: instanceName,
+      userId: userId
     })
 
-    if (!connectResponse.ok) {
-      const errorData = await connectResponse.text()
-      console.error('Failed to get QR Code:', errorData)
-      throw new Error('Falha ao obter QR Code')
+    if (!result.success) {
+      throw new Error(result.error || 'Falha ao criar instância via n8n')
     }
 
-    const connectData = await connectResponse.json()
-    console.log('QR Code obtained successfully')
+    console.log('Instance created successfully via n8n')
+
+    // Get QR Code via n8n
+    console.log('Getting QR Code via n8n...')
+    const qrResult = await callN8nWebhook(n8nWebhookUrl, {
+      action: 'get_qr_code',
+      instanceName: instanceName,
+      userId: userId
+    })
+
+    if (!qrResult.success) {
+      throw new Error(qrResult.error || 'Falha ao obter QR Code via n8n')
+    }
+
+    console.log('QR Code obtained successfully via n8n')
     
     // Update session in database
     await supabase
@@ -196,7 +150,7 @@ async function initializeWhatsApp(supabase: any, userId: string) {
       .upsert({
         user_id: userId,
         status: 'qr_needed',
-        qr_code: connectData.base64 || connectData.code,
+        qr_code: qrResult.qr_code,
         session_data: { instanceName },
         updated_at: new Date().toISOString()
       })
@@ -205,7 +159,7 @@ async function initializeWhatsApp(supabase: any, userId: string) {
       JSON.stringify({ 
         success: true, 
         status: 'qr_needed',
-        qr_code: connectData.base64 || connectData.code,
+        qr_code: qrResult.qr_code,
         instanceName
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -228,21 +182,19 @@ async function initializeWhatsApp(supabase: any, userId: string) {
 
 async function disconnectWhatsApp(supabase: any, userId: string) {
   try {
-    const evolutionApiUrl = Deno.env.get('EVOLUTION_API_URL')
-    const evolutionApiKey = Deno.env.get('EVOLUTION_API_KEY')
+    const n8nWebhookUrl = Deno.env.get('N8N_WEBHOOK_SUPABASE_TO_EVOLUTION')
     
-    if (!evolutionApiUrl || !evolutionApiKey) {
-      throw new Error('Evolution API não configurada')
+    if (!n8nWebhookUrl) {
+      throw new Error('n8n webhook não configurado')
     }
 
     const instanceName = `user_${userId.substring(0, 8)}`
 
-    // Disconnect instance
-    const disconnectResponse = await fetch(`${evolutionApiUrl}/instance/logout/${instanceName}`, {
-      method: 'DELETE',
-      headers: {
-        'apikey': evolutionApiKey
-      }
+    // Disconnect via n8n
+    await callN8nWebhook(n8nWebhookUrl, {
+      action: 'disconnect_instance',
+      instanceName: instanceName,
+      userId: userId
     })
 
     // Update session regardless of API response
@@ -295,7 +247,7 @@ async function getStatus(supabase: any, userId: string) {
 
 async function handleWebhook(supabase: any, webhookData: any) {
   try {
-    console.log('Webhook received:', JSON.stringify(webhookData, null, 2))
+    console.log('Webhook received via n8n:', JSON.stringify(webhookData, null, 2))
 
     // Handle different event types from Evolution API
     if (webhookData.event) {
@@ -344,7 +296,7 @@ async function handleQRCodeUpdate(supabase: any, data: any) {
       return
     }
 
-    const userId = instanceName.replace('whatsapp_', '').replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5')
+    const userId = instanceName.replace('user_', '')
     
     const qrCode = data.data?.qrcode?.base64 || data.data?.qrcode?.code || data.data?.code
     
@@ -373,7 +325,7 @@ async function handleConnectionUpdate(supabase: any, data: any) {
       return
     }
 
-    const userId = instanceName.replace('whatsapp_', '').replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5')
+    const userId = instanceName.replace('user_', '')
     
     let status = 'disconnected'
     let phoneNumber = null
@@ -413,7 +365,7 @@ async function handleMessage(supabase: any, data: any) {
   try {
     const message = data.data
     const instanceName = data.instance
-    const userId = instanceName.replace('whatsapp_', '').replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5')
+    const userId = instanceName.replace('user_', '')
     
     // Only process text messages from the user to themselves
     if (message.messageType === 'conversation' && message.fromMe) {
@@ -435,7 +387,7 @@ async function handleMessage(supabase: any, data: any) {
           return
         }
 
-        // Send response back to user
+        // Send response back to user via n8n
         if (commandResult && commandResult.message) {
           await sendMessage(instanceName, message.key.remoteJid, commandResult.message)
         }
@@ -448,25 +400,22 @@ async function handleMessage(supabase: any, data: any) {
 
 async function sendMessage(instanceName: string, remoteJid: string, text: string) {
   try {
-    const evolutionApiUrl = Deno.env.get('EVOLUTION_API_URL')
-    const evolutionApiKey = Deno.env.get('EVOLUTION_API_KEY')
+    const n8nWebhookUrl = Deno.env.get('N8N_WEBHOOK_SUPABASE_TO_EVOLUTION')
     
-    const response = await fetch(`${evolutionApiUrl}/message/sendText/${instanceName}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': evolutionApiKey
-      },
-      body: JSON.stringify({
-        number: remoteJid.replace('@s.whatsapp.net', ''),
-        text: text
-      })
+    if (!n8nWebhookUrl) {
+      console.error('n8n webhook not configured for sending messages')
+      return
+    }
+
+    await callN8nWebhook(n8nWebhookUrl, {
+      action: 'send_message',
+      instanceName: instanceName,
+      number: remoteJid.replace('@s.whatsapp.net', ''),
+      text: text
     })
 
-    if (!response.ok) {
-      throw new Error('Failed to send message')
-    }
+    console.log('Message sent via n8n successfully')
   } catch (error) {
-    console.error('Error sending message:', error)
+    console.error('Error sending message via n8n:', error)
   }
 }
