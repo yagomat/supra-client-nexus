@@ -1,16 +1,13 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
-import { Send, Users, Clock } from "lucide-react";
+import { Users } from "lucide-react";
+import { CampaignForm } from "./bulk/CampaignForm";
+import { ClientFilters } from "./bulk/ClientFilters";
+import { ClientSelector } from "./bulk/ClientSelector";
+import { SendControls } from "./bulk/SendControls";
 
 interface Template {
   id: string;
@@ -90,7 +87,7 @@ export const BulkMessaging = ({ templates }: BulkMessagingProps) => {
     }
 
     setFilteredClients(filtered);
-    setSelectedClients([]); // Reset selection when filters change
+    setSelectedClients([]);
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -202,10 +199,6 @@ export const BulkMessaging = ({ templates }: BulkMessagingProps) => {
     }
   };
 
-  const getUniqueValues = (field: keyof Cliente) => {
-    return [...new Set(clients.map(client => client[field]).filter(Boolean))];
-  };
-
   return (
     <div className="space-y-6">
       <Card>
@@ -216,191 +209,31 @@ export const BulkMessaging = ({ templates }: BulkMessagingProps) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Campaign Settings */}
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="campaign_name">Nome da Campanha</Label>
-              <Input
-                id="campaign_name"
-                value={campaign.name}
-                onChange={(e) => setCampaign(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Ex: Promoção Black Friday"
-              />
-            </div>
+          <CampaignForm
+            campaign={campaign}
+            templates={templates}
+            onCampaignChange={(updates) => setCampaign(prev => ({ ...prev, ...updates }))}
+          />
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Template</Label>
-                <Select 
-                  value={campaign.template_id} 
-                  onValueChange={(value) => setCampaign(prev => ({ ...prev, template_id: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um template" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {templates.map(template => (
-                      <SelectItem key={template.id} value={template.id}>
-                        {template.template_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          <ClientFilters
+            filters={filters}
+            clients={clients}
+            onFiltersChange={(updates) => setFilters(prev => ({ ...prev, ...updates }))}
+          />
 
-              <div className="space-y-2">
-                <Label>Intervalo de Envio (segundos)</Label>
-                <div className="flex space-x-2">
-                  <Input
-                    type="number"
-                    placeholder="Min"
-                    value={campaign.send_interval_min}
-                    onChange={(e) => setCampaign(prev => ({ 
-                      ...prev, 
-                      send_interval_min: parseInt(e.target.value) || 30 
-                    }))}
-                  />
-                  <Input
-                    type="number"
-                    placeholder="Max"
-                    value={campaign.send_interval_max}
-                    onChange={(e) => setCampaign(prev => ({ 
-                      ...prev, 
-                      send_interval_max: parseInt(e.target.value) || 300 
-                    }))}
-                  />
-                </div>
-              </div>
-            </div>
+          <ClientSelector
+            filteredClients={filteredClients}
+            selectedClients={selectedClients}
+            onSelectAll={handleSelectAll}
+            onClientSelect={handleClientSelect}
+          />
 
-            <div>
-              <Label htmlFor="custom_message">Mensagem Personalizada (opcional)</Label>
-              <Textarea
-                id="custom_message"
-                value={campaign.custom_message}
-                onChange={(e) => setCampaign(prev => ({ ...prev, custom_message: e.target.value }))}
-                placeholder="Digite uma mensagem personalizada (sobrescreve o template)"
-                rows={4}
-              />
-            </div>
-          </div>
-
-          {/* Filters */}
-          <div className="space-y-4">
-            <h4 className="font-medium">Filtros de Clientes</h4>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Label>Status</Label>
-                <Select value={filters.status} onValueChange={(value) => 
-                  setFilters(prev => ({ ...prev, status: value }))
-                }>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
-                    {getUniqueValues('status').map(status => (
-                      <SelectItem key={status} value={status}>{status}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Servidor</Label>
-                <Select value={filters.servidor} onValueChange={(value) => 
-                  setFilters(prev => ({ ...prev, servidor: value }))
-                }>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
-                    {getUniqueValues('servidor').map(servidor => (
-                      <SelectItem key={servidor} value={servidor}>{servidor}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>UF</Label>
-                <Select value={filters.uf} onValueChange={(value) => 
-                  setFilters(prev => ({ ...prev, uf: value }))
-                }>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
-                    {getUniqueValues('uf').map(uf => (
-                      <SelectItem key={uf} value={uf}>{uf}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          {/* Client Selection */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h4 className="font-medium">
-                Clientes ({filteredClients.length} encontrados)
-              </h4>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  checked={selectedClients.length === filteredClients.length && filteredClients.length > 0}
-                  onCheckedChange={handleSelectAll}
-                />
-                <Label>Selecionar todos</Label>
-              </div>
-            </div>
-
-            <div className="max-h-60 overflow-y-auto space-y-2 border rounded p-4">
-              {filteredClients.map(client => (
-                <div key={client.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    checked={selectedClients.includes(client.id)}
-                    onCheckedChange={(checked) => handleClientSelect(client.id, checked as boolean)}
-                  />
-                  <span className="flex-1">{client.nome}</span>
-                  <Badge variant="outline">{client.status}</Badge>
-                  <span className="text-sm text-muted-foreground">{client.telefone}</span>
-                </div>
-              ))}
-              
-              {filteredClients.length === 0 && (
-                <p className="text-center text-muted-foreground py-4">
-                  Nenhum cliente encontrado com os filtros aplicados.
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Send Button */}
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              <Clock className="h-4 w-4" />
-              <span>
-                Intervalo: {campaign.send_interval_min}s - {campaign.send_interval_max}s
-              </span>
-            </div>
-            <Button 
-              onClick={sendBulkMessage} 
-              disabled={sending || selectedClients.length === 0}
-              className="min-w-[150px]"
-            >
-              {sending ? (
-                <>Enviando...</>
-              ) : (
-                <>
-                  <Send className="h-4 w-4 mr-2" />
-                  Enviar para {selectedClients.length} cliente{selectedClients.length !== 1 ? 's' : ''}
-                </>
-              )}
-            </Button>
-          </div>
+          <SendControls
+            campaign={campaign}
+            selectedClients={selectedClients}
+            sending={sending}
+            onSend={sendBulkMessage}
+          />
         </CardContent>
       </Card>
     </div>
