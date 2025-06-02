@@ -197,6 +197,171 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_auto_responses: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          match_type: string | null
+          priority: number | null
+          response_template: string
+          trigger_keywords: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          match_type?: string | null
+          priority?: number | null
+          response_template: string
+          trigger_keywords: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          match_type?: string | null
+          priority?: number | null
+          response_template?: string
+          trigger_keywords?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      whatsapp_billing_settings: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          send_after_days: number[] | null
+          send_before_days: number[] | null
+          send_on_due_date: boolean | null
+          template_after_id: string | null
+          template_before_id: string | null
+          template_on_due_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          send_after_days?: number[] | null
+          send_before_days?: number[] | null
+          send_on_due_date?: boolean | null
+          template_after_id?: string | null
+          template_before_id?: string | null
+          template_on_due_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          send_after_days?: number[] | null
+          send_before_days?: number[] | null
+          send_on_due_date?: boolean | null
+          template_after_id?: string | null
+          template_before_id?: string | null
+          template_on_due_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_billing_template_after"
+            columns: ["template_after_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_message_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_billing_template_before"
+            columns: ["template_before_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_message_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_billing_template_on_due"
+            columns: ["template_on_due_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_message_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_bulk_campaigns: {
+        Row: {
+          campaign_name: string
+          completed_at: string | null
+          created_at: string
+          failed_count: number | null
+          id: string
+          message_content: string | null
+          message_template_id: string | null
+          scheduled_start: string | null
+          send_interval_max: number | null
+          send_interval_min: number | null
+          sent_count: number | null
+          started_at: string | null
+          status: string
+          target_filter: Json
+          total_recipients: number | null
+          user_id: string
+        }
+        Insert: {
+          campaign_name: string
+          completed_at?: string | null
+          created_at?: string
+          failed_count?: number | null
+          id?: string
+          message_content?: string | null
+          message_template_id?: string | null
+          scheduled_start?: string | null
+          send_interval_max?: number | null
+          send_interval_min?: number | null
+          sent_count?: number | null
+          started_at?: string | null
+          status?: string
+          target_filter: Json
+          total_recipients?: number | null
+          user_id: string
+        }
+        Update: {
+          campaign_name?: string
+          completed_at?: string | null
+          created_at?: string
+          failed_count?: number | null
+          id?: string
+          message_content?: string | null
+          message_template_id?: string | null
+          scheduled_start?: string | null
+          send_interval_max?: number | null
+          send_interval_min?: number | null
+          sent_count?: number | null
+          started_at?: string | null
+          status?: string
+          target_filter?: Json
+          total_recipients?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_campaigns_template"
+            columns: ["message_template_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_message_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       whatsapp_commands: {
         Row: {
           command: string
@@ -229,6 +394,166 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      whatsapp_message_logs: {
+        Row: {
+          campaign_id: string | null
+          cliente_id: string | null
+          created_at: string
+          id: string
+          message_content: string
+          message_type: string
+          phone_number: string
+          status: string
+          template_id: string | null
+          user_id: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          cliente_id?: string | null
+          created_at?: string
+          id?: string
+          message_content: string
+          message_type: string
+          phone_number: string
+          status?: string
+          template_id?: string | null
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string | null
+          cliente_id?: string | null
+          created_at?: string
+          id?: string
+          message_content?: string
+          message_type?: string
+          phone_number?: string
+          status?: string
+          template_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_logs_campaign"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_bulk_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_logs_cliente"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_logs_template"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_message_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_message_templates: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          message_text: string
+          placeholders: string[] | null
+          template_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          message_text: string
+          placeholders?: string[] | null
+          template_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          message_text?: string
+          placeholders?: string[] | null
+          template_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      whatsapp_scheduled_messages: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          days_offset: number | null
+          error_message: string | null
+          id: string
+          message_content: string | null
+          message_type: string
+          retry_count: number | null
+          scheduled_date: string
+          sent_at: string | null
+          status: string
+          template_id: string | null
+          user_id: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          days_offset?: number | null
+          error_message?: string | null
+          id?: string
+          message_content?: string | null
+          message_type: string
+          retry_count?: number | null
+          scheduled_date: string
+          sent_at?: string | null
+          status?: string
+          template_id?: string | null
+          user_id: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          days_offset?: number | null
+          error_message?: string | null
+          id?: string
+          message_content?: string | null
+          message_type?: string
+          retry_count?: number | null
+          scheduled_date?: string
+          sent_at?: string | null
+          status?: string
+          template_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_scheduled_messages_cliente"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_scheduled_messages_template"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_message_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       whatsapp_sessions: {
         Row: {

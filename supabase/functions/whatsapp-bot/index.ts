@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -61,6 +60,18 @@ serve(async (req) => {
       case 'status':
         return await getStatus(supabase, user.id)
 
+      case 'send_bulk_message':
+        return await sendBulkMessage(supabase, user.id, data)
+
+      case 'send_template_message':
+        return await sendTemplateMessage(supabase, user.id, data)
+
+      case 'schedule_payment_reminders':
+        return await schedulePaymentReminders(supabase, user.id, data)
+
+      case 'process_auto_response':
+        return await processAutoResponse(supabase, user.id, data)
+
       default:
         throw new Error('Invalid action')
     }
@@ -104,6 +115,376 @@ async function callN8nWebhook(webhookUrl: string, data: any) {
     console.error('Error calling n8n webhook:', error)
     throw error
   }
+}
+
+async function sendBulkMessage(supabase: any, userId: string, data: any) {
+  try {
+    const { campaignId, targetFilter, messageContent, sendIntervalMin = 30, sendIntervalMax = 300 } = data
+    
+    // Get clients based on filter
+    let clientQuery = supabase.from('clientes').select('*').eq('user_id', userId)
+    
+    if (targetFilter.status) {
+      clientQuery = clientQuery.eq('status', targetFilter.status)
+    }
+    if (targetFilter.servidor) {
+      clientQuery = clientQuery.eq('servidor', targetFilter.servidor)
+    }
+    if (targetFilter.uf) {
+      clientQuery = clientQuery.eq('uf', targetFilter.uf)
+    }
+
+    const { data: clients, error: clientError } = await clientQuery
+    if (clientError) throw clientError
+
+    // Update campaign with total recipients
+    await supabase
+      .from('whatsapp_bulk_campaigns')
+      .update({ 
+        total_recipients: clients.length,
+        status: 'running',
+        started_at: new Date().toISOString()
+      })
+      .eq('id', campaignId)
+
+    // Send messages with random intervals
+    let sentCount = 0
+    for (const client of clients) {
+      if (!client.telefone) continue
+
+      try {
+        // Replace placeholders in message
+        const personalizedMessage = replacePlaceholders(messageContent, client)
+
+        // Send message via n8n
+        const instanceName = `user_${userId.substring(0, 8)}`
+        await sendMessage(instanceName, client.telefone, personalizedMessage)
+
+        // Log the message
+        await supabase.from('whatsapp_message_logs').insert({
+          user_id: userId,
+          cliente_id: client.id,
+          phone_number: client.telefone,
+          message_type: 'bulk_campaign',
+          message_content: personalizedMessage,
+          campaign_id: campaignId
+        })
+
+        sentCount++
+
+        // Wait random interval before next message
+        const interval = Math.floor(Math.random() * (sendIntervalMax - sendIntervalMin + 1)) + sendIntervalMin
+        await new Promise(resolve => setTimeout(resolve, interval * 1000))
+
+      } catch (error) {
+        console.error(`Error sending message to ${client.telefone}:`, error)
+        
+        // Update failed count
+        await supabase
+          .from('whatsapp_bulk_campaigns')
+          .update({ failed_count: supabase.raw('failed_count + 1') })
+          .eq('id', campaignId)
+      }
+    }
+
+    // Mark campaign as completed
+    await supabase
+      .from('whatsapp_bulk_campaigns')
+      .update({ 
+        status: 'completed',
+        sent_count: sentCount,
+        completed_at: new Date().toISOString()
+      })
+      .eq('id', campaignId)
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: `Bulk campaign completed. Sent: ${sentCount}/${clients.length}` 
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
+  } catch (error) {
+    console.error('Error in bulk message:', error)
+    throw error
+  }
+}
+
+async function sendTemplateMessage(supabase: any, userId: string, data: any) {
+  try {
+    const { templateId, clienteId, customData = {} } = data
+
+    // Get template
+    const { data: template, error: templateError } = await supabase
+      .from('whatsapp_message_templates')
+      .select('*')
+      .eq('id', templateId)
+      .eq('user_id', userId)
+      .single()
+
+    if (templateError) throw templateError
+
+    // Get client data
+    const { data: client, error: clientError } = await supabase
+      .from('clientes')
+      .select('*')
+      .eq('id', clienteId)
+      .eq('user_id', userId)
+      .single()
+
+    if (clientError) throw clientError
+
+    if (!client.telefone) {
+      throw new Error('Client has no phone number')
+    }
+
+    // Replace placeholders
+    const personalizedMessage = replacePlaceholders(template.message_text, client, customData)
+
+    // Send message
+    const instanceName = `user_${userId.substring(0, 8)}`
+    await sendMessage(instanceName, client.telefone, personalizedMessage)
+
+    // Log the message
+    await supabase.from('whatsapp_message_logs').insert({
+      user_id: userId,
+      cliente_id: client.id,
+      phone_number: client.telefone,
+      message_type: 'template_message',
+      message_content: personalizedMessage,
+      template_id: templateId
+    })
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: 'Template message sent successfully' 
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
+  } catch (error) {
+    console.error('Error sending template message:', error)
+    throw error
+  }
+}
+
+async function schedulePaymentReminders(supabase: any, userId: string, data: any) {
+  try {
+    // Get billing settings
+    const { data: settings, error: settingsError } = await supabase
+      .from('whatsapp_billing_settings')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
+
+    if (settingsError || !settings.is_active) {
+      throw new Error('Billing reminders not configured or not active')
+    }
+
+    // Get active clients
+    const { data: clients, error: clientsError } = await supabase
+      .from('clientes')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('status', 'ativo')
+
+    if (clientsError) throw clientsError
+
+    const currentDate = new Date()
+    const currentMonth = currentDate.getMonth() + 1
+    const currentYear = currentDate.getFullYear()
+
+    let scheduledCount = 0
+
+    for (const client of clients) {
+      // Calculate due date for current month
+      const dueDate = new Date(currentYear, currentMonth - 1, client.dia_vencimento)
+      
+      // Schedule before reminders
+      for (const days of settings.send_before_days) {
+        const reminderDate = new Date(dueDate)
+        reminderDate.setDate(reminderDate.getDate() - days)
+        
+        if (reminderDate > currentDate) {
+          await supabase.from('whatsapp_scheduled_messages').insert({
+            user_id: userId,
+            cliente_id: client.id,
+            message_type: 'payment_reminder',
+            scheduled_date: reminderDate.toISOString(),
+            template_id: settings.template_before_id,
+            days_offset: -days
+          })
+          scheduledCount++
+        }
+      }
+
+      // Schedule on due date
+      if (settings.send_on_due_date && dueDate >= currentDate) {
+        await supabase.from('whatsapp_scheduled_messages').insert({
+          user_id: userId,
+          cliente_id: client.id,
+          message_type: 'payment_reminder',
+          scheduled_date: dueDate.toISOString(),
+          template_id: settings.template_on_due_id,
+          days_offset: 0
+        })
+        scheduledCount++
+      }
+
+      // Schedule after reminders
+      for (const days of settings.send_after_days) {
+        const reminderDate = new Date(dueDate)
+        reminderDate.setDate(reminderDate.getDate() + days)
+        
+        await supabase.from('whatsapp_scheduled_messages').insert({
+          user_id: userId,
+          cliente_id: client.id,
+          message_type: 'payment_reminder',
+          scheduled_date: reminderDate.toISOString(),
+          template_id: settings.template_after_id,
+          days_offset: days
+        })
+        scheduledCount++
+      }
+    }
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: `${scheduledCount} payment reminders scheduled for ${clients.length} clients` 
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
+  } catch (error) {
+    console.error('Error scheduling payment reminders:', error)
+    throw error
+  }
+}
+
+async function processAutoResponse(supabase: any, userId: string, data: any) {
+  try {
+    const { message, fromPhone } = data
+
+    // Get auto-response rules for user
+    const { data: rules, error: rulesError } = await supabase
+      .from('whatsapp_auto_responses')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .order('priority', { ascending: false })
+
+    if (rulesError) throw rulesError
+
+    // Check each rule for a match
+    for (const rule of rules) {
+      let isMatch = false
+      const messageText = message.toLowerCase()
+
+      for (const keyword of rule.trigger_keywords) {
+        const keywordLower = keyword.toLowerCase()
+        
+        switch (rule.match_type) {
+          case 'exact':
+            isMatch = messageText === keywordLower
+            break
+          case 'starts_with':
+            isMatch = messageText.startsWith(keywordLower)
+            break
+          case 'ends_with':
+            isMatch = messageText.endsWith(keywordLower)
+            break
+          case 'contains':
+          default:
+            isMatch = messageText.includes(keywordLower)
+            break
+        }
+
+        if (isMatch) break
+      }
+
+      if (isMatch) {
+        // Find client by phone (if exists)
+        const { data: client } = await supabase
+          .from('clientes')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('telefone', fromPhone)
+          .single()
+
+        // Replace placeholders in response
+        const responseMessage = replacePlaceholders(rule.response_template, client || {})
+
+        // Send auto-response
+        const instanceName = `user_${userId.substring(0, 8)}`
+        await sendMessage(instanceName, fromPhone, responseMessage)
+
+        // Log the auto-response
+        await supabase.from('whatsapp_message_logs').insert({
+          user_id: userId,
+          cliente_id: client?.id || null,
+          phone_number: fromPhone,
+          message_type: 'auto_response',
+          message_content: responseMessage
+        })
+
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: 'Auto-response sent',
+            response: responseMessage
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+    }
+
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        message: 'No auto-response rule matched' 
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
+  } catch (error) {
+    console.error('Error processing auto-response:', error)
+    throw error
+  }
+}
+
+function replacePlaceholders(text: string, client: any, customData: any = {}) {
+  let result = text
+
+  // Client placeholders
+  if (client.nome) result = result.replace(/{nome}/g, client.nome)
+  if (client.telefone) result = result.replace(/{telefone}/g, client.telefone)
+  if (client.servidor) result = result.replace(/{servidor}/g, client.servidor)
+  if (client.valor_plano) result = result.replace(/{valor_plano}/g, `R$ ${client.valor_plano.toFixed(2)}`)
+  if (client.dia_vencimento) {
+    result = result.replace(/{dia_vencimento}/g, client.dia_vencimento.toString())
+    
+    // Calculate days until due date
+    const today = new Date()
+    const currentMonth = today.getMonth() + 1
+    const currentYear = today.getFullYear()
+    const dueDate = new Date(currentYear, currentMonth - 1, client.dia_vencimento)
+    const diffTime = dueDate.getTime() - today.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    
+    result = result.replace(/{dias_para_vencer}/g, diffDays.toString())
+    result = result.replace(/{data_vencimento}/g, dueDate.toLocaleDateString('pt-BR'))
+  }
+
+  // Custom data placeholders
+  for (const [key, value] of Object.entries(customData)) {
+    const placeholder = `{${key}}`
+    result = result.replace(new RegExp(placeholder, 'g'), value as string)
+  }
+
+  return result
 }
 
 async function initializeWhatsApp(supabase: any, userId: string) {
@@ -367,7 +748,23 @@ async function handleMessage(supabase: any, data: any) {
     const instanceName = data.instance
     const userId = instanceName.replace('user_', '')
     
-    // Only process text messages from the user to themselves
+    // Process auto-responses for incoming messages (not from me)
+    if (message.messageType === 'conversation' && !message.fromMe) {
+      const messageText = message.message?.conversation || message.message?.extendedTextMessage?.text
+      const fromPhone = message.key.remoteJid.replace('@s.whatsapp.net', '')
+      
+      if (messageText) {
+        console.log('Processing auto-response for incoming message:', messageText)
+        
+        // Call auto-response processing
+        await processAutoResponse(supabase, userId, {
+          message: messageText,
+          fromPhone: fromPhone
+        })
+      }
+    }
+    
+    // Only process text messages from the user to themselves for commands
     if (message.messageType === 'conversation' && message.fromMe) {
       const messageText = message.message?.conversation || message.message?.extendedTextMessage?.text
       

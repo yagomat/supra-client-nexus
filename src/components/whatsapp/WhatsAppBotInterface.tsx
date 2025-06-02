@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useWhatsAppBot } from "@/hooks/useWhatsAppBot";
+import { useWhatsAppTemplates } from "@/hooks/useWhatsAppTemplates";
 import { 
   QrCode, 
   Power, 
@@ -15,12 +16,20 @@ import {
   Clock, 
   AlertTriangle,
   BookOpen,
-  RefreshCw
+  RefreshCw,
+  MessageCircle,
+  Send,
+  Zap,
+  Settings
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ConnectionStatus } from "./ConnectionStatus";
 import { ConfigurationGuide } from "./ConfigurationGuide";
+import { TemplateManager } from "./TemplateManager";
+import { BillingSettings } from "./BillingSettings";
+import { BulkMessaging } from "./BulkMessaging";
+import { AutoResponseManager } from "./AutoResponseManager";
 
 export const WhatsAppBotInterface = () => {
   const { 
@@ -33,6 +42,17 @@ export const WhatsAppBotInterface = () => {
     refreshSession,
     refreshCommands 
   } = useWhatsAppBot();
+
+  const {
+    templates,
+    autoResponses,
+    campaigns,
+    messageLogs,
+    refreshTemplates,
+    refreshAutoResponses,
+    refreshCampaigns,
+    refreshMessageLogs
+  } = useWhatsAppTemplates();
 
   const renderQRCode = () => {
     if (!session?.qr_code) return null;
@@ -82,10 +102,13 @@ export const WhatsAppBotInterface = () => {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="status" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="status">Status & Controle</TabsTrigger>
-          <TabsTrigger value="commands">Comandos & Histórico</TabsTrigger>
-          <TabsTrigger value="config">Guia de Configuração</TabsTrigger>
+          <TabsTrigger value="templates">Templates</TabsTrigger>
+          <TabsTrigger value="billing">Cobrança Automática</TabsTrigger>
+          <TabsTrigger value="bulk">Envio em Massa</TabsTrigger>
+          <TabsTrigger value="autoresponse">Auto-Resposta</TabsTrigger>
+          <TabsTrigger value="config">Configuração</TabsTrigger>
         </TabsList>
 
         <TabsContent value="status" className="space-y-6">
@@ -136,96 +159,85 @@ export const WhatsAppBotInterface = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Commands History */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Clock className="h-5 w-5" />
+                  <span>Histórico de Comandos</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={refreshCommands}
+                >
+                  <RefreshCw className="h-3 w-3" />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-64">
+                {commands.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">
+                    Nenhum comando executado ainda.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {commands.map((command) => (
+                      <div 
+                        key={command.id} 
+                        className="p-3 border rounded-lg bg-gray-50"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge 
+                            variant={command.status === 'success' ? 'default' : 'destructive'}
+                            className="text-xs"
+                          >
+                            {command.status === 'success' ? 'Sucesso' : 'Erro'}
+                          </Badge>
+                          <span className="text-xs text-gray-500">
+                            {format(new Date(command.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                          </span>
+                        </div>
+                        <p className="text-sm font-medium">{command.command}</p>
+                        {command.response_sent && (
+                          <p className="text-xs text-gray-600 mt-1">{command.response_sent}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        <TabsContent value="commands" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <MessageSquare className="h-5 w-5" />
-                  <span>Comandos Disponíveis</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <p className="font-medium text-blue-900">Renovar [Nome]</p>
-                    <p className="text-sm text-blue-700">Marca pagamento como pago</p>
-                    <p className="text-xs text-blue-600 mt-1">Ex: "Renovar João Silva"</p>
-                  </div>
-                  
-                  <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                    <p className="font-medium text-green-900">Status [Nome]</p>
-                    <p className="text-sm text-green-700">Consulta dados do cliente</p>
-                    <p className="text-xs text-green-600 mt-1">Ex: "Status Maria"</p>
-                  </div>
-                  
-                  <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                    <p className="font-medium text-yellow-900">Vencimentos</p>
-                    <p className="text-sm text-yellow-700">Lista próximos vencimentos</p>
-                  </div>
-                  
-                  <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
-                    <p className="font-medium text-purple-900">Ajuda</p>
-                    <p className="text-sm text-purple-700">Mostra lista de comandos</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        <TabsContent value="templates">
+          <TemplateManager 
+            templates={templates} 
+            onRefresh={refreshTemplates}
+          />
+        </TabsContent>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Clock className="h-5 w-5" />
-                    <span>Histórico de Comandos</span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={refreshCommands}
-                  >
-                    <RefreshCw className="h-3 w-3" />
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-64">
-                  {commands.length === 0 ? (
-                    <p className="text-gray-500 text-center py-8">
-                      Nenhum comando executado ainda.
-                    </p>
-                  ) : (
-                    <div className="space-y-3">
-                      {commands.map((command) => (
-                        <div 
-                          key={command.id} 
-                          className="p-3 border rounded-lg bg-gray-50"
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <Badge 
-                              variant={command.status === 'success' ? 'default' : 'destructive'}
-                              className="text-xs"
-                            >
-                              {command.status === 'success' ? 'Sucesso' : 'Erro'}
-                            </Badge>
-                            <span className="text-xs text-gray-500">
-                              {format(new Date(command.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
-                            </span>
-                          </div>
-                          <p className="text-sm font-medium">{command.command}</p>
-                          {command.response_sent && (
-                            <p className="text-xs text-gray-600 mt-1">{command.response_sent}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </div>
+        <TabsContent value="billing">
+          <BillingSettings 
+            templates={templates}
+          />
+        </TabsContent>
+
+        <TabsContent value="bulk">
+          <BulkMessaging 
+            templates={templates}
+          />
+        </TabsContent>
+
+        <TabsContent value="autoresponse">
+          <AutoResponseManager 
+            autoResponses={autoResponses}
+            onRefresh={refreshAutoResponses}
+          />
         </TabsContent>
 
         <TabsContent value="config">
