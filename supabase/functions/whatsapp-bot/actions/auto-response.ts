@@ -1,5 +1,6 @@
 
-import { replacePlaceholders, sendMessage } from '../utils.ts'
+import { sendMessage } from './connection-management.ts'
+import { replacePlaceholders } from '../utils.ts'
 import type { AutoResponseData } from '../types.ts'
 
 export async function processAutoResponse(supabase: any, userId: string, data: AutoResponseData) {
@@ -55,23 +56,30 @@ export async function processAutoResponse(supabase: any, userId: string, data: A
         // Replace placeholders in response
         const responseMessage = replacePlaceholders(rule.response_template, client || {})
 
-        // Send auto-response
-        const instanceName = `user_${userId.substring(0, 8)}`
-        await sendMessage(instanceName, fromPhone, responseMessage)
+        // Send auto-response via Venom-bot
+        const success = await sendMessage(userId, fromPhone, responseMessage)
 
-        // Log the auto-response
-        await supabase.from('whatsapp_message_logs').insert({
-          user_id: userId,
-          cliente_id: client?.id || null,
-          phone_number: fromPhone,
-          message_type: 'auto_response',
-          message_content: responseMessage
-        })
+        if (success) {
+          // Log the auto-response
+          await supabase.from('whatsapp_message_logs').insert({
+            user_id: userId,
+            cliente_id: client?.id || null,
+            phone_number: fromPhone,
+            message_type: 'auto_response',
+            message_content: responseMessage,
+            status: 'sent'
+          })
 
-        return {
-          success: true, 
-          message: 'Auto-response sent',
-          response: responseMessage
+          return {
+            success: true, 
+            message: 'Auto-response sent',
+            response: responseMessage
+          }
+        } else {
+          return {
+            success: false, 
+            message: 'Failed to send auto-response' 
+          }
         }
       }
     }

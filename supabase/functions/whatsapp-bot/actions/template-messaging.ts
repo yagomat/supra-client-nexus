@@ -1,5 +1,6 @@
 
-import { replacePlaceholders, sendMessage } from '../utils.ts'
+import { sendMessage } from './connection-management.ts'
+import { replacePlaceholders } from '../utils.ts'
 import type { TemplateMessageData } from '../types.ts'
 
 export async function sendTemplateMessage(supabase: any, userId: string, data: TemplateMessageData) {
@@ -33,9 +34,12 @@ export async function sendTemplateMessage(supabase: any, userId: string, data: T
     // Replace placeholders
     const personalizedMessage = replacePlaceholders(template.message_text, client, customData)
 
-    // Send message
-    const instanceName = `user_${userId.substring(0, 8)}`
-    await sendMessage(instanceName, client.telefone, personalizedMessage)
+    // Send message via Venom-bot
+    const success = await sendMessage(userId, client.telefone, personalizedMessage)
+
+    if (!success) {
+      throw new Error('Failed to send message via WhatsApp')
+    }
 
     // Log the message
     await supabase.from('whatsapp_message_logs').insert({
@@ -44,7 +48,8 @@ export async function sendTemplateMessage(supabase: any, userId: string, data: T
       phone_number: client.telefone,
       message_type: 'template_message',
       message_content: personalizedMessage,
-      template_id: templateId
+      template_id: templateId,
+      status: 'sent'
     })
 
     return {

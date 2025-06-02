@@ -1,0 +1,6 @@
+
+{
+  "imports": {
+    "venom-bot": "https://esm.sh/venom-bot@5.0.8"
+  }
+}

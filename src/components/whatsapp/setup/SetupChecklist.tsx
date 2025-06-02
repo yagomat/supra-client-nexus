@@ -3,68 +3,61 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { CheckCircle, Circle, AlertCircle, ExternalLink } from "lucide-react";
+import { CheckCircle, Circle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export const SetupChecklist = () => {
   const { toast } = useToast();
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
-  const [testUrls, setTestUrls] = useState({
-    evolutionApi: '',
-    n8nWebhook: '',
-    n8nEventsWebhook: ''
-  });
 
   const checklistItems = [
     {
-      id: 'vps-setup',
-      title: 'VPS e EasyPanel Configurados',
-      description: 'VPS criada e EasyPanel instalado com SSL',
+      id: 'supabase-configured',
+      title: 'Supabase Configurado',
+      description: 'Projeto conectado e funcionando',
       category: 'infrastructure'
     },
     {
-      id: 'evolution-installed',
-      title: 'Evolution API Instalada',
-      description: 'Docker container rodando e acessível',
-      category: 'evolution'
+      id: 'venom-bot-integrated',
+      title: 'Venom-bot Integrado',
+      description: 'Edge Function com Venom-bot ativa',
+      category: 'whatsapp'
     },
     {
-      id: 'evolution-webhook',
-      title: 'Webhook Evolution Configurado',
-      description: 'Evolution API enviando eventos para n8n',
-      category: 'evolution'
+      id: 'database-tables',
+      title: 'Tabelas do Banco Criadas',
+      description: 'Todas as tabelas WhatsApp existem',
+      category: 'database'
     },
     {
-      id: 'n8n-installed',
-      title: 'n8n Instalado',
-      description: 'n8n rodando e acessível via web',
-      category: 'n8n'
+      id: 'user-authentication',
+      title: 'Autenticação Funcionando',
+      description: 'Login/logout operacional',
+      category: 'auth'
     },
     {
-      id: 'workflow-supabase-evolution',
-      title: 'Workflow Supabase → Evolution',
-      description: 'Workflow importado e ativo no n8n',
-      category: 'n8n'
-    },
-    {
-      id: 'workflow-evolution-supabase',
-      title: 'Workflow Evolution → Supabase',
-      description: 'Workflow importado e ativo no n8n',
-      category: 'n8n'
-    },
-    {
-      id: 'supabase-secrets',
-      title: 'Secrets Supabase Configurados',
-      description: 'Todas as variáveis de ambiente adicionadas',
-      category: 'supabase'
-    },
-    {
-      id: 'test-connection',
-      title: 'Teste de Conexão',
-      description: 'Conexão WhatsApp testada com sucesso',
+      id: 'whatsapp-connection',
+      title: 'Conexão WhatsApp Testada',
+      description: 'QR Code gerado e WhatsApp conectado',
       category: 'test'
+    },
+    {
+      id: 'message-sending',
+      title: 'Envio de Mensagens',
+      description: 'Teste de envio bem-sucedido',
+      category: 'test'
+    },
+    {
+      id: 'templates-working',
+      title: 'Templates Funcionando',
+      description: 'Criação e uso de templates',
+      category: 'features'
+    },
+    {
+      id: 'auto-responses',
+      title: 'Auto-respostas Ativas',
+      description: 'Respostas automáticas configuradas',
+      category: 'features'
     }
   ];
 
@@ -75,26 +68,6 @@ export const SetupChecklist = () => {
     }));
   };
 
-  const testConnection = async (url: string, type: string) => {
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-        mode: 'no-cors'
-      });
-      
-      toast({
-        title: "Teste Realizado",
-        description: `Requisição enviada para ${type}. Verifique os logs do serviço.`,
-      });
-    } catch (error) {
-      toast({
-        title: "Erro no Teste",
-        description: `Não foi possível conectar com ${type}.`,
-        variant: "destructive",
-      });
-    }
-  };
-
   const getCategoryProgress = (category: string) => {
     const categoryItems = checklistItems.filter(item => item.category === category);
     const checkedCount = categoryItems.filter(item => checkedItems[item.id]).length;
@@ -103,10 +76,11 @@ export const SetupChecklist = () => {
 
   const categories = [
     { id: 'infrastructure', name: 'Infraestrutura', color: 'bg-blue-100 text-blue-800' },
-    { id: 'evolution', name: 'Evolution API', color: 'bg-green-100 text-green-800' },
-    { id: 'n8n', name: 'n8n Workflows', color: 'bg-purple-100 text-purple-800' },
-    { id: 'supabase', name: 'Supabase', color: 'bg-orange-100 text-orange-800' },
-    { id: 'test', name: 'Testes', color: 'bg-red-100 text-red-800' }
+    { id: 'whatsapp', name: 'WhatsApp Bot', color: 'bg-green-100 text-green-800' },
+    { id: 'database', name: 'Banco de Dados', color: 'bg-purple-100 text-purple-800' },
+    { id: 'auth', name: 'Autenticação', color: 'bg-orange-100 text-orange-800' },
+    { id: 'test', name: 'Testes', color: 'bg-red-100 text-red-800' },
+    { id: 'features', name: 'Funcionalidades', color: 'bg-yellow-100 text-yellow-800' }
   ];
 
   return (
@@ -115,10 +89,23 @@ export const SetupChecklist = () => {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <CheckCircle className="h-5 w-5" />
-            <span>Checklist de Configuração</span>
+            <span>Checklist Simplificado - Venom-bot</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+            <div className="flex items-start space-x-2">
+              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+              <div>
+                <h4 className="font-medium text-green-800">Configuração Simplificada!</h4>
+                <p className="text-sm text-green-700 mt-1">
+                  Com a nova implementação Venom-bot, não é mais necessário configurar Evolution API, 
+                  n8n, VPS ou Docker. Tudo roda diretamente no Supabase!
+                </p>
+              </div>
+            </div>
+          </div>
+
           {categories.map(category => (
             <div key={category.id} className="space-y-3">
               <div className="flex items-center justify-between">
@@ -152,58 +139,26 @@ export const SetupChecklist = () => {
             </div>
           ))}
 
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <h4 className="font-medium mb-4">Testes de Conectividade</h4>
-            
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="evolution-url">URL Evolution API</Label>
-                <div className="flex space-x-2 mt-1">
-                  <Input
-                    id="evolution-url"
-                    placeholder="https://evolution.seudominio.com"
-                    value={testUrls.evolutionApi}
-                    onChange={(e) => setTestUrls(prev => ({ ...prev, evolutionApi: e.target.value }))}
-                  />
-                  <Button
-                    variant="outline"
-                    onClick={() => testConnection(testUrls.evolutionApi, 'Evolution API')}
-                    disabled={!testUrls.evolutionApi}
-                  >
-                    Testar
-                  </Button>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="n8n-webhook">URL Webhook n8n (Supabase → Evolution)</Label>
-                <div className="flex space-x-2 mt-1">
-                  <Input
-                    id="n8n-webhook"
-                    placeholder="https://n8n.seudominio.com/webhook/supabase-to-evolution"
-                    value={testUrls.n8nWebhook}
-                    onChange={(e) => setTestUrls(prev => ({ ...prev, n8nWebhook: e.target.value }))}
-                  />
-                  <Button
-                    variant="outline"
-                    onClick={() => testConnection(testUrls.n8nWebhook, 'n8n Webhook')}
-                    disabled={!testUrls.n8nWebhook}
-                  >
-                    Testar
-                  </Button>
-                </div>
-              </div>
-            </div>
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h4 className="font-medium text-blue-800 mb-2">Como Testar</h4>
+            <ol className="text-sm text-blue-700 space-y-1">
+              <li>1. Faça login no sistema</li>
+              <li>2. Vá para "Status & Controle"</li>
+              <li>3. Clique em "Conectar"</li>
+              <li>4. Escaneie o QR Code com seu WhatsApp</li>
+              <li>5. Teste envio de mensagem</li>
+              <li>6. Configure templates e auto-respostas</li>
+            </ol>
           </div>
 
           <div className="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
             <div className="flex items-start space-x-2">
               <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
               <div>
-                <h4 className="font-medium text-yellow-800">Próximos Passos</h4>
+                <h4 className="font-medium text-yellow-800">Isolamento Multi-usuário</h4>
                 <p className="text-sm text-yellow-700 mt-1">
-                  Complete todos os itens do checklist antes de tentar conectar o WhatsApp. 
-                  Em caso de problemas, verifique os logs do n8n e Evolution API.
+                  Cada usuário terá sua própria sessão WhatsApp isolada. Os dados e mensagens 
+                  de um usuário nunca serão visíveis para outros usuários.
                 </p>
               </div>
             </div>

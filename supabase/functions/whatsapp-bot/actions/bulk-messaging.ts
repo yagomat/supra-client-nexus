@@ -1,5 +1,6 @@
 
-import { replacePlaceholders, sendMessage } from '../utils.ts'
+import { sendMessage } from './connection-management.ts'
+import { replacePlaceholders } from '../utils.ts'
 import type { BulkMessageData } from '../types.ts'
 
 export async function sendBulkMessage(supabase: any, userId: string, data: BulkMessageData) {
@@ -41,21 +42,34 @@ export async function sendBulkMessage(supabase: any, userId: string, data: BulkM
         // Replace placeholders in message
         const personalizedMessage = replacePlaceholders(messageContent, client)
 
-        // Send message via n8n
-        const instanceName = `user_${userId.substring(0, 8)}`
-        await sendMessage(instanceName, client.telefone, personalizedMessage)
+        // Send message via Venom-bot
+        const success = await sendMessage(userId, client.telefone, personalizedMessage)
+        
+        if (success) {
+          // Log the message
+          await supabase.from('whatsapp_message_logs').insert({
+            user_id: userId,
+            cliente_id: client.id,
+            phone_number: client.telefone,
+            message_type: 'bulk_campaign',
+            message_content: personalizedMessage,
+            campaign_id: campaignId,
+            status: 'sent'
+          })
 
-        // Log the message
-        await supabase.from('whatsapp_message_logs').insert({
-          user_id: userId,
-          cliente_id: client.id,
-          phone_number: client.telefone,
-          message_type: 'bulk_campaign',
-          message_content: personalizedMessage,
-          campaign_id: campaignId
-        })
-
-        sentCount++
+          sentCount++
+        } else {
+          // Log failed message
+          await supabase.from('whatsapp_message_logs').insert({
+            user_id: userId,
+            cliente_id: client.id,
+            phone_number: client.telefone,
+            message_type: 'bulk_campaign',
+            message_content: personalizedMessage,
+            campaign_id: campaignId,
+            status: 'failed'
+          })
+        }
 
         // Wait random interval before next message
         const interval = Math.floor(Math.random() * (sendIntervalMax - sendIntervalMin + 1)) + sendIntervalMin

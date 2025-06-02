@@ -6,8 +6,6 @@ import { sendTemplateMessage } from './actions/template-messaging.ts'
 import { schedulePaymentReminders } from './actions/billing-reminders.ts'
 import { processAutoResponse } from './actions/auto-response.ts'
 import { initializeWhatsApp, disconnectWhatsApp, getStatus } from './actions/connection-management.ts'
-import { handleWebhook } from './webhooks/handler.ts'
-import type { WebhookData } from './types.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -29,34 +27,14 @@ serve(async (req) => {
     const requestBody = await req.json()
     console.log('Request received:', JSON.stringify(requestBody, null, 2))
 
-    // Check if this is a webhook from Evolution API (via n8n)
-    const isWebhook = !!(
-      requestBody.event || 
-      requestBody.instance || 
-      requestBody.data ||
-      requestBody.destination ||
-      requestBody.server_url ||
-      requestBody.apikey ||
-      (!requestBody.action && !requestBody.userId && !requestBody.authToken)
-    )
-
-    if (isWebhook) {
-      console.log('Processing webhook from Evolution API via n8n')
-      const result = await handleWebhook(supabase, requestBody as WebhookData)
-      return new Response(
-        JSON.stringify(result),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // For non-webhook requests (user actions), require authentication
+    // All requests now require authentication (no more webhook handling)
     const { action, userId, authToken, ...data } = requestBody
 
     if (!authToken) {
-      throw new Error('Missing authentication token for user action')
+      throw new Error('Missing authentication token')
     }
 
-    // Validate user authentication for user actions
+    // Validate user authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser(authToken)
     if (authError || !user) {
       throw new Error('Unauthorized')
