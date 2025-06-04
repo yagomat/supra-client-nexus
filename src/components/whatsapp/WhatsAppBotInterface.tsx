@@ -45,13 +45,30 @@ export const WhatsAppBotInterface = () => {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="status" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="status">Status & Controle</TabsTrigger>
-          <TabsTrigger value="templates">Templates</TabsTrigger>
-          <TabsTrigger value="billing">Cobrança Automática</TabsTrigger>
-          <TabsTrigger value="bulk">Envio em Massa</TabsTrigger>
-          <TabsTrigger value="autoresponse">Auto-Resposta</TabsTrigger>
-          <TabsTrigger value="config">Configuração</TabsTrigger>
+        <TabsList className="h-auto w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1 p-1">
+          <TabsTrigger value="status" className="text-xs sm:text-sm px-2 py-2 h-auto">
+            <span className="hidden sm:inline">Status & Controle</span>
+            <span className="sm:hidden">Status</span>
+          </TabsTrigger>
+          <TabsTrigger value="templates" className="text-xs sm:text-sm px-2 py-2 h-auto">
+            Templates
+          </TabsTrigger>
+          <TabsTrigger value="billing" className="text-xs sm:text-sm px-2 py-2 h-auto">
+            <span className="hidden sm:inline">Cobrança Automática</span>
+            <span className="sm:hidden">Cobrança</span>
+          </TabsTrigger>
+          <TabsTrigger value="bulk" className="text-xs sm:text-sm px-2 py-2 h-auto">
+            <span className="hidden md:inline">Envio em Massa</span>
+            <span className="md:hidden">Massa</span>
+          </TabsTrigger>
+          <TabsTrigger value="autoresponse" className="text-xs sm:text-sm px-2 py-2 h-auto">
+            <span className="hidden md:inline">Auto-Resposta</span>
+            <span className="md:hidden">Auto</span>
+          </TabsTrigger>
+          <TabsTrigger value="config" className="text-xs sm:text-sm px-2 py-2 h-auto">
+            <span className="hidden sm:inline">Configuração</span>
+            <span className="sm:hidden">Config</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="status" className="space-y-6">
