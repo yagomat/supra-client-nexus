@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -42,7 +41,7 @@ export const AlertCards = ({ clientesInativos, appsVencendo, clientesEmRiscoDeta
         <CardHeader className="pb-2">
           <CardTitle className="text-lg font-medium flex items-center">
             <AlertTriangle className="h-5 w-5 mr-2 text-amber-500" />
-            Clientes em risco
+            Clientes vencendo
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -94,7 +93,7 @@ export const AlertCards = ({ clientesInativos, appsVencendo, clientesEmRiscoDeta
         <CardHeader className="pb-2">
           <CardTitle className="text-lg font-medium flex items-center">
             <Calendar className="h-5 w-5 mr-2 text-blue-500" />
-            Licenças vencendo
+            Apps com licenças vencendo
           </CardTitle>
         </CardHeader>
         <CardContent>
