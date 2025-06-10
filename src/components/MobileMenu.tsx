@@ -12,12 +12,11 @@ import {
 } from "@/components/ui/drawer";
 import {
   LayoutDashboard,
-  UserPlus,
   Users,
   CreditCard,
   Database,
+  Settings,
   LogOut,
-  MessageSquare,
   X
 } from "lucide-react";
 
@@ -32,29 +31,24 @@ export function MobileMenu() {
       icon: <LayoutDashboard size={20} />,
     },
     {
-      name: "Cadastrar Cliente",
-      href: "/clientes/cadastrar",
-      icon: <UserPlus size={20} />,
-    },
-    {
-      name: "Lista de Clientes",
+      name: "Clientes",
       href: "/clientes",
       icon: <Users size={20} />,
     },
     {
-      name: "Gestão de Pagamentos",
+      name: "Pagamentos",
       href: "/pagamentos",
       icon: <CreditCard size={20} />,
-    },
-    {
-      name: "WhatsApp",
-      href: "/whatsapp",
-      icon: <MessageSquare size={20} />,
     },
     {
       name: "Banco de Dados",
       href: "/banco-dados",
       icon: <Database size={20} />,
+    },
+    {
+      name: "Configurações",
+      href: "/configuracoes",
+      icon: <Settings size={20} />,
     },
   ];
 
@@ -63,14 +57,11 @@ export function MobileMenu() {
     // Exact match for paths like /dashboard, /pagamentos, etc.
     if (href === location.pathname) return true;
     
-    // Special case for /clientes/cadastrar - only match exact path
-    if (href === "/clientes/cadastrar") {
-      return location.pathname === "/clientes/cadastrar";
-    }
-    
-    // Special case for /clientes - only match exact path or editar route
+    // Special case for /clientes - match exact path or related routes
     if (href === "/clientes") {
-      return location.pathname === "/clientes" || location.pathname.startsWith("/clientes/editar");
+      return location.pathname === "/clientes" || 
+             location.pathname.startsWith("/clientes/cadastrar") ||
+             location.pathname.startsWith("/clientes/editar");
     }
     
     return false;
