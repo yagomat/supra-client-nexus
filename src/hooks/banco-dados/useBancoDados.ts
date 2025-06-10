@@ -35,8 +35,8 @@ export const useBancoDados = () => {
   } = useValoresPredefinidosActions({ valoresPredefinidos, setValoresPredefinidos });
   
   // Wrapper functions to simplify component usage and handle dialog state
-  const handleAddValue = async (value: string | number) => {
-    const result = await baseHandleAddValue(value, activeTab);
+  const handleAddValue = async (value: string | number, tabType: string) => {
+    const result = await baseHandleAddValue(value, tabType);
     if (result) {
       setIsAddDialogOpen(false);
     }

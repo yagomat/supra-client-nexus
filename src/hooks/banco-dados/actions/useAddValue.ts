@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { ValoresPredefinidos } from "@/types";
 import { ValorPredefinidoResponse } from "@/types/supabase-responses";
 import { addValorPredefinido, getValoresPredefinidosOrdered } from "@/services/valoresPredefinidosService/valoresPredefinidosActions";
@@ -18,6 +18,16 @@ export const useAddValue = (
     try {
       setSaving(true);
       
+      // Validar se o valor não está vazio
+      if (!newValueOrNumber || (typeof newValueOrNumber === 'string' && newValueOrNumber.trim() === '')) {
+        toast({
+          title: "Erro",
+          description: "Por favor, insira um valor válido.",
+          variant: "destructive",
+        });
+        return false;
+      }
+
       const result = await addValorPredefinido(activeTab, newValueOrNumber);
       const typedResult = result as unknown as ValorPredefinidoResponse;
       
@@ -34,14 +44,17 @@ export const useAddValue = (
       const updatedValues = await getValoresPredefinidosOrdered(activeTab);
       
       // Atualizar estado local com os valores ordenados do servidor
-      setValoresPredefinidos({
-        ...valoresPredefinidos,
-        [activeTab]: updatedValues || [],
+      setValoresPredefinidos(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          [activeTab]: updatedValues || [],
+        };
       });
       
       toast({
-        title: "Valor adicionado",
-        description: "O valor foi adicionado com sucesso.",
+        title: "Sucesso",
+        description: "Valor adicionado com sucesso.",
       });
       
       return true;
@@ -49,7 +62,7 @@ export const useAddValue = (
       console.error("Erro ao adicionar valor", error);
       toast({
         title: "Erro ao adicionar valor",
-        description: "Ocorreu um erro ao adicionar o valor. Por favor, tente novamente.",
+        description: "Ocorreu um erro ao adicionar o valor. Verifique sua conexão e tente novamente.",
         variant: "destructive",
       });
       return false;
