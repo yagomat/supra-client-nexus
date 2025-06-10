@@ -43,7 +43,7 @@ export const TableHeaderComponent = ({
             className="flex items-center font-medium -ml-2"
             onClick={() => handleSortToggle('nome')}
           >
-            Cliente
+            Nome
             {sortOrder === 'nome' ? (
               <ArrowDownIcon className="ml-2 h-4 w-4 opacity-70" />
             ) : null}

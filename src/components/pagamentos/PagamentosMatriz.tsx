@@ -57,7 +57,12 @@ export const PagamentosMatriz = ({
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="font-medium">Nome</TableHead>
-              <TableHead className="font-medium">Dia de Venc.</TableHead>
+              <TableHead>
+                <div className="leading-tight font-medium">
+                  <div>Dia de</div>
+                  <div>Venc.</div>
+                </div>
+              </TableHead>
               <TableHead className="font-medium">Status</TableHead>
               {displayMeses.map((mes) => (
                 <TableHead key={mes.value} className="text-center font-medium">

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil, Trash2, ArrowUpDown } from "lucide-react";
+import { Eye, Pencil, Trash2, ArrowDownIcon } from "lucide-react";
 import { Cliente } from "@/types";
 import { formatDate } from "@/utils/dateUtils";
 import { ClienteStatusBadge } from "./ClienteStatusBadge";
@@ -68,29 +68,44 @@ export const ClienteTable = ({
   );
   
   return (
-    <div className="rounded-md overflow-hidden border border-border/50 shadow-sm">
+    <div className="rounded-lg shadow-sm overflow-hidden border border-border/50">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead onClick={() => handleSortChange('data')} className="cursor-pointer">
-                <div className="flex items-center font-medium">
+              <TableHead>
+                <Button
+                  variant="ghost"
+                  className="flex items-center font-medium -ml-2"
+                  onClick={() => handleSortChange('data')}
+                >
                   Data de Cadastro
-                  {onSortChange && <ArrowUpDown className="ml-1 h-4 w-4 opacity-70" />}
-                  {sortOrder === 'data' && <span className="ml-1 text-primary">•</span>}
-                </div>
+                  {sortOrder === 'data' ? (
+                    <ArrowDownIcon className="ml-2 h-4 w-4 opacity-70" />
+                  ) : null}
+                </Button>
               </TableHead>
-              <TableHead onClick={() => handleSortChange('nome')} className="cursor-pointer">
-                <div className="flex items-center font-medium">
+              <TableHead>
+                <Button
+                  variant="ghost"
+                  className="flex items-center font-medium -ml-2"
+                  onClick={() => handleSortChange('nome')}
+                >
                   Nome
-                  {onSortChange && <ArrowUpDown className="ml-1 h-4 w-4 opacity-70" />}
-                  {sortOrder === 'nome' && <span className="ml-1 text-primary">•</span>}
-                </div>
+                  {sortOrder === 'nome' ? (
+                    <ArrowDownIcon className="ml-2 h-4 w-4 opacity-70" />
+                  ) : null}
+                </Button>
               </TableHead>
               <TableHead className="font-medium">Telefone</TableHead>
               <TableHead className="font-medium">UF</TableHead>
               <TableHead className="font-medium">Servidor</TableHead>
-              <TableHead className="whitespace-pre-line font-medium">Dia de{'\n'}Venc.</TableHead>
+              <TableHead>
+                <div className="leading-tight font-medium">
+                  <div>Dia de</div>
+                  <div>Venc.</div>
+                </div>
+              </TableHead>
               <TableHead className="font-medium">Plano</TableHead>
               <TableHead className="font-medium">Status</TableHead>
               <TableHead className="font-medium">Tela Principal</TableHead>
