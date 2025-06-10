@@ -22,7 +22,87 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   // Processar os dados para combinar dispositivos e aplicativos das telas principal e adicional
   const processedData = processDashboardData(data);
   
+  // Get detailed client risk information
+  const clientesRiscoDetalhes = await getClientesEmRiscoDetalhes(currentUser.user.id);
+  
+  // Add client risk details to the processed data
+  processedData.clientes_em_risco_detalhes = clientesRiscoDetalhes;
+  
   return processedData as unknown as DashboardStats;
+}
+
+// Nova função para obter detalhes dos clientes em risco
+async function getClientesEmRiscoDetalhes(userId: string) {
+  const { data, error } = await supabase
+    .from('clientes')
+    .select('id, nome, servidor, dia_vencimento')
+    .eq('user_id', userId)
+    .eq('status', 'ativo');
+
+  if (error) {
+    console.error("Erro ao buscar clientes em risco:", error);
+    return [];
+  }
+
+  if (!data) return [];
+
+  const hoje = new Date();
+  const diaAtual = hoje.getDate();
+  const mesAtual = hoje.getMonth() + 1;
+  const anoAtual = hoje.getFullYear();
+
+  // Calcular mês anterior
+  let mesAnterior = mesAtual - 1;
+  let anoAnterior = anoAtual;
+  if (mesAnterior === 0) {
+    mesAnterior = 12;
+    anoAnterior = anoAtual - 1;
+  }
+
+  const clientesEmRisco = [];
+
+  for (const cliente of data) {
+    // Verificar se pagou o mês atual
+    const { data: pagamentoAtual } = await supabase
+      .from('pagamentos')
+      .select('id')
+      .eq('cliente_id', cliente.id)
+      .eq('mes', mesAtual)
+      .eq('ano', anoAtual)
+      .in('status', ['pago', 'pago_confianca'])
+      .maybeSingle();
+
+    // Se já pagou o mês atual, não está em risco
+    if (pagamentoAtual) continue;
+
+    // Verificar se pagou o mês anterior
+    const { data: pagamentoAnterior } = await supabase
+      .from('pagamentos')
+      .select('id')
+      .eq('cliente_id', cliente.id)
+      .eq('mes', mesAnterior)
+      .eq('ano', anoAnterior)
+      .in('status', ['pago', 'pago_confianca'])
+      .maybeSingle();
+
+    // Se pagou o mês anterior e está dentro do prazo de vencimento
+    if (pagamentoAnterior && diaAtual <= cliente.dia_vencimento) {
+      const diasRestantes = cliente.dia_vencimento - diaAtual;
+      
+      // Se vence nos próximos 3 dias (inclusive hoje)
+      if (diasRestantes <= 3) {
+        clientesEmRisco.push({
+          id: cliente.id,
+          nome: cliente.nome,
+          servidor: cliente.servidor,
+          dias_restantes: diasRestantes
+        });
+      }
+    }
+  }
+
+  // Ordenar por dias restantes (menos dias primeiro)
+  return clientesEmRisco.sort((a, b) => a.dias_restantes - b.dias_restantes);
 }
 
 // Nova função para processar e combinar os dados de dispositivos e aplicativos

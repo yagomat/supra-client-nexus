@@ -1,3 +1,4 @@
+
 export type PaymentStatus = "pago" | "pago_confianca" | "nao_pago";
 
 export interface Cliente {
@@ -78,6 +79,7 @@ export interface DashboardStats {
   }[];
   clientes_inativos_proximos_dias: number;
   apps_vencendo_proximos_dias: AppVencendo[];
+  clientes_em_risco_detalhes?: ClienteEmRisco[];
 }
 
 export interface AppVencendo {
@@ -86,6 +88,13 @@ export interface AppVencendo {
   aplicativo: string;
   data_vencimento: string;
   tipo_tela: 'principal' | 'adicional';
+  dias_restantes: number;
+}
+
+export interface ClienteEmRisco {
+  id: string;
+  nome: string;
+  servidor: string;
   dias_restantes: number;
 }
 

@@ -29,6 +29,7 @@ export const DashboardContent = ({ stats, loading }: DashboardContentProps) => {
   // Create safe versions of new alert data
   const safeClientesInativos = stats?.clientes_inativos_proximos_dias || 0;
   const safeAppsVencendo = stats?.apps_vencendo_proximos_dias ? getSafeData(stats.apps_vencendo_proximos_dias) : [];
+  const safeClientesEmRiscoDetalhes = stats?.clientes_em_risco_detalhes ? getSafeData(stats.clientes_em_risco_detalhes) : [];
 
   return (
     <div className="flex flex-col space-y-4 w-full">
@@ -42,6 +43,7 @@ export const DashboardContent = ({ stats, loading }: DashboardContentProps) => {
       <AlertCards 
         clientesInativos={safeClientesInativos}
         appsVencendo={safeAppsVencendo}
+        clientesEmRiscoDetalhes={safeClientesEmRiscoDetalhes}
         loading={loading}
       />
 
