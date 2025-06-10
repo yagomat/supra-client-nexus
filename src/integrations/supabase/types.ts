@@ -297,6 +297,47 @@ export type Database = {
           updated_at: string | null
         }[]
       }
+      filter_pagamentos_with_clients: {
+        Args: {
+          p_cliente_id?: string
+          p_mes?: number
+          p_ano?: number
+          p_status?: string
+          p_user_id?: string
+          p_ordem?: string
+        }
+        Returns: {
+          id: string
+          cliente_id: string
+          mes: number
+          ano: number
+          status: string
+          data_pagamento: string
+          created_at: string
+          updated_at: string
+          cliente_nome: string
+          cliente_created_at: string
+          cliente_dia_vencimento: number
+          cliente_valor_plano: number
+          cliente_status: string
+          cliente_telefone: string
+          cliente_uf: string
+          cliente_servidor: string
+          cliente_dispositivo_smart: string
+          cliente_aplicativo: string
+          cliente_usuario_aplicativo: string
+          cliente_senha_aplicativo: string
+          cliente_data_licenca_aplicativo: string
+          cliente_possui_tela_adicional: boolean
+          cliente_dispositivo_smart_2: string
+          cliente_aplicativo_2: string
+          cliente_usuario_2: string
+          cliente_senha_2: string
+          cliente_data_licenca_2: string
+          cliente_observacoes: string
+          cliente_user_id: string
+        }[]
+      }
       get_dashboard_stats: {
         Args: { user_id_param: string }
         Returns: Json

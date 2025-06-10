@@ -1,8 +1,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { getClientes } from "@/services/clienteService";
-import { getPagamentos } from "@/services/pagamentoService";
+import { getPagamentosWithClients } from "@/services/pagamentoService";
 import { Cliente, Pagamento, ClienteComPagamentos } from "@/types";
 import { meses } from "./usePaymentFilters";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,9 +20,14 @@ export const useClientesPagamentos = () => {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const clientesData = await getClientes();
-      // Usar a função getPagamentos com filtro por ano e ordenação
-      const pagamentosData = await getPagamentos(undefined, undefined, anoAtual, undefined, sortOrder);
+      // Usar a nova função que retorna dados completos e já ordenados
+      const { pagamentos: pagamentosData, clientes: clientesData } = await getPagamentosWithClients(
+        undefined, 
+        undefined, 
+        anoAtual, 
+        undefined, 
+        sortOrder
+      );
       
       setClientes(clientesData);
       setPagamentos(pagamentosData);
@@ -120,7 +124,7 @@ export const useClientesPagamentos = () => {
     };
   }, [fetchData, toast]);
 
-  // Processar clientes e pagamentos
+  // Processar clientes e pagamentos (agora os clientes já vêm na ordem correta do backend)
   useEffect(() => {
     const clientesPagamentos = clientes.map((cliente) => {
       const clientePagamentos: Record<string, Pagamento> = {};
