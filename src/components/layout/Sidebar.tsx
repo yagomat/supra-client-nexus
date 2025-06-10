@@ -9,13 +9,15 @@ import {
   CreditCard, 
   Settings,
   Menu,
-  X
+  X,
+  Database
 } from "lucide-react";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
   { name: "Clientes", href: "/clientes", icon: Users },
   { name: "Pagamentos", href: "/pagamentos", icon: CreditCard },
+  { name: "Banco de Dados", href: "/banco-dados", icon: Database },
   { name: "Configurações", href: "/configuracoes", icon: Settings },
 ];
 

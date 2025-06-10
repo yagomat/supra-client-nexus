@@ -6,7 +6,6 @@ import {
   Users, 
   CreditCard, 
   Database, 
-  MessageSquare, 
   Settings,
   ChevronLeft, 
   ChevronRight
@@ -35,7 +34,6 @@ export function SidebarMenu({ onCollapseChange }: { onCollapseChange?: (collapse
     { path: "/clientes", icon: <Users />, text: "Clientes" },
     { path: "/pagamentos", icon: <CreditCard />, text: "Pagamentos" },
     { path: "/banco-dados", icon: <Database />, text: "Banco de Dados" },
-    { path: "/whatsapp", icon: <MessageSquare />, text: "WhatsApp" },
     { path: "/configuracoes", icon: <Settings />, text: "Configurações" }
   ];
 

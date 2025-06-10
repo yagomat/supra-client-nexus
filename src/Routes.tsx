@@ -10,7 +10,6 @@ import EditarCliente from "./pages/EditarCliente";
 import ListaClientes from "./pages/ListaClientes";
 import GestaoPagamentos from "./pages/GestaoPagamentos";
 import BancoDados from "./pages/BancoDados";
-import WhatsappMessenger from "./pages/WhatsappMessenger";
 import Configuracoes from "./pages/Configuracoes";
 import NotFound from "./pages/NotFound";
 import { SessionExpireAlert } from "./components/SessionExpireAlert";
@@ -59,7 +58,6 @@ export const AppRoutes = () => {
       <Route path="/clientes/cadastrar" element={<PrivateRoute><CadastrarCliente /></PrivateRoute>} />
       <Route path="/clientes/editar/:id" element={<PrivateRoute><EditarCliente /></PrivateRoute>} />
       <Route path="/pagamentos" element={<PrivateRoute><GestaoPagamentos /></PrivateRoute>} />
-      <Route path="/whatsapp" element={<PrivateRoute><WhatsappMessenger /></PrivateRoute>} />
       <Route path="/banco-dados" element={<PrivateRoute><BancoDados /></PrivateRoute>} />
       <Route path="/configuracoes" element={<PrivateRoute><Configuracoes /></PrivateRoute>} />
       
