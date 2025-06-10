@@ -36,17 +36,17 @@ export const TabsContainer = ({ activeTab, onTabChange, valoresPredefinidos, onD
       onValueChange={onTabChange}
       className="pt-4"
     >
-      {/* Mobile view: sticky horizontal scroll tabs */}
+      {/* Mobile view: grid layout without scroll */}
       {isMobile ? (
         <div className="space-y-6">
           <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pb-2">
-            <TabsList className="flex w-full overflow-x-auto">
-              <TabsTrigger value="ufs" className="min-w-fit">UF</TabsTrigger>
-              <TabsTrigger value="servidores" className="min-w-fit">Servidores</TabsTrigger>
-              <TabsTrigger value="dias_vencimento" className="min-w-fit">Vencimentos</TabsTrigger>
-              <TabsTrigger value="valores_plano" className="min-w-fit">Plano</TabsTrigger>
-              <TabsTrigger value="dispositivos_smart" className="min-w-fit">Dispositivos</TabsTrigger>
-              <TabsTrigger value="aplicativos" className="min-w-fit">Aplicativos</TabsTrigger>
+            <TabsList className="grid grid-cols-2 gap-1 h-auto p-1">
+              <TabsTrigger value="ufs" className="text-xs px-2 py-2">UF</TabsTrigger>
+              <TabsTrigger value="servidores" className="text-xs px-2 py-2">Servidores</TabsTrigger>
+              <TabsTrigger value="dias_vencimento" className="text-xs px-2 py-2">Vencimentos</TabsTrigger>
+              <TabsTrigger value="valores_plano" className="text-xs px-2 py-2">Plano</TabsTrigger>
+              <TabsTrigger value="dispositivos_smart" className="text-xs px-2 py-2">Dispositivos</TabsTrigger>
+              <TabsTrigger value="aplicativos" className="text-xs px-2 py-2">Aplicativos</TabsTrigger>
             </TabsList>
           </div>
           {/* Content with proper spacing for mobile */}
