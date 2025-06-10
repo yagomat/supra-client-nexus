@@ -23,3 +23,6 @@ BEGIN
   PERFORM pg_catalog.pg_advisory_unlock(42);
 END;
 $$;
+
+-- Execute the function to enable realtime
+SELECT public.enable_realtime_for_clients();
