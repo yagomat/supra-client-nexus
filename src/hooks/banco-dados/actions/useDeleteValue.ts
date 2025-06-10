@@ -1,9 +1,10 @@
 
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { ValoresPredefinidos } from "@/types";
 import { ValorPredefinidoResponse } from "@/types/supabase-responses";
-import { deleteValorPredefinido, getValoresPredefinidosOrdered } from "@/services/valoresPredefinidosService/valoresPredefinidosActions";
+import { deleteValorPredefinido } from "@/services/valoresPredefinidosService/valoresPredefinidosActions";
+import { convertToSingularType } from "@/services/valoresPredefinidosService/utils";
 
 export const useDeleteValue = (
   valoresPredefinidos: ValoresPredefinidos | null,
@@ -12,13 +13,16 @@ export const useDeleteValue = (
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
-  const handleDeleteValue = async (type: string, value: string | number) => {
+  const handleDeleteValue = async (activeTab: string, valueToDelete: string | number) => {
     if (!valoresPredefinidos) return false;
     
     try {
       setSaving(true);
       
-      const result = await deleteValorPredefinido(type, value);
+      // Converter tipo para formato singular
+      const singularType = convertToSingularType(activeTab as keyof ValoresPredefinidos);
+      
+      const result = await deleteValorPredefinido(singularType, valueToDelete);
       const typedResult = result as unknown as ValorPredefinidoResponse;
       
       if (!typedResult.success) {
@@ -30,18 +34,26 @@ export const useDeleteValue = (
         return false;
       }
       
-      // Buscar valores atualizados diretamente do servidor (já ordenados)
-      const updatedValues = await getValoresPredefinidosOrdered(type);
-      
-      // Atualizar estado local com os valores ordenados do servidor
-      setValoresPredefinidos({
-        ...valoresPredefinidos,
-        [type]: updatedValues || [],
+      // Atualizar estado local imediatamente
+      setValoresPredefinidos(prev => {
+        if (!prev) return prev;
+        
+        const newValues = { ...prev };
+        const tabKey = activeTab as keyof ValoresPredefinidos;
+        
+        // Remover o valor do array correspondente
+        if (tabKey === 'dias_vencimento' || tabKey === 'valores_plano') {
+          newValues[tabKey] = (newValues[tabKey] as number[]).filter(v => v !== Number(valueToDelete));
+        } else {
+          (newValues[tabKey] as string[]) = (newValues[tabKey] as string[]).filter(v => v !== String(valueToDelete));
+        }
+        
+        return newValues;
       });
       
       toast({
-        title: "Valor excluído",
-        description: "O valor foi excluído com sucesso.",
+        title: "Sucesso",
+        description: "Valor excluído com sucesso.",
       });
       
       return true;
@@ -49,7 +61,7 @@ export const useDeleteValue = (
       console.error("Erro ao excluir valor", error);
       toast({
         title: "Erro ao excluir valor",
-        description: "Ocorreu um erro ao excluir o valor. Por favor, tente novamente.",
+        description: "Ocorreu um erro ao excluir o valor. Verifique sua conexão e tente novamente.",
         variant: "destructive",
       });
       return false;

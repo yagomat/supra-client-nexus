@@ -27,9 +27,9 @@ export function convertToSingularType(tipo: keyof ValoresPredefinidos): string {
  * Organiza todos os arrays em ValoresPredefinidos
  */
 export function sortValoresPredefinidos(valoresPredefinidos: ValoresPredefinidos): void {
-  // Ordenar arrays numéricos
-  valoresPredefinidos.dias_vencimento.sort((a, b) => a - b);
-  valoresPredefinidos.valores_plano.sort((a, b) => a - b);
+  // Ordenar arrays numéricos numericamente (não alfabeticamente)
+  valoresPredefinidos.dias_vencimento.sort((a, b) => Number(a) - Number(b));
+  valoresPredefinidos.valores_plano.sort((a, b) => Number(a) - Number(b));
   
   // Ordenar arrays de strings em ordem alfabética
   valoresPredefinidos.ufs.sort();

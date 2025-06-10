@@ -3,7 +3,8 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ValoresPredefinidos } from "@/types";
 import { ValorPredefinidoResponse } from "@/types/supabase-responses";
-import { addValorPredefinido, getValoresPredefinidosOrdered } from "@/services/valoresPredefinidosService/valoresPredefinidosActions";
+import { addValorPredefinido } from "@/services/valoresPredefinidosService/valoresPredefinidosActions";
+import { convertToSingularType } from "@/services/valoresPredefinidosService/utils";
 
 export const useAddValue = (
   valoresPredefinidos: ValoresPredefinidos | null,
@@ -28,7 +29,10 @@ export const useAddValue = (
         return false;
       }
 
-      const result = await addValorPredefinido(activeTab, newValueOrNumber);
+      // Converter tipo para formato singular
+      const singularType = convertToSingularType(activeTab as keyof ValoresPredefinidos);
+      
+      const result = await addValorPredefinido(singularType, newValueOrNumber);
       const typedResult = result as unknown as ValorPredefinidoResponse;
       
       if (!typedResult.success) {
@@ -40,16 +44,26 @@ export const useAddValue = (
         return false;
       }
       
-      // Buscar valores atualizados diretamente do servidor (já ordenados)
-      const updatedValues = await getValoresPredefinidosOrdered(activeTab);
-      
-      // Atualizar estado local com os valores ordenados do servidor
+      // Atualizar estado local imediatamente
       setValoresPredefinidos(prev => {
         if (!prev) return prev;
-        return {
-          ...prev,
-          [activeTab]: updatedValues || [],
-        };
+        
+        const newValues = { ...prev };
+        const tabKey = activeTab as keyof ValoresPredefinidos;
+        
+        // Adicionar o novo valor ao array correspondente
+        if (tabKey === 'dias_vencimento') {
+          const numericValue = Number(newValueOrNumber);
+          newValues[tabKey] = [...newValues[tabKey], numericValue].sort((a, b) => Number(a) - Number(b));
+        } else if (tabKey === 'valores_plano') {
+          const numericValue = Number(newValueOrNumber);
+          newValues[tabKey] = [...newValues[tabKey], numericValue].sort((a, b) => Number(a) - Number(b));
+        } else {
+          const stringValue = String(newValueOrNumber);
+          (newValues[tabKey] as string[]) = [...(newValues[tabKey] as string[]), stringValue].sort();
+        }
+        
+        return newValues;
       });
       
       toast({
