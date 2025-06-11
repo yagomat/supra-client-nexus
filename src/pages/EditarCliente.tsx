@@ -35,8 +35,8 @@ const EditarCliente = () => {
 
   return (
     <DashboardLayout title="Editar Cliente">
-      <div className="px-4 md:px-6 py-4 md:py-6 space-y-6">
-        <div className="flex flex-col space-y-2">
+      <div className="space-y-6">
+        <div>
           <p className="text-muted-foreground">
             Edite as informações do cliente.
           </p>

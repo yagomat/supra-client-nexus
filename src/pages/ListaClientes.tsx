@@ -36,24 +36,26 @@ const ListaClientes = () => {
   } = useClienteList();
 
   return (
-    <DashboardLayout title="Lista de Clientes">
-      <ClienteListContent 
-        loading={loading}
-        filteredClientes={filteredClientes}
-        allClientes={clientes}  // Passamos todos os clientes para exportação
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-        handleLimparFiltros={handleLimparFiltros}
-        verDetalhes={verDetalhes}
-        verTelaAdicional={verTelaAdicional}
-        verObservacoes={verObservacoes}
-        confirmarExclusao={confirmarExclusao}
-        sortOrder={sortOrder}
-        onSortChange={handleSortChange}
-        onImportSuccess={fetchClientes}  // Para atualizar após importação
-      />
+    <DashboardLayout title="Clientes">
+      <div className="space-y-6">
+        <ClienteListContent 
+          loading={loading}
+          filteredClientes={filteredClientes}
+          allClientes={clientes}  // Passamos todos os clientes para exportação
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          handleLimparFiltros={handleLimparFiltros}
+          verDetalhes={verDetalhes}
+          verTelaAdicional={verTelaAdicional}
+          verObservacoes={verObservacoes}
+          confirmarExclusao={confirmarExclusao}
+          sortOrder={sortOrder}
+          onSortChange={handleSortChange}
+          onImportSuccess={fetchClientes}  // Para atualizar após importação
+        />
+      </div>
 
       <ClienteModals 
         clienteDetalhes={clienteDetalhes}

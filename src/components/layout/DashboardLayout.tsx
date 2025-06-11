@@ -5,7 +5,7 @@ import { MobileMenu } from "@/components/MobileMenu";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Settings, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -27,11 +27,6 @@ export function DashboardLayout({ children, className, title }: DashboardLayoutP
     setSidebarCollapsed(collapsed);
   };
 
-  // Navigate to settings page
-  const handleSettingsClick = () => {
-    navigate("/configuracoes");
-  };
-
   return (
     <div className="flex h-screen bg-background">
       {/* Only show sidebar in desktop mode */}
@@ -50,15 +45,6 @@ export function DashboardLayout({ children, className, title }: DashboardLayoutP
               {title && <h1 className="text-xl font-bold ml-4">{title}</h1>}
             </div>
             <div className="flex items-center gap-1">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={handleSettingsClick} 
-                title="Configurações"
-              >
-                <Settings className="h-[1.2rem] w-[1.2rem]" />
-                <span className="sr-only">Configurações</span>
-              </Button>
               <ThemeToggle />
               <Button 
                 variant="ghost" 
@@ -75,15 +61,6 @@ export function DashboardLayout({ children, className, title }: DashboardLayoutP
           <div className="flex justify-between items-center container px-4 pt-2">
             {title && <h1 className="text-2xl font-bold">{title}</h1>}
             <div className="flex items-center gap-1 ml-auto">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={handleSettingsClick} 
-                title="Configurações"
-              >
-                <Settings className="h-[1.2rem] w-[1.2rem]" />
-                <span className="sr-only">Configurações</span>
-              </Button>
               <ThemeToggle />
               <Button 
                 variant="ghost" 

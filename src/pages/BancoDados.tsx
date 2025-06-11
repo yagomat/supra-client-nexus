@@ -32,9 +32,9 @@ const BancoDados = () => {
 
   return (
     <DashboardLayout title="Banco de Dados">
-      <div className="flex flex-col space-y-6">
+      <div className="space-y-6">
         <div>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-muted-foreground">
             Gerencie os valores predefinidos utilizados no sistema.
           </p>
         </div>

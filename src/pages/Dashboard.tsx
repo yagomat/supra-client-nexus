@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { getDashboardStats } from "@/services/dashboardService";
@@ -72,7 +73,7 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout title="Dashboard">
-      <div className="flex flex-col space-y-4">
+      <div className="space-y-6">
         <DashboardContent stats={stats} loading={loading} />
       </div>
     </DashboardLayout>

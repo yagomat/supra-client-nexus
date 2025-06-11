@@ -4,7 +4,10 @@ import { ClienteTable } from "@/components/clientes/ClienteTable";
 import { EmptyState } from "@/components/clientes/EmptyState";
 import { LoadingState } from "@/components/clientes/LoadingState";
 import { ClienteFilters } from "@/components/clientes/ClienteFilters";
-import { ClienteListHeader } from "@/components/clientes/ClienteListHeader";
+import { ClienteExcelButtons } from "@/components/clientes/ClienteExcelButtons";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { UserPlus } from "lucide-react";
 import { Cliente } from "@/types";
 
 interface ClienteListContentProps {
@@ -42,6 +45,8 @@ export const ClienteListContent = ({
   onSortChange,
   onImportSuccess
 }: ClienteListContentProps) => {
+  const navigate = useNavigate();
+  
   // Estado para controlar a paginação
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -70,11 +75,22 @@ export const ClienteListContent = ({
   };
 
   return (
-    <div className="flex flex-col space-y-4">
-      <ClienteListHeader 
-        clientes={allClientes}
-        onImportSuccess={onImportSuccess}
-      />
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <p className="text-muted-foreground">Gerencie seus clientes</p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <ClienteExcelButtons 
+            clientes={allClientes} 
+            onImportSuccess={onImportSuccess} 
+          />
+          <Button onClick={() => navigate("/clientes/cadastrar")}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Novo Cliente
+          </Button>
+        </div>
+      </div>
 
       <ClienteFilters 
         searchTerm={searchTerm}
