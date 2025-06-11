@@ -13,9 +13,10 @@ import { useNavigate } from "react-router-dom";
 interface DashboardLayoutProps {
   children: ReactNode;
   className?: string;
+  title?: string;
 }
 
-export function DashboardLayout({ children, className }: DashboardLayoutProps) {
+export function DashboardLayout({ children, className, title }: DashboardLayoutProps) {
   const isMobile = useIsMobile();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { signOut } = useAuth();
@@ -46,6 +47,7 @@ export function DashboardLayout({ children, className }: DashboardLayoutProps) {
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center">
               <MobileMenu />
+              {title && <h1 className="text-xl font-bold ml-4">{title}</h1>}
             </div>
             <div className="flex items-center gap-1">
               <Button 
@@ -70,8 +72,9 @@ export function DashboardLayout({ children, className }: DashboardLayoutProps) {
             </div>
           </div>
         ) : (
-          <div className="flex justify-end container px-4 pt-2">
-            <div className="flex items-center gap-1">
+          <div className="flex justify-between items-center container px-4 pt-2">
+            {title && <h1 className="text-2xl font-bold">{title}</h1>}
+            <div className="flex items-center gap-1 ml-auto">
               <Button 
                 variant="ghost" 
                 size="icon" 

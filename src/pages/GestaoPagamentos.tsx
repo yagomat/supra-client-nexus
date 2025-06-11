@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,10 +38,9 @@ const GestaoPagamentos = () => {
   };
 
   return (
-    <DashboardLayout>
+    <DashboardLayout title="Gestão de Pagamentos">
       <div className="flex flex-col space-y-4 md:space-y-6 px-2 md:px-0">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Gestão de Pagamentos</h1>
           <p className="text-sm md:text-base text-muted-foreground mt-2">
             Gerencie os pagamentos dos clientes e acompanhe seu status.
           </p>
