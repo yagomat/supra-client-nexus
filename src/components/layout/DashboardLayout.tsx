@@ -46,7 +46,6 @@ export function DashboardLayout({ children, className }: DashboardLayoutProps) {
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center">
               <MobileMenu />
-              <h1 className="text-xl font-bold ml-4">Gestão de Clientes</h1>
             </div>
             <div className="flex items-center gap-1">
               <Button 

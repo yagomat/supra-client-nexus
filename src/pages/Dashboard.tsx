@@ -74,9 +74,7 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="flex flex-col space-y-4">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        </div>
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <DashboardContent stats={stats} loading={loading} />
       </div>
     </DashboardLayout>
