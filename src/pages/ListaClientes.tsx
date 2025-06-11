@@ -36,7 +36,7 @@ const ListaClientes = () => {
   } = useClienteList();
 
   return (
-    <DashboardLayout>
+    <DashboardLayout title="Lista de Clientes">
       <ClienteListContent 
         loading={loading}
         filteredClientes={filteredClientes}

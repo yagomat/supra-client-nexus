@@ -25,7 +25,7 @@ const EditarCliente = () => {
 
   if (loading) {
     return (
-      <DashboardLayout>
+      <DashboardLayout title="Editar Cliente">
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
@@ -34,10 +34,9 @@ const EditarCliente = () => {
   }
 
   return (
-    <DashboardLayout>
+    <DashboardLayout title="Editar Cliente">
       <div className="px-4 md:px-6 py-4 md:py-6 space-y-6">
         <div className="flex flex-col space-y-2">
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Editar Cliente</h1>
           <p className="text-muted-foreground">
             Edite as informações do cliente.
           </p>

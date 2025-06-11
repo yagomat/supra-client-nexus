@@ -29,9 +29,8 @@ const CadastrarCliente = () => {
 
   if (loading) {
     return (
-      <DashboardLayout>
+      <DashboardLayout title="Cadastrar Cliente">
         <div className="flex flex-col space-y-4">
-          <h1 className="text-3xl font-bold tracking-tight">Cadastrar Cliente</h1>
           <div className="flex items-center justify-center h-64">
             <Loader2 className="mr-2 h-8 w-8 animate-spin text-primary" />
             <span className="text-lg">Carregando...</span>
@@ -42,9 +41,8 @@ const CadastrarCliente = () => {
   }
 
   return (
-    <DashboardLayout>
+    <DashboardLayout title="Cadastrar Cliente">
       <div className="flex flex-col space-y-4">
-        <h1 className="text-3xl font-bold tracking-tight">Cadastrar Cliente</h1>
         <p className="text-muted-foreground">
           Preencha os campos abaixo para cadastrar um novo cliente.
         </p>

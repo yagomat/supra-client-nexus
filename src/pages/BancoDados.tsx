@@ -31,10 +31,9 @@ const BancoDados = () => {
   } = useBancoDados();
 
   return (
-    <DashboardLayout>
+    <DashboardLayout title="Banco de Dados">
       <div className="flex flex-col space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Banco de Dados</h1>
           <p className="text-muted-foreground mt-2">
             Gerencie os valores predefinidos utilizados no sistema.
           </p>
