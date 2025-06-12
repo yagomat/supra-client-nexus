@@ -46,7 +46,7 @@ export function SidebarMenu({ onCollapseChange }: { onCollapseChange?: (collapse
       <div className={`flex items-center p-4 ${isCollapsed ? "justify-center" : "justify-between"}`}>
         {!isCollapsed && (
           <span className="text-xl font-semibold text-white">
-            Gerenciador
+            Gestor Connect
           </span>
         )}
         <button 

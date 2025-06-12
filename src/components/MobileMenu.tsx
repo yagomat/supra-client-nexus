@@ -84,7 +84,7 @@ export function MobileMenu() {
           <div className="flex h-full flex-col bg-sidebar">
             <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
               <div className="text-white font-bold">
-                Gestão de Clientes
+                Gestor Connect
               </div>
               <DrawerClose asChild>
                 <Button
