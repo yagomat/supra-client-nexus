@@ -6,6 +6,7 @@ import { ValorPredefinidoResponse } from "@/types/supabase-responses";
 import { addValorPredefinido } from "@/services/valoresPredefinidosService/valoresPredefinidosActions";
 import { convertToSingularType } from "@/services/valoresPredefinidosService/utils";
 import { validateMultipleValues, generateValuePreview } from "../utils/multipleValueUtils";
+import { normalizeValueForDatabase } from "../utils/valueNormalization";
 
 export const useAddValue = (
   valoresPredefinidos: ValoresPredefinidos | null,
@@ -52,7 +53,11 @@ export const useAddValue = (
 
       for (const value of validationResult.values) {
         try {
-          const result = await addValorPredefinido(singularType, value);
+          // Normalizar o valor antes de enviar para o banco
+          const normalizedValue = normalizeValueForDatabase(value, singularType);
+          console.log(`Adicionando valor normalizado: "${normalizedValue}" (original: "${value}") do tipo: ${singularType}`);
+          
+          const result = await addValorPredefinido(singularType, normalizedValue);
           const typedResult = result as unknown as ValorPredefinidoResponse;
           
           if (typedResult.success) {
@@ -95,6 +100,7 @@ export const useAddValue = (
         } catch (error) {
           errorCount++;
           errors.push(`${value}: Erro ao adicionar`);
+          console.error(`Erro ao adicionar valor ${value}:`, error);
         }
       }
       

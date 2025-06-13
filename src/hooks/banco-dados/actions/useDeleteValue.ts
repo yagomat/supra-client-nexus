@@ -5,6 +5,7 @@ import { ValoresPredefinidos } from "@/types";
 import { ValorPredefinidoResponse } from "@/types/supabase-responses";
 import { deleteValorPredefinido } from "@/services/valoresPredefinidosService/valoresPredefinidosActions";
 import { convertToSingularType } from "@/services/valoresPredefinidosService/utils";
+import { normalizeValueForDatabase } from "../utils/valueNormalization";
 
 export const useDeleteValue = (
   valoresPredefinidos: ValoresPredefinidos | null,
@@ -22,10 +23,26 @@ export const useDeleteValue = (
       // Converter tipo para formato singular
       const singularType = convertToSingularType(activeTab as keyof ValoresPredefinidos);
       
-      const result = await deleteValorPredefinido(singularType, valueToDelete);
+      // Normalizar o valor para o formato do banco de dados
+      let normalizedValue: string;
+      try {
+        normalizedValue = normalizeValueForDatabase(valueToDelete, singularType);
+        console.log(`Tentando excluir valor normalizado: "${normalizedValue}" (original: "${valueToDelete}") do tipo: ${singularType}`);
+      } catch (error) {
+        console.error("Erro ao normalizar valor para exclusão:", error);
+        toast({
+          title: "Erro na normalização",
+          description: "Não foi possível normalizar o valor para exclusão.",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      const result = await deleteValorPredefinido(singularType, normalizedValue);
       const typedResult = result as unknown as ValorPredefinidoResponse;
       
       if (!typedResult.success) {
+        console.error(`Erro na exclusão: ${typedResult.message}`);
         toast({
           title: "Erro ao excluir valor",
           description: typedResult.message,
