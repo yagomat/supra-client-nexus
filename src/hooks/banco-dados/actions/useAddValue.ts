@@ -5,6 +5,7 @@ import { ValoresPredefinidos } from "@/types";
 import { ValorPredefinidoResponse } from "@/types/supabase-responses";
 import { addValorPredefinido } from "@/services/valoresPredefinidosService/valoresPredefinidosActions";
 import { convertToSingularType } from "@/services/valoresPredefinidosService/utils";
+import { validateMultipleValues, generateValuePreview } from "../utils/multipleValueUtils";
 
 export const useAddValue = (
   valoresPredefinidos: ValoresPredefinidos | null,
@@ -29,49 +30,102 @@ export const useAddValue = (
         return false;
       }
 
-      // Converter tipo para formato singular
-      const singularType = convertToSingularType(activeTab as keyof ValoresPredefinidos);
+      // Validar múltiplos valores
+      const validationResult = validateMultipleValues(newValueOrNumber, activeTab);
       
-      const result = await addValorPredefinido(singularType, newValueOrNumber);
-      const typedResult = result as unknown as ValorPredefinidoResponse;
-      
-      if (!typedResult.success) {
+      if (!validationResult.isValid) {
         toast({
-          title: "Erro ao adicionar valor",
-          description: typedResult.message,
+          title: "Erro ao validar valores",
+          description: validationResult.errors.join("; "),
           variant: "destructive",
         });
         return false;
       }
+
+      // Converter tipo para formato singular
+      const singularType = convertToSingularType(activeTab as keyof ValoresPredefinidos);
       
-      // Atualizar estado local imediatamente
-      setValoresPredefinidos(prev => {
-        if (!prev) return prev;
+      // Adicionar cada valor individualmente
+      let addedCount = 0;
+      let errorCount = 0;
+      const errors: string[] = [];
+
+      for (const value of validationResult.values) {
+        try {
+          const result = await addValorPredefinido(singularType, value);
+          const typedResult = result as unknown as ValorPredefinidoResponse;
+          
+          if (typedResult.success) {
+            addedCount++;
+            
+            // Atualizar estado local imediatamente
+            setValoresPredefinidos(prev => {
+              if (!prev) return prev;
+              
+              const newValues = { ...prev };
+              const tabKey = activeTab as keyof ValoresPredefinidos;
+              
+              // Adicionar o novo valor ao array correspondente
+              if (tabKey === 'dias_vencimento') {
+                const numericValue = Number(value);
+                if (!newValues[tabKey].includes(numericValue)) {
+                  newValues[tabKey] = [...newValues[tabKey], numericValue].sort((a, b) => Number(a) - Number(b));
+                }
+              } else if (tabKey === 'valores_plano') {
+                const numericValue = Number(value);
+                if (!newValues[tabKey].includes(numericValue)) {
+                  newValues[tabKey] = [...newValues[tabKey], numericValue].sort((a, b) => Number(a) - Number(b));
+                }
+              } else {
+                const stringValue = String(value);
+                const currentArray = newValues[tabKey] as string[];
+                if (!currentArray.includes(stringValue)) {
+                  (newValues[tabKey] as string[]) = [...currentArray, stringValue].sort();
+                }
+              }
+              
+              return newValues;
+            });
+          } else {
+            if (typedResult.message !== 'Valor já existe') {
+              errorCount++;
+              errors.push(`${value}: ${typedResult.message}`);
+            }
+          }
+        } catch (error) {
+          errorCount++;
+          errors.push(`${value}: Erro ao adicionar`);
+        }
+      }
+      
+      // Feedback para o usuário
+      if (addedCount > 0) {
+        const preview = generateValuePreview(validationResult.values.slice(0, addedCount));
+        let message = "";
         
-        const newValues = { ...prev };
-        const tabKey = activeTab as keyof ValoresPredefinidos;
-        
-        // Adicionar o novo valor ao array correspondente
-        if (tabKey === 'dias_vencimento') {
-          const numericValue = Number(newValueOrNumber);
-          newValues[tabKey] = [...newValues[tabKey], numericValue].sort((a, b) => Number(a) - Number(b));
-        } else if (tabKey === 'valores_plano') {
-          const numericValue = Number(newValueOrNumber);
-          newValues[tabKey] = [...newValues[tabKey], numericValue].sort((a, b) => Number(a) - Number(b));
+        if (validationResult.totalCount === 1) {
+          message = "Valor adicionado com sucesso.";
+        } else if (addedCount === validationResult.validCount) {
+          message = `${addedCount} valores adicionados com sucesso: ${preview}`;
         } else {
-          const stringValue = String(newValueOrNumber);
-          (newValues[tabKey] as string[]) = [...(newValues[tabKey] as string[]), stringValue].sort();
+          message = `${addedCount} de ${validationResult.validCount} valores adicionados: ${preview}`;
         }
         
-        return newValues;
-      });
+        toast({
+          title: "Sucesso",
+          description: message,
+        });
+      }
       
-      toast({
-        title: "Sucesso",
-        description: "Valor adicionado com sucesso.",
-      });
+      if (errorCount > 0 && validationResult.errors.length === 0) {
+        toast({
+          title: "Alguns valores não foram adicionados",
+          description: errors.join("; "),
+          variant: "destructive",
+        });
+      }
       
-      return true;
+      return addedCount > 0;
     } catch (error) {
       console.error("Erro ao adicionar valor", error);
       toast({

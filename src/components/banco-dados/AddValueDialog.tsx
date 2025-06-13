@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
+import { parseMultipleValues, generateValuePreview } from "@/hooks/banco-dados/utils/multipleValueUtils";
 
 interface AddValueDialogProps {
   isOpen: boolean;
@@ -43,14 +44,22 @@ export const AddValueDialog = ({ isOpen, onOpenChange, onAdd, activeTab, saving 
     let valueToAdd: string | number;
     
     if (["dias_vencimento"].includes(selectedTab)) {
-      if (!newNumericValue || isNaN(Number(newNumericValue))) {
+      if (!newNumericValue) {
         return;
       }
-      valueToAdd = parseInt(newNumericValue);
+      // Para dias de vencimento, verificar se contém múltiplos valores
+      if (newNumericValue.includes(';')) {
+        valueToAdd = newNumericValue;
+      } else {
+        const numValue = parseInt(newNumericValue);
+        if (isNaN(numValue)) return;
+        valueToAdd = numValue;
+      }
     } else if (selectedTab === "valores_plano") {
-      if (!newNumericValue || isNaN(Number(newNumericValue))) {
+      if (!newNumericValue) {
         return;
       }
+      // Para valores de plano, aceitar múltiplos valores ou valor único
       valueToAdd = newNumericValue;
     } else {
       if (!newValue.trim()) {
@@ -68,13 +77,19 @@ export const AddValueDialog = ({ isOpen, onOpenChange, onAdd, activeTab, saving 
   const getInputPlaceholder = () => {
     switch (selectedTab) {
       case "ufs":
-        return "Digite a UF (máx. 2 caracteres)";
+        return "Ex: SP;RJ;MG (máx. 10 valores, separados por ;)";
       case "dias_vencimento":
-        return "Ex: 10 (entre 1 e 31)";
+        return "Ex: 10;15;20 (entre 1 e 31, máx. 10 valores)";
       case "valores_plano":
-        return "Ex: 49.9";
+        return "Ex: 49.9;99.9;199.9 (máx. R$ 1.000, 10 valores)";
+      case "servidores":
+        return "Ex: Servidor1;Servidor2 (máx. 25 chars, 10 valores)";
+      case "dispositivos_smart":
+        return "Ex: TV Box;Smart TV (máx. 25 chars, 10 valores)";
+      case "aplicativos":
+        return "Ex: Netflix;YouTube (máx. 25 chars, 10 valores)";
       default:
-        return "Digite o valor (máx. 25 caracteres)";
+        return "Digite o valor (máx. 10 valores, separados por ;)";
     }
   };
 
@@ -84,19 +99,33 @@ export const AddValueDialog = ({ isOpen, onOpenChange, onAdd, activeTab, saving 
   };
 
   const getMaxLength = () => {
+    // Considerando múltiplos valores, aumentar o limite
     switch (selectedTab) {
       case "ufs":
-        return 2;
+        return 50; // 10 UFs com 2 chars + separadores
       case "valores_plano":
-        return 4;
+      case "dias_vencimento":
+        return 100; // Números e separadores
       default:
-        return 25;
+        return 300; // 10 valores com 25 chars + separadores
     }
   };
 
   const isNumericInput = ["dias_vencimento", "valores_plano"].includes(selectedTab);
   const currentValue = isNumericInput ? newNumericValue : newValue;
   const maxLength = getMaxLength();
+
+  // Gerar preview dos valores que serão adicionados
+  const getValuePreview = () => {
+    if (!currentValue) return "";
+    
+    const values = parseMultipleValues(currentValue);
+    if (values.length <= 1) return "";
+    
+    return `${values.length} valores: ${generateValuePreview(values)}`;
+  };
+
+  const valuePreview = getValuePreview();
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -124,16 +153,19 @@ export const AddValueDialog = ({ isOpen, onOpenChange, onAdd, activeTab, saving 
           <div className="space-y-2">
             <Label htmlFor="valueInput">{getInputLabel()}</Label>
             {isNumericInput ? (
-              <Input
-                id="valueInput"
-                type="number"
-                step={selectedTab === "valores_plano" ? "0.1" : "1"}
-                min={selectedTab === "dias_vencimento" ? "1" : "0"}
-                max={selectedTab === "dias_vencimento" ? "31" : undefined}
-                value={newNumericValue}
-                onChange={(e) => setNewNumericValue(e.target.value)}
-                placeholder={getInputPlaceholder()}
-              />
+              <div>
+                <Input
+                  id="valueInput"
+                  type="text"
+                  value={newNumericValue}
+                  onChange={(e) => setNewNumericValue(e.target.value)}
+                  placeholder={getInputPlaceholder()}
+                  maxLength={maxLength}
+                />
+                <div className="text-xs text-gray-500 text-right mt-0.5">
+                  {newNumericValue?.length || 0}/{maxLength}
+                </div>
+              </div>
             ) : (
               <div>
                 <Input
@@ -147,6 +179,11 @@ export const AddValueDialog = ({ isOpen, onOpenChange, onAdd, activeTab, saving 
                 <div className="text-xs text-gray-500 text-right mt-0.5">
                   {newValue?.length || 0}/{maxLength}
                 </div>
+              </div>
+            )}
+            {valuePreview && (
+              <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
+                Preview: {valuePreview}
               </div>
             )}
           </div>

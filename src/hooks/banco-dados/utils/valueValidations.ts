@@ -72,6 +72,16 @@ export const validatePlanoValue = (value: unknown): { isValid: boolean; value?: 
     return { isValid: false };
   }
   
+  // Validar limite máximo de R$ 1.000,00
+  if (valorPlano > 1000) {
+    toast({
+      title: "Valor inválido",
+      description: "O valor do plano deve ser no máximo R$ 1.000,00.",
+      variant: "destructive",
+    });
+    return { isValid: false };
+  }
+  
   // Arredondar para duas casas decimais
   valorPlano = parseFloat(valorPlano.toFixed(2));
   
