@@ -73,13 +73,16 @@ export const ClienteTable = ({
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead>
+              <TableHead className="w-32">
                 <Button
                   variant="ghost"
                   className="flex items-center font-medium -ml-2"
                   onClick={() => handleSortChange('data')}
                 >
-                  Data de Cadastro
+                  <div className="leading-tight">
+                    <div>Data de</div>
+                    <div>Cadastro</div>
+                  </div>
                   {sortOrder === 'data' ? (
                     <ArrowDownIcon className="ml-2 h-4 w-4 opacity-70" />
                   ) : null}
