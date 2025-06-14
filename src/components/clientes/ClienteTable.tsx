@@ -1,13 +1,9 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Eye, Pencil, Trash2, ArrowDownIcon } from "lucide-react";
+import { Table, TableBody } from "@/components/ui/table";
 import { Cliente } from "@/types";
-import { formatDate } from "@/utils/dateUtils";
-import { ClienteStatusBadge } from "./ClienteStatusBadge";
 import { TablePagination } from "../table/TablePagination";
+import { TableHeaderRow } from "./table/TableHeaderRow";
+import { ClienteTableRow } from "./table/ClienteTableRow";
 
 interface ClienteTableProps {
   clientes: Cliente[];
@@ -36,25 +32,9 @@ export const ClienteTable = ({
   onPageChange,
   onItemsPerPageChange
 }: ClienteTableProps) => {
-  const navigate = useNavigate();
-  
   const handleSortChange = (field: 'nome' | 'data') => {
     if (onSortChange) {
       onSortChange(field);
-    }
-  };
-  
-  // Format phone number for display
-  const formatPhoneNumber = (phone: string | null) => {
-    if (!phone) return "-";
-    
-    const digits = phone.replace(/\D/g, '');
-    if (digits.length <= 2) {
-      return digits;
-    } else if (digits.length <= 7) {
-      return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-    } else {
-      return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
     }
   };
 
@@ -71,129 +51,21 @@ export const ClienteTable = ({
     <div className="rounded-lg shadow-sm overflow-hidden border border-border/50">
       <div className="overflow-x-auto">
         <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead className="w-32">
-                <Button
-                  variant="ghost"
-                  className="flex items-center font-medium -ml-2"
-                  onClick={() => handleSortChange('data')}
-                >
-                  <div className="leading-tight">
-                    <div>Data de</div>
-                    <div>Cadastro</div>
-                  </div>
-                  {sortOrder === 'data' ? (
-                    <ArrowDownIcon className="ml-2 h-4 w-4 opacity-70" />
-                  ) : null}
-                </Button>
-              </TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  className="flex items-center font-medium -ml-2"
-                  onClick={() => handleSortChange('nome')}
-                >
-                  Nome
-                  {sortOrder === 'nome' ? (
-                    <ArrowDownIcon className="ml-2 h-4 w-4 opacity-70" />
-                  ) : null}
-                </Button>
-              </TableHead>
-              <TableHead className="font-medium">Telefone</TableHead>
-              <TableHead className="font-medium">UF</TableHead>
-              <TableHead className="font-medium">Servidor</TableHead>
-              <TableHead>
-                <div className="leading-tight font-medium">
-                  <div>Dia de</div>
-                  <div>Venc.</div>
-                </div>
-              </TableHead>
-              <TableHead className="font-medium">Plano</TableHead>
-              <TableHead className="font-medium">Status</TableHead>
-              <TableHead className="font-medium">Tela Principal</TableHead>
-              <TableHead className="font-medium">Tela Adicional</TableHead>
-              <TableHead className="font-medium">Obs.</TableHead>
-              <TableHead className="font-medium text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
+          <TableHeaderRow 
+            sortOrder={sortOrder}
+            onSortChange={handleSortChange}
+          />
           <TableBody>
             {paginatedClientes.map((cliente, index) => (
-              <TableRow 
+              <ClienteTableRow
                 key={cliente.id}
-                className={index % 2 === 0 ? "bg-background" : "bg-muted/10"}
-              >
-                <TableCell>{formatDate(cliente.created_at)}</TableCell>
-                <TableCell className="font-medium">{cliente.nome}</TableCell>
-                <TableCell>{formatPhoneNumber(cliente.telefone)}</TableCell>
-                <TableCell>{cliente.uf || "-"}</TableCell>
-                <TableCell>{cliente.servidor}</TableCell>
-                <TableCell>{cliente.dia_vencimento}</TableCell>
-                <TableCell>
-                  {cliente.valor_plano ? `R$ ${cliente.valor_plano.toFixed(2)}` : "-"}
-                </TableCell>
-                <TableCell>
-                  <ClienteStatusBadge status={cliente.status} />
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => verDetalhes(cliente)}
-                    className="rounded-full hover:bg-primary/10"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-                <TableCell>
-                  {cliente.possui_tela_adicional ? (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => verTelaAdicional(cliente)}
-                      className="rounded-full hover:bg-primary/10"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    "-"
-                  )}
-                </TableCell>
-                <TableCell>
-                  {cliente.observacoes ? (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => verObservacoes(cliente)}
-                      className="rounded-full hover:bg-primary/10"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    "-"
-                  )}
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end space-x-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => navigate(`/clientes/editar/${cliente.id}`)}
-                      className="rounded-full hover:bg-primary/10"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => confirmarExclusao(cliente.id)}
-                      className="rounded-full hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
+                cliente={cliente}
+                index={index}
+                verDetalhes={verDetalhes}
+                verTelaAdicional={verTelaAdicional}
+                verObservacoes={verObservacoes}
+                confirmarExclusao={confirmarExclusao}
+              />
             ))}
           </TableBody>
         </Table>
