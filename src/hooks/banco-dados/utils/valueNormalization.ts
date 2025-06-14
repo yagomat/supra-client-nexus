@@ -4,13 +4,17 @@
  */
 
 export const normalizeValueForDatabase = (value: string | number, type: string): string => {
+  console.log(`Normalizando valor "${value}" do tipo "${type}" para o banco de dados`);
+  
   if (type === 'valor_plano') {
     // Para valores de plano, converter para número e formatar com 2 casas decimais
     const numericValue = typeof value === 'number' ? value : parseFloat(String(value).replace(',', '.'));
     if (isNaN(numericValue)) {
       throw new Error('Valor inválido para plano');
     }
-    return numericValue.toFixed(2);
+    const normalized = numericValue.toFixed(2);
+    console.log(`Valor de plano normalizado: "${normalized}"`);
+    return normalized;
   }
   
   if (type === 'dia_vencimento') {
@@ -19,16 +23,22 @@ export const normalizeValueForDatabase = (value: string | number, type: string):
     if (isNaN(numericValue)) {
       throw new Error('Valor inválido para dia de vencimento');
     }
-    return String(numericValue);
+    const normalized = String(numericValue);
+    console.log(`Dia de vencimento normalizado: "${normalized}"`);
+    return normalized;
   }
   
   if (type === 'uf') {
-    // Para UFs, converter para maiúscula
-    return String(value).toUpperCase().trim();
+    // Para UFs, converter para maiúscula e remover espaços
+    const normalized = String(value).toUpperCase().trim();
+    console.log(`UF normalizada: "${normalized}"`);
+    return normalized;
   }
   
   // Para outros tipos (servidor, dispositivo_smart, aplicativo), apenas trim
-  return String(value).trim();
+  const normalized = String(value).trim();
+  console.log(`Valor normalizado: "${normalized}"`);
+  return normalized;
 };
 
 export const normalizeValueForDisplay = (value: string | number, type: string): string | number => {

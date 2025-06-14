@@ -27,15 +27,31 @@ export function convertToSingularType(tipo: keyof ValoresPredefinidos): string {
  * Organiza todos os arrays em ValoresPredefinidos
  */
 export function sortValoresPredefinidos(valoresPredefinidos: ValoresPredefinidos): void {
+  console.log('Ordenando valores predefinidos...');
+  
   // Ordenar arrays numéricos numericamente (não alfabeticamente)
-  valoresPredefinidos.dias_vencimento.sort((a, b) => Number(a) - Number(b));
-  valoresPredefinidos.valores_plano.sort((a, b) => Number(a) - Number(b));
+  valoresPredefinidos.dias_vencimento.sort((a, b) => {
+    const numA = typeof a === 'number' ? a : parseInt(String(a));
+    const numB = typeof b === 'number' ? b : parseInt(String(b));
+    return numA - numB;
+  });
+  
+  valoresPredefinidos.valores_plano.sort((a, b) => {
+    const numA = typeof a === 'number' ? a : parseFloat(String(a));
+    const numB = typeof b === 'number' ? b : parseFloat(String(b));
+    return numA - numB;
+  });
   
   // Ordenar arrays de strings em ordem alfabética
   valoresPredefinidos.ufs.sort();
   valoresPredefinidos.servidores.sort();
   valoresPredefinidos.dispositivos_smart.sort();
   valoresPredefinidos.aplicativos.sort();
+  
+  console.log('Valores ordenados:', {
+    dias_vencimento: valoresPredefinidos.dias_vencimento,
+    valores_plano: valoresPredefinidos.valores_plano
+  });
 }
 
 /**
@@ -45,6 +61,8 @@ export function processValoresPredefinidos(
   data: { tipo: string; valor: string }[], 
   valoresPredefinidos: ValoresPredefinidos
 ): ValoresPredefinidos {
+  console.log('Processando valores do banco de dados:', data);
+  
   // Popular os diferentes tipos de valores predefinidos
   data.forEach((item) => {
     const { tipo, valor } = item;
