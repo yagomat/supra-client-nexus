@@ -5,8 +5,9 @@ import { ValoresPredefinidos } from "@/types";
 import { ValorPredefinidoResponse } from "@/types/supabase-responses";
 import { addValorPredefinido } from "@/services/valoresPredefinidosService/valoresPredefinidosActions";
 import { convertToSingularType } from "@/services/valoresPredefinidosService/utils";
-import { validateMultipleValues, generateValuePreview } from "../utils/multipleValueUtils";
+import { validateMultipleValuesEnhanced } from "../utils/enhancedValidations";
 import { normalizeValueForDatabase } from "../utils/valueNormalization";
+import { generateValuePreview } from "../utils/multipleValueUtils";
 
 export const useAddValue = (
   valoresPredefinidos: ValoresPredefinidos | null,
@@ -31,8 +32,8 @@ export const useAddValue = (
         return false;
       }
 
-      // Validar múltiplos valores
-      const validationResult = validateMultipleValues(newValueOrNumber, activeTab);
+      // Usar validação aprimorada
+      const validationResult = validateMultipleValuesEnhanced(newValueOrNumber, activeTab);
       
       if (!validationResult.isValid) {
         toast({
