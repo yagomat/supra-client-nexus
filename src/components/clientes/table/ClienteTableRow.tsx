@@ -36,7 +36,7 @@ export const ClienteTableRow = ({
       className={rowBgClass}
     >
       <TableCell>{formatDate(cliente.created_at)}</TableCell>
-      <TableCell className={`font-medium sticky left-0 ${nameCellBgClass} z-10 border-r`}>{cliente.nome}</TableCell>
+      <TableCell className={`font-medium sticky left-0 ${nameCellBgClass} z-20 border-r shadow-lg`}>{cliente.nome}</TableCell>
       <TableCell>{formatPhoneNumber(cliente.telefone)}</TableCell>
       <TableCell>{cliente.uf || "-"}</TableCell>
       <TableCell>{cliente.servidor}</TableCell>

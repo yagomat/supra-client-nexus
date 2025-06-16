@@ -56,7 +56,7 @@ export const PagamentosMatriz = ({
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="font-medium sticky left-0 bg-background z-10 border-r">Nome</TableHead>
+              <TableHead className="font-medium sticky left-0 bg-background z-20 border-r shadow-lg">Nome</TableHead>
               <TableHead>
                 <div className="leading-tight font-medium">
                   <div>Dia de</div>
@@ -79,7 +79,7 @@ export const PagamentosMatriz = ({
               
               return (
                 <TableRow key={cliente.id} className={rowBgClass}>
-                  <TableCell className={`font-medium sticky left-0 ${nameCellBgClass} z-10 border-r`}>{cliente.nome}</TableCell>
+                  <TableCell className={`font-medium sticky left-0 ${nameCellBgClass} z-20 border-r shadow-lg`}>{cliente.nome}</TableCell>
                   <TableCell>{cliente.dia_vencimento}</TableCell>
                   <TableCell>
                     <ClientStatusBadge status={cliente.status} />
