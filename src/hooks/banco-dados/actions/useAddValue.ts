@@ -49,8 +49,10 @@ export const useAddValue = (
       
       // Adicionar cada valor individualmente
       let addedCount = 0;
+      let duplicateCount = 0;
       let errorCount = 0;
       const errors: string[] = [];
+      const duplicateValues: (string | number)[] = [];
 
       for (const value of validationResult.values) {
         try {
@@ -93,7 +95,10 @@ export const useAddValue = (
               return newValues;
             });
           } else {
-            if (typedResult.message !== 'Valor já existe') {
+            if (typedResult.message === 'Valor já existe') {
+              duplicateCount++;
+              duplicateValues.push(value);
+            } else {
               errorCount++;
               errors.push(`${value}: ${typedResult.message}`);
             }
@@ -105,17 +110,15 @@ export const useAddValue = (
         }
       }
       
-      // Feedback para o usuário
+      // Feedback detalhado para o usuário
       if (addedCount > 0) {
-        const preview = generateValuePreview(validationResult.values.slice(0, addedCount));
+        const addedPreview = generateValuePreview(validationResult.values.slice(0, addedCount));
         let message = "";
         
         if (validationResult.totalCount === 1) {
           message = "Valor adicionado com sucesso.";
-        } else if (addedCount === validationResult.validCount) {
-          message = `${addedCount} valores adicionados com sucesso: ${preview}`;
         } else {
-          message = `${addedCount} de ${validationResult.validCount} valores adicionados: ${preview}`;
+          message = `${addedCount} ${addedCount === 1 ? 'valor adicionado' : 'valores adicionados'} com sucesso: ${addedPreview}`;
         }
         
         toast({
@@ -124,12 +127,32 @@ export const useAddValue = (
         });
       }
       
-      if (errorCount > 0 && validationResult.errors.length === 0) {
+      // Feedback para valores duplicados
+      if (duplicateCount > 0) {
+        const duplicatePreview = generateValuePreview(duplicateValues);
+        const message = duplicateCount === 1 
+          ? `Valor "${duplicatePreview}" já existe e não foi adicionado.`
+          : `${duplicateCount} valores já existem e não foram adicionados: ${duplicatePreview}`;
+        
+        toast({
+          title: "Valores duplicados",
+          description: message,
+          variant: "destructive",
+        });
+      }
+      
+      // Feedback para outros erros
+      if (errorCount > 0) {
         toast({
           title: "Alguns valores não foram adicionados",
           description: errors.join("; "),
           variant: "destructive",
         });
+      }
+
+      // Se nenhum valor foi adicionado (todos duplicados ou com erro)
+      if (addedCount === 0 && (duplicateCount > 0 || errorCount > 0)) {
+        return false;
       }
       
       return addedCount > 0;
