@@ -6,10 +6,23 @@ import { VALIDATION_CONFIG } from "../config/validationConfig";
  * Atualizado para usar a configuração centralizada
  */
 
+// Mapeamento dos tipos singulares para plurais para acessar a configuração
+const SINGULAR_TO_PLURAL_TYPE_MAP: Record<string, string> = {
+  'uf': 'ufs',
+  'servidor': 'servidores', 
+  'dia_vencimento': 'dias_vencimento',
+  'valor_plano': 'valores_plano',
+  'dispositivo_smart': 'dispositivos_smart',
+  'aplicativo': 'aplicativos'
+};
+
 export const normalizeValueForDatabase = (value: string | number, type: string): string => {
   console.log(`Normalizando valor "${value}" do tipo "${type}" para o banco de dados`);
   
-  const config = VALIDATION_CONFIG.tipos[type];
+  // Mapear tipo singular para plural para acessar configuração
+  const configType = SINGULAR_TO_PLURAL_TYPE_MAP[type] || type;
+  const config = VALIDATION_CONFIG.tipos[configType];
+  
   if (!config) {
     throw new Error(`Tipo "${type}" não reconhecido`);
   }
@@ -40,7 +53,7 @@ export const normalizeValueForDatabase = (value: string | number, type: string):
       let stringValue = String(value).trim();
       
       // Casos especiais
-      if (type === 'ufs') {
+      if (type === 'uf') {
         stringValue = stringValue.toUpperCase();
         console.log(`UF normalizada: "${stringValue}"`);
       } else {
@@ -57,7 +70,10 @@ export const normalizeValueForDatabase = (value: string | number, type: string):
 };
 
 export const normalizeValueForDisplay = (value: string | number, type: string): string | number => {
-  const config = VALIDATION_CONFIG.tipos[type];
+  // Mapear tipo singular para plural para acessar configuração
+  const configType = SINGULAR_TO_PLURAL_TYPE_MAP[type] || type;
+  const config = VALIDATION_CONFIG.tipos[configType];
+  
   if (!config) {
     return String(value);
   }
@@ -78,12 +94,15 @@ export const normalizeValueForDisplay = (value: string | number, type: string): 
  * Formata um valor para exibição amigável ao usuário
  */
 export const formatValueForDisplay = (value: string | number, type: string): string => {
-  const config = VALIDATION_CONFIG.tipos[type];
+  // Mapear tipo singular para plural para acessar configuração
+  const configType = SINGULAR_TO_PLURAL_TYPE_MAP[type] || type;
+  const config = VALIDATION_CONFIG.tipos[configType];
+  
   if (!config) {
     return String(value);
   }
 
-  switch (type) {
+  switch (configType) {
     case 'valores_plano':
       const numValue = typeof value === 'number' ? value : parseFloat(String(value));
       return `R$ ${numValue.toFixed(2).replace('.', ',')}`;

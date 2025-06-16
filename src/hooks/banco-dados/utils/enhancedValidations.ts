@@ -8,12 +8,25 @@ export interface ValidationResult {
   code?: string;
 }
 
+// Mapeamento dos tipos singulares para plurais para acessar a configuração
+const SINGULAR_TO_PLURAL_TYPE_MAP: Record<string, string> = {
+  'uf': 'ufs',
+  'servidor': 'servidores', 
+  'dia_vencimento': 'dias_vencimento',
+  'valor_plano': 'valores_plano',
+  'dispositivo_smart': 'dispositivos_smart',
+  'aplicativo': 'aplicativos'
+};
+
 /**
  * Valida um valor individual usando as mesmas regras do backend
  */
 export const validateSingleValue = (value: string | number, type: string): ValidationResult => {
   const stringValue = String(value).trim();
-  const config = VALIDATION_CONFIG.tipos[type];
+  
+  // Mapear tipo singular para plural para acessar configuração
+  const configType = SINGULAR_TO_PLURAL_TYPE_MAP[type] || type;
+  const config = VALIDATION_CONFIG.tipos[configType];
   
   if (!config) {
     return {
@@ -33,7 +46,7 @@ export const validateSingleValue = (value: string | number, type: string): Valid
   }
 
   // Validações específicas por tipo
-  switch (type) {
+  switch (configType) {
     case 'dias_vencimento':
       return validateDiaVencimento(stringValue);
     
@@ -180,7 +193,10 @@ export const validateMultipleValuesEnhanced = (input: string | number, type: str
   totalCount: number;
 } => {
   const inputString = String(input);
-  const config = VALIDATION_CONFIG.tipos[type];
+  
+  // Mapear tipo singular para plural para acessar configuração
+  const configType = SINGULAR_TO_PLURAL_TYPE_MAP[type] || type;
+  const config = VALIDATION_CONFIG.tipos[configType];
   
   if (!config) {
     return {
