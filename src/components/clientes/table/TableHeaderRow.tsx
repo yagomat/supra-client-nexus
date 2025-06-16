@@ -27,7 +27,7 @@ export const TableHeaderRow = ({ sortOrder, onSortChange }: TableHeaderRowProps)
             ) : null}
           </Button>
         </TableHead>
-        <TableHead>
+        <TableHead className="sticky left-0 bg-background z-10 border-r">
           <Button
             variant="ghost"
             className="flex items-center font-medium -ml-2"

@@ -56,7 +56,7 @@ export const PagamentosMatriz = ({
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="font-medium">Nome</TableHead>
+              <TableHead className="font-medium sticky left-0 bg-background z-10 border-r">Nome</TableHead>
               <TableHead>
                 <div className="leading-tight font-medium">
                   <div>Dia de</div>
@@ -74,7 +74,7 @@ export const PagamentosMatriz = ({
           <TableBody>
             {paginatedClientes.map((cliente, index) => (
               <TableRow key={cliente.id} className={index % 2 === 1 ? "bg-muted/10" : "bg-background"}>
-                <TableCell className="font-medium">{cliente.nome}</TableCell>
+                <TableCell className="font-medium sticky left-0 bg-inherit z-10 border-r">{cliente.nome}</TableCell>
                 <TableCell>{cliente.dia_vencimento}</TableCell>
                 <TableCell>
                   <ClientStatusBadge status={cliente.status} />

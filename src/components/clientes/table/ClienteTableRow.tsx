@@ -32,7 +32,7 @@ export const ClienteTableRow = ({
       className={index % 2 === 0 ? "bg-background" : "bg-muted/10"}
     >
       <TableCell>{formatDate(cliente.created_at)}</TableCell>
-      <TableCell className="font-medium">{cliente.nome}</TableCell>
+      <TableCell className="font-medium sticky left-0 bg-inherit z-10 border-r">{cliente.nome}</TableCell>
       <TableCell>{formatPhoneNumber(cliente.telefone)}</TableCell>
       <TableCell>{cliente.uf || "-"}</TableCell>
       <TableCell>{cliente.servidor}</TableCell>
