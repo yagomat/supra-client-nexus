@@ -72,45 +72,51 @@ export const PagamentosMatriz = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedClientes.map((cliente, index) => (
-              <TableRow key={cliente.id} className={index % 2 === 1 ? "bg-muted/10" : "bg-background"}>
-                <TableCell className="font-medium sticky left-0 bg-inherit z-10 border-r">{cliente.nome}</TableCell>
-                <TableCell>{cliente.dia_vencimento}</TableCell>
-                <TableCell>
-                  <ClientStatusBadge status={cliente.status} />
-                </TableCell>
-                {displayMeses.map((mes) => {
-                  const chave = `${mes.value}-${anoAtual}`;
-                  const pagamento = cliente.pagamentos[chave];
-                  // Default status is "nao_pago" (not paid)
-                  const status = pagamento?.status || "nao_pago";
-                  
-                  let cellClass = "";
-                  if (status === "pago") {
-                    cellClass = "bg-success/20";
-                  } else if (status === "pago_confianca") {
-                    cellClass = "bg-warning/20";
-                  } else if (status === "nao_pago") {
-                    cellClass = "bg-danger/20";
-                  }
-                  
-                  return (
-                    <TableCell key={mes.value} className={cellClass}>
-                      <div className="flex justify-center">
-                        <PaymentStatusButton
-                          status={status}
-                          onStatusChange={(value) => 
-                            onChangeStatus(cliente, mes.value, anoAtual, value)
-                          }
-                          disabled={submitting}
-                          minimal={true}
-                        />
-                      </div>
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            ))}
+            {paginatedClientes.map((cliente, index) => {
+              const isOdd = index % 2 === 1;
+              const rowBgClass = isOdd ? "bg-muted/10" : "bg-background";
+              const nameCellBgClass = isOdd ? "bg-muted/10" : "bg-background";
+              
+              return (
+                <TableRow key={cliente.id} className={rowBgClass}>
+                  <TableCell className={`font-medium sticky left-0 ${nameCellBgClass} z-10 border-r`}>{cliente.nome}</TableCell>
+                  <TableCell>{cliente.dia_vencimento}</TableCell>
+                  <TableCell>
+                    <ClientStatusBadge status={cliente.status} />
+                  </TableCell>
+                  {displayMeses.map((mes) => {
+                    const chave = `${mes.value}-${anoAtual}`;
+                    const pagamento = cliente.pagamentos[chave];
+                    // Default status is "nao_pago" (not paid)
+                    const status = pagamento?.status || "nao_pago";
+                    
+                    let cellClass = "";
+                    if (status === "pago") {
+                      cellClass = "bg-success/20";
+                    } else if (status === "pago_confianca") {
+                      cellClass = "bg-warning/20";
+                    } else if (status === "nao_pago") {
+                      cellClass = "bg-danger/20";
+                    }
+                    
+                    return (
+                      <TableCell key={mes.value} className={cellClass}>
+                        <div className="flex justify-center">
+                          <PaymentStatusButton
+                            status={status}
+                            onStatusChange={(value) => 
+                              onChangeStatus(cliente, mes.value, anoAtual, value)
+                            }
+                            disabled={submitting}
+                            minimal={true}
+                          />
+                        </div>
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>

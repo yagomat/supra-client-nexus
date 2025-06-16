@@ -33,10 +33,13 @@ export const ClienteRow = ({
     ? `R$ ${cliente.valor_plano.toFixed(2).replace('.', ',')}`
     : "-";
 
+  const rowBgClass = isAlternate ? "bg-muted/10" : "bg-background";
+  const nameCellBgClass = isAlternate ? "bg-muted/10" : "bg-background";
+
   return (
-    <TableRow className={isAlternate ? "bg-muted/10" : "bg-background"}>
+    <TableRow className={rowBgClass}>
       <TableCell>{formatDate(cliente.created_at)}</TableCell>
-      <TableCell className="font-medium sticky left-0 bg-inherit z-10 border-r">{cliente.nome}</TableCell>
+      <TableCell className={`font-medium sticky left-0 ${nameCellBgClass} z-10 border-r`}>{cliente.nome}</TableCell>
       <TableCell>{cliente.dia_vencimento}</TableCell>
       {!isMobile && <TableCell>{valorPlanoFormatado}</TableCell>}
       <TableCell>

@@ -27,12 +27,16 @@ export const ClienteTableRow = ({
 }: ClienteTableRowProps) => {
   const navigate = useNavigate();
 
+  const isEven = index % 2 === 0;
+  const rowBgClass = isEven ? "bg-background" : "bg-muted/10";
+  const nameCellBgClass = isEven ? "bg-background" : "bg-muted/10";
+
   return (
     <TableRow 
-      className={index % 2 === 0 ? "bg-background" : "bg-muted/10"}
+      className={rowBgClass}
     >
       <TableCell>{formatDate(cliente.created_at)}</TableCell>
-      <TableCell className="font-medium sticky left-0 bg-inherit z-10 border-r">{cliente.nome}</TableCell>
+      <TableCell className={`font-medium sticky left-0 ${nameCellBgClass} z-10 border-r`}>{cliente.nome}</TableCell>
       <TableCell>{formatPhoneNumber(cliente.telefone)}</TableCell>
       <TableCell>{cliente.uf || "-"}</TableCell>
       <TableCell>{cliente.servidor}</TableCell>
