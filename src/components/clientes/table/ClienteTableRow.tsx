@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -48,7 +47,7 @@ export const ClienteTableRow = ({
         {cliente.valor_plano ? `R$ ${cliente.valor_plano.toFixed(2)}` : "-"}
       </TableCell>
       <TableCell>
-        <ClientStatusBadge status={cliente.status} />
+        <ClienteStatusBadge status={cliente.status} />
       </TableCell>
       <TableCell>
         <Button
