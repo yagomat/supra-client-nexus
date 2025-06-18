@@ -76,6 +76,7 @@ export const InputField: React.FC<InputFieldProps> = ({
                 disabled={disabled}
                 maxLength={maxLength}
                 pattern={pattern}
+                readOnly={false}
               />
               {maxLength && (
                 <div className="text-xs text-gray-500 text-right mt-0.5">

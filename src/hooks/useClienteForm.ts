@@ -1,6 +1,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
 import { formSchema, ClienteFormValues } from "./cliente/clienteFormSchema";
 import { useClienteData } from "./cliente/useClienteData";
 import { useStatusMonitoring } from "./cliente/useStatusMonitoring";
@@ -9,7 +10,6 @@ import { useClienteSubmit } from "./cliente/useClienteSubmit";
 export type { ClienteFormValues } from "./cliente/clienteFormSchema";
 
 export const useClienteForm = (clienteId: string | undefined) => {
-  // useClienteData gets the id from useParams now
   const { 
     loading, 
     cliente, 
@@ -52,17 +52,11 @@ export const useClienteForm = (clienteId: string | undefined) => {
   // Gerenciar submissão do formulário
   const { submitting, onSubmit } = useClienteSubmit(clienteId);
 
-  // Atualizar o formulário quando os dados do cliente forem carregados
-  // Use useEffect to update the form when client data changes
-  if (cliente && !loading) {
-    // Check if the form values are different from client values before resetting
-    // to avoid unnecessary form resets that can cause re-renders
-    const currentValues = form.getValues();
-    const needsReset = 
-      currentValues.nome !== cliente.nome ||
-      currentValues.status !== cliente.status;
+  // Effect to update form when cliente data is loaded
+  useEffect(() => {
+    if (cliente && !loading) {
+      console.log("Carregando dados do cliente no formulário:", cliente);
       
-    if (needsReset) {
       form.reset({
         nome: cliente.nome,
         telefone: cliente.telefone || "",
@@ -86,9 +80,9 @@ export const useClienteForm = (clienteId: string | undefined) => {
         
         observacoes: cliente.observacoes || "",
         status: cliente.status,
-      }, { keepDefaultValues: true });
+      });
     }
-  }
+  }, [cliente, loading, form]);
 
   return {
     form,
