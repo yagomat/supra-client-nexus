@@ -29,7 +29,8 @@ export const ClienteTableRow = ({
 
   const isEven = index % 2 === 0;
   const rowBgClass = isEven ? "bg-background" : "bg-muted/10";
-  const nameCellBgClass = isEven ? "bg-background" : "bg-muted/10";
+  // Sempre usar fundo sólido para a coluna nome
+  const nameCellBgClass = isEven ? "bg-background" : "bg-muted/30";
 
   return (
     <TableRow 

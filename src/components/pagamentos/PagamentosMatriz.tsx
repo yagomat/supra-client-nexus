@@ -75,7 +75,8 @@ export const PagamentosMatriz = ({
             {paginatedClientes.map((cliente, index) => {
               const isOdd = index % 2 === 1;
               const rowBgClass = isOdd ? "bg-muted/10" : "bg-background";
-              const nameCellBgClass = isOdd ? "bg-muted/10" : "bg-background";
+              // Sempre usar fundo sólido para a coluna nome
+              const nameCellBgClass = isOdd ? "bg-muted/30" : "bg-background";
               
               return (
                 <TableRow key={cliente.id} className={rowBgClass}>
