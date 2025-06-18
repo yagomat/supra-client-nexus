@@ -30,7 +30,7 @@ export const ClienteTableRow = ({
   const isEven = index % 2 === 0;
   const rowBgClass = isEven ? "bg-background" : "bg-muted/10";
   // Sempre usar fundo sólido para a coluna nome
-  const nameCellBgClass = isEven ? "bg-background" : "bg-muted/30";
+  const nameCellBgClass = isEven ? "bg-background" : "bg-muted/90";
 
   return (
     <TableRow 
@@ -48,7 +48,7 @@ export const ClienteTableRow = ({
         {cliente.valor_plano ? `R$ ${cliente.valor_plano.toFixed(2)}` : "-"}
       </TableCell>
       <TableCell>
-        <ClienteStatusBadge status={cliente.status} />
+        <ClientStatusBadge status={cliente.status} />
       </TableCell>
       <TableCell>
         <Button

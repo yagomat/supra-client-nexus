@@ -35,7 +35,7 @@ export const ClienteRow = ({
 
   const rowBgClass = isAlternate ? "bg-muted/10" : "bg-background";
   // Sempre usar fundo sólido para a coluna nome
-  const nameCellBgClass = isAlternate ? "bg-muted/30" : "bg-background";
+  const nameCellBgClass = isAlternate ? "bg-muted/90" : "bg-background";
 
   return (
     <TableRow className={rowBgClass}>
