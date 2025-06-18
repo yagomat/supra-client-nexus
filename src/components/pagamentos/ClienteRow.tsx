@@ -39,7 +39,9 @@ export const ClienteRow = ({
   return (
     <TableRow className={rowBgClass}>
       <TableCell>{formatDate(cliente.created_at)}</TableCell>
-      <TableCell className={`font-medium sticky left-0 ${nameCellBgClass} z-20 border-r shadow-lg`}>{cliente.nome}</TableCell>
+      <TableCell className={`font-medium sticky left-0 ${nameCellBgClass} z-30 border-r-2 border-border shadow-xl`}>
+        {cliente.nome}
+      </TableCell>
       <TableCell>{cliente.dia_vencimento}</TableCell>
       {!isMobile && <TableCell>{valorPlanoFormatado}</TableCell>}
       <TableCell>

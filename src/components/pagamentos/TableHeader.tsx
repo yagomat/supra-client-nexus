@@ -38,7 +38,7 @@ export const TableHeaderComponent = ({
             ) : null}
           </Button>
         </TableHead>
-        <TableHead className="sticky left-0 bg-background z-20 border-r shadow-lg">
+        <TableHead className="sticky left-0 bg-muted/50 z-30 border-r-2 border-border shadow-xl">
           <Button
             variant="ghost"
             className="flex items-center font-medium -ml-2"
