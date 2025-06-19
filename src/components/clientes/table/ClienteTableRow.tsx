@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -29,7 +30,7 @@ export const ClienteTableRow = ({
   const isEven = index % 2 === 0;
   const rowBgClass = isEven ? "bg-background" : "bg-muted/10";
   // Sempre usar fundo sólido para a coluna nome
-  const nameCellBgClass = isEven ? "bg-background" : "bg-muted/90";
+  const nameCellBgClass = isEven ? "bg-background" : "bg-muted";
 
   return (
     <TableRow 
