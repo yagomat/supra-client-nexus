@@ -50,6 +50,7 @@ export type Database = {
           dispositivo_smart: string | null
           dispositivo_smart_2: string | null
           id: string
+          licenca_status: string | null
           nome: string
           observacoes: string | null
           possui_tela_adicional: boolean | null
@@ -74,6 +75,7 @@ export type Database = {
           dispositivo_smart?: string | null
           dispositivo_smart_2?: string | null
           id?: string
+          licenca_status?: string | null
           nome: string
           observacoes?: string | null
           possui_tela_adicional?: boolean | null
@@ -98,6 +100,7 @@ export type Database = {
           dispositivo_smart?: string | null
           dispositivo_smart_2?: string | null
           id?: string
+          licenca_status?: string | null
           nome?: string
           observacoes?: string | null
           possui_tela_adicional?: boolean | null
@@ -210,6 +213,10 @@ export type Database = {
         Args: { p_user_id: string; p_tipo: string; p_valor: string }
         Returns: Json
       }
+      calculate_licenca_status: {
+        Args: { p_cliente_id: string }
+        Returns: string
+      }
       check_cliente_licencas: {
         Args: { p_cliente_id: string }
         Returns: Json
@@ -254,6 +261,7 @@ export type Database = {
           dispositivo_smart: string | null
           dispositivo_smart_2: string | null
           id: string
+          licenca_status: string | null
           nome: string
           observacoes: string | null
           possui_tela_adicional: boolean | null
@@ -386,6 +394,10 @@ export type Database = {
         Returns: undefined
       }
       recalculate_all_client_status: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      recalculate_all_licenca_status: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }

@@ -31,6 +31,10 @@ export const DashboardContent = ({ stats, loading }: DashboardContentProps) => {
   const safeAppsVencendo = stats?.apps_vencendo_proximos_dias ? getSafeData(stats.apps_vencendo_proximos_dias) : [];
   const safeClientesEmRiscoDetalhes = stats?.clientes_em_risco_detalhes ? getSafeData(stats.clientes_em_risco_detalhes) : [];
 
+  // Safe license stats
+  const safeLicencasVencidas = stats?.licencas_vencidas || 0;
+  const safeLicencasAtencao = stats?.licencas_atencao || 0;
+
   return (
     <div className="flex flex-col space-y-4 w-full">
       <p className="text-muted-foreground">
@@ -39,11 +43,13 @@ export const DashboardContent = ({ stats, loading }: DashboardContentProps) => {
 
       <StatsCards stats={stats} loading={loading} />
 
-      {/* New alert cards */}
+      {/* Enhanced alert cards with license information */}
       <AlertCards 
         clientesInativos={safeClientesInativos}
         appsVencendo={safeAppsVencendo}
         clientesEmRiscoDetalhes={safeClientesEmRiscoDetalhes}
+        licencasVencidas={safeLicencasVencidas}
+        licencasAtencao={safeLicencasAtencao}
         loading={loading}
       />
 
