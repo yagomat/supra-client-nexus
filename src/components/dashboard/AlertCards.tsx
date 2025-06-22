@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle, Calendar, Shield } from "lucide-react";
+import { AlertTriangle, Calendar } from "lucide-react";
 import { AppVencendo, ClienteEmRisco } from "@/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -11,8 +11,6 @@ interface AlertCardsProps {
   clientesInativos: number;
   appsVencendo: AppVencendo[];
   clientesEmRiscoDetalhes: ClienteEmRisco[];
-  licencasVencidas: number;
-  licencasAtencao: number;
   loading: boolean;
 }
 
@@ -20,8 +18,6 @@ export const AlertCards = ({
   clientesInativos, 
   appsVencendo, 
   clientesEmRiscoDetalhes, 
-  licencasVencidas,
-  licencasAtencao,
   loading 
 }: AlertCardsProps) => {
   // Format date to Brazilian format (day/month/year)
@@ -45,7 +41,7 @@ export const AlertCards = ({
   };
   
   return (
-    <div className="grid gap-4 md:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-2">
       {/* Clients becoming inactive card */}
       <Card className="border-l-4 border-l-amber-500">
         <CardHeader className="pb-2">
@@ -142,47 +138,6 @@ export const AlertCards = ({
                   </AlertTitle>
                   <AlertDescription className="text-blue-700 dark:text-blue-400">
                     Todas as licenças estão com vencimento além de 30 dias.
-                  </AlertDescription>
-                </Alert>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* License status summary card */}
-      <Card className="border-l-4 border-l-red-500">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-medium flex items-center">
-            <Shield className="h-5 w-5 mr-2 text-red-500" />
-            Resumo de Licenças
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <Skeleton className="h-16 w-full" />
-          ) : (
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-red-700 dark:text-red-400">
-                  Licenças Vencidas:
-                </span>
-                <span className="text-lg font-bold text-red-800 dark:text-red-300">
-                  {licencasVencidas || 0}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-amber-700 dark:text-amber-400">
-                  Licenças em Atenção:
-                </span>
-                <span className="text-lg font-bold text-amber-800 dark:text-amber-300">
-                  {licencasAtencao || 0}
-                </span>
-              </div>
-              {!licencasVencidas && !licencasAtencao && (
-                <Alert variant="default" className="bg-green-50 dark:bg-green-950/20 mt-2">
-                  <AlertDescription className="text-green-700 dark:text-green-400 text-sm">
-                    Todas as licenças estão válidas!
                   </AlertDescription>
                 </Alert>
               )}
