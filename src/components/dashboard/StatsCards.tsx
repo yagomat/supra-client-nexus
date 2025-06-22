@@ -13,31 +13,31 @@ export const StatsCards = ({ stats, loading }: StatsCardsProps) => {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <StatCard
         title="Total de Clientes"
-        value={loading ? "" : stats?.clientes_total || "0"}
+        value={loading ? "" : String(stats?.clientes_total || "0")}
         icon={<Users size={24} />}
         loading={loading}
       />
       <StatCard
         title="Clientes Ativos"
-        value={loading ? "" : stats?.clientes_ativos || "0"}
+        value={loading ? "" : String(stats?.clientes_ativos || "0")}
         icon={<UserCheck size={24} />}
         loading={loading}
       />
       <StatCard
         title="Clientes Inativos"
-        value={loading ? "" : stats?.clientes_inativos || "0"}
+        value={loading ? "" : String(stats?.clientes_inativos || "0")}
         icon={<UserX size={24} />}
         loading={loading}
       />
       <StatCard
         title="Clientes Novos (30 dias)"
-        value={loading ? "" : stats?.clientes_novos || "0"}
+        value={loading ? "" : String(stats?.clientes_novos || "0")}
         icon={<UserPlus size={24} />}
         loading={loading}
       />
       <StatCard
         title="Pagamentos Pendentes"
-        value={loading ? "" : stats?.pagamentos_pendentes || "0"}
+        value={loading ? "" : String(stats?.pagamentos_pendentes || "0")}
         icon={<AlertCircle size={24} />}
         loading={loading}
       />
@@ -49,14 +49,14 @@ export const StatsCards = ({ stats, loading }: StatsCardsProps) => {
       />
       <StatCard
         title="Licenças Vencidas"
-        value={loading ? "" : stats?.licencas_vencidas || "0"}
+        value={loading ? "" : String(stats?.licencas_vencidas || "0")}
         icon={<ShieldAlert size={24} />}
         loading={loading}
         variant="destructive"
       />
       <StatCard
         title="Licenças em Atenção"
-        value={loading ? "" : stats?.licencas_atencao || "0"}
+        value={loading ? "" : String(stats?.licencas_atencao || "0")}
         icon={<ShieldCheck size={24} />}
         loading={loading}
         variant="warning"

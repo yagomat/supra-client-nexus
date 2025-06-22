@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Table, TableBody } from "@/components/ui/table";
 import { ClienteComPagamentos } from "@/types";
 import { ClienteRow } from "./ClienteRow";
-import { TableHeaderComponent } from "./TableHeader";
+import { PagamentosTableHeader } from "./TableHeader";
 import { TablePagination } from "../table/TablePagination";
 
 interface PagamentosTableProps {
@@ -49,7 +49,7 @@ export const PagamentosTable = ({
     <div className="rounded-lg shadow-sm overflow-hidden border border-border/50">
       <div className="overflow-x-auto">
         <Table>
-          <TableHeaderComponent 
+          <PagamentosTableHeader 
             isMobile={isMobile} 
             sortOrder={sortOrder}
             onSortChange={onSortChange}

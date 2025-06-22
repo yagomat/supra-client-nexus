@@ -3,9 +3,11 @@ import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface TableHeaderProps {
   isMobile?: boolean;
+  sortOrder?: 'nome' | 'data';
+  onSortChange?: (sortOrder: 'nome' | 'data') => void;
 }
 
-export const TableHeader = ({ isMobile = false }: TableHeaderProps) => {
+export const PagamentosTableHeader = ({ isMobile = false, sortOrder, onSortChange }: TableHeaderProps) => {
   return (
     <TableHeader>
       <TableRow>

@@ -1,7 +1,12 @@
 
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-export const TableHeaderRow = () => {
+interface TableHeaderRowProps {
+  sortOrder?: 'data' | 'nome';
+  onSortChange?: (field: 'data' | 'nome') => void;
+}
+
+export const TableHeaderRow = ({ sortOrder, onSortChange }: TableHeaderRowProps) => {
   return (
     <TableHeader>
       <TableRow>

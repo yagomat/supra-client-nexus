@@ -101,7 +101,8 @@ export async function getPagamentosWithClients(
         senha_2: item.cliente_senha_2,
         data_licenca_2: item.cliente_data_licenca_2,
         observacoes: item.cliente_observacoes,
-        status: item.cliente_status
+        status: item.cliente_status,
+        licenca_status: 'n/a' // Valor padrão temporário
       });
     }
   });

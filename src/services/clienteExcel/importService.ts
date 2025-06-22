@@ -1,4 +1,3 @@
-
 import * as XLSX from 'xlsx';
 import { createCliente } from '../clienteService';
 import { ClienteExcel, ImportResult } from './types';
@@ -48,8 +47,7 @@ export async function importClientesFromExcel(file: File): Promise<ImportResult>
               senha_2: row['Senha 2'] ? convertToString(row['Senha 2']) : null,
               data_licenca_2: row['Vencimento da licença do app 2'] ? 
                 convertDateBrToIso(row['Vencimento da licença do app 2']) : null,
-              observacoes: row['Observações'] || null,
-              status: 'ativo' // Status padrão para novos clientes
+              observacoes: row['Observações'] || null
             };
             
             // Validar campos específicos obrigatórios
