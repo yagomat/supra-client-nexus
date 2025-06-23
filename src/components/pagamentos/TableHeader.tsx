@@ -1,5 +1,7 @@
 
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface TableHeaderProps {
   isMobile?: boolean;
@@ -7,17 +9,56 @@ interface TableHeaderProps {
   onSortChange?: (sortOrder: 'nome' | 'data') => void;
 }
 
-export const PagamentosTableHeader = ({ isMobile = false, sortOrder, onSortChange }: TableHeaderProps) => {
+export const TableHeaderComponent = ({
+  isMobile = false,
+  sortOrder = 'data',
+  onSortChange
+}: TableHeaderProps) => {
+  const handleSortToggle = (field: 'nome' | 'data') => {
+    if (onSortChange) {
+      onSortChange(field);
+    }
+  };
+  
   return (
     <TableHeader>
-      <TableRow>
-        <TableHead>Data Cadastro</TableHead>
-        <TableHead className="sticky left-0 bg-background z-30 border-r-2 border-border shadow-xl">Nome</TableHead>
-        <TableHead>Dia Vencimento</TableHead>
-        {!isMobile && <TableHead>Valor Plano</TableHead>}
-        <TableHead>Status Pagamento</TableHead>
-        <TableHead>Status Licenças</TableHead>
-        <TableHead>Pagamento</TableHead>
+      <TableRow className="bg-muted/50">
+        <TableHead className="w-32">
+          <Button
+            variant="ghost"
+            className="flex items-center font-medium -ml-2"
+            onClick={() => handleSortToggle('data')}
+          >
+            <div className="leading-tight">
+              <div>Data de</div>
+              <div>Cadastro</div>
+            </div>
+            {sortOrder === 'data' ? (
+              <ArrowDownIcon className="ml-2 h-4 w-4 opacity-70" />
+            ) : null}
+          </Button>
+        </TableHead>
+        <TableHead className="sticky left-0 bg-muted/50 z-30 border-r-2 border-border shadow-xl">
+          <Button
+            variant="ghost"
+            className="flex items-center font-medium -ml-2"
+            onClick={() => handleSortToggle('nome')}
+          >
+            Nome
+            {sortOrder === 'nome' ? (
+              <ArrowDownIcon className="ml-2 h-4 w-4 opacity-70" />
+            ) : null}
+          </Button>
+        </TableHead>
+        <TableHead>
+          <div className="leading-tight font-medium">
+            <div>Dia de</div>
+            <div>Venc.</div>
+          </div>
+        </TableHead>
+        {!isMobile && <TableHead className="font-medium">Plano</TableHead>}
+        <TableHead className="font-medium">Status</TableHead>
+        <TableHead className="font-medium">Pagamento</TableHead>
       </TableRow>
     </TableHeader>
   );

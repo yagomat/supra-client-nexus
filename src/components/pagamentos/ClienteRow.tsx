@@ -4,7 +4,6 @@ import { ClienteComPagamentos } from "@/types";
 import { formatDate } from "@/utils/dateUtils";
 import { PaymentStatusCell } from "./PaymentStatusCell";
 import { ClientStatusBadge } from "./ClientStatusBadge";
-import { LicencaStatusBadge } from "../clientes/LicencaStatusBadge";
 
 interface ClienteRowProps {
   cliente: ClienteComPagamentos;
@@ -48,9 +47,6 @@ export const ClienteRow = ({
       {!isMobile && <TableCell>{valorPlanoFormatado}</TableCell>}
       <TableCell>
         <ClientStatusBadge status={clienteStatus} />
-      </TableCell>
-      <TableCell>
-        <LicencaStatusBadge status={cliente.licenca_status} size="sm" />
       </TableCell>
       <TableCell>
         <PaymentStatusCell

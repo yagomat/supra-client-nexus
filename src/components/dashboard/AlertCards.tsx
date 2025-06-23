@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -14,12 +13,7 @@ interface AlertCardsProps {
   loading: boolean;
 }
 
-export const AlertCards = ({ 
-  clientesInativos, 
-  appsVencendo, 
-  clientesEmRiscoDetalhes, 
-  loading 
-}: AlertCardsProps) => {
+export const AlertCards = ({ clientesInativos, appsVencendo, clientesEmRiscoDetalhes, loading }: AlertCardsProps) => {
   // Format date to Brazilian format (day/month/year)
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

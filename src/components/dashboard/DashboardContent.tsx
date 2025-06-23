@@ -39,7 +39,7 @@ export const DashboardContent = ({ stats, loading }: DashboardContentProps) => {
 
       <StatsCards stats={stats} loading={loading} />
 
-      {/* Alert cards without license information */}
+      {/* New alert cards */}
       <AlertCards 
         clientesInativos={safeClientesInativos}
         appsVencendo={safeAppsVencendo}

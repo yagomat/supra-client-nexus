@@ -6,7 +6,6 @@ import { Eye, Pencil, Trash2 } from "lucide-react";
 import { Cliente } from "@/types";
 import { formatDate } from "@/utils/dateUtils";
 import { ClienteStatusBadge } from "../ClienteStatusBadge";
-import { LicencaStatusBadge } from "../LicencaStatusBadge";
 import { formatPhoneNumber } from "./PhoneFormatter";
 
 interface ClienteTableRowProps {
@@ -50,9 +49,6 @@ export const ClienteTableRow = ({
       </TableCell>
       <TableCell>
         <ClienteStatusBadge status={cliente.status} />
-      </TableCell>
-      <TableCell>
-        <LicencaStatusBadge status={cliente.licenca_status} size="sm" />
       </TableCell>
       <TableCell>
         <Button

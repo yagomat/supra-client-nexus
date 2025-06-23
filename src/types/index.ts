@@ -1,9 +1,6 @@
 
 export type PaymentStatus = "pago" | "pago_confianca" | "nao_pago";
 
-// Nova definição para status de licenças
-export type LicencaStatusType = "valida" | "atencao" | "vencida" | "n/a";
-
 export interface Cliente {
   id: string;
   created_at: string;
@@ -30,8 +27,7 @@ export interface Cliente {
   data_licenca_2: string | null;
   
   observacoes: string | null;
-  status: string; // Status de pagamento
-  licenca_status: LicencaStatusType; // Novo status de licenças
+  status: string; // Changed from "ativo" | "inativo" to string to match what comes from the database
 }
 
 export interface ClienteComPagamentos extends Cliente {
@@ -84,9 +80,6 @@ export interface DashboardStats {
   clientes_inativos_proximos_dias: number;
   apps_vencendo_proximos_dias: AppVencendo[];
   clientes_em_risco_detalhes?: ClienteEmRisco[];
-  // Novas estatísticas de licenças
-  licencas_vencidas: number;
-  licencas_atencao: number;
 }
 
 export interface AppVencendo {

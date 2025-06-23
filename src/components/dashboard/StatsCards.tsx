@@ -13,31 +13,31 @@ export const StatsCards = ({ stats, loading }: StatsCardsProps) => {
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <StatCard
         title="Total de Clientes"
-        value={loading ? "" : String(stats?.clientes_total || "0")}
+        value={loading ? "" : stats?.clientes_total || "0"}
         icon={<Users size={24} />}
         loading={loading}
       />
       <StatCard
         title="Clientes Ativos"
-        value={loading ? "" : String(stats?.clientes_ativos || "0")}
+        value={loading ? "" : stats?.clientes_ativos || "0"}
         icon={<UserCheck size={24} />}
         loading={loading}
       />
       <StatCard
         title="Clientes Inativos"
-        value={loading ? "" : String(stats?.clientes_inativos || "0")}
+        value={loading ? "" : stats?.clientes_inativos || "0"}
         icon={<UserX size={24} />}
         loading={loading}
       />
       <StatCard
         title="Clientes Novos (30 dias)"
-        value={loading ? "" : String(stats?.clientes_novos || "0")}
+        value={loading ? "" : stats?.clientes_novos || "0"}
         icon={<UserPlus size={24} />}
         loading={loading}
       />
       <StatCard
         title="Pagamentos Pendentes"
-        value={loading ? "" : String(stats?.pagamentos_pendentes || "0")}
+        value={loading ? "" : stats?.pagamentos_pendentes || "0"}
         icon={<AlertCircle size={24} />}
         loading={loading}
       />

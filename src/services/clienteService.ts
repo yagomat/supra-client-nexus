@@ -53,7 +53,7 @@ export async function getCliente(id: string): Promise<Cliente> {
   return data as Cliente;
 }
 
-export async function createCliente(cliente: Omit<Cliente, "id" | "created_at" | "status" | "licenca_status">): Promise<Cliente> {
+export async function createCliente(cliente: Omit<Cliente, "id" | "created_at" | "status">): Promise<Cliente> {
   const { data: currentUser } = await supabase.auth.getUser();
   
   if (!currentUser.user) {
