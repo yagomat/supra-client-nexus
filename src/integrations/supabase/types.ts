@@ -210,14 +210,6 @@ export type Database = {
         Args: { p_user_id: string; p_tipo: string; p_valor: string }
         Returns: Json
       }
-      check_cliente_licencas: {
-        Args: { p_cliente_id: string }
-        Returns: Json
-      }
-      check_licenca_status: {
-        Args: { p_data_licenca: string }
-        Returns: Json
-      }
       cliente_pertence_ao_usuario: {
         Args: { cliente_id_param: string }
         Returns: boolean
