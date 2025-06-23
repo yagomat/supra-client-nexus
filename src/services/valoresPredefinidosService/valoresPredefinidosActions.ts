@@ -94,12 +94,3 @@ export async function validateClienteData(
   if (error) throw error;
   return data;
 }
-
-export async function checkClienteLicencas(clienteId: string) {
-  const { data, error } = await supabase.rpc('check_cliente_licencas', {
-    p_cliente_id: clienteId
-  });
-
-  if (error) throw error;
-  return data;
-}
