@@ -9,3 +9,4 @@ export * from './clientStatusService';
 export * from './clienteExcel';
 export * from './auth';
 export * from './auditLogService';
+export * from './cobrancaService';

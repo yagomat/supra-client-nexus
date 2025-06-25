@@ -39,6 +39,50 @@ export type Database = {
         }
         Relationships: []
       }
+      cliente_cobrancas: {
+        Row: {
+          ano_referencia: number
+          cliente_id: string
+          created_at: string
+          data_ultimo_aviso: string | null
+          id: string
+          mes_referencia: number
+          ultimo_aviso: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ano_referencia: number
+          cliente_id: string
+          created_at?: string
+          data_ultimo_aviso?: string | null
+          id?: string
+          mes_referencia: number
+          ultimo_aviso?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ano_referencia?: number
+          cliente_id?: string
+          created_at?: string
+          data_ultimo_aviso?: string | null
+          id?: string
+          mes_referencia?: number
+          ultimo_aviso?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_cobrancas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clientes: {
         Row: {
           aplicativo: string
@@ -334,6 +378,22 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: Json
       }
+      get_fila_cobranca: {
+        Args: { p_user_id: string; p_mes: number; p_ano: number }
+        Returns: {
+          cliente_id: string
+          cliente_nome: string
+          cliente_telefone: string
+          cliente_servidor: string
+          dia_vencimento: number
+          valor_plano: number
+          status_pagamento: string
+          dias_para_vencimento: number
+          ultimo_aviso: string
+          data_ultimo_aviso: string
+          prioridade: number
+        }[]
+      }
       get_user_audit_logs: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -380,6 +440,16 @@ export type Database = {
       recalculate_all_client_status: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      registrar_cobranca: {
+        Args: {
+          p_cliente_id: string
+          p_user_id: string
+          p_tipo_aviso: string
+          p_mes: number
+          p_ano: number
+        }
+        Returns: Json
       }
       validate_cliente_data: {
         Args: {
