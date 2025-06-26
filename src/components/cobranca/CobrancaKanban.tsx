@@ -23,12 +23,14 @@ export const CobrancaKanban = () => {
   const clientesFiltrados = useMemo(() => {
     let clientes = [...filaCobranca];
 
-    // Aplicar filtro de status
+    // Aplicar filtro de status baseado no status do cliente, não no pagamento
     if (statusFilter !== "todos") {
       clientes = clientes.filter(cliente => {
-        // Verificar se o cliente está ativo/inativo baseado no status de pagamento
-        const isAtivo = cliente.status_pagamento === 'pago' || cliente.status_pagamento === 'pago_confianca';
-        return statusFilter === "ativo" ? isAtivo : !isAtivo;
+        // Aqui assumimos que existe uma propriedade cliente_status na resposta da RPC
+        // Se não existir, precisaremos ajustar a RPC get_fila_cobranca
+        return statusFilter === "ativo" ? 
+          cliente.cliente_status === 'ativo' : 
+          cliente.cliente_status === 'inativo';
       });
     }
 
