@@ -388,6 +388,7 @@ export type Database = {
           dia_vencimento: number
           valor_plano: number
           status_pagamento: string
+          data_proximo_pagamento: string
           dias_para_vencimento: number
           ultimo_aviso: string
           data_ultimo_aviso: string

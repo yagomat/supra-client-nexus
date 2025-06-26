@@ -2,9 +2,9 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Phone, Calendar, DollarSign, Server } from "lucide-react";
+import { Phone, Calendar, DollarSign, Server, CalendarDays } from "lucide-react";
 import { FilaCobranca } from "@/services/cobrancaService";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface ClienteCobrancaCardProps {
@@ -62,11 +62,14 @@ export const ClienteCobrancaCard = ({
   };
 
   const isButtonDisabled = (tipo: string) => {
-    return submitting || cliente.status_pagamento === 'pago' || cliente.status_pagamento === 'pago_confianca';
+    return submitting;
   };
 
+  // Formatar a data do próximo pagamento
+  const dataProximoPagamento = format(new Date(cliente.data_proximo_pagamento), 'dd/MM/yyyy');
+
   return (
-    <Card className="w-full mb-3 shadow-sm">
+    <Card className="w-full shadow-sm">
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
           <div>
@@ -81,10 +84,14 @@ export const ClienteCobrancaCard = ({
       </CardHeader>
       
       <CardContent className="pt-0">
-        <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+        <div className="grid grid-cols-1 gap-2 mb-3 text-xs">
+          <div className="flex items-center gap-1 font-medium text-primary">
+            <CalendarDays className="w-3 h-3" />
+            <span>Próximo pagamento: {dataProximoPagamento}</span>
+          </div>
           <div className="flex items-center gap-1">
             <Calendar className="w-3 h-3" />
-            <span>Dia {cliente.dia_vencimento}</span>
+            <span>Dia de vencimento: {cliente.dia_vencimento}</span>
           </div>
           {cliente.valor_plano && (
             <div className="flex items-center gap-1">
@@ -93,7 +100,7 @@ export const ClienteCobrancaCard = ({
             </div>
           )}
           {cliente.cliente_telefone && (
-            <div className="flex items-center gap-1 col-span-2">
+            <div className="flex items-center gap-1">
               <Phone className="w-3 h-3" />
               <span>{cliente.cliente_telefone}</span>
             </div>

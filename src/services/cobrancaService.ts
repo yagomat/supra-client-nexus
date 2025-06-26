@@ -9,6 +9,7 @@ export interface FilaCobranca {
   dia_vencimento: number;
   valor_plano: number | null;
   status_pagamento: string;
+  data_proximo_pagamento: string;
   dias_para_vencimento: number;
   ultimo_aviso: string | null;
   data_ultimo_aviso: string | null;
