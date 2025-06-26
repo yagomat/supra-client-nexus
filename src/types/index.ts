@@ -6,6 +6,7 @@ export interface Cliente {
   created_at: string;
   nome: string;
   telefone: string | null;
+  codigo_pais_telefone: string | null; // Adicionado campo código do país
   uf: string | null;
   servidor: string;
   dia_vencimento: number;

@@ -58,6 +58,9 @@ export const useClienteForm = (clienteId: string | undefined) => {
     if (cliente && !loading) {
       console.log("Carregando dados do cliente no formulário:", cliente);
       
+      // Converter status para o tipo esperado
+      const status = cliente.status === "ativo" ? "ativo" : "inativo";
+      
       form.reset({
         nome: cliente.nome,
         telefone: cliente.telefone || "",
@@ -81,7 +84,7 @@ export const useClienteForm = (clienteId: string | undefined) => {
         data_licenca_2: cliente.data_licenca_2 || "",
         
         observacoes: cliente.observacoes || "",
-        status: cliente.status,
+        status: status,
       });
     }
   }, [cliente, loading, form]);

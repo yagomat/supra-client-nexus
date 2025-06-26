@@ -30,8 +30,9 @@ export const useStatusMonitoring = (
             // Busca o cliente atualizado para obter o novo status
             const clienteAtualizado = await getCliente(clienteId);
             
-            // Atualiza o campo status no formulário
-            form.setValue("status", clienteAtualizado.status);
+            // Atualiza o campo status no formulário - converter para o tipo esperado
+            const status = clienteAtualizado.status === "ativo" ? "ativo" : "inativo";
+            form.setValue("status", status);
           } catch (error) {
             console.error("Erro ao atualizar dia de vencimento:", error);
           }

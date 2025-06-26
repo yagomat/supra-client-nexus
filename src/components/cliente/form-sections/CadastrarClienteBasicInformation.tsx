@@ -2,18 +2,24 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { CodigoPaisSelect } from "@/components/form/CodigoPaisSelect";
+import { SelectField } from "@/components/form/SelectField";
 import { Control } from "react-hook-form";
 import { ClienteFormValues } from "@/hooks/cliente";
+import { ValoresPredefinidos } from "@/types";
 
 interface CadastrarClienteBasicInformationProps {
   control: Control<ClienteFormValues>;
+  valoresPredefinidos: ValoresPredefinidos | null;
+  disabled?: boolean;
 }
 
-export const CadastrarClienteBasicInformation = ({ control }: CadastrarClienteBasicInformationProps) => {
+export const CadastrarClienteBasicInformation = ({ 
+  control, 
+  valoresPredefinidos, 
+  disabled = false 
+}: CadastrarClienteBasicInformationProps) => {
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">Informações Básicas</h3>
-      
       <FormField
         control={control}
         name="nome"
@@ -21,7 +27,7 @@ export const CadastrarClienteBasicInformation = ({ control }: CadastrarClienteBa
           <FormItem>
             <FormLabel>Nome *</FormLabel>
             <FormControl>
-              <Input placeholder="Digite o nome do cliente" {...field} />
+              <Input placeholder="Digite o nome do cliente" {...field} disabled={disabled} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -39,6 +45,7 @@ export const CadastrarClienteBasicInformation = ({ control }: CadastrarClienteBa
                 <CodigoPaisSelect
                   value={field.value || "+55"}
                   onValueChange={field.onChange}
+                  disabled={disabled}
                 />
               </FormControl>
               <FormMessage />
@@ -53,7 +60,12 @@ export const CadastrarClienteBasicInformation = ({ control }: CadastrarClienteBa
             <FormItem className="md:col-span-2">
               <FormLabel>Telefone</FormLabel>
               <FormControl>
-                <Input placeholder="11999999999" {...field} value={field.value || ""} />
+                <Input 
+                  placeholder="11999999999" 
+                  {...field} 
+                  value={field.value || ""} 
+                  disabled={disabled}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -61,19 +73,68 @@ export const CadastrarClienteBasicInformation = ({ control }: CadastrarClienteBa
         />
       </div>
 
-      <FormField
-        control={control}
-        name="uf"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>UF</FormLabel>
-            <FormControl>
-              <Input placeholder="SP" {...field} value={field.value || ""} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {valoresPredefinidos?.ufs && (
+          <SelectField
+            name="uf"
+            control={control}
+            label="UF"
+            placeholder="Selecione um estado"
+            options={[
+              { value: "", label: "Não informado" },
+              ...valoresPredefinidos.ufs.map(uf => ({ value: uf, label: uf }))
+            ]}
+            disabled={disabled}
+          />
         )}
-      />
+
+        {valoresPredefinidos?.servidores && (
+          <SelectField
+            name="servidor"
+            control={control}
+            label="Servidor *"
+            placeholder="Selecione um servidor"
+            options={valoresPredefinidos.servidores.map(servidor => ({
+              value: servidor,
+              label: servidor
+            }))}
+            disabled={disabled}
+          />
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {valoresPredefinidos?.dias_vencimento && (
+          <SelectField
+            name="dia_vencimento"
+            control={control}
+            label="Dia de Vencimento *"
+            placeholder="Selecione o dia"
+            options={valoresPredefinidos.dias_vencimento.map(dia => ({
+              value: dia.toString(),
+              label: dia.toString()
+            }))}
+            disabled={disabled}
+          />
+        )}
+
+        {valoresPredefinidos?.valores_plano && (
+          <SelectField
+            name="valor_plano"
+            control={control}
+            label="Valor do Plano (R$)"
+            placeholder="Selecione o valor"
+            options={[
+              { value: "", label: "Não informado" },
+              ...valoresPredefinidos.valores_plano.map(valor => ({
+                value: valor.toString(),
+                label: `R$ ${valor.toFixed(2).replace('.', ',')}`
+              }))
+            ]}
+            disabled={disabled}
+          />
+        )}
+      </div>
     </div>
   );
 };
