@@ -5,8 +5,9 @@ export interface FilaCobranca {
   cliente_id: string;
   cliente_nome: string;
   cliente_telefone: string | null;
+  cliente_codigo_pais: string; // Adicionado código do país
   cliente_servidor: string;
-  cliente_status: string; // Adicionado o status do cliente
+  cliente_status: string;
   dia_vencimento: number;
   valor_plano: number | null;
   status_pagamento: string;

@@ -10,3 +10,4 @@ export * from './clienteExcel';
 export * from './auth';
 export * from './auditLogService';
 export * from './cobrancaService';
+export * from './mensagensWhatsAppService';

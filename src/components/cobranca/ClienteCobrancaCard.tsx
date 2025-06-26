@@ -1,26 +1,31 @@
 
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Phone, DollarSign, Server, CalendarDays } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FilaCobranca } from "@/services/cobrancaService";
-import { formatDistanceToNow, format, isValid, parseISO } from "date-fns";
+import { TipoMensagem } from "@/services/mensagensWhatsAppService";
+import { useMensagensWhatsApp } from "@/hooks/useMensagensWhatsApp";
+import { formatarMensagemWhatsApp, gerarLinkWhatsApp, determinarTipoMensagem, abrirWhatsApp } from "@/utils/whatsappUtils";
+import { MessageCircle, Phone, Calendar, DollarSign, Server, User } from "lucide-react";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface ClienteCobrancaCardProps {
   cliente: FilaCobranca;
-  onRegistrarCobranca: (clienteId: string, tipoAviso: string) => void;
+  onRegistrarCobranca: (clienteId: string, tipoAviso: string) => Promise<void>;
   submitting: boolean;
 }
 
-export const ClienteCobrancaCard = ({ 
-  cliente, 
-  onRegistrarCobranca, 
-  submitting 
-}: ClienteCobrancaCardProps) => {
+export const ClienteCobrancaCard = ({ cliente, onRegistrarCobranca, submitting }: ClienteCobrancaCardProps) => {
+  const { mensagens, loading: loadingMensagens } = useMensagensWhatsApp();
+  const [tipoMensagem, setTipoMensagem] = useState<TipoMensagem>(determinarTipoMensagem(cliente.dias_para_vencimento));
+  const [enviandoWhatsApp, setEnviandoWhatsApp] = useState(false);
+
   const getStatusBadge = () => {
     if (cliente.status_pagamento === 'pago' || cliente.status_pagamento === 'pago_confianca') {
-      return <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">Pago</Badge>;
+      return <Badge variant="default" className="bg-green-100 text-green-800">Pago</Badge>;
     }
     
     if (cliente.dias_para_vencimento < 0) {
@@ -28,173 +33,121 @@ export const ClienteCobrancaCard = ({
     }
     
     if (cliente.dias_para_vencimento === 0) {
-      return <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200">Vence hoje</Badge>;
+      return <Badge variant="outline" className="border-orange-500 text-orange-600">Vence hoje</Badge>;
     }
     
-    if (cliente.dias_para_vencimento <= 3) {
-      return <Badge variant="outline" className="bg-yellow-50 text-yellow-600 border-yellow-200">Vence em {cliente.dias_para_vencimento} dias</Badge>;
-    }
-    
-    return <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">Vence em {cliente.dias_para_vencimento} dias</Badge>;
+    return <Badge variant="secondary">Vence em {cliente.dias_para_vencimento} dias</Badge>;
   };
 
-  const getUltimoAvisoInfo = () => {
-    if (!cliente.ultimo_aviso || !cliente.data_ultimo_aviso) {
-      return null;
-    }
-
-    const tipoAvisoLabels: Record<string, string> = {
-      '3_dias': '3 dias',
-      '1_dia': '1 dia',
-      'hoje': 'hoje',
-      'ontem': 'ontem',
-      'renovado': 'renovado'
-    };
-
-    // Validar se a data é válida antes de tentar formatá-la
-    let dataUltimoAviso: Date;
+  const handleEnviarWhatsApp = async () => {
     try {
-      dataUltimoAviso = typeof cliente.data_ultimo_aviso === 'string' 
-        ? parseISO(cliente.data_ultimo_aviso) 
-        : new Date(cliente.data_ultimo_aviso);
-      
-      if (!isValid(dataUltimoAviso)) {
-        return (
-          <div className="text-xs text-muted-foreground mt-2">
-            Último aviso: {tipoAvisoLabels[cliente.ultimo_aviso] || cliente.ultimo_aviso} - (data inválida)
-          </div>
-        );
+      setEnviandoWhatsApp(true);
+
+      // Validar telefone
+      if (!cliente.cliente_telefone) {
+        throw new Error("Cliente não possui telefone cadastrado");
       }
-    } catch (error) {
-      console.error("Erro ao processar data do último aviso:", error);
-      return (
-        <div className="text-xs text-muted-foreground mt-2">
-          Último aviso: {tipoAvisoLabels[cliente.ultimo_aviso] || cliente.ultimo_aviso} - (erro na data)
-        </div>
+
+      // Buscar mensagem do tipo selecionado
+      const mensagemTemplate = mensagens[tipoMensagem];
+      if (!mensagemTemplate) {
+        throw new Error("Mensagem não configurada para este tipo");
+      }
+
+      // Formatar mensagem com placeholders
+      const mensagemFormatada = formatarMensagemWhatsApp(mensagemTemplate, cliente);
+
+      // Gerar link do WhatsApp
+      const linkWhatsApp = gerarLinkWhatsApp(
+        cliente.cliente_codigo_pais || '+55',
+        cliente.cliente_telefone,
+        mensagemFormatada
       );
-    }
 
-    return (
-      <div className="text-xs text-muted-foreground mt-2">
-        Último aviso: {tipoAvisoLabels[cliente.ultimo_aviso]} - {formatDistanceToNow(dataUltimoAviso, { 
-          addSuffix: true, 
-          locale: ptBR 
-        })}
-      </div>
-    );
-  };
+      // Registrar cobrança
+      await onRegistrarCobranca(cliente.cliente_id, tipoMensagem);
 
-  const isButtonDisabled = (tipo: string) => {
-    return submitting;
-  };
+      // Abrir WhatsApp
+      abrirWhatsApp(linkWhatsApp);
 
-  // Formatar a data do próximo pagamento com validação
-  const formatDataProximoPagamento = () => {
-    if (!cliente.data_proximo_pagamento) {
-      return "Data não disponível";
-    }
-
-    try {
-      let dataProximoPagamento: Date;
-      if (typeof cliente.data_proximo_pagamento === 'string') {
-        dataProximoPagamento = parseISO(cliente.data_proximo_pagamento);
-      } else {
-        dataProximoPagamento = new Date(cliente.data_proximo_pagamento);
-      }
-
-      if (!isValid(dataProximoPagamento)) {
-        return "Data inválida";
-      }
-
-      return format(dataProximoPagamento, 'dd/MM/yyyy');
     } catch (error) {
-      console.error("Erro ao formatar data do próximo pagamento:", error);
-      return "Erro na data";
+      console.error("Erro ao enviar WhatsApp:", error);
+    } finally {
+      setEnviandoWhatsApp(false);
     }
   };
 
   return (
-    <Card className="w-full shadow-sm">
+    <Card className="transition-all hover:shadow-md">
       <CardHeader className="pb-3">
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="font-semibold text-sm">{cliente.cliente_nome}</h3>
-            <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-              <Server className="w-3 h-3" />
-              <span>{cliente.cliente_servidor}</span>
-            </div>
-          </div>
+        <div className="flex items-start justify-between">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <User className="w-5 h-5" />
+            {cliente.cliente_nome}
+          </CardTitle>
           {getStatusBadge()}
         </div>
       </CardHeader>
       
-      <CardContent className="pt-0">
-        <div className="grid grid-cols-1 gap-2 mb-3 text-xs">
-          <div className="flex items-center gap-1 font-medium text-primary">
-            <CalendarDays className="w-3 h-3" />
-            <span>Próximo pagamento: {formatDataProximoPagamento()}</span>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <Phone className="w-4 h-4 text-muted-foreground" />
+            <span>{cliente.cliente_codigo_pais || '+55'} {cliente.cliente_telefone || 'Não informado'}</span>
           </div>
-          {cliente.valor_plano && (
-            <div className="flex items-center gap-1">
-              <DollarSign className="w-3 h-3" />
-              <span>R$ {cliente.valor_plano.toFixed(2)}</span>
-            </div>
-          )}
-          {cliente.cliente_telefone && (
-            <div className="flex items-center gap-1">
-              <Phone className="w-3 h-3" />
-              <span>{cliente.cliente_telefone}</span>
-            </div>
-          )}
+          
+          <div className="flex items-center gap-2">
+            <Server className="w-4 h-4 text-muted-foreground" />
+            <span>{cliente.cliente_servidor}</span>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-muted-foreground" />
+            <span>
+              {format(new Date(cliente.data_proximo_pagamento), "dd/MM/yyyy", { locale: ptBR })}
+            </span>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <DollarSign className="w-4 h-4 text-muted-foreground" />
+            <span>R$ {cliente.valor_plano?.toFixed(2).replace('.', ',') || '0,00'}</span>
+          </div>
         </div>
 
-        {getUltimoAvisoInfo()}
+        {cliente.ultimo_aviso && (
+          <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
+            Último aviso: {cliente.ultimo_aviso} em{' '}
+            {cliente.data_ultimo_aviso ? 
+              format(new Date(cliente.data_ultimo_aviso), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) :
+              'Data não informada'
+            }
+          </div>
+        )}
 
-        <div className="grid grid-cols-2 gap-2 mt-3">
-          <Button 
-            size="sm" 
-            variant="outline"
-            className="text-xs h-8"
-            onClick={() => onRegistrarCobranca(cliente.cliente_id, '3_dias')}
-            disabled={isButtonDisabled('3_dias')}
+        <div className="flex items-center gap-2 pt-2">
+          <Select 
+            value={tipoMensagem} 
+            onValueChange={(value: TipoMensagem) => setTipoMensagem(value)}
+            disabled={loadingMensagens || submitting}
           >
-            3 dias
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline"
-            className="text-xs h-8"
-            onClick={() => onRegistrarCobranca(cliente.cliente_id, '1_dia')}
-            disabled={isButtonDisabled('1_dia')}
+            <SelectTrigger className="flex-1">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="a_vencer">A Vencer</SelectItem>
+              <SelectItem value="vence_hoje">Vence Hoje</SelectItem>
+              <SelectItem value="vencido">Vencido</SelectItem>
+              <SelectItem value="pago">Pago</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button
+            onClick={handleEnviarWhatsApp}
+            disabled={submitting || enviandoWhatsApp || loadingMensagens || !cliente.cliente_telefone}
+            className="bg-green-600 hover:bg-green-700"
           >
-            1 dia
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline"
-            className="text-xs h-8"
-            onClick={() => onRegistrarCobranca(cliente.cliente_id, 'hoje')}
-            disabled={isButtonDisabled('hoje')}
-          >
-            Hoje
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline"
-            className="text-xs h-8"
-            onClick={() => onRegistrarCobranca(cliente.cliente_id, 'ontem')}
-            disabled={isButtonDisabled('ontem')}
-          >
-            Ontem
-          </Button>
-          <Button 
-            size="sm" 
-            variant="default"
-            className="text-xs h-8 col-span-2"
-            onClick={() => onRegistrarCobranca(cliente.cliente_id, 'renovado')}
-            disabled={isButtonDisabled('renovado')}
-          >
-            Renovado
+            <MessageCircle className="w-4 h-4 mr-2" />
+            {enviandoWhatsApp ? 'Enviando...' : 'Enviar WhatsApp'}
           </Button>
         </div>
       </CardContent>

@@ -23,6 +23,7 @@ export const useClienteForm = (clienteId: string | undefined) => {
     defaultValues: {
       nome: "",
       telefone: "",
+      codigo_pais_telefone: "+55",
       uf: "",
       servidor: "",
       dia_vencimento: 1,
@@ -60,6 +61,7 @@ export const useClienteForm = (clienteId: string | undefined) => {
       form.reset({
         nome: cliente.nome,
         telefone: cliente.telefone || "",
+        codigo_pais_telefone: cliente.codigo_pais_telefone || "+55",
         uf: cliente.uf || "",
         servidor: cliente.servidor,
         dia_vencimento: cliente.dia_vencimento,

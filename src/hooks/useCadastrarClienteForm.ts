@@ -22,6 +22,7 @@ export const useCadastrarClienteForm = () => {
     defaultValues: {
       nome: "",
       telefone: "",
+      codigo_pais_telefone: "+55",
       uf: "",
       servidor: "",
       dia_vencimento: 1,
@@ -92,6 +93,7 @@ export const useCadastrarClienteForm = () => {
       const clienteData = {
         nome: data.nome,
         telefone: data.telefone || null,
+        codigo_pais_telefone: data.codigo_pais_telefone || "+55",
         uf: data.uf || null,
         servidor: data.servidor,
         dia_vencimento: data.dia_vencimento || 1,

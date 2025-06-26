@@ -87,6 +87,7 @@ export type Database = {
         Row: {
           aplicativo: string
           aplicativo_2: string | null
+          codigo_pais_telefone: string | null
           created_at: string
           data_licenca_2: string | null
           data_licenca_aplicativo: string | null
@@ -111,6 +112,7 @@ export type Database = {
         Insert: {
           aplicativo: string
           aplicativo_2?: string | null
+          codigo_pais_telefone?: string | null
           created_at?: string
           data_licenca_2?: string | null
           data_licenca_aplicativo?: string | null
@@ -135,6 +137,7 @@ export type Database = {
         Update: {
           aplicativo?: string
           aplicativo_2?: string | null
+          codigo_pais_telefone?: string | null
           created_at?: string
           data_licenca_2?: string | null
           data_licenca_aplicativo?: string | null
@@ -155,6 +158,33 @@ export type Database = {
           usuario_2?: string | null
           usuario_aplicativo?: string
           valor_plano?: number | null
+        }
+        Relationships: []
+      }
+      mensagens_whatsapp: {
+        Row: {
+          created_at: string
+          id: string
+          mensagem: string
+          tipo_mensagem: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mensagem: string
+          tipo_mensagem: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mensagem?: string
+          tipo_mensagem?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -283,6 +313,7 @@ export type Database = {
         Returns: {
           aplicativo: string
           aplicativo_2: string | null
+          codigo_pais_telefone: string | null
           created_at: string
           data_licenca_2: string | null
           data_licenca_aplicativo: string | null
@@ -384,6 +415,7 @@ export type Database = {
           cliente_id: string
           cliente_nome: string
           cliente_telefone: string
+          cliente_codigo_pais: string
           cliente_servidor: string
           cliente_status: string
           dia_vencimento: number
