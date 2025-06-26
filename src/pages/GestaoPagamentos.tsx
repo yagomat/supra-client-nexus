@@ -3,12 +3,8 @@ import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePagamentos } from "@/hooks/usePagamentos";
-import { PagamentosTable } from "@/components/pagamentos/PagamentosTable";
-import { PagamentosMatriz } from "@/components/pagamentos/PagamentosMatriz";
-import { PagamentosFiltros } from "@/components/pagamentos/PagamentosFiltros";
+import { RegistrarPagamento } from "@/components/pagamentos/RegistrarPagamento";
 import { CobrancaKanban } from "@/components/cobranca/CobrancaKanban";
-import { LoadingState } from "@/components/clientes/LoadingState";
-import { EmptyState } from "@/components/clientes/EmptyState";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const GestaoPagamentos = () => {
@@ -43,10 +39,9 @@ const GestaoPagamentos = () => {
     <DashboardLayout title="Pagamentos">
       <div className="space-y-6 h-full flex flex-col">
         <Tabs defaultValue="cobranca" className="w-full flex flex-col flex-1 min-h-0">
-          <TabsList className="grid w-full max-w-lg grid-cols-3">
+          <TabsList className="grid w-full max-w-lg grid-cols-2">
             <TabsTrigger value="cobranca">Cobrança</TabsTrigger>
-            <TabsTrigger value="lista">Lista</TabsTrigger>
-            <TabsTrigger value="matriz">Matriz</TabsTrigger>
+            <TabsTrigger value="registrar">Registrar Pagamento</TabsTrigger>
           </TabsList>
           
           <TabsContent value="cobranca" className="pt-2 flex-1 min-h-0">
@@ -55,8 +50,9 @@ const GestaoPagamentos = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="lista" className="pt-2 flex-1">
-            <PagamentosFiltros 
+          <TabsContent value="registrar" className="pt-2 flex-1">
+            <RegistrarPagamento
+              filteredClientes={filteredClientes}
               anoAtual={anoAtual}
               mesAtual={mesAtual}
               onAnoChange={setAnoAtual}
@@ -64,67 +60,15 @@ const GestaoPagamentos = () => {
               searchTerm={searchTerm}
               onSearchChange={setSearchTerm}
               onClearSearch={handleLimparFiltro}
-              isListView={true}
+              loading={loading}
+              submitting={submitting}
+              onChangeStatus={handleChangeStatus}
               meses={meses}
               anos={anos}
               isMobile={isMobile}
+              sortOrder={sortOrder}
+              onSortChange={handleSortChange}
             />
-
-            {loading ? (
-              <LoadingState />
-            ) : (
-              <div className="border rounded-md overflow-hidden">
-                {filteredClientes.length === 0 ? (
-                  <EmptyState />
-                ) : (
-                  <PagamentosTable 
-                    clientes={filteredClientes}
-                    mesAtual={mesAtual}
-                    anoAtual={anoAtual}
-                    submitting={submitting}
-                    onChangeStatus={handleChangeStatus}
-                    isMobile={isMobile}
-                    sortOrder={sortOrder}
-                    onSortChange={handleSortChange}
-                  />
-                )}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="matriz" className="pt-2 flex-1">
-            <PagamentosFiltros 
-              anoAtual={anoAtual}
-              mesAtual={mesAtual}
-              onAnoChange={setAnoAtual}
-              onMesChange={setMesAtual}
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              onClearSearch={handleLimparFiltro}
-              isListView={false}
-              meses={meses}
-              anos={anos}
-              isMobile={isMobile}
-            />
-
-            {loading ? (
-              <LoadingState />
-            ) : (
-              <div className="border rounded-md overflow-hidden">
-                {filteredClientes.length === 0 ? (
-                  <EmptyState />
-                ) : (
-                  <PagamentosMatriz 
-                    clientes={filteredClientes}
-                    meses={meses}
-                    anoAtual={anoAtual}
-                    submitting={submitting}
-                    onChangeStatus={handleChangeStatus}
-                    isMobile={isMobile}
-                  />
-                )}
-              </div>
-            )}
           </TabsContent>
         </Tabs>
       </div>
