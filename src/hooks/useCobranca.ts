@@ -15,8 +15,13 @@ export const useCobranca = () => {
   const fetchFilaCobranca = async () => {
     try {
       setLoading(true);
+      console.log("Iniciando carregamento da fila de cobrança...", { mesAtual, anoAtual });
+      
       const data = await getFilaCobranca(mesAtual, anoAtual);
+      console.log("Dados recebidos da fila de cobrança:", data);
+      
       setFilaCobranca(data);
+      console.log("Estado da fila atualizado com", data.length, "clientes");
     } catch (error) {
       console.error("Erro ao carregar fila de cobrança:", error);
       toast({
@@ -26,12 +31,15 @@ export const useCobranca = () => {
       });
     } finally {
       setLoading(false);
+      console.log("Carregamento da fila finalizado");
     }
   };
 
   const handleRegistrarCobranca = async (clienteId: string, tipoAviso: string) => {
     try {
       setSubmitting(true);
+      console.log("Registrando cobrança:", { clienteId, tipoAviso, mesAtual, anoAtual });
+      
       await registrarCobranca(clienteId, tipoAviso, mesAtual, anoAtual);
       
       toast({
@@ -40,6 +48,7 @@ export const useCobranca = () => {
       });
       
       // Recarregar a fila para atualizar as posições
+      console.log("Recarregando fila após registro de cobrança...");
       await fetchFilaCobranca();
     } catch (error) {
       console.error("Erro ao registrar cobrança:", error);
@@ -54,6 +63,7 @@ export const useCobranca = () => {
   };
 
   useEffect(() => {
+    console.log("Hook useCobranca inicializado");
     fetchFilaCobranca();
   }, []);
 
