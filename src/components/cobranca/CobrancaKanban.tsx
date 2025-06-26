@@ -18,9 +18,8 @@ export const CobrancaKanban = () => {
   } = useCobranca();
 
   const [statusFilter, setStatusFilter] = useState("todos");
-  const [ordenacaoFilter, setOrdenacaoFilter] = useState("vencimento");
 
-  // Filtrar e ordenar clientes
+  // Filtrar clientes
   const clientesFiltrados = useMemo(() => {
     let clientes = [...filaCobranca];
 
@@ -33,33 +32,11 @@ export const CobrancaKanban = () => {
       });
     }
 
-    // Aplicar ordenação
-    if (ordenacaoFilter === "vencidos_primeiro") {
-      clientes.sort((a, b) => {
-        // Primeiro: vencidos (dias negativos)
-        // Segundo: por vencer (dias positivos)
-        if (a.dias_para_vencimento < 0 && b.dias_para_vencimento >= 0) return -1;
-        if (a.dias_para_vencimento >= 0 && b.dias_para_vencimento < 0) return 1;
-        
-        // Se ambos são vencidos, o mais atrasado primeiro
-        if (a.dias_para_vencimento < 0 && b.dias_para_vencimento < 0) {
-          return a.dias_para_vencimento - b.dias_para_vencimento;
-        }
-        
-        // Se ambos são por vencer, o mais próximo primeiro
-        if (a.dias_para_vencimento >= 0 && b.dias_para_vencimento >= 0) {
-          return a.dias_para_vencimento - b.dias_para_vencimento;
-        }
-        
-        return 0;
-      });
-    } else {
-      // Ordenação padrão por proximidade (já vem ordenado do backend)
-      clientes.sort((a, b) => a.prioridade - b.prioridade);
-    }
+    // Ordenação padrão por proximidade (já vem ordenado do backend)
+    clientes.sort((a, b) => a.prioridade - b.prioridade);
 
     return clientes;
-  }, [filaCobranca, statusFilter, ordenacaoFilter]);
+  }, [filaCobranca, statusFilter]);
 
   if (loading) {
     return <LoadingState />;
@@ -87,16 +64,11 @@ export const CobrancaKanban = () => {
       <CobrancaFilters
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
-        ordenacaoFilter={ordenacaoFilter}
-        onOrdenacaoFilterChange={setOrdenacaoFilter}
       />
 
       <ScrollArea className="flex-1 p-4">
         <div className="mb-4 text-sm text-muted-foreground">
-          {ordenacaoFilter === "vencidos_primeiro" 
-            ? "Ordenados: vencidos primeiro, depois por proximidade do vencimento"
-            : "Ordenados por proximidade do próximo pagamento (vencidos primeiro)"
-          }
+          Ordenados por proximidade do próximo pagamento (vencidos primeiro)
         </div>
         
         <div className="space-y-3">
