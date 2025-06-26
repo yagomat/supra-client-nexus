@@ -5,7 +5,7 @@ export interface FilaCobranca {
   cliente_id: string;
   cliente_nome: string;
   cliente_telefone: string | null;
-  cliente_codigo_pais: string; // Adicionado código do país
+  cliente_codigo_pais: string;
   cliente_servidor: string;
   cliente_status: string;
   dia_vencimento: number;
@@ -32,6 +32,8 @@ export const getFilaCobranca = async (mes: number, ano: number): Promise<FilaCob
     if (!userId) {
       throw new Error("Usuário não autenticado");
     }
+    
+    console.log("Chamando RPC get_fila_cobranca com:", { userId, mes, ano });
     
     const { data, error } = await supabase.rpc('get_fila_cobranca', {
       p_user_id: userId,

@@ -26,7 +26,6 @@ export const CobrancaKanban = () => {
     // Aplicar filtro de status baseado no status do cliente, não no pagamento
     if (statusFilter !== "todos") {
       clientes = clientes.filter(cliente => {
-        // Usar a propriedade cliente_status retornada pela RPC
         return statusFilter === "ativo" ? 
           cliente.cliente_status === 'ativo' : 
           cliente.cliente_status === 'inativo';
@@ -70,26 +69,34 @@ export const CobrancaKanban = () => {
       <div className="flex-1 min-h-0">
         <ScrollArea className="h-full">
           <div className="p-4">
-            <div className="mb-4 text-sm text-muted-foreground">
-              Ordenados por proximidade do próximo pagamento (vencidos primeiro)
-            </div>
-            
-            <div className="space-y-3 pb-4">
-              {clientesFiltrados.length === 0 ? (
-                <div className="text-center text-muted-foreground text-sm py-8">
-                  Nenhum cliente encontrado
+            {filaCobranca.length === 0 ? (
+              <div className="text-center text-muted-foreground text-sm py-8">
+                Nenhum cliente na fila de cobrança
+              </div>
+            ) : (
+              <>
+                <div className="mb-4 text-sm text-muted-foreground">
+                  Ordenados por proximidade do próximo pagamento (vencidos primeiro)
                 </div>
-              ) : (
-                clientesFiltrados.map((cliente) => (
-                  <ClienteCobrancaCard
-                    key={cliente.cliente_id}
-                    cliente={cliente}
-                    onRegistrarCobranca={handleRegistrarCobranca}
-                    submitting={submitting}
-                  />
-                ))
-              )}
-            </div>
+                
+                <div className="space-y-3 pb-4">
+                  {clientesFiltrados.length === 0 ? (
+                    <div className="text-center text-muted-foreground text-sm py-8">
+                      Nenhum cliente encontrado com o filtro selecionado
+                    </div>
+                  ) : (
+                    clientesFiltrados.map((cliente) => (
+                      <ClienteCobrancaCard
+                        key={cliente.cliente_id}
+                        cliente={cliente}
+                        onRegistrarCobranca={handleRegistrarCobranca}
+                        submitting={submitting}
+                      />
+                    ))
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </ScrollArea>
       </div>

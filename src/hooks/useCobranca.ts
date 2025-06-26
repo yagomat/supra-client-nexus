@@ -15,16 +15,20 @@ export const useCobranca = () => {
   const fetchFilaCobranca = async () => {
     try {
       setLoading(true);
+      console.log("Carregando fila de cobrança...");
       const data = await getFilaCobranca(mesAtual, anoAtual);
+      console.log("Dados recebidos:", data);
       setFilaCobranca(data);
       
     } catch (error) {
       console.error("Erro ao carregar fila de cobrança:", error);
       toast({
         title: "Erro ao carregar dados",
-        description: "Não foi possível carregar a fila de cobrança.",
+        description: "Não foi possível carregar a fila de cobrança. Verifique o console para mais detalhes.",
         variant: "destructive",
       });
+      // Set empty array on error to avoid showing loading forever
+      setFilaCobranca([]);
     } finally {
       setLoading(false);
     }
