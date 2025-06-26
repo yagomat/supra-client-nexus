@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Phone, Calendar, DollarSign, Server, CalendarDays } from "lucide-react";
+import { Phone, DollarSign, Server, CalendarDays } from "lucide-react";
 import { FilaCobranca } from "@/services/cobrancaService";
 import { formatDistanceToNow, format, isValid, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -133,10 +133,6 @@ export const ClienteCobrancaCard = ({
           <div className="flex items-center gap-1 font-medium text-primary">
             <CalendarDays className="w-3 h-3" />
             <span>Próximo pagamento: {formatDataProximoPagamento()}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Calendar className="w-3 h-3" />
-            <span>Dia de vencimento: {cliente.dia_vencimento}</span>
           </div>
           {cliente.valor_plano && (
             <div className="flex items-center gap-1">
