@@ -42,12 +42,6 @@ const GestaoPagamentos = () => {
   return (
     <DashboardLayout title="Pagamentos">
       <div className="space-y-6">
-        <div>
-          <p className="text-muted-foreground">
-            Gerencie os pagamentos dos clientes e acompanhe seu status.
-          </p>
-        </div>
-
         <Tabs defaultValue="lista" className="w-full">
           <TabsList className="grid w-full max-w-lg grid-cols-3">
             <TabsTrigger value="lista">Lista</TabsTrigger>
