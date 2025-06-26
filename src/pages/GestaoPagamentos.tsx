@@ -42,13 +42,19 @@ const GestaoPagamentos = () => {
   return (
     <DashboardLayout title="Pagamentos">
       <div className="space-y-6 h-full flex flex-col">
-        <Tabs defaultValue="lista" className="w-full flex flex-col flex-1 min-h-0">
+        <Tabs defaultValue="cobranca" className="w-full flex flex-col flex-1 min-h-0">
           <TabsList className="grid w-full max-w-lg grid-cols-3">
+            <TabsTrigger value="cobranca">Cobrança</TabsTrigger>
             <TabsTrigger value="lista">Lista</TabsTrigger>
             <TabsTrigger value="matriz">Matriz</TabsTrigger>
-            <TabsTrigger value="cobranca">Cobrança</TabsTrigger>
           </TabsList>
           
+          <TabsContent value="cobranca" className="pt-2 flex-1 min-h-0">
+            <div className="border rounded-md overflow-hidden h-full">
+              <CobrancaKanban />
+            </div>
+          </TabsContent>
+
           <TabsContent value="lista" className="pt-2 flex-1">
             <PagamentosFiltros 
               anoAtual={anoAtual}
@@ -119,12 +125,6 @@ const GestaoPagamentos = () => {
                 )}
               </div>
             )}
-          </TabsContent>
-
-          <TabsContent value="cobranca" className="pt-2 flex-1 min-h-0">
-            <div className="border rounded-md overflow-hidden h-full">
-              <CobrancaKanban />
-            </div>
           </TabsContent>
         </Tabs>
       </div>
