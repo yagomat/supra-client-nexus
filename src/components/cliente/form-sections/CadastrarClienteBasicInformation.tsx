@@ -80,10 +80,7 @@ export const CadastrarClienteBasicInformation = ({
             control={control}
             label="UF"
             placeholder="Selecione um estado"
-            options={[
-              { value: "", label: "Não informado" },
-              ...valoresPredefinidos.ufs.map(uf => ({ value: uf, label: uf }))
-            ]}
+            options={valoresPredefinidos.ufs.map(uf => ({ value: uf, label: uf }))}
             disabled={disabled}
           />
         )}
@@ -124,13 +121,10 @@ export const CadastrarClienteBasicInformation = ({
             control={control}
             label="Valor do Plano (R$)"
             placeholder="Selecione o valor"
-            options={[
-              { value: "", label: "Não informado" },
-              ...valoresPredefinidos.valores_plano.map(valor => ({
-                value: valor.toString(),
-                label: `R$ ${valor.toFixed(2).replace('.', ',')}`
-              }))
-            ]}
+            options={valoresPredefinidos.valores_plano.map(valor => ({
+              value: valor.toString(),
+              label: `R$ ${valor.toFixed(2).replace('.', ',')}`
+            }))}
             disabled={disabled}
           />
         )}
