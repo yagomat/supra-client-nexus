@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Phone, Calendar, DollarSign, Server, CalendarDays } from "lucide-react";
 import { FilaCobranca } from "@/services/cobrancaService";
-import { formatDistanceToNow, format } from "date-fns";
+import { formatDistanceToNow, format, isValid, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface ClienteCobrancaCardProps {
@@ -51,9 +51,32 @@ export const ClienteCobrancaCard = ({
       'renovado': 'renovado'
     };
 
+    // Validar se a data é válida antes de tentar formatá-la
+    let dataUltimoAviso: Date;
+    try {
+      dataUltimoAviso = typeof cliente.data_ultimo_aviso === 'string' 
+        ? parseISO(cliente.data_ultimo_aviso) 
+        : new Date(cliente.data_ultimo_aviso);
+      
+      if (!isValid(dataUltimoAviso)) {
+        return (
+          <div className="text-xs text-muted-foreground mt-2">
+            Último aviso: {tipoAvisoLabels[cliente.ultimo_aviso] || cliente.ultimo_aviso} - (data inválida)
+          </div>
+        );
+      }
+    } catch (error) {
+      console.error("Erro ao processar data do último aviso:", error);
+      return (
+        <div className="text-xs text-muted-foreground mt-2">
+          Último aviso: {tipoAvisoLabels[cliente.ultimo_aviso] || cliente.ultimo_aviso} - (erro na data)
+        </div>
+      );
+    }
+
     return (
       <div className="text-xs text-muted-foreground mt-2">
-        Último aviso: {tipoAvisoLabels[cliente.ultimo_aviso]} - {formatDistanceToNow(new Date(cliente.data_ultimo_aviso), { 
+        Último aviso: {tipoAvisoLabels[cliente.ultimo_aviso]} - {formatDistanceToNow(dataUltimoAviso, { 
           addSuffix: true, 
           locale: ptBR 
         })}
@@ -65,8 +88,30 @@ export const ClienteCobrancaCard = ({
     return submitting;
   };
 
-  // Formatar a data do próximo pagamento
-  const dataProximoPagamento = format(new Date(cliente.data_proximo_pagamento), 'dd/MM/yyyy');
+  // Formatar a data do próximo pagamento com validação
+  const formatDataProximoPagamento = () => {
+    if (!cliente.data_proximo_pagamento) {
+      return "Data não disponível";
+    }
+
+    try {
+      let dataProximoPagamento: Date;
+      if (typeof cliente.data_proximo_pagamento === 'string') {
+        dataProximoPagamento = parseISO(cliente.data_proximo_pagamento);
+      } else {
+        dataProximoPagamento = new Date(cliente.data_proximo_pagamento);
+      }
+
+      if (!isValid(dataProximoPagamento)) {
+        return "Data inválida";
+      }
+
+      return format(dataProximoPagamento, 'dd/MM/yyyy');
+    } catch (error) {
+      console.error("Erro ao formatar data do próximo pagamento:", error);
+      return "Erro na data";
+    }
+  };
 
   return (
     <Card className="w-full shadow-sm">
@@ -87,7 +132,7 @@ export const ClienteCobrancaCard = ({
         <div className="grid grid-cols-1 gap-2 mb-3 text-xs">
           <div className="flex items-center gap-1 font-medium text-primary">
             <CalendarDays className="w-3 h-3" />
-            <span>Próximo pagamento: {dataProximoPagamento}</span>
+            <span>Próximo pagamento: {formatDataProximoPagamento()}</span>
           </div>
           <div className="flex items-center gap-1">
             <Calendar className="w-3 h-3" />
