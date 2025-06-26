@@ -18,6 +18,7 @@ interface PagamentoComCliente {
   cliente_valor_plano: number | null;
   cliente_status: string;
   cliente_telefone: string | null;
+  cliente_codigo_pais_telefone: string | null;
   cliente_uf: string | null;
   cliente_servidor: string;
   cliente_dispositivo_smart: string | null;
@@ -85,6 +86,7 @@ export async function getPagamentosWithClients(
         created_at: item.cliente_created_at,
         nome: item.cliente_nome,
         telefone: item.cliente_telefone,
+        codigo_pais_telefone: item.cliente_codigo_pais_telefone,
         uf: item.cliente_uf,
         servidor: item.cliente_servidor,
         dia_vencimento: item.cliente_dia_vencimento,

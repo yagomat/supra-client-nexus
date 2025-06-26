@@ -30,6 +30,7 @@ export async function importClientesFromExcel(file: File): Promise<ImportResult>
             const cliente = {
               nome: row['Nome'],
               telefone: row['Telefone'] ? convertToString(row['Telefone']) : null,
+              codigo_pais_telefone: '+55', // Valor padrão para importações
               uf: row['UF'] || null,
               servidor: row['Servidor'],
               dia_vencimento: Number(row['Dia de Vencimento']),
