@@ -385,6 +385,7 @@ export type Database = {
           cliente_nome: string
           cliente_telefone: string
           cliente_servidor: string
+          cliente_status: string
           dia_vencimento: number
           valor_plano: number
           status_pagamento: string

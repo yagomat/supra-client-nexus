@@ -26,8 +26,7 @@ export const CobrancaKanban = () => {
     // Aplicar filtro de status baseado no status do cliente, não no pagamento
     if (statusFilter !== "todos") {
       clientes = clientes.filter(cliente => {
-        // Aqui assumimos que existe uma propriedade cliente_status na resposta da RPC
-        // Se não existir, precisaremos ajustar a RPC get_fila_cobranca
+        // Usar a propriedade cliente_status retornada pela RPC
         return statusFilter === "ativo" ? 
           cliente.cliente_status === 'ativo' : 
           cliente.cliente_status === 'inativo';
