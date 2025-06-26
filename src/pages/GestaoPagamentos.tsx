@@ -41,15 +41,15 @@ const GestaoPagamentos = () => {
 
   return (
     <DashboardLayout title="Pagamentos">
-      <div className="space-y-6">
-        <Tabs defaultValue="lista" className="w-full">
+      <div className="space-y-6 h-full flex flex-col">
+        <Tabs defaultValue="lista" className="w-full flex flex-col flex-1 min-h-0">
           <TabsList className="grid w-full max-w-lg grid-cols-3">
             <TabsTrigger value="lista">Lista</TabsTrigger>
             <TabsTrigger value="matriz">Matriz</TabsTrigger>
             <TabsTrigger value="cobranca">Cobrança</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="lista" className="pt-2">
+          <TabsContent value="lista" className="pt-2 flex-1">
             <PagamentosFiltros 
               anoAtual={anoAtual}
               mesAtual={mesAtual}
@@ -86,7 +86,7 @@ const GestaoPagamentos = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="matriz" className="pt-2">
+          <TabsContent value="matriz" className="pt-2 flex-1">
             <PagamentosFiltros 
               anoAtual={anoAtual}
               mesAtual={mesAtual}
@@ -121,8 +121,8 @@ const GestaoPagamentos = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="cobranca" className="pt-2">
-            <div className="border rounded-md overflow-hidden h-[calc(100vh-12rem)]">
+          <TabsContent value="cobranca" className="pt-2 flex-1 min-h-0">
+            <div className="border rounded-md overflow-hidden h-full">
               <CobrancaKanban />
             </div>
           </TabsContent>
