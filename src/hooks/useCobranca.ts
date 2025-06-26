@@ -13,31 +13,13 @@ export const useCobranca = () => {
   const anoAtual = new Date().getFullYear();
 
   const fetchFilaCobranca = async () => {
-    console.log("=== INÍCIO fetchFilaCobranca (hook) ===");
-    console.log("Estado inicial - loading:", loading);
-    console.log("Mês e ano atuais:", { mesAtual, anoAtual });
-    
     try {
       setLoading(true);
-      console.log("Loading definido como true");
-      
-      console.log("Chamando getFilaCobranca do service...");
       const data = await getFilaCobranca(mesAtual, anoAtual);
-      
-      console.log("=== DADOS RECEBIDOS NO HOOK ===");
-      console.log("Tipo dos dados:", typeof data);
-      console.log("É array:", Array.isArray(data));
-      console.log("Quantidade:", data.length);
-      console.log("Dados completos:", data);
-      
       setFilaCobranca(data);
-      console.log("Estado filaCobranca atualizado");
       
     } catch (error) {
-      console.error("=== ERRO NO fetchFilaCobranca (hook) ===");
-      console.error("Erro completo:", error);
-      console.error("Stack trace:", error instanceof Error ? error.stack : 'No stack trace');
-      
+      console.error("Erro ao carregar fila de cobrança:", error);
       toast({
         title: "Erro ao carregar dados",
         description: "Não foi possível carregar a fila de cobrança.",
@@ -45,14 +27,10 @@ export const useCobranca = () => {
       });
     } finally {
       setLoading(false);
-      console.log("=== FIM fetchFilaCobranca - loading definido como false ===");
     }
   };
 
   const handleRegistrarCobranca = async (clienteId: string, tipoAviso: string) => {
-    console.log("=== INÍCIO handleRegistrarCobranca ===");
-    console.log("Parâmetros:", { clienteId, tipoAviso, mesAtual, anoAtual });
-    
     try {
       setSubmitting(true);
       
@@ -63,7 +41,6 @@ export const useCobranca = () => {
         description: `Aviso de ${tipoAviso.replace('_', ' ')} registrado com sucesso.`,
       });
       
-      console.log("Recarregando fila após registro...");
       await fetchFilaCobranca();
       
     } catch (error) {
@@ -79,17 +56,8 @@ export const useCobranca = () => {
   };
 
   useEffect(() => {
-    console.log("=== useEffect do useCobranca executado ===");
-    console.log("Hook useCobranca inicializado");
     fetchFilaCobranca();
   }, []);
-
-  console.log("=== RENDER useCobranca ===");
-  console.log("Estado atual:", {
-    filaCobrancaLength: filaCobranca.length,
-    loading,
-    submitting
-  });
 
   return {
     filaCobranca,
