@@ -3,7 +3,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileTab } from "@/components/configuracoes/ProfileTab";
 import { PreferencesTab } from "@/components/configuracoes/PreferencesTab";
-import { TemplatesPersonalizados } from "@/components/configuracoes/TemplatesPersonalizados";
+import { MensagensWhatsAppTab } from "@/components/configuracoes/MensagensWhatsAppTab";
 
 const Configuracoes = () => {
   return (
@@ -19,7 +19,7 @@ const Configuracoes = () => {
           <TabsList>
             <TabsTrigger value="perfil">Perfil</TabsTrigger>
             <TabsTrigger value="preferencias">Preferências</TabsTrigger>
-            <TabsTrigger value="templates">Templates</TabsTrigger>
+            <TabsTrigger value="templates">Templates WhatsApp</TabsTrigger>
           </TabsList>
           
           <TabsContent value="perfil" className="space-y-4">
@@ -31,7 +31,7 @@ const Configuracoes = () => {
           </TabsContent>
           
           <TabsContent value="templates" className="space-y-4">
-            <TemplatesPersonalizados />
+            <MensagensWhatsAppTab />
           </TabsContent>
         </Tabs>
       </div>
