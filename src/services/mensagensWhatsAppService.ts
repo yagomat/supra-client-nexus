@@ -136,7 +136,7 @@ export const addTemplatePersonalizado = async (
       throw error;
     }
 
-    const response = data as RpcResponse;
+    const response = data as unknown as RpcResponse;
 
     if (!response?.success) {
       throw new Error(response?.message || 'Erro ao criar template personalizado');
@@ -174,7 +174,7 @@ export const deleteTemplatePersonalizado = async (templateId: string): Promise<v
       throw error;
     }
 
-    const response = data as RpcResponse;
+    const response = data as unknown as RpcResponse;
 
     if (!response?.success) {
       throw new Error(response?.message || 'Erro ao deletar template personalizado');
