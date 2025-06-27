@@ -11,18 +11,3 @@ export interface MensagemWhatsApp {
 }
 
 export type TipoMensagem = 'a_vencer' | 'vence_hoje' | 'vencido' | 'pago';
-
-export interface TemplatePersonalizado {
-  id: string;
-  tipo_mensagem: string;
-  nome_template: string;
-  mensagem: string;
-  is_template_padrao: boolean;
-}
-
-export interface RpcResponse {
-  success: boolean;
-  message: string;
-  template_id?: string;
-  tipo_mensagem?: string;
-}
