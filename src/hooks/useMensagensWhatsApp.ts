@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { 
   getMensagensWhatsApp, 
   updateMensagemWhatsApp, 
   TipoMensagem 
-} from "@/services/mensagensWhatsAppService";
+} from "@/services/mensagensWhatsApp";
 
 export const useMensagensWhatsApp = () => {
   const [mensagens, setMensagens] = useState<Record<TipoMensagem, string>>({

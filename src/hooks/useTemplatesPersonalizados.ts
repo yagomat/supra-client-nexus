@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -6,7 +5,7 @@ import {
   addTemplatePersonalizado, 
   deleteTemplatePersonalizado,
   TemplatePersonalizado 
-} from "@/services/mensagensWhatsAppService";
+} from "@/services/mensagensWhatsApp";
 
 export const useTemplatesPersonalizados = () => {
   const [templates, setTemplates] = useState<TemplatePersonalizado[]>([]);

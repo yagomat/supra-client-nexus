@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Plus, Trash2, MessageCircle, Info, Save } from "lucide-react";
 import { useTemplatesPersonalizados } from "@/hooks/useTemplatesPersonalizados";
 import { useMensagensWhatsApp } from "@/hooks/useMensagensWhatsApp";
-import { TipoMensagem } from "@/services/mensagensWhatsAppService";
+import { TipoMensagem } from "@/services/mensagensWhatsApp";
 import {
   Dialog,
   DialogContent,
