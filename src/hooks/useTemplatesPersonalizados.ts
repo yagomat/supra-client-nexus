@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -44,7 +45,7 @@ export const useTemplatesPersonalizados = () => {
 
     try {
       setSubmitting(true);
-      console.log("Hook: Iniciando criação de template:", { nomeTemplate, mensagem });
+      console.log("Hook: Criando template:", { nomeTemplate, mensagem });
       
       await addTemplatePersonalizado(nomeTemplate.trim(), mensagem.trim());
       
@@ -58,17 +59,9 @@ export const useTemplatesPersonalizados = () => {
     } catch (error) {
       console.error("Hook: Erro ao criar template:", error);
       
-      let errorMessage = "Não foi possível criar o template personalizado.";
-      
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === 'object' && error !== null && 'message' in error) {
-        errorMessage = String(error.message);
-      }
-      
       toast({
         title: "Erro ao criar template",
-        description: errorMessage,
+        description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
     } finally {

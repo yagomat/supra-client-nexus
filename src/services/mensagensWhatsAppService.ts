@@ -129,13 +129,12 @@ export const addTemplatePersonalizado = async (
 
     console.log("Criando template personalizado:", { userId, nomeTemplate, mensagem });
 
-    // Primeiro, vamos testar a constraint verificando se conseguimos inserir diretamente
-    console.log("Tentando inserção direta primeiro...");
-    
-    const tipoCustom = `custom_${crypto.randomUUID()}`;
+    // Gerar tipo único mais simples
+    const tipoCustom = `template_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     console.log("Tipo gerado:", tipoCustom);
 
-    const { data: insertData, error: insertError } = await supabase
+    // Inserção direta simples
+    const { data, error } = await supabase
       .from('mensagens_whatsapp')
       .insert({
         user_id: userId,
@@ -147,58 +146,15 @@ export const addTemplatePersonalizado = async (
       .select()
       .single();
 
-    if (insertError) {
-      console.error("Erro na inserção direta:", insertError);
-      console.error("Código do erro:", insertError.code);
-      console.error("Detalhes:", insertError.details);
-      console.error("Mensagem:", insertError.message);
-      
-      // Se falhar por constraint, tentar via RPC como backup
-      console.log("Tentando via RPC como fallback...");
-      
-      const { data: rpcData, error: rpcError } = await supabase.rpc('add_template_personalizado', {
-        p_user_id: userId,
-        p_nome_template: nomeTemplate,
-        p_mensagem: mensagem
-      });
-
-      if (rpcError) {
-        console.error("Erro RPC ao adicionar template personalizado:", rpcError);
-        console.error("Detalhes do erro RPC:", rpcError.message, rpcError.details, rpcError.hint);
-        
-        // Verificar se é problema de constraint
-        if (rpcError.code === '23514') {
-          throw new Error("Erro de configuração do banco de dados. A constraint precisa ser atualizada. Contate o administrador.");
-        }
-        
-        throw new Error(`Erro ao criar template: ${rpcError.message}`);
-      }
-
-      console.log("Resposta da RPC:", rpcData);
-      const response = rpcData as unknown as RpcResponse;
-
-      if (!response?.success) {
-        console.error("RPC retornou falha:", response);
-        throw new Error(response?.message || 'Erro ao criar template personalizado via RPC');
-      }
-
-      console.log("Template personalizado criado com sucesso via RPC:", response);
-      return;
+    if (error) {
+      console.error("Erro na inserção:", error);
+      throw new Error(`Erro ao criar template: ${error.message}`);
     }
 
-    console.log("Template criado com sucesso via inserção direta:", insertData);
+    console.log("Template criado com sucesso:", data);
   } catch (error) {
     console.error("Erro em addTemplatePersonalizado:", error);
-    
-    // Melhorar a mensagem de erro para o usuário
-    if (error instanceof Error) {
-      if (error.message.includes('constraint')) {
-        throw new Error("Erro de configuração do sistema. Tente novamente em alguns minutos ou contate o suporte.");
-      }
-      throw error;
-    }
-    
-    throw new Error("Erro desconhecido ao criar template personalizado");
+    throw error;
   }
 };
 
