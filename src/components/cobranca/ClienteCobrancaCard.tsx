@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useTemplatesPersonalizados } from "@/hooks/useTemplatesPersonalizados";
+import { useMensagensWhatsApp } from "@/hooks/useMensagensWhatsApp";
 
 interface ClienteCobrancaCardProps {
   cliente: FilaCobranca;
@@ -35,12 +35,22 @@ interface ClienteCobrancaCardProps {
   submitting: boolean;
 }
 
+const tiposMensagem: Array<{
+  tipo: string;
+  nome: string;
+}> = [
+  { tipo: 'a_vencer', nome: 'A Vencer' },
+  { tipo: 'vence_hoje', nome: 'Vence Hoje' },
+  { tipo: 'vencido', nome: 'Vencido' },
+  { tipo: 'pago', nome: 'Pago' }
+];
+
 export const ClienteCobrancaCard = ({ 
   cliente, 
   onRegistrarCobranca, 
   submitting 
 }: ClienteCobrancaCardProps) => {
-  const { templates } = useTemplatesPersonalizados();
+  const { mensagens } = useMensagensWhatsApp();
   const [templateSelecionado, setTemplateSelecionado] = useState<string>("");
   
   const statusColor = cliente.cliente_status === 'ativo' ? 'bg-green-500' : 'bg-red-500';
@@ -59,12 +69,12 @@ export const ClienteCobrancaCard = ({
   });
 
   const handleEnviarWhatsApp = () => {
-    if (!templateSelecionado) return;
+    if (!templateSelecionado || !cliente.cliente_telefone) return;
     
-    const template = templates.find(t => t.tipo_mensagem === templateSelecionado);
-    if (!template || !cliente.cliente_telefone) return;
+    const mensagemTemplate = mensagens[templateSelecionado as keyof typeof mensagens];
+    if (!mensagemTemplate) return;
 
-    const mensagemFormatada = formatarMensagemWhatsApp(template.mensagem, cliente);
+    const mensagemFormatada = formatarMensagemWhatsApp(mensagemTemplate, cliente);
     const linkWhatsApp = gerarLinkWhatsApp(
       cliente.cliente_codigo_pais, 
       cliente.cliente_telefone, 
@@ -75,14 +85,9 @@ export const ClienteCobrancaCard = ({
     onRegistrarCobranca(cliente.cliente_id, templateSelecionado);
   };
 
-  const templatesDisponiveis = templates.map(template => ({
-    value: template.tipo_mensagem,
-    label: template.nome_template
-  }));
-
   // Sugerir template baseado no status do pagamento
   const tipoSugerido = determinarTipoMensagem(cliente.dias_para_vencimento);
-  const templatePadrao = templates.find(t => t.tipo_mensagem === tipoSugerido);
+  const templateSugerido = tiposMensagem.find(t => t.tipo === tipoSugerido);
 
   return (
     <Card className="w-full mb-4">
@@ -141,23 +146,23 @@ export const ClienteCobrancaCard = ({
           <Select value={templateSelecionado} onValueChange={setTemplateSelecionado}>
             <SelectTrigger className="flex-1">
               <SelectValue placeholder={
-                templatePadrao ? `Sugerido: ${templatePadrao.nome_template}` : "Escolha um template"
+                templateSugerido ? `Sugerido: ${templateSugerido.nome}` : "Escolha um template"
               } />
             </SelectTrigger>
             <SelectContent>
-              {templatePadrao && (
-                <SelectItem value={templatePadrao.tipo_mensagem}>
+              {templateSugerido && (
+                <SelectItem value={templateSugerido.tipo}>
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary" className="text-xs">Sugerido</Badge>
-                    {templatePadrao.nome_template}
+                    {templateSugerido.nome}
                   </div>
                 </SelectItem>
               )}
-              {templatesDisponiveis
-                .filter(t => t.value !== templatePadrao?.tipo_mensagem)
+              {tiposMensagem
+                .filter(t => t.tipo !== templateSugerido?.tipo)
                 .map((template) => (
-                  <SelectItem key={template.value} value={template.value}>
-                    {template.label}
+                  <SelectItem key={template.tipo} value={template.tipo}>
+                    {template.nome}
                   </SelectItem>
                 ))}
             </SelectContent>
