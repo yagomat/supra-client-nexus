@@ -33,11 +33,20 @@ export const useTemplatesPersonalizados = () => {
   };
 
   const addTemplate = async (nomeTemplate: string, mensagem: string) => {
+    if (!nomeTemplate.trim() || !mensagem.trim()) {
+      toast({
+        title: "Dados inválidos",
+        description: "Nome e mensagem são obrigatórios.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setSubmitting(true);
       console.log("Hook: Iniciando criação de template:", { nomeTemplate, mensagem });
       
-      await addTemplatePersonalizado(nomeTemplate, mensagem);
+      await addTemplatePersonalizado(nomeTemplate.trim(), mensagem.trim());
       
       toast({
         title: "Template criado",
@@ -48,10 +57,13 @@ export const useTemplatesPersonalizados = () => {
       await fetchTemplates();
     } catch (error) {
       console.error("Hook: Erro ao criar template:", error);
+      
       let errorMessage = "Não foi possível criar o template personalizado.";
       
       if (error instanceof Error) {
         errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null && 'message' in error) {
+        errorMessage = String(error.message);
       }
       
       toast({
