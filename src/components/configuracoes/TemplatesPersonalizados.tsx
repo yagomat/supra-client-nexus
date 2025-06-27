@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Plus, Trash2, MessageCircle, Info } from "lucide-react";
+import { Plus, Trash2, MessageCircle, Info, Save } from "lucide-react";
 import { useTemplatesPersonalizados } from "@/hooks/useTemplatesPersonalizados";
+import { useMensagensWhatsApp } from "@/hooks/useMensagensWhatsApp";
+import { TipoMensagem } from "@/services/mensagensWhatsAppService";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +31,33 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+const tiposMensagem: Array<{
+  tipo: TipoMensagem;
+  titulo: string;
+  descricao: string;
+}> = [
+  {
+    tipo: 'a_vencer',
+    titulo: 'A Vencer',
+    descricao: 'Mensagem padrão para clientes que ainda não venceram'
+  },
+  {
+    tipo: 'vence_hoje',
+    titulo: 'Vence Hoje',
+    descricao: 'Mensagem padrão para clientes que vencem hoje'
+  },
+  {
+    tipo: 'vencido',
+    titulo: 'Vencido',
+    descricao: 'Mensagem padrão para clientes em atraso'
+  },
+  {
+    tipo: 'pago',
+    titulo: 'Pago',
+    descricao: 'Mensagem padrão de confirmação de pagamento'
+  }
+];
+
 const placeholders = [
   { placeholder: '{nome}', descricao: 'Nome do cliente' },
   { placeholder: '{dias_vencimento}', descricao: 'Dias para vencer ou em atraso' },
@@ -37,13 +66,47 @@ const placeholders = [
 ];
 
 export const TemplatesPersonalizados = () => {
-  const { templates, loading, submitting, addTemplate, deleteTemplate } = useTemplatesPersonalizados();
+  const { templates, loading: templatesLoading, submitting: templatesSubmitting, addTemplate, deleteTemplate } = useTemplatesPersonalizados();
+  const { mensagens, loading: mensagensLoading, submitting: mensagensSubmitting, updateMensagem } = useMensagensWhatsApp();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [nomeTemplate, setNomeTemplate] = useState("");
   const [mensagemTemplate, setMensagemTemplate] = useState("");
+  const [mensagensEditadas, setMensagensEditadas] = useState<Record<TipoMensagem, string>>({
+    a_vencer: '',
+    vence_hoje: '',
+    vencido: '',
+    pago: ''
+  });
 
   const templatesPersonalizados = templates.filter(t => !t.is_template_padrao);
-  const templatesPadrao = templates.filter(t => t.is_template_padrao);
+  const loading = templatesLoading || mensagensLoading;
+  const submitting = templatesSubmitting || mensagensSubmitting;
+
+  // Sincronizar mensagens carregadas com as editadas
+  React.useEffect(() => {
+    if (!mensagensLoading) {
+      setMensagensEditadas(mensagens);
+    }
+  }, [mensagens, mensagensLoading]);
+
+  const handleMensagemChange = (tipo: TipoMensagem, valor: string) => {
+    setMensagensEditadas(prev => ({
+      ...prev,
+      [tipo]: valor
+    }));
+  };
+
+  const handleSalvarMensagem = async (tipo: TipoMensagem) => {
+    await updateMensagem(tipo, mensagensEditadas[tipo]);
+  };
+
+  const handleSalvarTodas = async () => {
+    for (const tipo of Object.keys(mensagensEditadas) as TipoMensagem[]) {
+      if (mensagensEditadas[tipo] !== mensagens[tipo]) {
+        await updateMensagem(tipo, mensagensEditadas[tipo]);
+      }
+    }
+  };
 
   const handleCreateTemplate = async () => {
     if (!nomeTemplate.trim() || !mensagemTemplate.trim()) {
@@ -77,7 +140,7 @@ export const TemplatesPersonalizados = () => {
         <div>
           <h3 className="text-lg font-medium">Templates de Mensagens</h3>
           <p className="text-sm text-muted-foreground">
-            Gerencie templates padrão e crie templates personalizados para suas mensagens.
+            Gerencie templates padrão do sistema e crie templates personalizados para suas mensagens.
           </p>
         </div>
         
@@ -153,23 +216,70 @@ export const TemplatesPersonalizados = () => {
         </Dialog>
       </div>
 
+      <Alert>
+        <Info className="h-4 w-4" />
+        <AlertDescription>
+          <div className="space-y-2">
+            <p className="font-medium">Placeholders disponíveis:</p>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              {placeholders.map((item) => (
+                <div key={item.placeholder} className="flex items-center gap-2">
+                  <code className="bg-muted px-2 py-1 rounded text-xs">
+                    {item.placeholder}
+                  </code>
+                  <span className="text-muted-foreground">{item.descricao}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </AlertDescription>
+      </Alert>
+
       {/* Templates Padrão */}
       <div className="space-y-4">
-        <h4 className="font-medium text-muted-foreground">Templates Padrão</h4>
-        <div className="grid gap-4">
-          {templatesPadrao.map((template) => (
-            <Card key={template.id}>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">{template.nome_template}</CardTitle>
-                <CardDescription>Template do sistema</CardDescription>
+        <h4 className="font-medium text-muted-foreground">Templates Padrão do Sistema</h4>
+        <div className="grid gap-6">
+          {tiposMensagem.map((config) => (
+            <Card key={config.tipo}>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  {config.titulo}
+                  <Button
+                    size="sm"
+                    onClick={() => handleSalvarMensagem(config.tipo)}
+                    disabled={submitting || mensagensEditadas[config.tipo] === mensagens[config.tipo]}
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    Salvar
+                  </Button>
+                </CardTitle>
+                <CardDescription>{config.descricao}</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="p-3 bg-muted rounded-md">
-                  <p className="text-sm whitespace-pre-wrap">{template.mensagem}</p>
+                <div className="space-y-2">
+                  <Label htmlFor={`mensagem-${config.tipo}`}>Mensagem</Label>
+                  <Textarea
+                    id={`mensagem-${config.tipo}`}
+                    value={mensagensEditadas[config.tipo]}
+                    onChange={(e) => handleMensagemChange(config.tipo, e.target.value)}
+                    placeholder={`Digite a mensagem para "${config.titulo.toLowerCase()}"`}
+                    rows={4}
+                  />
                 </div>
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        <div className="flex justify-end">
+          <Button 
+            onClick={handleSalvarTodas}
+            disabled={submitting}
+            size="lg"
+          >
+            <Save className="w-4 h-4 mr-2" />
+            Salvar Todos os Templates Padrão
+          </Button>
         </div>
       </div>
 
