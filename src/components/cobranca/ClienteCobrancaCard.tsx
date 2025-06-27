@@ -1,153 +1,211 @@
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Phone, 
+  Calendar, 
+  DollarSign, 
+  Clock, 
+  MessageCircle,
+  ExternalLink 
+} from "lucide-react";
 import { FilaCobranca } from "@/services/cobrancaService";
-import { TipoMensagem } from "@/services/mensagensWhatsAppService";
-import { useMensagensWhatsApp } from "@/hooks/useMensagensWhatsApp";
-import { formatarMensagemWhatsApp, gerarLinkWhatsApp, determinarTipoMensagem, abrirWhatsApp } from "@/utils/whatsappUtils";
-import { MessageCircle, Phone, Calendar, DollarSign, Server, User } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { 
+  formatarMensagemWhatsApp, 
+  gerarLinkWhatsApp, 
+  abrirWhatsApp,
+  determinarTipoMensagem 
+} from "@/utils/whatsappUtils";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useTemplatesPersonalizados } from "@/hooks/useTemplatesPersonalizados";
 
 interface ClienteCobrancaCardProps {
   cliente: FilaCobranca;
-  onRegistrarCobranca: (clienteId: string, tipoAviso: string) => Promise<void>;
+  onRegistrarCobranca: (clienteId: string, tipoAviso: string) => void;
   submitting: boolean;
 }
 
-export const ClienteCobrancaCard = ({ cliente, onRegistrarCobranca, submitting }: ClienteCobrancaCardProps) => {
-  const { mensagens, loading: loadingMensagens } = useMensagensWhatsApp();
-  const [tipoMensagem, setTipoMensagem] = useState<TipoMensagem>(determinarTipoMensagem(cliente.dias_para_vencimento));
-  const [enviandoWhatsApp, setEnviandoWhatsApp] = useState(false);
+export const ClienteCobrancaCard = ({ 
+  cliente, 
+  onRegistrarCobranca, 
+  submitting 
+}: ClienteCobrancaCardProps) => {
+  const { templates } = useTemplatesPersonalizados();
+  const [templateSelecionado, setTemplateSelecionado] = useState<string>("");
+  
+  const statusColor = cliente.cliente_status === 'ativo' ? 'bg-green-500' : 'bg-red-500';
+  const diasText = cliente.dias_para_vencimento === 0 
+    ? "Vence hoje" 
+    : cliente.dias_para_vencimento > 0 
+      ? `${cliente.dias_para_vencimento} dias para vencer`
+      : `${Math.abs(cliente.dias_para_vencimento)} dias em atraso`;
 
-  const getStatusBadge = () => {
-    if (cliente.status_pagamento === 'pago' || cliente.status_pagamento === 'pago_confianca') {
-      return <Badge variant="default" className="bg-green-100 text-green-800">Pago</Badge>;
-    }
+  const statusPagamento = cliente.status_pagamento === 'pago' || cliente.status_pagamento === 'pago_confianca' 
+    ? 'Pago' 
+    : 'Pendente';
+
+  const dataFormatada = format(new Date(cliente.data_proximo_pagamento), "dd/MM/yyyy", {
+    locale: ptBR
+  });
+
+  const handleEnviarWhatsApp = () => {
+    if (!templateSelecionado) return;
     
-    if (cliente.dias_para_vencimento < 0) {
-      return <Badge variant="destructive">Vencido há {Math.abs(cliente.dias_para_vencimento)} dias</Badge>;
-    }
+    const template = templates.find(t => t.tipo_mensagem === templateSelecionado);
+    if (!template || !cliente.cliente_telefone) return;
+
+    const mensagemFormatada = formatarMensagemWhatsApp(template.mensagem, cliente);
+    const linkWhatsApp = gerarLinkWhatsApp(
+      cliente.cliente_codigo_pais, 
+      cliente.cliente_telefone, 
+      mensagemFormatada
+    );
     
-    if (cliente.dias_para_vencimento === 0) {
-      return <Badge variant="outline" className="border-orange-500 text-orange-600">Vence hoje</Badge>;
-    }
-    
-    return <Badge variant="secondary">Vence em {cliente.dias_para_vencimento} dias</Badge>;
+    abrirWhatsApp(linkWhatsApp);
+    onRegistrarCobranca(cliente.cliente_id, templateSelecionado);
   };
 
-  const handleEnviarWhatsApp = async () => {
-    try {
-      setEnviandoWhatsApp(true);
+  const templatesDisponiveis = templates.map(template => ({
+    value: template.tipo_mensagem,
+    label: template.nome_template
+  }));
 
-      // Validar telefone
-      if (!cliente.cliente_telefone) {
-        throw new Error("Cliente não possui telefone cadastrado");
-      }
-
-      // Buscar mensagem do tipo selecionado
-      const mensagemTemplate = mensagens[tipoMensagem];
-      if (!mensagemTemplate) {
-        throw new Error("Mensagem não configurada para este tipo");
-      }
-
-      // Formatar mensagem com placeholders
-      const mensagemFormatada = formatarMensagemWhatsApp(mensagemTemplate, cliente);
-
-      // Gerar link do WhatsApp
-      const linkWhatsApp = gerarLinkWhatsApp(
-        cliente.cliente_codigo_pais || '+55',
-        cliente.cliente_telefone,
-        mensagemFormatada
-      );
-
-      // Registrar cobrança
-      await onRegistrarCobranca(cliente.cliente_id, tipoMensagem);
-
-      // Abrir WhatsApp
-      abrirWhatsApp(linkWhatsApp);
-
-    } catch (error) {
-      console.error("Erro ao enviar WhatsApp:", error);
-    } finally {
-      setEnviandoWhatsApp(false);
-    }
-  };
+  // Sugerir template baseado no status do pagamento
+  const tipoSugerido = determinarTipoMensagem(cliente.dias_para_vencimento);
+  const templatePadrao = templates.find(t => t.tipo_mensagem === tipoSugerido);
 
   return (
-    <Card className="transition-all hover:shadow-md">
+    <Card className="w-full">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <User className="w-5 h-5" />
-            {cliente.cliente_nome}
-          </CardTitle>
-          {getStatusBadge()}
+          <div className="flex-1">
+            <CardTitle className="text-lg font-semibold">
+              {cliente.cliente_nome}
+            </CardTitle>
+            <div className="flex items-center gap-2 mt-1">
+              <Badge 
+                variant="secondary" 
+                className={`text-white ${statusColor}`}
+              >
+                {cliente.cliente_status}
+              </Badge>
+              <Badge variant="outline">
+                {cliente.cliente_servidor}
+              </Badge>
+            </div>
+          </div>
+          
+          <div className="text-right">
+            <div className="text-sm text-muted-foreground">Próximo Pagamento</div>
+            <div className="font-medium">{dataFormatada}</div>
+            <div className={`text-sm ${
+              cliente.dias_para_vencimento < 0 ? 'text-red-600' : 
+              cliente.dias_para_vencimento === 0 ? 'text-yellow-600' : 
+              'text-green-600'
+            }`}>
+              {diasText}
+            </div>
+          </div>
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="flex items-center gap-2">
             <Phone className="w-4 h-4 text-muted-foreground" />
-            <span>{cliente.cliente_codigo_pais || '+55'} {cliente.cliente_telefone || 'Não informado'}</span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Server className="w-4 h-4 text-muted-foreground" />
-            <span>{cliente.cliente_servidor}</span>
+            <span>{cliente.cliente_telefone || "Não informado"}</span>
           </div>
           
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-muted-foreground" />
-            <span>
-              {format(new Date(cliente.data_proximo_pagamento), "dd/MM/yyyy", { locale: ptBR })}
-            </span>
+            <span>Dia {cliente.dia_vencimento}</span>
           </div>
           
           <div className="flex items-center gap-2">
             <DollarSign className="w-4 h-4 text-muted-foreground" />
-            <span>R$ {cliente.valor_plano?.toFixed(2).replace('.', ',') || '0,00'}</span>
+            <span>
+              {cliente.valor_plano 
+                ? `R$ ${cliente.valor_plano.toFixed(2).replace('.', ',')}` 
+                : "Não informado"
+              }
+            </span>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-muted-foreground" />
+            <span className={
+              statusPagamento === 'Pago' ? 'text-green-600' : 'text-red-600'
+            }>
+              {statusPagamento}
+            </span>
           </div>
         </div>
 
         {cliente.ultimo_aviso && (
-          <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
-            Último aviso: {cliente.ultimo_aviso} em{' '}
-            {cliente.data_ultimo_aviso ? 
-              format(new Date(cliente.data_ultimo_aviso), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) :
-              'Data não informada'
-            }
+          <div className="p-3 bg-muted rounded-md">
+            <div className="text-sm">
+              <span className="font-medium">Último aviso:</span> {cliente.ultimo_aviso.replace('_', ' ')}
+            </div>
+            {cliente.data_ultimo_aviso && (
+              <div className="text-xs text-muted-foreground mt-1">
+                {format(new Date(cliente.data_ultimo_aviso), "dd/MM/yyyy 'às' HH:mm", {
+                  locale: ptBR
+                })}
+              </div>
+            )}
           </div>
         )}
 
-        <div className="flex items-center gap-2 pt-2">
-          <Select 
-            value={tipoMensagem} 
-            onValueChange={(value: TipoMensagem) => setTipoMensagem(value)}
-            disabled={loadingMensagens || submitting}
-          >
-            <SelectTrigger className="flex-1">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="a_vencer">A Vencer</SelectItem>
-              <SelectItem value="vence_hoje">Vence Hoje</SelectItem>
-              <SelectItem value="vencido">Vencido</SelectItem>
-              <SelectItem value="pago">Pago</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="space-y-3">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Selecionar Template</label>
+            <Select value={templateSelecionado} onValueChange={setTemplateSelecionado}>
+              <SelectTrigger>
+                <SelectValue placeholder={
+                  templatePadrao ? `Sugerido: ${templatePadrao.nome_template}` : "Escolha um template"
+                } />
+              </SelectTrigger>
+              <SelectContent>
+                {templatePadrao && (
+                  <>
+                    <SelectItem value={templatePadrao.tipo_mensagem}>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-xs">Sugerido</Badge>
+                        {templatePadrao.nome_template}
+                      </div>
+                    </SelectItem>
+                  </>
+                )}
+                {templatesDisponiveis
+                  .filter(t => t.value !== templatePadrao?.tipo_mensagem)
+                  .map((template) => (
+                    <SelectItem key={template.value} value={template.value}>
+                      {template.label}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           <Button
             onClick={handleEnviarWhatsApp}
-            disabled={submitting || enviandoWhatsApp || loadingMensagens || !cliente.cliente_telefone}
-            className="bg-green-600 hover:bg-green-700"
+            disabled={!templateSelecionado || !cliente.cliente_telefone || submitting}
+            className="w-full"
+            size="sm"
           >
             <MessageCircle className="w-4 h-4 mr-2" />
-            {enviandoWhatsApp ? 'Enviando...' : 'Enviar WhatsApp'}
+            <ExternalLink className="w-4 h-4 mr-2" />
+            Enviar WhatsApp
           </Button>
         </div>
       </CardContent>

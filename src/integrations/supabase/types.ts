@@ -165,7 +165,9 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_template_padrao: boolean | null
           mensagem: string
+          nome_template: string | null
           tipo_mensagem: string
           updated_at: string
           user_id: string
@@ -173,7 +175,9 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_template_padrao?: boolean | null
           mensagem: string
+          nome_template?: string | null
           tipo_mensagem: string
           updated_at?: string
           user_id: string
@@ -181,7 +185,9 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_template_padrao?: boolean | null
           mensagem?: string
+          nome_template?: string | null
           tipo_mensagem?: string
           updated_at?: string
           user_id?: string
@@ -280,6 +286,10 @@ export type Database = {
         Args: { table_name: string }
         Returns: undefined
       }
+      add_template_personalizado: {
+        Args: { p_user_id: string; p_nome_template: string; p_mensagem: string }
+        Returns: Json
+      }
       add_valor_predefinido: {
         Args: { p_user_id: string; p_tipo: string; p_valor: string }
         Returns: Json
@@ -287,6 +297,10 @@ export type Database = {
       cliente_pertence_ao_usuario: {
         Args: { cliente_id_param: string }
         Returns: boolean
+      }
+      delete_template_personalizado: {
+        Args: { p_user_id: string; p_template_id: string }
+        Returns: Json
       }
       delete_valor_predefinido: {
         Args: { p_user_id: string; p_tipo: string; p_valor: string }
@@ -426,6 +440,16 @@ export type Database = {
           ultimo_aviso: string
           data_ultimo_aviso: string
           prioridade: number
+        }[]
+      }
+      get_templates_mensagens_whatsapp: {
+        Args: { p_user_id: string }
+        Returns: {
+          id: string
+          tipo_mensagem: string
+          nome_template: string
+          mensagem: string
+          is_template_padrao: boolean
         }[]
       }
       get_user_audit_logs: {
