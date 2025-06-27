@@ -17,22 +17,22 @@ const tiposMensagem: Array<{
   {
     tipo: 'a_vencer',
     titulo: 'A Vencer',
-    descricao: 'Mensagem para clientes que ainda não venceram'
+    descricao: 'Mensagem padrão para clientes que ainda não venceram'
   },
   {
     tipo: 'vence_hoje',
     titulo: 'Vence Hoje',
-    descricao: 'Mensagem para clientes que vencem hoje'
+    descricao: 'Mensagem padrão para clientes que vencem hoje'
   },
   {
     tipo: 'vencido',
     titulo: 'Vencido',
-    descricao: 'Mensagem para clientes em atraso'
+    descricao: 'Mensagem padrão para clientes em atraso'
   },
   {
     tipo: 'pago',
     titulo: 'Pago',
-    descricao: 'Mensagem de confirmação de pagamento'
+    descricao: 'Mensagem padrão de confirmação de pagamento'
   }
 ];
 
@@ -92,9 +92,9 @@ export const MensagensWhatsAppTab = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium">Mensagens do WhatsApp</h3>
+        <h3 className="text-lg font-medium">Templates Padrão do Sistema</h3>
         <p className="text-sm text-muted-foreground">
-          Configure as mensagens que serão enviadas via WhatsApp para seus clientes.
+          Configure os templates padrão que serão usados automaticamente pela fila de cobrança.
         </p>
       </div>
 
