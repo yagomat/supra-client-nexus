@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, MessageCircle, Save } from "lucide-react";
 import { useMensagensWhatsApp } from "@/hooks/useMensagensWhatsApp";
-import { TipoMensagem } from "@/services/mensagensWhatsAppService";
+import { TipoMensagem } from "@/services/mensagensWhatsApp";
 
 const tiposMensagem: Array<{
   tipo: TipoMensagem;
