@@ -85,127 +85,92 @@ export const ClienteCobrancaCard = ({
   const templatePadrao = templates.find(t => t.tipo_mensagem === tipoSugerido);
 
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="text-lg font-semibold">
-              {cliente.cliente_nome}
-            </CardTitle>
-            <div className="flex items-center gap-2 mt-1">
-              <Badge 
-                variant="secondary" 
-                className={`text-white ${statusColor}`}
-              >
-                {cliente.cliente_status}
-              </Badge>
-              <Badge variant="outline">
-                {cliente.cliente_servidor}
-              </Badge>
-            </div>
+    <Card className="w-full mb-4">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg">{cliente.cliente_nome}</CardTitle>
+          <div className="flex items-center gap-2">
+            <Badge 
+              variant="secondary" 
+              className={`text-white ${statusColor}`}
+            >
+              {cliente.cliente_status}
+            </Badge>
+            <Badge variant="outline">{cliente.cliente_servidor}</Badge>
           </div>
-          
-          <div className="text-right">
-            <div className="text-sm text-muted-foreground">Próximo Pagamento</div>
-            <div className="font-medium">{dataFormatada}</div>
-            <div className={`text-sm ${
-              cliente.dias_para_vencimento < 0 ? 'text-red-600' : 
-              cliente.dias_para_vencimento === 0 ? 'text-yellow-600' : 
-              'text-green-600'
-            }`}>
-              {diasText}
-            </div>
-          </div>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          Próximo pagamento: {dataFormatada} - {diasText}
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <Phone className="w-4 h-4 text-muted-foreground" />
-            <span>{cliente.cliente_telefone || "Não informado"}</span>
+      <CardContent className="space-y-3">
+        <div className="grid grid-cols-4 gap-2 text-sm">
+          <div className="flex items-center gap-1">
+            <Phone className="w-3 h-3" />
+            <span className="truncate">{cliente.cliente_telefone || "N/A"}</span>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-muted-foreground" />
+          <div className="flex items-center gap-1">
+            <Calendar className="w-3 h-3" />
             <span>Dia {cliente.dia_vencimento}</span>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <DollarSign className="w-4 h-4 text-muted-foreground" />
-            <span>
-              {cliente.valor_plano 
-                ? `R$ ${cliente.valor_plano.toFixed(2).replace('.', ',')}` 
-                : "Não informado"
-              }
-            </span>
+          <div className="flex items-center gap-1">
+            <DollarSign className="w-3 h-3" />
+            <span>R$ {cliente.valor_plano?.toFixed(2).replace('.', ',') || "0,00"}</span>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-muted-foreground" />
-            <span className={
-              statusPagamento === 'Pago' ? 'text-green-600' : 'text-red-600'
-            }>
+          <div className="flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            <span className={statusPagamento === 'Pago' ? 'text-green-600' : 'text-red-600'}>
               {statusPagamento}
             </span>
           </div>
         </div>
 
         {cliente.ultimo_aviso && (
-          <div className="p-3 bg-muted rounded-md">
-            <div className="text-sm">
-              <span className="font-medium">Último aviso:</span> {cliente.ultimo_aviso.replace('_', ' ')}
-            </div>
+          <div className="text-xs p-2 bg-muted rounded">
+            <strong>Último aviso:</strong> {cliente.ultimo_aviso.replace('_', ' ')}
             {cliente.data_ultimo_aviso && (
-              <div className="text-xs text-muted-foreground mt-1">
-                {format(new Date(cliente.data_ultimo_aviso), "dd/MM/yyyy 'às' HH:mm", {
-                  locale: ptBR
-                })}
-              </div>
+              <span className="ml-2 text-muted-foreground">
+                ({format(new Date(cliente.data_ultimo_aviso), "dd/MM/yyyy HH:mm", { locale: ptBR })})
+              </span>
             )}
           </div>
         )}
 
-        <div className="space-y-3">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Selecionar Template</label>
-            <Select value={templateSelecionado} onValueChange={setTemplateSelecionado}>
-              <SelectTrigger>
-                <SelectValue placeholder={
-                  templatePadrao ? `Sugerido: ${templatePadrao.nome_template}` : "Escolha um template"
-                } />
-              </SelectTrigger>
-              <SelectContent>
-                {templatePadrao && (
-                  <>
-                    <SelectItem value={templatePadrao.tipo_mensagem}>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="text-xs">Sugerido</Badge>
-                        {templatePadrao.nome_template}
-                      </div>
-                    </SelectItem>
-                  </>
-                )}
-                {templatesDisponiveis
-                  .filter(t => t.value !== templatePadrao?.tipo_mensagem)
-                  .map((template) => (
-                    <SelectItem key={template.value} value={template.value}>
-                      {template.label}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="flex gap-2">
+          <Select value={templateSelecionado} onValueChange={setTemplateSelecionado}>
+            <SelectTrigger className="flex-1">
+              <SelectValue placeholder={
+                templatePadrao ? `Sugerido: ${templatePadrao.nome_template}` : "Escolha um template"
+              } />
+            </SelectTrigger>
+            <SelectContent>
+              {templatePadrao && (
+                <SelectItem value={templatePadrao.tipo_mensagem}>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="text-xs">Sugerido</Badge>
+                    {templatePadrao.nome_template}
+                  </div>
+                </SelectItem>
+              )}
+              {templatesDisponiveis
+                .filter(t => t.value !== templatePadrao?.tipo_mensagem)
+                .map((template) => (
+                  <SelectItem key={template.value} value={template.value}>
+                    {template.label}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
 
           <Button
             onClick={handleEnviarWhatsApp}
             disabled={!templateSelecionado || !cliente.cliente_telefone || submitting}
-            className="w-full"
             size="sm"
+            className="px-3"
           >
-            <MessageCircle className="w-4 h-4 mr-2" />
-            <ExternalLink className="w-4 h-4 mr-2" />
-            Enviar WhatsApp
+            <MessageCircle className="w-4 h-4 mr-1" />
+            <ExternalLink className="w-4 h-4" />
           </Button>
         </div>
       </CardContent>
