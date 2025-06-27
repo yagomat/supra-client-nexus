@@ -22,6 +22,13 @@ export interface TemplatePersonalizado {
   is_template_padrao: boolean;
 }
 
+interface RpcResponse {
+  success: boolean;
+  message: string;
+  template_id?: string;
+  tipo_mensagem?: string;
+}
+
 export const getMensagensWhatsApp = async (): Promise<Record<TipoMensagem, string>> => {
   try {
     const { data: currentUser, error: userError } = await supabase.auth.getUser();
@@ -129,8 +136,10 @@ export const addTemplatePersonalizado = async (
       throw error;
     }
 
-    if (!data?.success) {
-      throw new Error(data?.message || 'Erro ao criar template personalizado');
+    const response = data as RpcResponse;
+
+    if (!response?.success) {
+      throw new Error(response?.message || 'Erro ao criar template personalizado');
     }
 
     console.log("Template personalizado criado com sucesso");
@@ -165,8 +174,10 @@ export const deleteTemplatePersonalizado = async (templateId: string): Promise<v
       throw error;
     }
 
-    if (!data?.success) {
-      throw new Error(data?.message || 'Erro ao deletar template personalizado');
+    const response = data as RpcResponse;
+
+    if (!response?.success) {
+      throw new Error(response?.message || 'Erro ao deletar template personalizado');
     }
 
     console.log("Template personalizado deletado com sucesso");
