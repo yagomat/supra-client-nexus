@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -17,10 +16,12 @@ export const useTemplatesPersonalizados = () => {
   const fetchTemplates = async () => {
     try {
       setLoading(true);
+      console.log("Hook: Iniciando busca de templates");
       const data = await getAllTemplates();
+      console.log("Hook: Templates carregados:", data);
       setTemplates(data);
     } catch (error) {
-      console.error("Erro ao carregar templates:", error);
+      console.error("Hook: Erro ao carregar templates:", error);
       toast({
         title: "Erro ao carregar templates",
         description: "Não foi possível carregar os templates de mensagem.",
@@ -34,6 +35,8 @@ export const useTemplatesPersonalizados = () => {
   const addTemplate = async (nomeTemplate: string, mensagem: string) => {
     try {
       setSubmitting(true);
+      console.log("Hook: Iniciando criação de template:", { nomeTemplate, mensagem });
+      
       await addTemplatePersonalizado(nomeTemplate, mensagem);
       
       toast({
@@ -41,12 +44,19 @@ export const useTemplatesPersonalizados = () => {
         description: `Template "${nomeTemplate}" foi criado com sucesso.`,
       });
       
+      console.log("Hook: Template criado, recarregando lista");
       await fetchTemplates();
     } catch (error) {
-      console.error("Erro ao criar template:", error);
+      console.error("Hook: Erro ao criar template:", error);
+      let errorMessage = "Não foi possível criar o template personalizado.";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Erro ao criar template",
-        description: "Não foi possível criar o template personalizado.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

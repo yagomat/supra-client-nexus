@@ -91,6 +91,8 @@ export const getAllTemplates = async (): Promise<TemplatePersonalizado[]> => {
       throw new Error("Usuário não autenticado");
     }
 
+    console.log("Buscando templates para o usuário:", userId);
+
     const { data, error } = await supabase.rpc('get_templates_mensagens_whatsapp', {
       p_user_id: userId
     });
@@ -100,6 +102,7 @@ export const getAllTemplates = async (): Promise<TemplatePersonalizado[]> => {
       throw error;
     }
 
+    console.log("Templates retornados:", data);
     return data || [];
   } catch (error) {
     console.error("Erro em getAllTemplates:", error);
@@ -125,6 +128,8 @@ export const addTemplatePersonalizado = async (
       throw new Error("Usuário não autenticado");
     }
 
+    console.log("Criando template personalizado:", { userId, nomeTemplate, mensagem });
+
     const { data, error } = await supabase.rpc('add_template_personalizado', {
       p_user_id: userId,
       p_nome_template: nomeTemplate,
@@ -132,17 +137,20 @@ export const addTemplatePersonalizado = async (
     });
 
     if (error) {
-      console.error("Erro ao adicionar template personalizado:", error);
+      console.error("Erro RPC ao adicionar template personalizado:", error);
+      console.error("Detalhes do erro:", error.message, error.details, error.hint);
       throw error;
     }
 
+    console.log("Resposta da RPC:", data);
     const response = data as unknown as RpcResponse;
 
     if (!response?.success) {
+      console.error("RPC retornou falha:", response);
       throw new Error(response?.message || 'Erro ao criar template personalizado');
     }
 
-    console.log("Template personalizado criado com sucesso");
+    console.log("Template personalizado criado com sucesso:", response);
   } catch (error) {
     console.error("Erro em addTemplatePersonalizado:", error);
     throw error;
