@@ -9,8 +9,7 @@ import {
   DollarSign, 
   Clock, 
   MessageCircle,
-  ExternalLink,
-  Server
+  ExternalLink
 } from "lucide-react";
 import { FilaCobranca } from "@/services/cobrancaService";
 import { format } from "date-fns";
@@ -57,8 +56,8 @@ export const ClienteCobrancaCard = ({
   const diasText = cliente.dias_para_vencimento === 0 
     ? "Vence hoje" 
     : cliente.dias_para_vencimento > 0 
-      ? `${cliente.dias_para_vencimento} dias para vencer`
-      : `${Math.abs(cliente.dias_para_vencimento)} dias em atraso`;
+      ? `Vence em ${cliente.dias_para_vencimento} dias`
+      : `Venceu a ${Math.abs(cliente.dias_para_vencimento)} dias`;
 
   const statusPagamento = cliente.status_pagamento === 'pago' || cliente.status_pagamento === 'pago_confianca' 
     ? 'Pago' 
@@ -102,7 +101,7 @@ export const ClienteCobrancaCard = ({
       </CardHeader>
 
       <CardContent className="space-y-3">
-        <div className="grid grid-cols-5 gap-2 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
           <div className="flex items-center gap-1">
             <Phone className="w-3 h-3" />
             <span className="truncate">{cliente.cliente_telefone || "N/A"}</span>
@@ -110,10 +109,6 @@ export const ClienteCobrancaCard = ({
           <div className="flex items-center gap-1">
             <Calendar className="w-3 h-3" />
             <span>{dataFormatada}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Server className="w-3 h-3" />
-            <span className="truncate">{cliente.cliente_servidor}</span>
           </div>
           <div className="flex items-center gap-1">
             <DollarSign className="w-3 h-3" />
