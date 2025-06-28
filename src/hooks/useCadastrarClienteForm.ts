@@ -74,8 +74,11 @@ export const useCadastrarClienteForm = () => {
 
   const handleSubmit = async (data: ClienteFormValues) => {
     // Validar campos obrigatórios
-    const requiredFields = ['nome', 'servidor', 'aplicativo'];
-    const missingFields = requiredFields.filter((field) => !data[field as keyof typeof data]);
+    const requiredFields = ['nome', 'servidor', 'aplicativo', 'usuario_aplicativo', 'senha_aplicativo'];
+    const missingFields = requiredFields.filter((field) => {
+      const value = data[field as keyof typeof data];
+      return !value || (typeof value === 'string' && value.trim() === '');
+    });
 
     if (missingFields.length > 0) {
       toast({
@@ -91,30 +94,32 @@ export const useCadastrarClienteForm = () => {
 
       // Formatar os dados para enviar ao servidor
       const clienteData = {
-        nome: data.nome,
-        telefone: data.telefone || null,
+        nome: data.nome.trim(),
+        telefone: data.telefone?.trim() || null,
         codigo_pais_telefone: data.codigo_pais_telefone || "+55",
-        uf: data.uf || null,
-        servidor: data.servidor,
+        uf: data.uf?.trim() || null,
+        servidor: data.servidor.trim(),
         dia_vencimento: data.dia_vencimento || 1,
         valor_plano: data.valor_plano ? Number(data.valor_plano) : null,
         
-        dispositivo_smart: data.dispositivo_smart || null,
-        aplicativo: data.aplicativo,
-        usuario_aplicativo: data.usuario_aplicativo || null,
-        senha_aplicativo: data.senha_aplicativo || null,
-        data_licenca_aplicativo: data.data_licenca_aplicativo || null,
+        dispositivo_smart: data.dispositivo_smart?.trim() || null,
+        aplicativo: data.aplicativo.trim(),
+        usuario_aplicativo: data.usuario_aplicativo.trim(),
+        senha_aplicativo: data.senha_aplicativo.trim(),
+        data_licenca_aplicativo: data.data_licenca_aplicativo?.trim() || null,
         
         possui_tela_adicional: possuiTelaAdicional,
-        dispositivo_smart_2: possuiTelaAdicional ? data.dispositivo_smart_2 || null : null,
-        aplicativo_2: possuiTelaAdicional ? data.aplicativo_2 || null : null,
-        usuario_2: possuiTelaAdicional ? data.usuario_2 || null : null,
-        senha_2: possuiTelaAdicional ? data.senha_2 || null : null,
-        data_licenca_2: possuiTelaAdicional ? data.data_licenca_2 || null : null,
+        dispositivo_smart_2: possuiTelaAdicional ? (data.dispositivo_smart_2?.trim() || null) : null,
+        aplicativo_2: possuiTelaAdicional ? (data.aplicativo_2?.trim() || null) : null,
+        usuario_2: possuiTelaAdicional ? (data.usuario_2?.trim() || null) : null,
+        senha_2: possuiTelaAdicional ? (data.senha_2?.trim() || null) : null,
+        data_licenca_2: possuiTelaAdicional ? (data.data_licenca_2?.trim() || null) : null,
         
-        observacoes: data.observacoes || null
+        observacoes: data.observacoes?.trim() || null
         // Removido: não enviamos mais o status, ele será determinado automaticamente pelo banco
       };
+
+      console.log("Dados que serão enviados:", clienteData);
 
       // Enviar dados para o backend
       await createCliente(clienteData);
