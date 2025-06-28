@@ -9,7 +9,8 @@ import {
   DollarSign, 
   Clock, 
   MessageCircle,
-  ExternalLink 
+  ExternalLink,
+  Server
 } from "lucide-react";
 import { FilaCobranca } from "@/services/cobrancaService";
 import { format } from "date-fns";
@@ -53,7 +54,6 @@ export const ClienteCobrancaCard = ({
   const { mensagens } = useMensagensWhatsApp();
   const [templateSelecionado, setTemplateSelecionado] = useState<string>("");
   
-  const statusColor = cliente.cliente_status === 'ativo' ? 'bg-green-500' : 'bg-red-500';
   const diasText = cliente.dias_para_vencimento === 0 
     ? "Vence hoje" 
     : cliente.dias_para_vencimento > 0 
@@ -85,39 +85,35 @@ export const ClienteCobrancaCard = ({
     onRegistrarCobranca(cliente.cliente_id, templateSelecionado);
   };
 
-  // Sugerir template baseado no status do pagamento
-  const tipoSugerido = determinarTipoMensagem(cliente.dias_para_vencimento);
-  const templateSugerido = tiposMensagem.find(t => t.tipo === tipoSugerido);
-
   return (
     <Card className="w-full mb-4">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">{cliente.cliente_nome}</CardTitle>
-          <div className="flex items-center gap-2">
-            <Badge 
-              variant="secondary" 
-              className={`text-white ${statusColor}`}
-            >
-              {cliente.cliente_status}
-            </Badge>
-            <Badge variant="outline">{cliente.cliente_servidor}</Badge>
-          </div>
-        </div>
-        <div className="text-sm text-muted-foreground">
-          Próximo pagamento: {dataFormatada} - {diasText}
+          <Badge 
+            variant="outline" 
+            className={cliente.dias_para_vencimento < 0 ? 'border-red-500 text-red-600' : 
+                      cliente.dias_para_vencimento === 0 ? 'border-orange-500 text-orange-600' : 
+                      'border-blue-500 text-blue-600'}
+          >
+            {diasText}
+          </Badge>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-3">
-        <div className="grid grid-cols-4 gap-2 text-sm">
+        <div className="grid grid-cols-5 gap-2 text-sm">
           <div className="flex items-center gap-1">
             <Phone className="w-3 h-3" />
             <span className="truncate">{cliente.cliente_telefone || "N/A"}</span>
           </div>
           <div className="flex items-center gap-1">
             <Calendar className="w-3 h-3" />
-            <span>Dia {cliente.dia_vencimento}</span>
+            <span>{dataFormatada}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Server className="w-3 h-3" />
+            <span className="truncate">{cliente.cliente_servidor}</span>
           </div>
           <div className="flex items-center gap-1">
             <DollarSign className="w-3 h-3" />
@@ -145,32 +141,20 @@ export const ClienteCobrancaCard = ({
         <div className="flex gap-2">
           <Select value={templateSelecionado} onValueChange={setTemplateSelecionado}>
             <SelectTrigger className="flex-1">
-              <SelectValue placeholder={
-                templateSugerido ? `Sugerido: ${templateSugerido.nome}` : "Escolha um template"
-              } />
+              <SelectValue placeholder="Escolha um template" />
             </SelectTrigger>
             <SelectContent>
-              {templateSugerido && (
-                <SelectItem value={templateSugerido.tipo}>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">Sugerido</Badge>
-                    {templateSugerido.nome}
-                  </div>
+              {tiposMensagem.map((template) => (
+                <SelectItem key={template.tipo} value={template.tipo}>
+                  {template.nome}
                 </SelectItem>
-              )}
-              {tiposMensagem
-                .filter(t => t.tipo !== templateSugerido?.tipo)
-                .map((template) => (
-                  <SelectItem key={template.tipo} value={template.tipo}>
-                    {template.nome}
-                  </SelectItem>
-                ))}
+              ))}
             </SelectContent>
           </Select>
 
           <Button
             onClick={handleEnviarWhatsApp}
-            disabled={!templateSelecionado || !cliente.cliente_telefone || submitting}
+            disabled={!cliente.cliente_telefone || submitting}
             size="sm"
             className="px-3"
           >
