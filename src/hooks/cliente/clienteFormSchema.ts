@@ -21,8 +21,8 @@ export const formSchema = z.object({
   
   dispositivo_smart: z.string().optional(),
   aplicativo: z.string().min(1, "Aplicativo é obrigatório"),
-  usuario_aplicativo: z.string().min(1, "Usuário do aplicativo é obrigatório"),
-  senha_aplicativo: z.string().min(1, "Senha do aplicativo é obrigatória"),
+  usuario_aplicativo: z.string().optional(),
+  senha_aplicativo: z.string().optional(),
   data_licenca_aplicativo: z.string().optional(),
   
   possui_tela_adicional: z.boolean().default(false),

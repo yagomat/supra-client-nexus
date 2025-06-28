@@ -60,7 +60,6 @@ export const CadastrarClienteAdditionalScreen: React.FC<AdditionalScreenProps> =
           control={control}
           label="Senha (Id) 2"
           placeholder="Identificação do dispositivo 2"
-          type="password"
           disabled={disabled}
           maxLength={25}
         />

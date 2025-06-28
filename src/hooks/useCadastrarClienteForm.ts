@@ -101,8 +101,8 @@ export const useCadastrarClienteForm = () => {
         
         dispositivo_smart: data.dispositivo_smart || null,
         aplicativo: data.aplicativo,
-        usuario_aplicativo: data.usuario_aplicativo,
-        senha_aplicativo: data.senha_aplicativo,
+        usuario_aplicativo: data.usuario_aplicativo || null,
+        senha_aplicativo: data.senha_aplicativo || null,
         data_licenca_aplicativo: data.data_licenca_aplicativo || null,
         
         possui_tela_adicional: possuiTelaAdicional,
