@@ -33,7 +33,7 @@ export const formSchema = z.object({
   data_licenca_2: z.string().optional(),
   
   observacoes: z.string().optional(),
-  status: z.enum(["ativo", "inativo"]).default("ativo"),
+  status: z.enum(["ativo", "inativo"]).default("inativo"),
 });
 
 export type ClienteFormValues = z.infer<typeof formSchema>;

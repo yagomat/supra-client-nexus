@@ -42,7 +42,7 @@ export const useCadastrarClienteForm = () => {
       data_licenca_2: "",
       
       observacoes: "",
-      status: "ativo",
+      status: "inativo", // Mudança: status padrão agora é inativo
     }
   });
 
@@ -113,6 +113,7 @@ export const useCadastrarClienteForm = () => {
         data_licenca_2: possuiTelaAdicional ? data.data_licenca_2 || null : null,
         
         observacoes: data.observacoes || null
+        // Removido: não enviamos mais o status, ele será determinado automaticamente pelo banco
       };
 
       // Enviar dados para o backend
@@ -120,7 +121,7 @@ export const useCadastrarClienteForm = () => {
 
       toast({
         title: "Cliente cadastrado com sucesso",
-        description: `O cliente ${data.nome} foi cadastrado com sucesso.`,
+        description: `O cliente ${data.nome} foi cadastrado. O status será determinado automaticamente baseado nos pagamentos.`,
       });
 
       // Redirecionar para a lista de clientes

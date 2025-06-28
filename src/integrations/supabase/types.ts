@@ -481,6 +481,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      recalculate_all_client_status_on_startup: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       registrar_cobranca: {
         Args: {
           p_cliente_id: string
