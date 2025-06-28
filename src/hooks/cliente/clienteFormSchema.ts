@@ -7,7 +7,16 @@ export const formSchema = z.object({
   codigo_pais_telefone: z.string().default("+55"),
   uf: z.string().optional(),
   servidor: z.string().min(1, "Servidor é obrigatório"),
-  dia_vencimento: z.number().min(1, "Dia deve ser entre 1 e 31").max(31, "Dia deve ser entre 1 e 31"),
+  dia_vencimento: z.union([
+    z.number().min(1, "Dia deve ser entre 1 e 31").max(31, "Dia deve ser entre 1 e 31"),
+    z.string().transform((val) => {
+      const num = parseInt(val);
+      if (isNaN(num) || num < 1 || num > 31) {
+        throw new Error("Dia deve ser entre 1 e 31");
+      }
+      return num;
+    })
+  ]),
   valor_plano: z.string().optional(),
   
   dispositivo_smart: z.string().optional(),

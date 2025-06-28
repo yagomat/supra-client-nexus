@@ -16,12 +16,17 @@ import {
 } from "@/components/ui/select";
 import { Control } from "react-hook-form";
 
+interface SelectOption {
+  value: string;
+  label: string;
+}
+
 interface SelectFieldProps {
   name: string;
   control: Control<any>;
   label: string;
   placeholder: string;
-  options: Array<{ value: string; label: string }>;
+  options: SelectOption[];
   disabled?: boolean;
 }
 
@@ -40,9 +45,16 @@ export const SelectField: React.FC<SelectFieldProps> = ({
       render={({ field }) => (
         <FormItem>
           <FormLabel>{label}</FormLabel>
-          <Select
-            onValueChange={field.onChange}
-            value={field.value?.toString() || ""}
+          <Select 
+            onValueChange={(value) => {
+              // Se o campo é dia_vencimento, converter para número
+              if (name === 'dia_vencimento') {
+                field.onChange(parseInt(value));
+              } else {
+                field.onChange(value);
+              }
+            }} 
+            value={field.value?.toString() || ""} 
             disabled={disabled}
           >
             <FormControl>
