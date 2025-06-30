@@ -3,13 +3,13 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X, Minimize2 } from 'lucide-react';
-import { useOverlay } from '../hooks/useOverlay';
+import { useCordovaOverlay } from '../hooks/useCordovaOverlay';
 import { ClienteInfo } from './ClienteInfo';
 import { TemplatesList } from './TemplatesList';
 import { QuickActions } from './QuickActions';
 
 export const OverlayWindow = () => {
-  const { config, hideOverlay } = useOverlay();
+  const { config, hideOverlay } = useCordovaOverlay();
 
   if (!config.isVisible) return null;
 
@@ -26,7 +26,7 @@ export const OverlayWindow = () => {
       <Card className="w-full h-full">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm">Gestor Connect Mobile</CardTitle>
+            <CardTitle className="text-sm">Gestor Connect Mobile (Cordova)</CardTitle>
             <div className="flex gap-1">
               <Button
                 variant="ghost"

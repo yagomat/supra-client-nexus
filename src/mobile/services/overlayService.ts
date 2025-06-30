@@ -1,6 +1,4 @@
 
-import { Device } from '@capacitor/device';
-
 export interface OverlayConfig {
   isVisible: boolean;
   position: { x: number; y: number };
@@ -17,25 +15,42 @@ class OverlayService {
   private listeners: Array<(config: OverlayConfig) => void> = [];
 
   async initialize() {
-    const info = await Device.getInfo();
-    console.log('Initializing overlay service on:', info.platform);
+    console.log('Initializing overlay service for Cordova');
     
-    if (info.platform === 'android') {
-      await this.setupAndroidOverlay();
+    // Aguardar o Cordova estar pronto
+    if (window.cordova) {
+      document.addEventListener('deviceready', () => {
+        this.setupOverlay();
+      }, false);
+    } else {
+      // Desenvolvimento - simular overlay
+      this.setupOverlay();
     }
   }
 
-  private async setupAndroidOverlay() {
-    // Android-specific overlay setup
-    console.log('Setting up Android overlay system');
+  private setupOverlay() {
+    console.log('Setting up overlay system for Cordova');
+    
+    // Se estiver no dispositivo real, verificar permissões
+    if (window.cordova && window.device?.platform === 'Android') {
+      this.checkOverlayPermissions();
+    }
+  }
+
+  private async checkOverlayPermissions() {
+    // Aqui seria implementada a verificação de permissões específicas do Android
+    // Por enquanto, apenas log
+    console.log('Checking overlay permissions on Android');
   }
 
   showOverlay() {
+    console.log('Showing overlay');
     this.config.isVisible = true;
     this.notifyListeners();
   }
 
   hideOverlay() {
+    console.log('Hiding overlay');
     this.config.isVisible = false;
     this.notifyListeners();
   }
