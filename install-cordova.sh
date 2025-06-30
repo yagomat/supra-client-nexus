@@ -19,13 +19,13 @@ if [ ! -f "config.xml" ]; then
     cp cordova-config.xml config.xml
 fi
 
-# 3. Adicionar plataforma Android
-echo "📱 Adicionando plataforma Android..."
-cordova platform add android
-
-# 4. Fazer build do projeto
+# 3. Fazer build do projeto ANTES de adicionar plataforma
 echo "📦 Fazendo build..."
 node build-cordova.js
+
+# 4. Adicionar plataforma Android
+echo "📱 Adicionando plataforma Android..."
+cordova platform add android
 
 # 5. Instalar plugins necessários
 echo "🔌 Instalando plugins..."
