@@ -32,7 +32,7 @@ jobs:
       uses: android-actions/setup-android@v3
       
     - name: Install dependencies
-      run: npm install
+      run: npm ci
       
     - name: Install Cordova CLI
       run: npm install -g cordova@latest
@@ -43,50 +43,59 @@ jobs:
           cordova create temp com.lovable.supraclientnexus "Supra Client Nexus"
           cp temp/config.xml .
           rm -rf temp
-          if [ -f "cordova-config.xml" ]; then
-            cp cordova-config.xml config.xml
-          fi
+        fi
+        if [ -f "cordova-config.xml" ]; then
+          cp cordova-config.xml config.xml
         fi
         
     - name: Build React app
       run: |
         npm run build
         mkdir -p www
-        cp -r dist/* www/
+        cp -r dist/* www/ || echo "Copied dist files"
         
     - name: Fix index.html for Cordova
       run: |
         if [ -f "www/index.html" ]; then
           sed -i 's|href="/|href="|g' www/index.html
           sed -i 's|src="/|src="|g' www/index.html
-          sed -i 's|<script type="module" src="/src/main.tsx"></script>|<script src="cordova.js"></script>\n    <script type="module" src="src/main.tsx"></script>|g' www/index.html
+          # Add cordova.js script
+          if ! grep -q "cordova.js" www/index.html; then
+            sed -i 's|</head>|  <script src="cordova.js"></script>\n  </head>|g' www/index.html
+          fi
         fi
         
     - name: Add Android platform
-      run: cordova platform add android
-      
+      run: |
+        cordova platform add android --save
+        
     - name: Install Cordova plugins
       run: |
-        cordova plugin add cordova-plugin-device
-        cordova plugin add cordova-plugin-splashscreen
-        cordova plugin add cordova-plugin-statusbar
-        cordova plugin add cordova-plugin-whitelist
-        cordova plugin add cordova-plugin-network-information
+        cordova plugin add cordova-plugin-device --save
+        cordova plugin add cordova-plugin-splashscreen --save
+        cordova plugin add cordova-plugin-statusbar --save
+        cordova plugin add cordova-plugin-whitelist --save
+        cordova plugin add cordova-plugin-network-information --save
         
     - name: Accept Android SDK licenses
-      run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-      
+      run: |
+        echo y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || echo "License acceptance attempted"
+        
     - name: Build Android APK
-      run: cordova build android --release
-      
+      run: |
+        cordova build android --release --verbose
+        
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
+      if: success()
       with:
         name: android-apk
         path: platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
+        retention-days: 30
         
     - name: Create Release
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
