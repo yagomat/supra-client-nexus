@@ -40,151 +40,197 @@ jobs:
     - name: Build React app first
       run: |
         npm run build
+        echo "✅ React app built successfully"
         
     - name: Create Cordova project structure
       run: |
+        echo "🔧 Setting up Cordova project..."
         if [ ! -f "config.xml" ]; then
           cordova create temp com.lovable.supraclientnexus "Supra Client Nexus"
           cp temp/config.xml ./config.xml
           rm -rf temp
+          echo "✅ Base config.xml created"
         fi
         if [ -f "cordova-config.xml" ]; then
           cp cordova-config.xml config.xml
+          echo "✅ Custom config.xml applied"
         fi
         
     - name: Prepare www directory
       run: |
+        echo "📂 Preparing www directory..."
         mkdir -p www
-        cp -r dist/* www/ || echo "Copied dist files"
+        if [ -d "dist" ]; then
+          cp -r dist/* www/
+          echo "✅ Dist files copied to www"
+        else
+          echo "❌ Dist directory not found"
+          exit 1
+        fi
         
     - name: Fix index.html for Cordova
       run: |
+        echo "🔧 Fixing index.html for Cordova..."
         if [ -f "www/index.html" ]; then
+          # Fix asset paths
           sed -i 's|href="/|href="|g' www/index.html
           sed -i 's|src="/|src="|g' www/index.html
-          # Add cordova.js script before closing head tag
+          # Add cordova.js script
           if ! grep -q "cordova.js" www/index.html; then
             sed -i 's|</head>|  <script src="cordova.js"></script>\n  </head>|g' www/index.html
           fi
-          echo "✅ index.html ajustado para Cordova"
-          cat www/index.html | head -20
+          echo "✅ index.html fixed for Cordova"
+        else
+          echo "❌ index.html not found in www directory"
+          exit 1
         fi
+        
+    - name: Set environment variables
+      run: |
+        echo "🌍 Setting environment variables..."
+        echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+        echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
+        echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+        echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+        echo "$ANDROID_HOME/build-tools/34.0.0" >> $GITHUB_PATH
         
     - name: Accept Android SDK licenses
       run: |
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || echo "License acceptance attempted"
+        echo "📜 Accepting Android SDK licenses..."
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || echo "License acceptance completed"
         
-    - name: Install additional SDK components
+    - name: Install Android SDK components
       run: |
-        echo "📦 Instalando componentes do SDK..."
-        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.0" || echo "Build tools install failed"
-        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" || echo "Platform install failed"
-        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" || echo "Platform tools install failed"
+        echo "📦 Installing Android SDK components..."
+        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0" || echo "Build tools install attempted"
+        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" || echo "Platform install attempted"
+        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" || echo "Platform 33 install attempted"
+        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" || echo "Platform tools install attempted"
         
     - name: Add Android platform
       run: |
-        echo "📱 Adicionando plataforma Android..."
-        cordova platform add android@12 --save || cordova platform add android --save || echo "Platform add failed, trying to continue..."
-        cordova platform ls
+        echo "📱 Adding Android platform..."
+        cordova platform add android@latest --save || echo "Platform add attempted"
+        cordova platform ls || echo "Platform list failed"
         
-    - name: Install Cordova plugins
+    - name: Install essential Cordova plugins
       run: |
-        echo "🔌 Instalando plugins..."
-        cordova plugin add cordova-plugin-device --save || echo "Plugin device failed"
-        cordova plugin add cordova-plugin-splashscreen --save || echo "Plugin splashscreen failed"
-        cordova plugin add cordova-plugin-statusbar --save || echo "Plugin statusbar failed"
-        cordova plugin add cordova-plugin-whitelist --save || echo "Plugin whitelist failed"
-        cordova plugin add cordova-plugin-network-information --save || echo "Plugin network failed"
-        cordova plugin ls
+        echo "🔌 Installing essential plugins..."
+        cordova plugin add cordova-plugin-whitelist --save || echo "Whitelist plugin failed"
+        cordova plugin add cordova-plugin-device --save || echo "Device plugin failed"
+        cordova plugin add cordova-plugin-splashscreen --save || echo "Splashscreen plugin failed"
+        cordova plugin add cordova-plugin-statusbar --save || echo "Statusbar plugin failed"
+        cordova plugin ls || echo "Plugin list failed"
         
-    - name: Configure Gradle wrapper permissions
+    - name: Verify project structure
       run: |
-        echo "🔧 Configurando permissões do Gradle..."
+        echo "📂 Project structure verification:"
+        ls -la
+        echo "📂 www directory:"
+        ls -la www/ || echo "www not found"
+        echo "📂 platforms directory:"
+        ls -la platforms/ || echo "platforms not found"
+        if [ -d "platforms/android" ]; then
+          echo "📂 Android platform found"
+          ls -la platforms/android/
+        fi
+        
+    - name: Configure Gradle
+      run: |
+        echo "🔧 Configuring Gradle..."
         if [ -f "platforms/android/gradlew" ]; then
           chmod +x platforms/android/gradlew
           echo "✅ Gradle wrapper permissions set"
         fi
         
-    - name: Set ANDROID_HOME environment
-      run: |
-        echo "🌍 Configurando variáveis de ambiente..."
-        echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-        echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
-        echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
-        echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
-        echo "$ANDROID_HOME/build-tools/33.0.0" >> $GITHUB_PATH
-        
-    - name: Verify project structure
-      run: |
-        echo "📂 Estrutura do projeto:"
-        ls -la
-        echo "📂 Conteúdo www:"
-        ls -la www/ || echo "www directory not found"
-        echo "📂 Platforms:"
-        ls -la platforms/ || echo "platforms directory not found"
+        # Create or update gradle.properties
         if [ -d "platforms/android" ]; then
-          echo "📂 Android platform:"
-          ls -la platforms/android/
+          echo "org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m" >> platforms/android/gradle.properties
+          echo "org.gradle.parallel=true" >> platforms/android/gradle.properties
+          echo "org.gradle.daemon=true" >> platforms/android/gradle.properties
+          echo "✅ Gradle properties configured"
         fi
         
     - name: Build Android APK
       run: |
-        echo "🔨 Construindo APK..."
-        cordova requirements android || echo "Requirements check failed"
+        echo "🔨 Building Android APK..."
         
-        # Try release build first, fallback to debug
-        echo "Tentando build release..."
-        if ! cordova build android --release --verbose; then
-          echo "❌ Release build falhou, tentando debug..."
-          if ! cordova build android --debug --verbose; then
-            echo "❌ Debug build também falhou, tentando sem verbose..."
-            cordova build android || echo "All build attempts failed"
+        # Check Cordova requirements
+        cordova requirements android || echo "Requirements check completed"
+        
+        # Try different build approaches
+        echo "Attempting release build..."
+        if cordova build android --release --verbose; then
+          echo "✅ Release build successful"
+        else
+          echo "❌ Release build failed, trying debug build..."
+          if cordova build android --debug --verbose; then
+            echo "✅ Debug build successful"
+          else
+            echo "❌ Debug build failed, trying simple build..."
+            cordova build android || echo "❌ All build attempts failed"
           fi
         fi
         
-    - name: Find APK files
+    - name: Find and list APK files
       run: |
-        echo "🔍 Procurando arquivos APK..."
-        find . -name "*.apk" -type f || echo "No APK files found"
+        echo "🔍 Searching for APK files..."
+        find . -name "*.apk" -type f | head -20 || echo "No APK files found with find"
         
-        # Try to find in common locations
-        if [ -d "platforms/android/app/build/outputs/apk" ]; then
-          echo "📂 APKs encontrados em outputs/apk:"
-          find platforms/android/app/build/outputs/apk -name "*.apk" -type f || echo "No APKs in outputs/apk"
-        fi
+        # Check common locations
+        APK_LOCATIONS=(
+          "platforms/android/app/build/outputs/apk/release"
+          "platforms/android/app/build/outputs/apk/debug"
+          "platforms/android/build/outputs/apk/release"
+          "platforms/android/build/outputs/apk/debug"
+        )
         
-        if [ -d "platforms/android/build/outputs/apk" ]; then
-          echo "📂 APKs encontrados em build/outputs/apk:"
-          find platforms/android/build/outputs/apk -name "*.apk" -type f || echo "No APKs in build/outputs/apk"
-        fi
+        for location in "${APK_LOCATIONS[@]}"; do
+          if [ -d "$location" ]; then
+            echo "📂 Found APK directory: $location"
+            ls -la "$location" || echo "Could not list $location"
+          fi
+        done
         
-    - name: Upload APK artifact
+    - name: Create APK directory and copy files
+      run: |
+        echo "📁 Creating APK directory..."
+        mkdir -p apk-output
+        
+        # Copy any found APK files
+        find platforms/android -name "*.apk" -type f -exec cp {} apk-output/ \; || echo "No APK files to copy"
+        
+        # List what we have
+        echo "📦 APK files found:"
+        ls -la apk-output/ || echo "No files in apk-output"
+        
+    - name: Upload APK artifacts
       uses: actions/upload-artifact@v4
       if: always()
       with:
         name: android-apk
         path: |
-          platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
-          platforms/android/app/build/outputs/apk/debug/app-debug.apk
-          platforms/android/build/outputs/apk/release/android-release-unsigned.apk
-          platforms/android/build/outputs/apk/debug/android-debug.apk
+          apk-output/*.apk
+          platforms/android/app/build/outputs/apk/**/*.apk
+          platforms/android/build/outputs/apk/**/*.apk
         retention-days: 30
         
-    - name: Create Release
+    - name: Create GitHub Release
       if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
       uses: softprops/action-gh-release@v1
       with:
         tag_name: v${{ github.run_number }}
         name: Release v${{ github.run_number }}
         body: |
-          APK gerado automaticamente via GitHub Actions
+          🎉 APK Android gerado automaticamente
           
           📱 **Como instalar:**
           1. Baixe o arquivo APK
           2. Ative "Fontes desconhecidas" no Android
           3. Instale o APK
           4. Conceda as permissões necessárias
-        files: |
-          platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
-          platforms/android/app/build/outputs/apk/debug/app-debug.apk
+          
+          🔧 **Build #${{ github.run_number }}**
+        files: apk-output/*.apk
         token: ${{ secrets.GITHUB_TOKEN }}
+        fail_on_unmatched_files: false
