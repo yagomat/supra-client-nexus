@@ -2,7 +2,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.571771e6b8174602a6970499691ad4b3',
+  appId: 'com.lovable.supraclientnexus',
   appName: 'supra-client-nexus',
   webDir: 'dist',
   server: {
