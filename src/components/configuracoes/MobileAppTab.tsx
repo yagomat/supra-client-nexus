@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,14 +10,6 @@ export const MobileAppTab = () => {
   const appVersion = "1.0.0";
   const lastUpdate = "30/06/2025";
 
-  const handleDownloadInstructions = () => {
-    toast({
-      title: "Como gerar o APK",
-      description: "Siga as instruções abaixo para gerar o aplicativo Android.",
-      duration: 4000,
-    });
-  };
-
   const copyCommand = (command: string) => {
     navigator.clipboard.writeText(command);
     toast({
@@ -30,7 +21,7 @@ export const MobileAppTab = () => {
 
   const features = [
     "Overlay inteligente no WhatsApp",
-    "Detecção automática de clientes",
+    "Detecção automática de clientes", 
     "Templates de mensagem personalizados",
     "Ações rápidas de cobrança",
     "Sincronização em tempo real",
@@ -40,16 +31,15 @@ export const MobileAppTab = () => {
   const systemRequirements = [
     "Android 7.0 ou superior",
     "Acesso à sobreposição de apps",
-    "Permissão de acessibilidade",
+    "Permissão de acessibilidade", 
     "WhatsApp instalado"
   ];
 
   const buildCommands = [
-    { step: 1, command: "npm install", description: "Instalar dependências" },
-    { step: 2, command: "npx cap add android", description: "Adicionar plataforma Android" },
-    { step: 3, command: "npm run build", description: "Compilar o projeto" },
-    { step: 4, command: "npx cap sync", description: "Sincronizar com Android" },
-    { step: 5, command: "npx cap open android", description: "Abrir no Android Studio" }
+    { step: 1, command: "chmod +x install-cordova.sh", description: "Tornar script executável" },
+    { step: 2, command: "./install-cordova.sh", description: "Configurar Cordova" },
+    { step: 3, command: "cordova build android", description: "Compilar para Android" },
+    { step: 4, command: "cordova run android", description: "Instalar no dispositivo" }
   ];
 
   return (
@@ -59,16 +49,20 @@ export const MobileAppTab = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Smartphone className="h-5 w-5" />
-            Gestor Connect Mobile
+            Gestor Connect Mobile (Cordova)
             <Badge variant="outline">v{appVersion}</Badge>
           </CardTitle>
           <CardDescription>
-            Aplicativo Android com overlay para WhatsApp que facilita o atendimento e cobrança de clientes.
+            Aplicativo Android desenvolvido com Apache Cordova com overlay para WhatsApp que facilita o atendimento e cobrança de clientes.
           </CardDescription>
         </CardHeader>
         
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="text-center p-3 border rounded">
+              <div className="font-medium">Framework</div>
+              <div className="text-muted-foreground">Apache Cordova</div>
+            </div>
             <div className="text-center p-3 border rounded">
               <div className="font-medium">Versão</div>
               <div className="text-muted-foreground">{appVersion}</div>
@@ -77,32 +71,36 @@ export const MobileAppTab = () => {
               <div className="font-medium">Atualizado</div>
               <div className="text-muted-foreground">{lastUpdate}</div>
             </div>
+            <div className="text-center p-3 border rounded">
+              <div className="font-medium">Plataforma</div>
+              <div className="text-muted-foreground">Android</div>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Aviso sobre APK */}
-      <Card className="border-orange-200 bg-orange-50">
+      {/* Aviso sobre migração */}
+      <Card className="border-blue-200 bg-blue-50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-orange-800">
-            <AlertCircle className="h-5 w-5" />
-            APK não disponível para download direto
+          <CardTitle className="flex items-center gap-2 text-blue-800">
+            <CheckCircle className="h-5 w-5" />
+            Migração para Cordova concluída
           </CardTitle>
-          <CardDescription className="text-orange-700">
-            O aplicativo precisa ser compilado localmente no seu computador usando as instruções abaixo.
+          <CardDescription className="text-blue-700">
+            O projeto foi migrado do Capacitor para o Apache Cordova para resolver problemas de compatibilidade e facilitar a geração do APK.
           </CardDescription>
         </CardHeader>
       </Card>
 
-      {/* Como gerar o APK */}
+      {/* Como gerar o APK com Cordova */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Terminal className="h-5 w-5" />
-            Como gerar o aplicativo
+            Como gerar o aplicativo com Cordova
           </CardTitle>
           <CardDescription>
-            Siga estes passos para gerar o APK do aplicativo Android.
+            Siga estes passos para gerar o APK usando Apache Cordova.
           </CardDescription>
         </CardHeader>
         
@@ -143,17 +141,17 @@ export const MobileAppTab = () => {
             <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
               <CheckCircle className="h-5 w-5 text-green-600" />
               <div className="flex-1">
-                <div className="font-medium text-green-800">7. Gerar APK no Android Studio</div>
+                <div className="font-medium text-green-800">6. APK gerado com sucesso</div>
                 <div className="text-sm text-green-600">
-                  No Android Studio: Build → Build Bundle(s) / APK(s) → Build APK(s)
+                  O APK estará disponível em: platforms/android/app/build/outputs/apk/debug/
                 </div>
               </div>
             </div>
           </div>
 
           <div className="text-sm text-muted-foreground bg-muted p-3 rounded">
-            <strong>Importante:</strong> Você precisará ter o Android Studio instalado no seu computador 
-            para gerar o APK. O arquivo gerado estará na pasta <code>android/app/build/outputs/apk/debug/</code>
+            <strong>Vantagens do Cordova:</strong> Configuração mais simples, melhor compatibilidade com IDs de aplicativo personalizados, 
+            e processo de build mais direto. O Cordova é mais tolerante com configurações e menos restritivo que o Capacitor.
           </div>
         </CardContent>
       </Card>
