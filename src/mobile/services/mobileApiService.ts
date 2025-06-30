@@ -52,15 +52,21 @@ class MobileApiService {
   async buscarTemplates(): Promise<MobileTemplate[]> {
     try {
       const { data, error } = await supabase
-        .from('mensagens_whatsapp_customizadas')
-        .select('tipo, mensagem');
+        .from('mensagens_whatsapp')
+        .select('tipo_mensagem, mensagem');
 
       if (error) {
         console.error('Erro ao buscar templates:', error);
         return this.getDefaultTemplates();
       }
 
-      return data || this.getDefaultTemplates();
+      // Map the data to match MobileTemplate interface
+      const templates = data?.map(item => ({
+        tipo: item.tipo_mensagem,
+        mensagem: item.mensagem
+      })) || [];
+
+      return templates.length > 0 ? templates : this.getDefaultTemplates();
     } catch (error) {
       console.error('Erro ao carregar templates:', error);
       return this.getDefaultTemplates();
@@ -86,13 +92,16 @@ class MobileApiService {
 
   async registrarAcaoMobile(clienteId: string, acao: string, detalhes?: string) {
     try {
+      // Use the existing cliente_cobrancas table to register mobile actions
       const { error } = await supabase
-        .from('historico_cobranca')
+        .from('cliente_cobrancas')
         .insert({
           cliente_id: clienteId,
-          tipo_aviso: acao,
-          data_aviso: new Date().toISOString(),
-          observacoes: detalhes
+          user_id: (await supabase.auth.getUser()).data.user?.id || '',
+          ultimo_aviso: acao,
+          data_ultimo_aviso: new Date().toISOString(),
+          mes_referencia: new Date().getMonth() + 1,
+          ano_referencia: new Date().getFullYear()
         });
 
       if (error) {
