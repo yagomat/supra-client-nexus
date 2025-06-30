@@ -64,6 +64,26 @@ jobs:
         
         echo "✅ Dependencies installed successfully"
         
+    - name: Fix package.json for Cordova compatibility
+      run: |
+        echo "🔧 Fixing package.json for Cordova compatibility..."
+        
+        # Backup original package.json
+        cp package.json package.json.backup
+        
+        # Remove "type": "module" temporarily for Cordova compatibility
+        if grep -q '"type": "module"' package.json; then
+          echo "📝 Removing 'type': 'module' for Cordova compatibility..."
+          sed -i '/"type": "module",\?/d' package.json
+          echo "✅ package.json updated for Cordova"
+        else
+          echo "ℹ️ No 'type': 'module' found in package.json"
+        fi
+        
+        # Show the diff
+        echo "📋 Package.json changes:"
+        diff package.json.backup package.json || true
+        
     - name: Install Cordova CLI
       run: |
         echo "🔧 Installing Cordova CLI..."
@@ -247,26 +267,38 @@ jobs:
         
         echo "✅ Android environment configured"
         
-    - name: Add Android platform and plugins with error handling
+    - name: Add Android platform and plugins with enhanced error handling
       run: |
         echo "🔌 Adding Android platform and plugins..."
         
-        # Add Android platform with error handling
+        # Clean any existing platform first
+        echo "🧹 Cleaning existing platforms..."
+        rm -rf platforms/android
+        cordova platform rm android || echo "⚠️ No android platform to remove"
+        
+        # Add Android platform with better error handling
         echo "📱 Adding Android platform..."
         if cordova platform add android@12 --save 2>&1 | tee platform_add.log; then
-          echo "✅ Android platform added"
+          echo "✅ Android platform added successfully"
         else
-          echo "⚠️ Platform add had issues, but continuing..."
-          cat platform_add.log || true
+          echo "⚠️ Platform add with version failed, trying without version..."
+          if cordova platform add android --save 2>&1 | tee platform_add_fallback.log; then
+            echo "✅ Android platform added (fallback method)"
+          else
+            echo "❌ Both platform add methods failed"
+            cat platform_add.log || true
+            cat platform_add_fallback.log || true
+            exit 1
+          fi
         fi
         
-        # Check if platform was actually added
+        # Verify platform was added
         if [ -d "platforms/android" ]; then
           echo "✅ Android platform directory exists"
+          ls -la platforms/android/
         else
-          echo "❌ Android platform directory missing, trying alternative approach..."
-          # Try without version specification
-          cordova platform add android --save || echo "⚠️ Alternative platform add also failed, continuing..."
+          echo "❌ Android platform directory missing"
+          exit 1
         fi
         
         # Add plugins with error handling
@@ -281,20 +313,7 @@ jobs:
         cordova platform ls || echo "⚠️ Could not list platforms"
         cordova plugin ls || echo "⚠️ Could not list plugins"
         
-        # Verify Android platform structure
-        if [ -d "platforms/android" ]; then
-          echo "📂 Android platform structure:"
-          ls -la platforms/android/ || true
-          
-          # Check for critical files
-          if [ -f "platforms/android/cordova/Api.js" ]; then
-            echo "✅ Android API file exists"
-          else
-            echo "⚠️ Android API file missing, but continuing..."
-          fi
-        fi
-        
-    - name: Configure Gradle
+    - name: Configure Gradle and fix build issues
       run: |
         echo "⚙️ Configuring Gradle..."
         
@@ -316,14 +335,42 @@ jobs:
         android.enableJetifier=true
         android.suppressUnsupportedCompileSdk=34
         EOF
+          
+          # Update build.gradle if needed
+          if [ -f "platforms/android/build.gradle" ]; then
+            echo "🔧 Updating build.gradle for compatibility..."
+            
+            # Ensure proper Gradle version
+            sed -i "s/classpath 'com.android.tools.build:gradle:[0-9.]*'/classpath 'com.android.tools.build:gradle:8.1.1'/" platforms/android/build.gradle
+            
+            echo "✅ build.gradle updated"
+          fi
+          
+          # Fix cordova-android compatibility
+          if [ -f "platforms/android/cordova/Api.js" ]; then
+            echo "🔧 Checking Api.js compatibility..."
+            
+            # Check if Api.js has ES modules syntax
+            if grep -q "export" platforms/android/cordova/Api.js; then
+              echo "⚠️ Api.js uses ES modules syntax, this might cause issues"
+            fi
+          fi
+          
           echo "✅ Gradle configured"
         else
           echo "⚠️ Android platform not found, skipping Gradle configuration"
         fi
         
-    - name: Build Android APK with comprehensive error handling
+    - name: Restore package.json and build Android APK
       run: |
         echo "🔨 Building Android APK..."
+        
+        # Restore original package.json after Cordova operations
+        if [ -f "package.json.backup" ]; then
+          echo "📝 Restoring original package.json..."
+          cp package.json.backup package.json
+          echo "✅ Original package.json restored"
+        fi
         
         # Check requirements
         echo "🔍 Checking Cordova requirements..."
