@@ -3,26 +3,29 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Download, Smartphone, QrCode, CheckCircle, AlertCircle } from 'lucide-react';
+import { Download, Smartphone, QrCode, CheckCircle, AlertCircle, Github, Terminal } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export const MobileAppTab = () => {
+  const { toast } = useToast();
   const appVersion = "1.0.0";
-  const apkSize = "12.5 MB";
   const lastUpdate = "30/06/2025";
 
-  const handleDownloadAPK = () => {
-    // Em um ambiente real, isso baixaria o APK do servidor
-    const link = document.createElement('a');
-    link.href = '/gestor-connect-mobile.apk'; // URL do APK no servidor
-    link.download = 'gestor-connect-mobile.apk';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownloadInstructions = () => {
+    toast({
+      title: "Como gerar o APK",
+      description: "Siga as instruções abaixo para gerar o aplicativo Android.",
+      duration: 4000,
+    });
   };
 
-  const generateQRCode = () => {
-    // Em um ambiente real, isso geraria um QR code para download
-    alert('QR Code para download do APK seria gerado aqui');
+  const copyCommand = (command: string) => {
+    navigator.clipboard.writeText(command);
+    toast({
+      title: "Comando copiado!",
+      description: "Cole no terminal para executar.",
+      duration: 2000,
+    });
   };
 
   const features = [
@@ -41,6 +44,14 @@ export const MobileAppTab = () => {
     "WhatsApp instalado"
   ];
 
+  const buildCommands = [
+    { step: 1, command: "npm install", description: "Instalar dependências" },
+    { step: 2, command: "npx cap add android", description: "Adicionar plataforma Android" },
+    { step: 3, command: "npm run build", description: "Compilar o projeto" },
+    { step: 4, command: "npx cap sync", description: "Sincronizar com Android" },
+    { step: 5, command: "npx cap open android", description: "Abrir no Android Studio" }
+  ];
+
   return (
     <div className="space-y-6">
       {/* Informações do App */}
@@ -57,14 +68,10 @@ export const MobileAppTab = () => {
         </CardHeader>
         
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div className="text-center p-3 border rounded">
               <div className="font-medium">Versão</div>
               <div className="text-muted-foreground">{appVersion}</div>
-            </div>
-            <div className="text-center p-3 border rounded">
-              <div className="font-medium">Tamanho</div>
-              <div className="text-muted-foreground">{apkSize}</div>
             </div>
             <div className="text-center p-3 border rounded">
               <div className="font-medium">Atualizado</div>
@@ -74,34 +81,79 @@ export const MobileAppTab = () => {
         </CardContent>
       </Card>
 
-      {/* Download */}
+      {/* Aviso sobre APK */}
+      <Card className="border-orange-200 bg-orange-50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-orange-800">
+            <AlertCircle className="h-5 w-5" />
+            APK não disponível para download direto
+          </CardTitle>
+          <CardDescription className="text-orange-700">
+            O aplicativo precisa ser compilado localmente no seu computador usando as instruções abaixo.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+
+      {/* Como gerar o APK */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Download className="h-5 w-5" />
-            Download do Aplicativo
+            <Terminal className="h-5 w-5" />
+            Como gerar o aplicativo
           </CardTitle>
           <CardDescription>
-            Baixe e instale o aplicativo Android em seu dispositivo.
+            Siga estes passos para gerar o APK do aplicativo Android.
           </CardDescription>
         </CardHeader>
         
         <CardContent className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button onClick={handleDownloadAPK} className="flex-1">
-              <Download className="h-4 w-4 mr-2" />
-              Baixar APK ({apkSize})
-            </Button>
-            
-            <Button variant="outline" onClick={generateQRCode} className="flex-1">
-              <QrCode className="h-4 w-4 mr-2" />
-              Gerar QR Code
-            </Button>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+              <Github className="h-5 w-5 text-blue-600" />
+              <div className="flex-1">
+                <div className="font-medium text-blue-800">1. Exportar para GitHub</div>
+                <div className="text-sm text-blue-600">
+                  Primeiro, exporte o projeto para seu repositório GitHub usando o botão "Export to Github"
+                </div>
+              </div>
+            </div>
+
+            {buildCommands.map((item) => (
+              <div key={item.step} className="flex items-center gap-3 p-3 border rounded-lg">
+                <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
+                  {item.step + 1}
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium">{item.description}</div>
+                  <div className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded mt-1 font-mono">
+                    {item.command}
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => copyCommand(item.command)}
+                  className="shrink-0"
+                >
+                  Copiar
+                </Button>
+              </div>
+            ))}
+
+            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <div className="flex-1">
+                <div className="font-medium text-green-800">7. Gerar APK no Android Studio</div>
+                <div className="text-sm text-green-600">
+                  No Android Studio: Build → Build Bundle(s) / APK(s) → Build APK(s)
+                </div>
+              </div>
+            </div>
           </div>
-          
+
           <div className="text-sm text-muted-foreground bg-muted p-3 rounded">
-            <strong>Importante:</strong> Como este é um APK personalizado, você precisará habilitar 
-            "Fontes desconhecidas" nas configurações do Android para instalá-lo.
+            <strong>Importante:</strong> Você precisará ter o Android Studio instalado no seu computador 
+            para gerar o APK. O arquivo gerado estará na pasta <code>android/app/build/outputs/apk/debug/</code>
           </div>
         </CardContent>
       </Card>
@@ -154,9 +206,9 @@ export const MobileAppTab = () => {
       {/* Instruções de Instalação */}
       <Card>
         <CardHeader>
-          <CardTitle>Instruções de Instalação</CardTitle>
+          <CardTitle>Instruções de Instalação no Android</CardTitle>
           <CardDescription>
-            Siga estes passos para instalar o aplicativo corretamente.
+            Após gerar o APK, siga estes passos para instalar no seu dispositivo.
           </CardDescription>
         </CardHeader>
         
@@ -165,8 +217,8 @@ export const MobileAppTab = () => {
             <div className="flex gap-3">
               <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-medium">1</div>
               <div>
-                <div className="font-medium">Baixe o APK</div>
-                <div className="text-muted-foreground">Clique no botão "Baixar APK" acima</div>
+                <div className="font-medium">Transfira o APK para seu celular</div>
+                <div className="text-muted-foreground">Use USB, email ou nuvem para transferir o arquivo APK</div>
               </div>
             </div>
             
