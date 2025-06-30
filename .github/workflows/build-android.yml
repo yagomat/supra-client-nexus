@@ -37,20 +37,23 @@ jobs:
     - name: Install Cordova CLI
       run: npm install -g cordova@latest
       
+    - name: Build React app first
+      run: |
+        npm run build
+        
     - name: Create Cordova project structure
       run: |
         if [ ! -f "config.xml" ]; then
           cordova create temp com.lovable.supraclientnexus "Supra Client Nexus"
-          cp temp/config.xml .
+          cp temp/config.xml ./config.xml
           rm -rf temp
         fi
         if [ -f "cordova-config.xml" ]; then
           cp cordova-config.xml config.xml
         fi
         
-    - name: Build React app
+    - name: Prepare www directory
       run: |
-        npm run build
         mkdir -p www
         cp -r dist/* www/ || echo "Copied dist files"
         
@@ -59,42 +62,66 @@ jobs:
         if [ -f "www/index.html" ]; then
           sed -i 's|href="/|href="|g' www/index.html
           sed -i 's|src="/|src="|g' www/index.html
-          # Add cordova.js script
+          # Add cordova.js script before closing head tag
           if ! grep -q "cordova.js" www/index.html; then
             sed -i 's|</head>|  <script src="cordova.js"></script>\n  </head>|g' www/index.html
           fi
+          echo "✅ index.html ajustado para Cordova"
+          cat www/index.html | head -20
         fi
-        
-    - name: Add Android platform
-      run: |
-        cordova platform add android --save
-        
-    - name: Install Cordova plugins
-      run: |
-        cordova plugin add cordova-plugin-device --save
-        cordova plugin add cordova-plugin-splashscreen --save
-        cordova plugin add cordova-plugin-statusbar --save
-        cordova plugin add cordova-plugin-whitelist --save
-        cordova plugin add cordova-plugin-network-information --save
         
     - name: Accept Android SDK licenses
       run: |
-        echo y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || echo "License acceptance attempted"
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || echo "License acceptance attempted"
+        
+    - name: Add Android platform
+      run: |
+        echo "📱 Adicionando plataforma Android..."
+        cordova platform add android --save || echo "Platform add failed, trying to continue..."
+        cordova platform ls
+        
+    - name: Install Cordova plugins
+      run: |
+        echo "🔌 Instalando plugins..."
+        cordova plugin add cordova-plugin-device --save || echo "Plugin device failed"
+        cordova plugin add cordova-plugin-splashscreen --save || echo "Plugin splashscreen failed"
+        cordova plugin add cordova-plugin-statusbar --save || echo "Plugin statusbar failed"
+        cordova plugin add cordova-plugin-whitelist --save || echo "Plugin whitelist failed"
+        cordova plugin add cordova-plugin-network-information --save || echo "Plugin network failed"
+        cordova plugin ls
+        
+    - name: Verify project structure
+      run: |
+        echo "📂 Estrutura do projeto:"
+        ls -la
+        echo "📂 Conteúdo www:"
+        ls -la www/ || echo "www directory not found"
+        echo "📂 Platforms:"
+        ls -la platforms/ || echo "platforms directory not found"
         
     - name: Build Android APK
       run: |
-        cordova build android --release --verbose
+        echo "🔨 Construindo APK..."
+        cordova requirements android || echo "Requirements check failed"
+        cordova build android --release --verbose || cordova build android --debug --verbose
+        
+    - name: Find APK files
+      run: |
+        echo "🔍 Procurando arquivos APK..."
+        find . -name "*.apk" -type f || echo "No APK files found"
         
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
-      if: success()
+      if: always()
       with:
         name: android-apk
-        path: platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
+        path: |
+          platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
+          platforms/android/app/build/outputs/apk/debug/app-debug.apk
         retention-days: 30
         
     - name: Create Release
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
       id: create_release
       uses: actions/create-release@v1
       env:
@@ -114,7 +141,7 @@ jobs:
         prerelease: false
         
     - name: Upload Release Asset
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
