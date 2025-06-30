@@ -68,7 +68,6 @@ jobs:
       run: |
         echo "📱 Setting up Cordova project..."
         
-        # Create base config if not exists
         if [ ! -f "config.xml" ]; then
           cordova create temp-cordova com.lovable.supraclientnexus "Supra Client Nexus"
           cp temp-cordova/config.xml ./config.xml
@@ -76,24 +75,20 @@ jobs:
           echo "✅ Base config.xml created"
         fi
         
-        # Use custom config if available
         if [ -f "cordova-config.xml" ]; then
           cp cordova-config.xml config.xml
           echo "✅ Custom config.xml applied"
         fi
         
-        # Prepare www directory
         echo "📂 Preparing www directory..."
         rm -rf www
         mkdir -p www
         cp -r dist/* www/
         
-        # Fix paths in index.html for Cordova
         if [ -f "www/index.html" ]; then
           sed -i 's|href="/|href="|g' www/index.html
           sed -i 's|src="/|src="|g' www/index.html
           
-          # Add cordova.js script
           if ! grep -q "cordova.js" www/index.html; then
             sed -i 's|</head>|  <script src="cordova.js"></script>\n  </head>|g' www/index.html
           fi
@@ -109,10 +104,8 @@ jobs:
         export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
         export PATH=$PATH:$ANDROID_HOME/build-tools/34.0.0
         
-        # Accept licenses
         yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
         
-        # Install required SDK components
         $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0" || true
         $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" || true
         $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" || true
@@ -121,10 +114,8 @@ jobs:
       run: |
         echo "🔌 Adding Android platform and plugins..."
         
-        # Add Android platform
         cordova platform add android@12 --save
         
-        # Add essential plugins
         cordova plugin add cordova-plugin-whitelist --save
         cordova plugin add cordova-plugin-device --save
         cordova plugin add cordova-plugin-splashscreen --save
@@ -138,20 +129,18 @@ jobs:
       run: |
         echo "⚙️ Configuring Gradle..."
         if [ -d "platforms/android" ]; then
-          # Set Gradle permissions
           if [ -f "platforms/android/gradlew" ]; then
             chmod +x platforms/android/gradlew
           fi
           
-          # Configure gradle.properties
           cat > platforms/android/gradle.properties << EOF
-org.gradle.jvmargs=-Xmx4096m -XX:MaxPermSize=512m
-org.gradle.parallel=true
-org.gradle.daemon=true
-org.gradle.configureondemand=true
-android.useAndroidX=true
-android.enableJetifier=true
-EOF
+        org.gradle.jvmargs=-Xmx4096m -XX:MaxPermSize=512m
+        org.gradle.parallel=true
+        org.gradle.daemon=true
+        org.gradle.configureondemand=true
+        android.useAndroidX=true
+        android.enableJetifier=true
+        EOF
           echo "✅ Gradle configured"
         fi
         
@@ -159,10 +148,8 @@ EOF
       run: |
         echo "🔨 Building Android APK..."
         
-        # Check requirements
         cordova requirements android || true
         
-        # Try different build strategies
         if cordova build android --release --verbose; then
           echo "✅ Release build successful"
           BUILD_TYPE="release"
@@ -176,20 +163,23 @@ EOF
         
         echo "BUILD_TYPE=$BUILD_TYPE" >> $GITHUB_ENV
         
-    - name: Locate and prepare APK files
+    - name: Find and list APK files
       run: |
-        echo "🔍 Locating APK files..."
+        echo "🔍 Searching for APK files in all directories..."
+        find . -name "*.apk" -type f 2>/dev/null || echo "No APK files found with find command"
         
-        # Create output directory
-        mkdir -p apk-final
+        echo "📂 Checking specific directories:"
+        ls -la platforms/android/app/build/outputs/apk/ 2>/dev/null || echo "Directory not found: platforms/android/app/build/outputs/apk/"
+        ls -la platforms/android/app/build/outputs/apk/debug/ 2>/dev/null || echo "Directory not found: platforms/android/app/build/outputs/apk/debug/"
+        ls -la platforms/android/app/build/outputs/apk/release/ 2>/dev/null || echo "Directory not found: platforms/android/app/build/outputs/apk/release/"
         
-        # Find all APK files
-        find platforms/android -name "*.apk" -type f | while read apk; do
-          echo "Found APK: $apk"
-          cp "$apk" apk-final/ || true
-        done
+    - name: Create APK directory and copy files
+      run: |
+        echo "📦 Creating APK output directory..."
+        mkdir -p apk-output
         
-        # Check specific locations
+        echo "🔍 Locating and copying APK files..."
+        
         APK_PATHS=(
           "platforms/android/app/build/outputs/apk/debug/app-debug.apk"
           "platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk"
@@ -197,39 +187,52 @@ EOF
           "platforms/android/build/outputs/apk/release/android-release-unsigned.apk"
         )
         
+        APK_FOUND=false
         for path in "${APK_PATHS[@]}"; do
           if [ -f "$path" ]; then
-            echo "Copying APK from: $path"
-            cp "$path" apk-final/
+            echo "✅ Found APK: $path"
+            cp "$path" apk-output/
+            APK_FOUND=true
+          else
+            echo "❌ APK not found: $path"
           fi
         done
         
-        # List final APKs
-        echo "📦 Final APK files:"
-        ls -la apk-final/ || echo "No APK files found"
+        if [ "$APK_FOUND" = false ]; then
+          echo "🔍 Searching for any APK files..."
+          find platforms/android -name "*.apk" -type f -exec cp {} apk-output/ \; 2>/dev/null || true
+        fi
         
-        # Rename APKs with descriptive names
-        cd apk-final
-        for apk in *.apk; do
-          if [ -f "$apk" ]; then
-            new_name="supra-client-nexus-v${{ github.run_number }}-${apk}"
-            mv "$apk" "$new_name"
-            echo "Renamed: $apk -> $new_name"
-          fi
-        done
-        cd ..
+        echo "📋 Final APK directory contents:"
+        ls -la apk-output/ || echo "No files in apk-output directory"
+        
+        if [ -z "$(ls -A apk-output/)" ]; then
+          echo "❌ No APK files found - creating dummy file to prevent artifact failure"
+          echo "No APK files were generated during the build process." > apk-output/build-failed.txt
+        else
+          echo "✅ APK files ready for upload"
+          cd apk-output
+          for apk in *.apk; do
+            if [ -f "$apk" ]; then
+              new_name="supra-client-nexus-v${{ github.run_number }}-${apk}"
+              mv "$apk" "$new_name"
+              echo "📝 Renamed: $apk -> $new_name"
+            fi
+          done
+          cd ..
+        fi
         
     - name: Upload APK artifacts
       uses: actions/upload-artifact@v4
       if: always()
       with:
         name: android-apk
-        path: apk-final/*.apk
+        path: apk-output/
         retention-days: 30
         if-no-files-found: warn
         
     - name: Create GitHub Release
-      if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+      if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && hashFiles('apk-output/*.apk') != ''
       uses: softprops/action-gh-release@v1
       with:
         tag_name: v${{ github.run_number }}
@@ -244,6 +247,6 @@ EOF
           4. Conceda as permissões necessárias
           
           🔧 **Build #${{ github.run_number }}**
-        files: apk-final/*.apk
+        files: apk-output/*.apk
         token: ${{ secrets.GITHUB_TOKEN }}
         fail_on_unmatched_files: false
