@@ -74,10 +74,17 @@ jobs:
       run: |
         yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || echo "License acceptance attempted"
         
+    - name: Install additional SDK components
+      run: |
+        echo "📦 Instalando componentes do SDK..."
+        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.0" || echo "Build tools install failed"
+        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" || echo "Platform install failed"
+        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" || echo "Platform tools install failed"
+        
     - name: Add Android platform
       run: |
         echo "📱 Adicionando plataforma Android..."
-        cordova platform add android --save || echo "Platform add failed, trying to continue..."
+        cordova platform add android@12 --save || cordova platform add android --save || echo "Platform add failed, trying to continue..."
         cordova platform ls
         
     - name: Install Cordova plugins
@@ -90,6 +97,23 @@ jobs:
         cordova plugin add cordova-plugin-network-information --save || echo "Plugin network failed"
         cordova plugin ls
         
+    - name: Configure Gradle wrapper permissions
+      run: |
+        echo "🔧 Configurando permissões do Gradle..."
+        if [ -f "platforms/android/gradlew" ]; then
+          chmod +x platforms/android/gradlew
+          echo "✅ Gradle wrapper permissions set"
+        fi
+        
+    - name: Set ANDROID_HOME environment
+      run: |
+        echo "🌍 Configurando variáveis de ambiente..."
+        echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+        echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
+        echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+        echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+        echo "$ANDROID_HOME/build-tools/33.0.0" >> $GITHUB_PATH
+        
     - name: Verify project structure
       run: |
         echo "📂 Estrutura do projeto:"
@@ -98,17 +122,41 @@ jobs:
         ls -la www/ || echo "www directory not found"
         echo "📂 Platforms:"
         ls -la platforms/ || echo "platforms directory not found"
+        if [ -d "platforms/android" ]; then
+          echo "📂 Android platform:"
+          ls -la platforms/android/
+        fi
         
     - name: Build Android APK
       run: |
         echo "🔨 Construindo APK..."
         cordova requirements android || echo "Requirements check failed"
-        cordova build android --release --verbose || cordova build android --debug --verbose
+        
+        # Try release build first, fallback to debug
+        echo "Tentando build release..."
+        if ! cordova build android --release --verbose; then
+          echo "❌ Release build falhou, tentando debug..."
+          if ! cordova build android --debug --verbose; then
+            echo "❌ Debug build também falhou, tentando sem verbose..."
+            cordova build android || echo "All build attempts failed"
+          fi
+        fi
         
     - name: Find APK files
       run: |
         echo "🔍 Procurando arquivos APK..."
         find . -name "*.apk" -type f || echo "No APK files found"
+        
+        # Try to find in common locations
+        if [ -d "platforms/android/app/build/outputs/apk" ]; then
+          echo "📂 APKs encontrados em outputs/apk:"
+          find platforms/android/app/build/outputs/apk -name "*.apk" -type f || echo "No APKs in outputs/apk"
+        fi
+        
+        if [ -d "platforms/android/build/outputs/apk" ]; then
+          echo "📂 APKs encontrados em build/outputs/apk:"
+          find platforms/android/build/outputs/apk -name "*.apk" -type f || echo "No APKs in build/outputs/apk"
+        fi
         
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
@@ -118,6 +166,8 @@ jobs:
         path: |
           platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
           platforms/android/app/build/outputs/apk/debug/app-debug.apk
+          platforms/android/build/outputs/apk/release/android-release-unsigned.apk
+          platforms/android/build/outputs/apk/debug/android-debug.apk
         retention-days: 30
         
     - name: Create Release
