@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Copy, MessageCircle } from 'lucide-react';
 import { useMobileClient } from '../hooks/useMobileClient';
-import { Share } from '@capacitor/share';
 
 export const TemplatesList = () => {
   const { templates, formatarTemplate, registrarAcao } = useMobileClient();
@@ -13,12 +12,21 @@ export const TemplatesList = () => {
     const mensagemFormatada = formatarTemplate(template);
     
     try {
-      await Share.share({
-        text: mensagemFormatada,
-        dialogTitle: 'Copiar mensagem'
-      });
+      // Use Cordova clipboard or navigator clipboard API
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(mensagemFormatada);
+      } else {
+        // Fallback for older devices
+        const textArea = document.createElement('textarea');
+        textArea.value = mensagemFormatada;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
       
       await registrarAcao('template_copiado', `Template ${template.tipo} copiado`);
+      console.log('Template copiado com sucesso');
     } catch (error) {
       console.error('Erro ao copiar template:', error);
     }
