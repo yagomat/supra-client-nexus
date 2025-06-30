@@ -1,0 +1,140 @@
+
+name: Build Android APK with Capacitor
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.19.0'
+        cache: 'npm'
+        
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      
+    - name: Install dependencies
+      run: |
+        echo "📦 Installing dependencies..."
+        npm ci --no-optional --legacy-peer-deps
+        
+    - name: Build React app
+      run: |
+        echo "⚛️ Building React app..."
+        export NODE_OPTIONS="--max-old-space-size=4096"
+        npm run build
+        
+    - name: Install Capacitor CLI globally
+      run: |
+        echo "⚡ Installing Capacitor CLI..."
+        npm install -g @capacitor/cli@latest
+        
+    - name: Add Android platform
+      run: |
+        echo "🤖 Adding Android platform..."
+        npx cap add android --confirm
+        
+    - name: Sync Capacitor
+      run: |
+        echo "🔄 Syncing Capacitor..."
+        npx cap sync android
+        
+    - name: Configure Android environment
+      run: |
+        echo "🔧 Configuring Android environment..."
+        
+        # Set environment variables
+        export ANDROID_HOME=$ANDROID_HOME
+        export ANDROID_SDK_ROOT=$ANDROID_HOME
+        
+        # Accept licenses
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+        
+        # Install required SDK components
+        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0" || true
+        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" || true
+        
+    - name: Build Android APK
+      run: |
+        echo "🔨 Building Android APK with Capacitor..."
+        
+        cd android
+        chmod +x ./gradlew
+        
+        # Build debug APK
+        ./gradlew assembleDebug --no-daemon --stacktrace
+        
+        echo "✅ APK build completed"
+        
+    - name: Find and prepare APK files
+      run: |
+        echo "🔍 Searching for APK files..."
+        
+        mkdir -p apk-output
+        
+        # Find APK files
+        find android -name "*.apk" -type f | while read apk; do
+          if [ -f "$apk" ]; then
+            echo "📱 Found APK: $apk"
+            filename=$(basename "$apk")
+            timestamp=$(date +"%Y%m%d-%H%M")
+            new_name="supra-client-nexus-capacitor-${timestamp}-${filename}"
+            cp "$apk" "apk-output/$new_name"
+            echo "✅ Copied: $new_name"
+          fi
+        done
+        
+        echo "📋 APK files prepared:"
+        ls -la apk-output/
+        
+    - name: Upload APK artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-apk-capacitor
+        path: apk-output/
+        retention-days: 30
+        
+    - name: Create GitHub Release
+      if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: capacitor-v${{ github.run_number }}
+        name: Capacitor Android APK v${{ github.run_number }}
+        body: |
+          🎉 APK Android gerado com Capacitor
+          
+          📱 **Como instalar:**
+          1. Baixe o arquivo APK dos artifacts
+          2. Ative "Fontes desconhecidas" no Android
+          3. Instale o APK
+          4. Conceda as permissões necessárias
+          
+          🔧 **Build #${{ github.run_number }}**
+          ⚡️ **Framework:** Capacitor 5.x
+          
+        files: apk-output/*.apk
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fail_on_unmatched_files: false

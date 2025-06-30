@@ -7,10 +7,11 @@ import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./components/theme/ThemeProvider";
 import { AppRoutes } from "./Routes";
-import { CordovaOverlayWindow } from "./mobile/components/CordovaOverlayWindow";
+import { CapacitorOverlayWindow } from "./mobile/components/CapacitorOverlayWindow";
 import { useEffect } from "react";
-import { cordovaOverlayService } from "./mobile/services/cordovaOverlayService";
+import { capacitorOverlayService } from "./mobile/services/capacitorOverlayService";
 import { whatsappMonitor } from "./mobile/services/whatsappMonitor";
+import { Capacitor } from "@capacitor/core";
 
 const queryClient = new QueryClient();
 
@@ -19,16 +20,20 @@ const App = () => {
     // Initialize mobile services on app start
     const initializeMobile = async () => {
       try {
-        await cordovaOverlayService.initialize();
+        await capacitorOverlayService.initialize();
         await whatsappMonitor.startMonitoring();
-        console.log('Cordova mobile services initialized');
+        
+        console.log('Capacitor mobile services initialized', {
+          platform: Capacitor.getPlatform(),
+          isNative: Capacitor.isNativePlatform()
+        });
       } catch (error) {
-        console.error('Error initializing Cordova mobile services:', error);
+        console.error('Error initializing Capacitor mobile services:', error);
       }
     };
 
-    // Check if running on mobile or Cordova
-    if (window.cordova || window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+    // Check if running on mobile or native platform
+    if (Capacitor.isNativePlatform() || window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
       initializeMobile();
     }
   }, []);
@@ -42,7 +47,7 @@ const App = () => {
           <AuthProvider>
             <BrowserRouter>
               <AppRoutes />
-              <CordovaOverlayWindow />
+              <CapacitorOverlayWindow />
             </BrowserRouter>
           </AuthProvider>
         </TooltipProvider>

@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Download, Smartphone, QrCode, CheckCircle, AlertCircle, Github, Terminal } from 'lucide-react';
+import { Download, Smartphone, CheckCircle, AlertCircle, Github, Terminal } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export const MobileAppTab = () => {
@@ -36,10 +37,11 @@ export const MobileAppTab = () => {
   ];
 
   const buildCommands = [
-    { step: 1, command: "chmod +x install-cordova.sh", description: "Tornar script executável" },
-    { step: 2, command: "./install-cordova.sh", description: "Configurar Cordova" },
-    { step: 3, command: "cordova build android", description: "Compilar para Android" },
-    { step: 4, command: "cordova run android", description: "Instalar no dispositivo" }
+    { step: 1, command: "npm install", description: "Instalar dependências" },
+    { step: 2, command: "npm run build", description: "Build do projeto React" },
+    { step: 3, command: "npx cap add android", description: "Adicionar plataforma Android" },
+    { step: 4, command: "npx cap sync", description: "Sincronizar arquivos" },
+    { step: 5, command: "npx cap run android", description: "Executar no dispositivo" }
   ];
 
   return (
@@ -49,11 +51,11 @@ export const MobileAppTab = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Smartphone className="h-5 w-5" />
-            Gestor Connect Mobile (Cordova)
+            Supra Client Nexus Mobile (Capacitor)
             <Badge variant="outline">v{appVersion}</Badge>
           </CardTitle>
           <CardDescription>
-            Aplicativo Android desenvolvido com Apache Cordova com overlay para WhatsApp que facilita o atendimento e cobrança de clientes.
+            Aplicativo Android desenvolvido com Capacitor que oferece overlay para WhatsApp, facilitando o atendimento e cobrança de clientes.
           </CardDescription>
         </CardHeader>
         
@@ -61,7 +63,7 @@ export const MobileAppTab = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div className="text-center p-3 border rounded">
               <div className="font-medium">Framework</div>
-              <div className="text-muted-foreground">Apache Cordova</div>
+              <div className="text-muted-foreground">Capacitor 5.x</div>
             </div>
             <div className="text-center p-3 border rounded">
               <div className="font-medium">Versão</div>
@@ -80,27 +82,27 @@ export const MobileAppTab = () => {
       </Card>
 
       {/* Aviso sobre migração */}
-      <Card className="border-blue-200 bg-blue-50">
+      <Card className="border-green-200 bg-green-50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-blue-800">
+          <CardTitle className="flex items-center gap-2 text-green-800">
             <CheckCircle className="h-5 w-5" />
-            Migração para Cordova concluída
+            Migração para Capacitor concluída ✨
           </CardTitle>
-          <CardDescription className="text-blue-700">
-            O projeto foi migrado do Capacitor para o Apache Cordova para resolver problemas de compatibilidade e facilitar a geração do APK.
+          <CardDescription className="text-green-700">
+            O projeto foi migrado do Cordova para o Capacitor 5.x, resolvendo conflitos de ES modules e proporcionando melhor integração com React/Vite.
           </CardDescription>
         </CardHeader>
       </Card>
 
-      {/* Como gerar o APK com Cordova */}
+      {/* Como gerar o APK com Capacitor */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Terminal className="h-5 w-5" />
-            Como gerar o aplicativo com Cordova
+            Como gerar o aplicativo com Capacitor
           </CardTitle>
           <CardDescription>
-            Siga estes passos para gerar o APK usando Apache Cordova.
+            Siga estes passos para gerar o APK usando Capacitor 5.x.
           </CardDescription>
         </CardHeader>
         
@@ -141,17 +143,17 @@ export const MobileAppTab = () => {
             <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
               <CheckCircle className="h-5 w-5 text-green-600" />
               <div className="flex-1">
-                <div className="font-medium text-green-800">6. APK gerado com sucesso</div>
+                <div className="font-medium text-green-800">7. APK gerado com sucesso</div>
                 <div className="text-sm text-green-600">
-                  O APK estará disponível em: platforms/android/app/build/outputs/apk/debug/
+                  O APK estará disponível em: android/app/build/outputs/apk/debug/
                 </div>
               </div>
             </div>
           </div>
 
           <div className="text-sm text-muted-foreground bg-muted p-3 rounded">
-            <strong>Vantagens do Cordova:</strong> Configuração mais simples, melhor compatibilidade com IDs de aplicativo personalizados, 
-            e processo de build mais direto. O Cordova é mais tolerante com configurações e menos restritivo que o Capacitor.
+            <strong>Vantagens do Capacitor:</strong> Melhor integração com Vite/React, suporte nativo a ES modules, 
+            debugging mais fácil, melhor performance, e comunidade mais ativa. O Capacitor é mais moderno e estável que o Cordova.
           </div>
         </CardContent>
       </Card>
