@@ -1,0 +1,116 @@
+
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      
+    - name: Install dependencies
+      run: npm install
+      
+    - name: Install Cordova CLI
+      run: npm install -g cordova@latest
+      
+    - name: Create Cordova project structure
+      run: |
+        if [ ! -f "config.xml" ]; then
+          cordova create temp com.lovable.supraclientnexus "Supra Client Nexus"
+          cp temp/config.xml .
+          rm -rf temp
+          if [ -f "cordova-config.xml" ]; then
+            cp cordova-config.xml config.xml
+          fi
+        fi
+        
+    - name: Build React app
+      run: |
+        npm run build
+        mkdir -p www
+        cp -r dist/* www/
+        
+    - name: Fix index.html for Cordova
+      run: |
+        if [ -f "www/index.html" ]; then
+          sed -i 's|href="/|href="|g' www/index.html
+          sed -i 's|src="/|src="|g' www/index.html
+          sed -i 's|<script type="module" src="/src/main.tsx"></script>|<script src="cordova.js"></script>\n    <script type="module" src="src/main.tsx"></script>|g' www/index.html
+        fi
+        
+    - name: Add Android platform
+      run: cordova platform add android
+      
+    - name: Install Cordova plugins
+      run: |
+        cordova plugin add cordova-plugin-device
+        cordova plugin add cordova-plugin-splashscreen
+        cordova plugin add cordova-plugin-statusbar
+        cordova plugin add cordova-plugin-whitelist
+        cordova plugin add cordova-plugin-network-information
+        
+    - name: Accept Android SDK licenses
+      run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+      
+    - name: Build Android APK
+      run: cordova build android --release
+      
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-apk
+        path: platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
+        
+    - name: Create Release
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ github.run_number }}
+        release_name: Release v${{ github.run_number }}
+        body: |
+          APK gerado automaticamente via GitHub Actions
+          
+          📱 **Como instalar:**
+          1. Baixe o arquivo APK
+          2. Ative "Fontes desconhecidas" no Android
+          3. Instale o APK
+          4. Conceda as permissões necessárias
+        draft: false
+        prerelease: false
+        
+    - name: Upload Release Asset
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
+        asset_name: supra-client-nexus-v${{ github.run_number }}.apk
+        asset_content_type: application/vnd.android.package-archive
