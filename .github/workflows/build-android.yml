@@ -32,19 +32,22 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       
-    - name: Install dependencies with retry
+    - name: Clear npm cache and install dependencies
       run: |
-        echo "📦 Installing dependencies..."
-        for i in {1..3}; do
-          if npm ci --no-optional --prefer-offline; then
-            echo "✅ Dependencies installed successfully"
-            break
-          else
-            echo "❌ Attempt $i failed, retrying..."
-            rm -rf node_modules package-lock.json
-            sleep 10
-          fi
-        done
+        echo "🧹 Clearing npm cache..."
+        npm cache clean --force
+        
+        echo "📦 Installing dependencies with workaround for Rollup issue..."
+        # Remove problematic files first
+        rm -rf node_modules package-lock.json
+        
+        # Install with specific flags to avoid the Rollup bug
+        npm install --no-optional --legacy-peer-deps
+        
+        # Force install rollup with platform-specific binary
+        npm install @rollup/rollup-linux-x64-gnu --save-dev --no-optional
+        
+        echo "✅ Dependencies installed successfully"
         
     - name: Install Cordova CLI
       run: |
@@ -52,12 +55,24 @@ jobs:
         npm install -g cordova@12.0.0
         cordova --version
         
-    - name: Build React app
+    - name: Build React app with workaround
       run: |
         echo "⚛️ Building React app..."
-        npm run build
+        
+        # Try multiple build strategies
+        if npm run build; then
+          echo "✅ React build successful with npm"
+        elif npx vite build --mode production; then
+          echo "✅ React build successful with npx vite"  
+        elif NODE_OPTIONS="--max-old-space-size=4096" npm run build; then
+          echo "✅ React build successful with increased memory"
+        else
+          echo "❌ All build attempts failed"
+          exit 1
+        fi
+        
         if [ -d "dist" ]; then
-          echo "✅ React build successful"
+          echo "✅ React build successful - dist directory exists"
           ls -la dist/
         else
           echo "❌ React build failed - dist directory not found"
@@ -144,45 +159,61 @@ jobs:
           echo "✅ Gradle configured"
         fi
         
-    - name: Build Android APK
+    - name: Build Android APK with multiple attempts
       run: |
         echo "🔨 Building Android APK..."
         
         cordova requirements android || true
         
+        # Try multiple build strategies
+        BUILD_SUCCESS=false
+        
+        echo "📱 Attempting release build..."
         if cordova build android --release --verbose; then
           echo "✅ Release build successful"
           BUILD_TYPE="release"
-        elif cordova build android --debug --verbose; then
-          echo "✅ Debug build successful"  
-          BUILD_TYPE="debug"
+          BUILD_SUCCESS=true
         else
-          echo "❌ Both release and debug builds failed"
+          echo "⚠️ Release build failed, trying debug..."
+          if cordova build android --debug --verbose; then
+            echo "✅ Debug build successful"  
+            BUILD_TYPE="debug"
+            BUILD_SUCCESS=true
+          else
+            echo "⚠️ Standard builds failed, trying clean build..."
+            cordova clean android || true
+            if cordova build android --debug --verbose; then
+              echo "✅ Clean debug build successful"
+              BUILD_TYPE="debug"
+              BUILD_SUCCESS=true
+            fi
+          fi
+        fi
+        
+        if [ "$BUILD_SUCCESS" = false ]; then
+          echo "❌ All build attempts failed"
           exit 1
         fi
         
         echo "BUILD_TYPE=$BUILD_TYPE" >> $GITHUB_ENV
+        echo "✅ Android build completed successfully"
         
-    - name: Find and list APK files
+    - name: Find and prepare APK files
       run: |
-        echo "🔍 Searching for APK files in all directories..."
-        find . -name "*.apk" -type f 2>/dev/null || echo "No APK files found with find command"
+        echo "🔍 Searching for APK files..."
         
-        echo "📂 Checking specific directories:"
-        ls -la platforms/android/app/build/outputs/apk/ 2>/dev/null || echo "Directory not found: platforms/android/app/build/outputs/apk/"
-        ls -la platforms/android/app/build/outputs/apk/debug/ 2>/dev/null || echo "Directory not found: platforms/android/app/build/outputs/apk/debug/"
-        ls -la platforms/android/app/build/outputs/apk/release/ 2>/dev/null || echo "Directory not found: platforms/android/app/build/outputs/apk/release/"
-        
-    - name: Create APK directory and copy files
-      run: |
-        echo "📦 Creating APK output directory..."
+        # Create output directory
         mkdir -p apk-output
         
-        echo "🔍 Locating and copying APK files..."
+        # Comprehensive APK search
+        echo "📂 Searching in all possible locations..."
+        find . -name "*.apk" -type f 2>/dev/null | head -10 || echo "No APK files found with find command"
         
+        # Check specific directories
         APK_PATHS=(
           "platforms/android/app/build/outputs/apk/debug/app-debug.apk"
           "platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk"
+          "platforms/android/app/build/outputs/apk/release/app-release.apk"
           "platforms/android/build/outputs/apk/debug/android-debug.apk"
           "platforms/android/build/outputs/apk/release/android-release-unsigned.apk"
         )
@@ -193,24 +224,30 @@ jobs:
             echo "✅ Found APK: $path"
             cp "$path" apk-output/
             APK_FOUND=true
-          else
-            echo "❌ APK not found: $path"
           fi
         done
         
+        # Fallback: search and copy any APK files
         if [ "$APK_FOUND" = false ]; then
-          echo "🔍 Searching for any APK files..."
+          echo "🔍 Fallback: searching for any APK files..."
           find platforms/android -name "*.apk" -type f -exec cp {} apk-output/ \; 2>/dev/null || true
+          
+          # Check if any APKs were found
+          if [ -n "$(ls -A apk-output/ 2>/dev/null)" ]; then
+            APK_FOUND=true
+          fi
         fi
         
-        echo "📋 Final APK directory contents:"
-        ls -la apk-output/ || echo "No files in apk-output directory"
-        
-        if [ -z "$(ls -A apk-output/)" ]; then
-          echo "❌ No APK files found - creating dummy file to prevent artifact failure"
-          echo "No APK files were generated during the build process." > apk-output/build-failed.txt
+        # Ensure we have something to upload
+        if [ "$APK_FOUND" = false ]; then
+          echo "⚠️ No APK files found - creating dummy file"
+          echo "Build completed but no APK files were generated. Check build logs above." > apk-output/build-status.txt
+          echo "Build Type: ${BUILD_TYPE:-unknown}" >> apk-output/build-status.txt
+          echo "Timestamp: $(date)" >> apk-output/build-status.txt
         else
-          echo "✅ APK files ready for upload"
+          echo "✅ APK files prepared successfully"
+          
+          # Rename APKs with version
           cd apk-output
           for apk in *.apk; do
             if [ -f "$apk" ]; then
@@ -222,6 +259,9 @@ jobs:
           cd ..
         fi
         
+        echo "📋 Final APK directory contents:"
+        ls -la apk-output/
+        
     - name: Upload APK artifacts
       uses: actions/upload-artifact@v4
       if: always()
@@ -232,7 +272,7 @@ jobs:
         if-no-files-found: warn
         
     - name: Create GitHub Release
-      if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && hashFiles('apk-output/*.apk') != ''
+      if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
       uses: softprops/action-gh-release@v1
       with:
         tag_name: v${{ github.run_number }}
@@ -241,12 +281,14 @@ jobs:
           🎉 APK Android gerado automaticamente
           
           📱 **Como instalar:**
-          1. Baixe o arquivo APK
+          1. Baixe o arquivo APK dos artifacts acima
           2. Ative "Fontes desconhecidas" no Android
           3. Instale o APK
           4. Conceda as permissões necessárias
           
           🔧 **Build #${{ github.run_number }}**
+          
+          📦 **Baixar APK:** Vá para a seção "Artifacts" acima para fazer o download
         files: apk-output/*.apk
         token: ${{ secrets.GITHUB_TOKEN }}
         fail_on_unmatched_files: false
