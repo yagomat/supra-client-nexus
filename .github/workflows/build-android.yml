@@ -8,6 +8,10 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+  actions: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -380,19 +384,28 @@ jobs:
     - name: Find and prepare APK files
       if: always()
       run: |
-        echo "🔍 Comprehensive APK search..."
+        echo "🔍 Comprehensive APK search and preparation..."
         
         # Create output directory
         mkdir -p apk-output
         
-        # Search strategy 1: Find all APK files
+        # Search strategy 1: Find all APK files across the project
         echo "🔍 Searching for APK files across the entire project..."
+        APK_FOUND=false
+        
         find . -name "*.apk" -type f 2>/dev/null | while read apk; do
-          echo "📱 Found APK: $apk"
-          cp "$apk" apk-output/ 2>/dev/null || echo "⚠️ Could not copy $apk"
+          if [ -f "$apk" ]; then
+            echo "📱 Found APK: $apk"
+            # Copy with a unique name
+            filename=$(basename "$apk")
+            timestamp=$(date +"%Y%m%d-%H%M")
+            new_name="supra-client-nexus-${BUILD_TYPE:-unknown}-${timestamp}-${filename}"
+            cp "$apk" "apk-output/$new_name" 2>/dev/null && echo "✅ Copied: $new_name" || echo "⚠️ Failed to copy $apk"
+            APK_FOUND=true
+          fi
         done
         
-        # Search strategy 2: Check common locations
+        # Search strategy 2: Check common locations explicitly
         APK_PATHS=(
           "platforms/android/app/build/outputs/apk/debug/app-debug.apk"
           "platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk"
@@ -406,31 +419,32 @@ jobs:
         for path in "${APK_PATHS[@]}"; do
           if [ -f "$path" ]; then
             echo "✅ Found APK at: $path"
-            cp "$path" apk-output/
+            filename=$(basename "$path")
+            timestamp=$(date +"%Y%m%d-%H%M")
+            new_name="supra-client-nexus-${BUILD_TYPE:-unknown}-${timestamp}-${filename}"
+            cp "$path" "apk-output/$new_name"
+            echo "📦 Copied: $new_name"
+            APK_FOUND=true
+          else
+            echo "❌ Not found: $path"
           fi
         done
         
         # Check what we found
-        APK_COUNT=$(ls -1 apk-output/*.apk 2>/dev/null | wc -l)
+        APK_COUNT=$(find apk-output -name "*.apk" 2>/dev/null | wc -l)
         
         if [ "$APK_COUNT" -gt 0 ]; then
-          echo "✅ Found $APK_COUNT APK file(s)"
+          echo "✅ Found and prepared $APK_COUNT APK file(s)"
+          echo "📋 APK files prepared:"
+          ls -la apk-output/*.apk
           
-          # Rename APKs with build info
-          cd apk-output
-          for apk in *.apk; do
-            if [ -f "$apk" ]; then
-              timestamp=$(date +"%Y%m%d-%H%M")
-              new_name="supra-client-nexus-${BUILD_TYPE:-unknown}-${timestamp}-${apk}"
-              mv "$apk" "$new_name"
-              echo "📝 Renamed: $apk -> $new_name"
-            fi
-          done
-          cd ..
+          # Set environment variable for release step
+          echo "APK_FOUND=true" >> $GITHUB_ENV
+          
         else
-          echo "⚠️ No APK files found - creating build report"
+          echo "⚠️ No APK files found - creating comprehensive build report"
           
-          # Create comprehensive build report
+          # Create detailed build report
           cat > apk-output/build-report.txt << EOF
         Supra Client Nexus - Android Build Report
         =======================================
@@ -439,22 +453,41 @@ jobs:
         Build Number: ${{ github.run_number }}
         Build Type: ${BUILD_TYPE:-unknown}
         Build Success: ${BUILD_SUCCESS:-false}
+        APK Generation: Failed - No APK files found
         
         Build Process Summary:
         - Dependencies installation: Completed
         - React app build: Completed
         - Cordova setup: Completed
         - Android platform: Added
-        - APK generation: ${BUILD_SUCCESS:-Failed}
+        - APK generation: Failed (No files found)
         
-        Platform Information:
+        Searched Locations:
         EOF
+          
+          # Add searched locations to report
+          for path in "${APK_PATHS[@]}"; do
+            if [ -f "$path" ]; then
+              echo "  ✅ $path - EXISTS" >> apk-output/build-report.txt
+            else
+              echo "  ❌ $path - NOT FOUND" >> apk-output/build-report.txt
+            fi
+          done
           
           # Add platform info if available
           if [ -d "platforms/android" ]; then
+            echo -e "\nPlatform Information:" >> apk-output/build-report.txt
             echo "- Android platform directory: EXISTS" >> apk-output/build-report.txt
+            echo -e "\nDirectory structure:" >> apk-output/build-report.txt
             ls -la platforms/android/ >> apk-output/build-report.txt 2>/dev/null || true
+            
+            # Check build outputs directory
+            if [ -d "platforms/android/app/build/outputs" ]; then
+              echo -e "\nBuild outputs structure:" >> apk-output/build-report.txt
+              find platforms/android/app/build/outputs -type f >> apk-output/build-report.txt 2>/dev/null || true
+            fi
           else
+            echo -e "\nPlatform Information:" >> apk-output/build-report.txt
             echo "- Android platform directory: MISSING" >> apk-output/build-report.txt
           fi
           
@@ -463,6 +496,14 @@ jobs:
             echo -e "\n--- Debug Build Log (last 50 lines) ---" >> apk-output/build-report.txt
             tail -50 build_debug.log >> apk-output/build-report.txt 2>/dev/null || true
           fi
+          
+          if [ -f "build_release.log" ]; then
+            echo -e "\n--- Release Build Log (last 50 lines) ---" >> apk-output/build-report.txt
+            tail -50 build_release.log >> apk-output/build-report.txt 2>/dev/null || true
+          fi
+          
+          # Set environment variable
+          echo "APK_FOUND=false" >> $GITHUB_ENV
         fi
         
         echo "📋 Final output directory contents:"
@@ -478,7 +519,7 @@ jobs:
         if-no-files-found: warn
         
     - name: Create GitHub Release
-      if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && env.BUILD_SUCCESS == 'true'
+      if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && env.BUILD_SUCCESS == 'true' && env.APK_FOUND == 'true'
       uses: softprops/action-gh-release@v1
       with:
         tag_name: v${{ github.run_number }}
