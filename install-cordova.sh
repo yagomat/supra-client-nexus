@@ -11,7 +11,11 @@ fi
 
 # 2. Inicializar projeto Cordova (se não existir)
 if [ ! -f "config.xml" ]; then
-    echo "🔧 Copiando configuração do Cordova..."
+    echo "🔧 Inicializando projeto Cordova..."
+    cordova create temp com.lovable.supraclientnexus "Supra Client Nexus"
+    cp temp/config.xml .
+    rm -rf temp
+    echo "📋 Copiando configuração personalizada..."
     cp cordova-config.xml config.xml
 fi
 
@@ -34,8 +38,7 @@ cordova plugin add cordova-plugin-network-information
 echo "✅ Cordova configurado com sucesso!"
 echo ""
 echo "📋 Próximos passos:"
-echo "   1. chmod +x install-cordova.sh && ./install-cordova.sh"
-echo "   2. cordova build android"
-echo "   3. cordova run android (para testar no dispositivo)"
+echo "   1. cordova build android"
+echo "   2. cordova run android (para testar no dispositivo)"
 echo ""
 echo "📂 O APK será gerado em: platforms/android/app/build/outputs/apk/"
