@@ -36,10 +36,16 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       
+    - name: Clean npm cache and node_modules
+      run: |
+        echo "🧹 Cleaning npm cache and dependencies..."
+        npm cache clean --force
+        rm -rf node_modules package-lock.json
+        
     - name: Install dependencies
       run: |
         echo "📦 Installing dependencies..."
-        npm ci --no-optional --legacy-peer-deps
+        npm install --legacy-peer-deps
         
     - name: Build React app
       run: |
@@ -47,15 +53,16 @@ jobs:
         export NODE_OPTIONS="--max-old-space-size=4096"
         npm run build
         
-    - name: Install Capacitor CLI globally
+    - name: Verify Capacitor installation
       run: |
-        echo "⚡ Installing Capacitor CLI..."
-        npm install -g @capacitor/cli@latest
+        echo "🔍 Verifying Capacitor installation..."
+        npx cap --version
+        npx cap doctor
         
     - name: Add Android platform
       run: |
         echo "🤖 Adding Android platform..."
-        npx cap add android --confirm
+        npx cap add android --confirm || echo "Android platform may already exist"
         
     - name: Sync Capacitor
       run: |
@@ -77,6 +84,12 @@ jobs:
         $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0" || true
         $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" || true
         
+    - name: List Android directory structure
+      run: |
+        echo "📁 Checking Android directory structure..."
+        ls -la android/ || echo "Android directory not found"
+        ls -la android/app/ || echo "Android app directory not found"
+        
     - name: Build Android APK
       run: |
         echo "🔨 Building Android APK with Capacitor..."
@@ -84,10 +97,17 @@ jobs:
         cd android
         chmod +x ./gradlew
         
+        # Clean previous builds
+        ./gradlew clean --no-daemon
+        
         # Build debug APK
         ./gradlew assembleDebug --no-daemon --stacktrace
         
         echo "✅ APK build completed"
+        
+        # List generated files
+        echo "📋 Generated APK files:"
+        find . -name "*.apk" -type f
         
     - name: Find and prepare APK files
       run: |
@@ -107,8 +127,17 @@ jobs:
           fi
         done
         
+        # Verify files were copied
         echo "📋 APK files prepared:"
         ls -la apk-output/
+        
+        # If no APK found, show error
+        if [ ! "$(ls -A apk-output/)" ]; then
+          echo "❌ ERROR: No APK files found!"
+          echo "🔍 Searching entire build directory:"
+          find android -name "*.apk" -o -name "*.aab" 2>/dev/null || echo "No APK/AAB files found"
+          exit 1
+        fi
         
     - name: Upload APK artifacts
       uses: actions/upload-artifact@v4

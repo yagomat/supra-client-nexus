@@ -23,9 +23,10 @@ const App = () => {
         await capacitorOverlayService.initialize();
         await whatsappMonitor.startMonitoring();
         
-        console.log('Capacitor mobile services initialized', {
+        console.log('Capacitor mobile services initialized successfully', {
           platform: Capacitor.getPlatform(),
-          isNative: Capacitor.isNativePlatform()
+          isNative: Capacitor.isNativePlatform(),
+          version: '7.4.0'
         });
       } catch (error) {
         console.error('Error initializing Capacitor mobile services:', error);
@@ -34,7 +35,10 @@ const App = () => {
 
     // Check if running on mobile or native platform
     if (Capacitor.isNativePlatform() || window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      console.log('Mobile environment detected, initializing Capacitor services...');
       initializeMobile();
+    } else {
+      console.log('Web environment detected, Capacitor services will run in simulation mode');
     }
   }, []);
 
