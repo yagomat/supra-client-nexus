@@ -36,16 +36,39 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       
-    - name: Clean npm cache and node_modules
+    - name: Clean environment completely
       run: |
-        echo "🧹 Cleaning npm cache and dependencies..."
+        echo "🧹 Complete environment cleanup..."
         npm cache clean --force
         rm -rf node_modules package-lock.json
+        rm -rf android/ || true
+        rm -rf platforms/ || true
+        rm -rf plugins/ || true
+        rm -rf www/ || true
+        rm -f config.xml || true
+        rm -f cordova.js || true
         
     - name: Install dependencies
       run: |
         echo "📦 Installing dependencies..."
-        npm install --legacy-peer-deps
+        npm install --legacy-peer-deps --no-optional
+        
+    - name: Verify clean Capacitor setup
+      run: |
+        echo "🔍 Verifying Capacitor setup..."
+        npx cap --version
+        npx cap doctor
+        
+        # Ensure no Cordova remnants
+        echo "🚫 Checking for Cordova remnants..."
+        if [ -d "platforms" ]; then
+          echo "❌ Found Cordova platforms directory"
+          rm -rf platforms/
+        fi
+        if [ -f "config.xml" ]; then
+          echo "❌ Found Cordova config.xml"
+          rm -f config.xml
+        fi
         
     - name: Build React app
       run: |
@@ -53,69 +76,65 @@ jobs:
         export NODE_OPTIONS="--max-old-space-size=4096"
         npm run build
         
-    - name: Verify Capacitor installation
+    - name: Initialize Capacitor Android
       run: |
-        echo "🔍 Verifying Capacitor installation..."
-        npx cap --version
-        npx cap doctor
-        
-    - name: Add Android platform
-      run: |
-        echo "🤖 Adding Android platform..."
-        npx cap add android --confirm || echo "Android platform may already exist"
+        echo "🤖 Initializing Capacitor Android..."
+        npx cap add android --confirm
         
     - name: Sync Capacitor
       run: |
         echo "🔄 Syncing Capacitor..."
         npx cap sync android
         
-    - name: Configure Android environment
+    - name: Configure Android SDK
       run: |
-        echo "🔧 Configuring Android environment..."
-        
-        # Set environment variables
+        echo "🔧 Configuring Android SDK..."
         export ANDROID_HOME=$ANDROID_HOME
         export ANDROID_SDK_ROOT=$ANDROID_HOME
         
-        # Accept licenses
+        # Accept all licenses
         yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
         
-        # Install required SDK components
+        # Install required components
         $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0" || true
         $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" || true
+        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" || true
         
-    - name: List Android directory structure
+    - name: Verify Android setup
       run: |
-        echo "📁 Checking Android directory structure..."
+        echo "📁 Verifying Android setup..."
         ls -la android/ || echo "Android directory not found"
         ls -la android/app/ || echo "Android app directory not found"
         
+        if [ ! -d "android" ]; then
+          echo "❌ Android directory missing!"
+          exit 1
+        fi
+        
     - name: Build Android APK
       run: |
-        echo "🔨 Building Android APK with Capacitor..."
-        
+        echo "🔨 Building Android APK..."
         cd android
+        
+        # Make gradlew executable
         chmod +x ./gradlew
         
-        # Clean previous builds
-        ./gradlew clean --no-daemon
+        # Clean and build
+        ./gradlew clean --no-daemon --info
+        ./gradlew assembleDebug --no-daemon --stacktrace --info
         
-        # Build debug APK
-        ./gradlew assembleDebug --no-daemon --stacktrace
+        echo "✅ APK build completed successfully"
         
-        echo "✅ APK build completed"
-        
-        # List generated files
+        # List all APK files
         echo "📋 Generated APK files:"
-        find . -name "*.apk" -type f
+        find . -name "*.apk" -type f -exec ls -la {} \;
         
-    - name: Find and prepare APK files
+    - name: Prepare APK artifacts
       run: |
-        echo "🔍 Searching for APK files..."
-        
+        echo "📦 Preparing APK artifacts..."
         mkdir -p apk-output
         
-        # Find APK files
+        # Find and copy APK files
         find android -name "*.apk" -type f | while read apk; do
           if [ -f "$apk" ]; then
             echo "📱 Found APK: $apk"
@@ -127,15 +146,14 @@ jobs:
           fi
         done
         
-        # Verify files were copied
-        echo "📋 APK files prepared:"
+        # Verify files
+        echo "📋 Final APK files:"
         ls -la apk-output/
         
-        # If no APK found, show error
         if [ ! "$(ls -A apk-output/)" ]; then
           echo "❌ ERROR: No APK files found!"
-          echo "🔍 Searching entire build directory:"
-          find android -name "*.apk" -o -name "*.aab" 2>/dev/null || echo "No APK/AAB files found"
+          echo "🔍 Full search results:"
+          find . -name "*.apk" -o -name "*.aab" 2>/dev/null || echo "No APK/AAB files anywhere"
           exit 1
         fi
         
@@ -162,7 +180,7 @@ jobs:
           4. Conceda as permissões necessárias
           
           🔧 **Build #${{ github.run_number }}**
-          ⚡️ **Framework:** Capacitor 5.x
+          ⚡️ **Framework:** Capacitor 7.x
           
         files: apk-output/*.apk
         token: ${{ secrets.GITHUB_TOKEN }}
