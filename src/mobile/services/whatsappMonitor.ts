@@ -1,8 +1,14 @@
 
 import { Capacitor } from '@capacitor/core';
 
+export interface WhatsAppContact {
+  name: string;
+  phoneNumber: string;
+}
+
 class WhatsAppMonitor {
   private isMonitoring = false;
+  private listeners: Array<(contact: WhatsAppContact | null) => void> = [];
 
   async startMonitoring() {
     if (this.isMonitoring) {
@@ -32,7 +38,7 @@ class WhatsAppMonitor {
     console.log('Setting up web WhatsApp monitoring simulation');
     
     // Simulação para desenvolvimento web
-    const mockContact = {
+    const mockContact: WhatsAppContact = {
       name: 'Cliente Teste',
       phoneNumber: '+5511999999999'
     };
@@ -40,16 +46,29 @@ class WhatsAppMonitor {
     // Simular detecção após 2 segundos
     setTimeout(() => {
       console.log('Mock WhatsApp contact detected:', mockContact);
+      this.notifyListeners(mockContact);
     }, 2000);
   }
 
   async stopMonitoring() {
     console.log('Stopping WhatsApp monitor');
     this.isMonitoring = false;
+    this.notifyListeners(null);
   }
 
   isActive() {
     return this.isMonitoring;
+  }
+
+  subscribe(listener: (contact: WhatsAppContact | null) => void) {
+    this.listeners.push(listener);
+    return () => {
+      this.listeners = this.listeners.filter(l => l !== listener);
+    };
+  }
+
+  private notifyListeners(contact: WhatsAppContact | null) {
+    this.listeners.forEach(listener => listener(contact));
   }
 }
 
