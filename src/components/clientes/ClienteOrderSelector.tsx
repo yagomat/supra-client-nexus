@@ -22,7 +22,7 @@ export const ClienteOrderSelector = ({ orderBy, onOrderChange }: ClienteOrderSel
     <div className="flex items-center gap-2">
       <span className="text-sm text-muted-foreground whitespace-nowrap">Ordenar por:</span>
       <Select value={orderBy} onValueChange={onOrderChange}>
-        <SelectTrigger className="w-48">
+        <SelectTrigger className="w-44">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

@@ -32,9 +32,10 @@ export const ClienteFilters = ({
   onOrderChange,
 }: ClienteFiltersProps) => {
   return (
-    <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
-      <div className="flex flex-col sm:flex-row gap-2 flex-1">
-        <div className="relative flex-1">
+    <div className="space-y-4">
+      {/* Linha superior: Campo de busca */}
+      <div className="w-full">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Buscar por nome, telefone, UF, servidor ou observações..."
@@ -43,29 +44,36 @@ export const ClienteFilters = ({
             className="pl-10"
           />
         </div>
-        
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-32">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos</SelectItem>
-            <SelectItem value="ativo">Ativo</SelectItem>
-            <SelectItem value="inativo">Inativo</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={handleLimparFiltros}
-          title="Limpar filtros"
-        >
-          <X className="h-4 w-4" />
-        </Button>
       </div>
 
-      <ClienteOrderSelector orderBy={orderBy} onOrderChange={onOrderChange} />
+      {/* Linha inferior: Filtros e ordenação */}
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        {/* Lado esquerdo: Status e botão limpar */}
+        <div className="flex gap-2 items-center">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos</SelectItem>
+              <SelectItem value="ativo">Ativo</SelectItem>
+              <SelectItem value="inativo">Inativo</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleLimparFiltros}
+            title="Limpar filtros"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Lado direito: Ordenação */}
+        <ClienteOrderSelector orderBy={orderBy} onOrderChange={onOrderChange} />
+      </div>
     </div>
   );
 };
