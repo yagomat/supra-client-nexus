@@ -101,15 +101,15 @@ export const MensagensWhatsAppTab = () => {
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          <div className="space-y-2">
+          <div className="space-y-3">
             <p className="font-medium">Placeholders disponíveis:</p>
-            <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="space-y-3">
               {placeholders.map((item) => (
-                <div key={item.placeholder} className="flex items-center gap-2">
-                  <code className="bg-muted px-2 py-1 rounded text-xs">
+                <div key={item.placeholder} className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <code className="bg-muted px-3 py-1.5 rounded-md text-sm font-mono min-w-fit">
                     {item.placeholder}
                   </code>
-                  <span className="text-muted-foreground">{item.descricao}</span>
+                  <span className="text-sm text-muted-foreground">{item.descricao}</span>
                 </div>
               ))}
             </div>
