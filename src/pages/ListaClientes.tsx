@@ -8,7 +8,7 @@ import { useClienteList } from "@/hooks/cliente/useClienteList";
 const ListaClientes = () => {
   const navigate = useNavigate();
   const { 
-    clientes,  // Adicionado para exportação completa
+    clientes,
     filteredClientes, 
     loading, 
     searchTerm, 
@@ -24,15 +24,15 @@ const ListaClientes = () => {
     setIsObservacoesModalOpen,
     clienteParaExcluir,
     setClienteParaExcluir,
-    sortOrder,
-    handleSortChange,
+    orderBy,
+    handleOrderChange,
     handleLimparFiltros,
     verDetalhes,
     verTelaAdicional,
     verObservacoes,
     confirmarExclusao,
     handleExcluir,
-    fetchClientes  // Adicionado para atualizar após importação
+    fetchClientes
   } = useClienteList();
 
   return (
@@ -41,7 +41,7 @@ const ListaClientes = () => {
         <ClienteListContent 
           loading={loading}
           filteredClientes={filteredClientes}
-          allClientes={clientes}  // Passamos todos os clientes para exportação
+          allClientes={clientes}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
           statusFilter={statusFilter}
@@ -51,9 +51,9 @@ const ListaClientes = () => {
           verTelaAdicional={verTelaAdicional}
           verObservacoes={verObservacoes}
           confirmarExclusao={confirmarExclusao}
-          sortOrder={sortOrder}
-          onSortChange={handleSortChange}
-          onImportSuccess={fetchClientes}  // Para atualizar após importação
+          orderBy={orderBy}
+          onOrderChange={handleOrderChange}
+          onImportSuccess={fetchClientes}
         />
       </div>
 

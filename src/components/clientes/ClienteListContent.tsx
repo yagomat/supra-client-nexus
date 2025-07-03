@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { UserPlus } from "lucide-react";
 import { Cliente } from "@/types";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ClienteOrderType } from "@/components/clientes/ClienteOrderSelector";
 
 interface ClienteListContentProps {
   loading: boolean;
@@ -26,8 +27,8 @@ interface ClienteListContentProps {
   verTelaAdicional: (cliente: Cliente) => void;
   verObservacoes: (cliente: Cliente) => void;
   confirmarExclusao: (clienteId: string) => void;
-  sortOrder: 'nome' | 'data';
-  onSortChange: (order: 'nome' | 'data') => void;
+  orderBy: ClienteOrderType;
+  onOrderChange: (order: ClienteOrderType) => void;
   onImportSuccess: () => void;
 }
 
@@ -44,8 +45,8 @@ export const ClienteListContent = ({
   verTelaAdicional,
   verObservacoes,
   confirmarExclusao,
-  sortOrder,
-  onSortChange,
+  orderBy,
+  onOrderChange,
   onImportSuccess
 }: ClienteListContentProps) => {
   const navigate = useNavigate();
@@ -112,19 +113,23 @@ export const ClienteListContent = ({
         </Button>
       </div>
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col gap-4">
         <ClienteFilters 
           searchTerm={searchTerm}
           setSearchTerm={handleSearchOrFilterChange}
           statusFilter={statusFilter}
           setStatusFilter={handleStatusFilterChange}
           handleLimparFiltros={handleClearFilters}
+          orderBy={orderBy}
+          onOrderChange={onOrderChange}
         />
         
-        <ClienteViewToggle 
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-        />
+        <div className="flex justify-end">
+          <ClienteViewToggle 
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+          />
+        </div>
       </div>
 
       {loading ? (

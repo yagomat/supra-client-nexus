@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { getClientes, deleteCliente } from "@/services/clienteService";
 import { Cliente } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { verificarLicencasCliente } from "@/services/clienteService/clienteLicencaService";
+import { ClienteOrderType } from "@/components/clientes/ClienteOrderSelector";
 
 export const useClienteList = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -17,7 +17,7 @@ export const useClienteList = () => {
   const [isTelaAdicionaModalOpen, setIsTelaAdicionaModalOpen] = useState(false);
   const [isObservacoesModalOpen, setIsObservacoesModalOpen] = useState(false);
   const [clienteParaExcluir, setClienteParaExcluir] = useState<string | null>(null);
-  const [sortOrder, setSortOrder] = useState<'nome' | 'data'>('data');
+  const [orderBy, setOrderBy] = useState<ClienteOrderType>('data');
   const { toast } = useToast();
 
   // Buscar clientes baseado no filtro de status
@@ -57,10 +57,47 @@ export const useClienteList = () => {
     }
     
     // Apply sorting
-    if (sortOrder === 'nome') {
-      results.sort((a, b) => a.nome.localeCompare(b.nome));
-    } else {
-      results.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    const currentDate = new Date();
+    const currentDay = currentDate.getDate();
+    const currentMonth = currentDate.getMonth() + 1;
+    
+    switch (orderBy) {
+      case 'nome_asc':
+        results.sort((a, b) => a.nome.localeCompare(b.nome));
+        break;
+      case 'nome_desc':
+        results.sort((a, b) => b.nome.localeCompare(a.nome));
+        break;
+      case 'vencimento':
+        results.sort((a, b) => {
+          // Calcular "dias desde o vencimento" para cada cliente
+          const calcularDiasDesdeVencimento = (cliente: Cliente) => {
+            const diaVencimento = cliente.dia_vencimento;
+            
+            if (diaVencimento > currentDay) {
+              // Ainda não venceu este mês (próximo vencimento)
+              return diaVencimento - currentDay;
+            } else if (diaVencimento === currentDay) {
+              // Vence hoje
+              return 0;
+            } else {
+              // Já venceu este mês (em atraso)
+              // Calcular quantos dias já se passaram desde o vencimento
+              return -(currentDay - diaVencimento);
+            }
+          };
+          
+          const diasA = calcularDiasDesdeVencimento(a);
+          const diasB = calcularDiasDesdeVencimento(b);
+          
+          // Ordenar: vencidos primeiro (valores mais negativos), depois os que vão vencer (valores positivos)
+          return diasA - diasB;
+        });
+        break;
+      case 'data':
+      default:
+        results.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        break;
     }
     
     setFilteredClientes(results);
@@ -96,15 +133,16 @@ export const useClienteList = () => {
     if (clientes.length > 0) {
       applyFiltersAndSort(clientes);
     }
-  }, [searchTerm, sortOrder]);
+  }, [searchTerm, orderBy]);
 
-  const handleSortChange = (order: 'nome' | 'data') => {
-    setSortOrder(order);
+  const handleOrderChange = (order: ClienteOrderType) => {
+    setOrderBy(order);
   };
 
   const handleLimparFiltros = () => {
     setSearchTerm("");
     setStatusFilter("todos");
+    setOrderBy('data');
   };
 
   const verDetalhes = async (cliente: Cliente) => {
@@ -185,14 +223,14 @@ export const useClienteList = () => {
     setIsObservacoesModalOpen,
     clienteParaExcluir,
     setClienteParaExcluir,
-    sortOrder,
-    handleSortChange,
+    orderBy,
+    handleOrderChange,
     handleLimparFiltros,
     verDetalhes,
     verTelaAdicional,
     verObservacoes,
     confirmarExclusao,
     handleExcluir,
-    fetchClientes  // Exportamos a função para uso externo
+    fetchClientes
   };
 };
