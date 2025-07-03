@@ -4,8 +4,6 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { ProfileTab } from "@/components/configuracoes/ProfileTab";
 import { MensagensWhatsAppTab } from "@/components/configuracoes/MensagensWhatsAppTab";
 import { PreferencesTab } from "@/components/configuracoes/PreferencesTab";
-import { PWATab } from "@/components/configuracoes/PWATab";
-import { MobileAppTab } from "@/components/configuracoes/MobileAppTab";
 
 const Configuracoes = () => {
   return (
@@ -18,12 +16,10 @@ const Configuracoes = () => {
         </div>
 
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile">Perfil</TabsTrigger>
             <TabsTrigger value="messages">Mensagens</TabsTrigger>
             <TabsTrigger value="preferences">Preferências</TabsTrigger>
-            <TabsTrigger value="pwa">PWA</TabsTrigger>
-            <TabsTrigger value="mobile">APK/Cordova</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="space-y-4">
@@ -36,14 +32,6 @@ const Configuracoes = () => {
 
           <TabsContent value="preferences" className="space-y-4">
             <PreferencesTab />
-          </TabsContent>
-
-          <TabsContent value="pwa" className="space-y-4">
-            <PWATab />
-          </TabsContent>
-
-          <TabsContent value="mobile" className="space-y-4">
-            <MobileAppTab />
           </TabsContent>
         </Tabs>
       </div>
