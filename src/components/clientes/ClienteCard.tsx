@@ -21,50 +21,48 @@ import { PaymentStatusButton } from "@/components/pagamentos/PaymentStatusButton
 import { useNavigate } from "react-router-dom";
 import { usePaymentStatus } from "@/hooks/payments/usePaymentStatus";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { usePagamentos } from "@/hooks/usePagamentos";
 
 interface ClienteCardProps {
   cliente: Cliente;
   onVerDetalhes: (cliente: Cliente) => void;
   onConfirmarExclusao: (clienteId: string) => void;
+  mesAtual: number;
+  anoAtual: number;
+  statusPagamento?: string;
 }
 
 export const ClienteCard = ({ 
   cliente, 
   onVerDetalhes, 
-  onConfirmarExclusao
+  onConfirmarExclusao,
+  mesAtual,
+  anoAtual,
+  statusPagamento = "nao_pago"
 }: ClienteCardProps) => {
   const navigate = useNavigate();
   const { handleChangeStatus } = usePaymentStatus();
   const isMobile = useIsMobile();
-  
-  // Usar o hook de pagamentos para obter dados atualizados
-  const { filteredClientes, mesAtual, anoAtual } = usePagamentos();
-  
-  // Encontrar o cliente com dados de pagamento
-  const clienteComPagamento = filteredClientes.find(c => c.id === cliente.id);
-  
-  // Obter o status de pagamento atual
-  const chave = `${mesAtual}-${anoAtual}`;
-  const pagamentoAtual = clienteComPagamento?.pagamentos[chave];
-  const statusPagamento = pagamentoAtual?.status || "nao_pago";
 
   const dataFormatada = format(new Date(cliente.created_at), "dd/MM/yyyy", {
     locale: ptBR
   });
 
   const handlePaymentStatusChange = async (status: string) => {
-    if (clienteComPagamento) {
-      try {
-        await handleChangeStatus(
-          clienteComPagamento,
-          mesAtual,
-          anoAtual,
-          status
-        );
-      } catch (error) {
-        console.error("Erro ao alterar status de pagamento:", error);
-      }
+    try {
+      // Criar um objeto cliente compatível com ClienteComPagamentos
+      const clienteComPagamentos = {
+        ...cliente,
+        pagamentos: {}
+      };
+      
+      await handleChangeStatus(
+        clienteComPagamentos,
+        mesAtual,
+        anoAtual,
+        status
+      );
+    } catch (error) {
+      console.error("Erro ao alterar status de pagamento:", error);
     }
   };
 
@@ -78,7 +76,7 @@ export const ClienteCard = ({
       </CardHeader>
 
       <CardContent className="space-y-3">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
           <div className="flex items-center gap-1">
             <Phone className="w-3 h-3" />
             <span className="truncate">{formatPhoneNumber(cliente.telefone) || "N/A"}</span>
@@ -91,7 +89,7 @@ export const ClienteCard = ({
             <DollarSign className="w-3 h-3" />
             <span>R$ {cliente.valor_plano?.toFixed(2).replace('.', ',') || "0,00"}</span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 md:col-span-3">
             <Server className="w-3 h-3" />
             <span className="truncate">{cliente.servidor}</span>
           </div>
