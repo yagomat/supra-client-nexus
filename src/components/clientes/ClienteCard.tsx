@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,9 +42,39 @@ export const ClienteCard = ({
   const isMobile = useIsMobile();
   const [statusPagamento, setStatusPagamento] = useState("nao_pago");
 
-  const dataFormatada = format(new Date(cliente.created_at), "dd/MM/yyyy", {
-    locale: ptBR
-  });
+  // Calculate days until due date
+  const calculateDaysUntilDue = () => {
+    const today = new Date();
+    const currentDay = today.getDate();
+    const currentMonth = today.getMonth() + 1;
+    const currentYear = today.getFullYear();
+    
+    // Create due date for current month
+    const dueDate = new Date(currentYear, currentMonth - 1, cliente.dia_vencimento);
+    
+    // If due date has passed this month, it's overdue
+    if (currentDay > cliente.dia_vencimento) {
+      const daysPastDue = currentDay - cliente.dia_vencimento;
+      return { type: 'overdue', days: daysPastDue };
+    } else if (currentDay === cliente.dia_vencimento) {
+      return { type: 'today', days: 0 };
+    } else {
+      const daysUntilDue = cliente.dia_vencimento - currentDay;
+      return { type: 'upcoming', days: daysUntilDue };
+    }
+  };
+
+  const formatDueInfo = () => {
+    const dueInfo = calculateDaysUntilDue();
+    
+    if (dueInfo.type === 'overdue') {
+      return `Venceu há ${dueInfo.days} dia${dueInfo.days > 1 ? 's' : ''}`;
+    } else if (dueInfo.type === 'today') {
+      return 'Vence hoje';
+    } else {
+      return `Vence em ${dueInfo.days} dia${dueInfo.days > 1 ? 's' : ''}`;
+    }
+  };
 
   // Buscar status de pagamento inicial e configurar listener em tempo real
   useEffect(() => {
@@ -141,7 +170,7 @@ export const ClienteCard = ({
           </div>
           <div className="flex items-center gap-1">
             <Calendar className="w-3 h-3" />
-            <span>{dataFormatada}</span>
+            <span>{formatDueInfo()}</span>
           </div>
           <div className="flex items-center gap-1">
             <DollarSign className="w-3 h-3" />
