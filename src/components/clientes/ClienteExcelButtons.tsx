@@ -110,12 +110,12 @@ export const ClienteExcelButtons = ({ clientes, onImportSuccess }: ClienteExcelB
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:col-span-2">
+      <div className="flex justify-between gap-2 sm:col-span-2">
         <Button
           variant="outline"
           onClick={handleExport}
           disabled={isExporting || clientes.length === 0}
-          className="w-full"
+          className="flex-1"
         >
           {isExporting ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -129,7 +129,7 @@ export const ClienteExcelButtons = ({ clientes, onImportSuccess }: ClienteExcelB
           variant="outline"
           onClick={handleImportClick}
           disabled={isImporting}
-          className="w-full"
+          className="flex-1"
         >
           {isImporting ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
