@@ -97,12 +97,6 @@ export const ClienteCard = ({
           </div>
         </div>
 
-        <div className="text-sm space-y-1">
-          <div><strong>Aplicativo:</strong> {cliente.aplicativo}</div>
-          <div><strong>Dia Vencimento:</strong> {cliente.dia_vencimento}</div>
-          {cliente.uf && <div><strong>UF:</strong> {cliente.uf}</div>}
-        </div>
-
         <div className="flex gap-2 pt-2">
           <div className="flex-1">
             <PaymentStatusButton
