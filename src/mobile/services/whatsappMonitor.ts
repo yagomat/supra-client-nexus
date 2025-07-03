@@ -21,7 +21,17 @@ class WhatsAppMonitor {
     if (Capacitor.isNativePlatform()) {
       await this.setupNativeMonitoring();
     } else {
-      this.setupWebMonitoring();
+      // Em ambiente web, só simular se estivermos em modo desenvolvimento explícito  
+      // e não na página inicial normal
+      const isDevelopmentMode = window.location.search.includes('dev=true') || 
+                               window.location.hostname === 'localhost';
+      
+      if (isDevelopmentMode) {
+        this.setupWebMonitoring();
+      } else {
+        console.log('Web environment - WhatsApp monitoring disabled for production');
+        return;
+      }
     }
     
     this.isMonitoring = true;
@@ -37,13 +47,13 @@ class WhatsAppMonitor {
   private setupWebMonitoring() {
     console.log('Setting up web WhatsApp monitoring simulation');
     
-    // Simulação para desenvolvimento web
+    // Simulação para desenvolvimento web - só ativar quando explicitamente solicitado
     const mockContact: WhatsAppContact = {
       name: 'Cliente Teste',
       phoneNumber: '+5511999999999'
     };
     
-    // Simular detecção após 2 segundos
+    // Simular detecção após 2 segundos apenas em modo desenvolvimento
     setTimeout(() => {
       console.log('Mock WhatsApp contact detected:', mockContact);
       this.notifyListeners(mockContact);

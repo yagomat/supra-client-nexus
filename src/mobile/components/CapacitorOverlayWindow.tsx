@@ -4,26 +4,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X, Minimize2, Smartphone } from 'lucide-react';
 import { useCapacitor } from '../hooks/useCapacitor';
+import { useWhatsAppDetection } from '../hooks/useWhatsAppDetection';
 import { ClienteInfo } from './ClienteInfo';
 import { TemplatesList } from './TemplatesList';
 import { QuickActions } from './QuickActions';
 
 export const CapacitorOverlayWindow = () => {
   const { isReady, info } = useCapacitor();
+  const { currentContact } = useWhatsAppDetection();
   const [isVisible, setIsVisible] = React.useState(true);
   const [position, setPosition] = React.useState({ x: 20, y: 100 });
 
-  if (!isReady) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white p-6 rounded-lg">
-          <div className="flex items-center gap-2">
-            <Smartphone className="h-5 w-5 animate-pulse" />
-            <span>Inicializando aplicativo Capacitor...</span>
-          </div>
-        </div>
-      </div>
-    );
+  // Só mostrar a janela se:
+  // 1. Capacitor estiver pronto
+  // 2. Houver um contato detectado do WhatsApp
+  // 3. Estiver em ambiente móvel ou nativo
+  if (!isReady || !currentContact || (!info.isNative && window.innerWidth > 768)) {
+    return null;
   }
 
   if (!isVisible) return null;
@@ -77,6 +74,10 @@ export const CapacitorOverlayWindow = () => {
               Plataforma: {info.platform} | Capacitor v{info.version}
             </div>
           )}
+          
+          <div className="text-xs bg-blue-50 p-2 rounded">
+            <strong>Contato detectado:</strong> {currentContact.name} ({currentContact.phoneNumber})
+          </div>
           
           <ClienteInfo />
           <TemplatesList />
