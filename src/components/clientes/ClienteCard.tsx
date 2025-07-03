@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,38 +42,68 @@ export const ClienteCard = ({
   const isMobile = useIsMobile();
   const [statusPagamento, setStatusPagamento] = useState("nao_pago");
 
-  // Calculate days based on payment status and client status
+  // Calculate days based on client status and payment logic
   const calculateDaysInfo = () => {
     const today = new Date();
     const currentDay = today.getDate();
+    const currentMonth = today.getMonth() + 1; // JavaScript months are 0-based
+    const currentYear = today.getFullYear();
+    
+    // Get the last day of current month
+    const lastDayOfMonth = new Date(currentYear, currentMonth, 0).getDate();
+    const adjustedDueDay = Math.min(cliente.dia_vencimento, lastDayOfMonth);
     
     if (cliente.status === 'inativo') {
       // Cliente inativo - calcular há quantos dias venceu
-      const daysPastDue = currentDay - cliente.dia_vencimento;
-      if (daysPastDue > 0) {
+      // Se o dia atual é maior que o vencimento, venceu neste mês
+      if (currentDay > adjustedDueDay) {
+        const daysPastDue = currentDay - adjustedDueDay;
         return { type: 'overdue', days: daysPastDue };
-      } else if (daysPastDue === 0) {
+      } 
+      // Se o dia atual é igual ao vencimento, venceu hoje
+      else if (currentDay === adjustedDueDay) {
         return { type: 'today', days: 0 };
-      } else {
-        // Se dia atual é menor que vencimento mas cliente está inativo,
-        // significa que venceu no mês passado
-        const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 0);
-        const daysInLastMonth = lastMonth.getDate();
-        const daysPastDueLastMonth = (daysInLastMonth - cliente.dia_vencimento) + currentDay;
-        return { type: 'overdue', days: daysPastDueLastMonth };
+      } 
+      // Se o dia atual é menor que o vencimento, venceu no mês passado
+      else {
+        // Calculate days from last month's due date to today
+        const lastMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+        const lastMonthYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+        const lastMonthLastDay = new Date(lastMonthYear, lastMonth, 0).getDate();
+        const lastMonthAdjustedDueDay = Math.min(cliente.dia_vencimento, lastMonthLastDay);
+        
+        // Days from last month's due date to end of last month
+        const daysFromDueToEndOfLastMonth = lastMonthLastDay - lastMonthAdjustedDueDay;
+        // Days from start of current month to today
+        const daysInCurrentMonth = currentDay;
+        
+        const totalDaysPastDue = daysFromDueToEndOfLastMonth + daysInCurrentMonth;
+        return { type: 'overdue', days: totalDaysPastDue };
       }
     } else {
       // Cliente ativo - calcular quando será o próximo vencimento
-      if (currentDay > cliente.dia_vencimento) {
-        // Próximo vencimento é no mês seguinte
-        const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, cliente.dia_vencimento);
-        const daysUntilNext = Math.ceil((nextMonth.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        return { type: 'upcoming', days: daysUntilNext };
-      } else if (currentDay === cliente.dia_vencimento) {
-        return { type: 'today', days: 0 };
-      } else {
-        const daysUntilDue = cliente.dia_vencimento - currentDay;
+      if (currentDay < adjustedDueDay) {
+        // Próximo vencimento é ainda neste mês
+        const daysUntilDue = adjustedDueDay - currentDay;
         return { type: 'upcoming', days: daysUntilDue };
+      } 
+      else if (currentDay === adjustedDueDay) {
+        return { type: 'today', days: 0 };
+      } 
+      else {
+        // Próximo vencimento é no mês seguinte
+        const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+        const nextMonthYear = currentMonth === 12 ? currentYear + 1 : currentYear;
+        const nextMonthLastDay = new Date(nextMonthYear, nextMonth, 0).getDate();
+        const nextMonthAdjustedDueDay = Math.min(cliente.dia_vencimento, nextMonthLastDay);
+        
+        // Days from today to end of current month
+        const daysToEndOfCurrentMonth = lastDayOfMonth - currentDay;
+        // Days from start of next month to due date
+        const daysInNextMonth = nextMonthAdjustedDueDay;
+        
+        const totalDaysUntilDue = daysToEndOfCurrentMonth + daysInNextMonth;
+        return { type: 'upcoming', days: totalDaysUntilDue };
       }
     }
   };
@@ -83,11 +112,11 @@ export const ClienteCard = ({
     const dueInfo = calculateDaysInfo();
     
     if (dueInfo.type === 'overdue') {
-      return `Venceu há ${dueInfo.days} dia${dueInfo.days > 1 ? 's' : ''}`;
+      return `Venceu há ${dueInfo.days} dia${dueInfo.days !== 1 ? 's' : ''}`;
     } else if (dueInfo.type === 'today') {
       return 'Vence hoje';
     } else {
-      return `Vence em ${dueInfo.days} dia${dueInfo.days > 1 ? 's' : ''}`;
+      return `Vence em ${dueInfo.days} dia${dueInfo.days !== 1 ? 's' : ''}`;
     }
   };
 
