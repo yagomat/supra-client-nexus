@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PaymentStatusButton } from "@/components/pagamentos/PaymentStatusButton";
@@ -32,8 +31,8 @@ export const ClienteMatriz = ({
   const { handleChangeStatus } = usePaymentStatus();
   const [pagamentosStatus, setPagamentosStatus] = useState<Record<string, string>>({});
   
-  // Se for mobile, limitamos os meses exibidos para melhor visualização
-  const displayMeses = isMobile ? meses.slice(0, 6) : meses;
+  // Mostrar todos os meses, não limitar no mobile
+  const displayMeses = meses;
   
   // Calcular o número total de páginas
   const totalPages = Math.ceil(clientes.length / itemsPerPage);
