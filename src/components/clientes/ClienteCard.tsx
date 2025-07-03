@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ import { PaymentStatusButton } from "@/components/pagamentos/PaymentStatusButton
 import { useNavigate } from "react-router-dom";
 import { usePaymentStatus } from "@/hooks/payments/usePaymentStatus";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { usePagamentos } from "@/hooks/usePagamentos";
 
 interface ClienteCardProps {
   cliente: Cliente;
@@ -35,30 +37,34 @@ export const ClienteCard = ({
   const navigate = useNavigate();
   const { handleChangeStatus } = usePaymentStatus();
   const isMobile = useIsMobile();
+  
+  // Usar o hook de pagamentos para obter dados atualizados
+  const { filteredClientes, mesAtual, anoAtual } = usePagamentos();
+  
+  // Encontrar o cliente com dados de pagamento
+  const clienteComPagamento = filteredClientes.find(c => c.id === cliente.id);
+  
+  // Obter o status de pagamento atual
+  const chave = `${mesAtual}-${anoAtual}`;
+  const pagamentoAtual = clienteComPagamento?.pagamentos[chave];
+  const statusPagamento = pagamentoAtual?.status || "nao_pago";
 
   const dataFormatada = format(new Date(cliente.created_at), "dd/MM/yyyy", {
     locale: ptBR
   });
 
-  // Obter o mês e ano atuais para o pagamento
-  const currentDate = new Date();
-  const currentMonth = currentDate.getMonth() + 1;
-  const currentYear = currentDate.getFullYear();
-
-  // Status de pagamento do mês atual (seria necessário buscar do backend)
-  // Para demonstração, usando um status padrão
-  const currentPaymentStatus = "nao_pago";
-
   const handlePaymentStatusChange = async (status: string) => {
-    try {
-      await handleChangeStatus(
-        cliente as any, // Casting para ClienteComPagamentos
-        currentMonth,
-        currentYear,
-        status
-      );
-    } catch (error) {
-      console.error("Erro ao alterar status de pagamento:", error);
+    if (clienteComPagamento) {
+      try {
+        await handleChangeStatus(
+          clienteComPagamento,
+          mesAtual,
+          anoAtual,
+          status
+        );
+      } catch (error) {
+        console.error("Erro ao alterar status de pagamento:", error);
+      }
     }
   };
 
@@ -100,7 +106,7 @@ export const ClienteCard = ({
         <div className="flex gap-2 pt-2">
           <div className="flex-1">
             <PaymentStatusButton
-              status={currentPaymentStatus}
+              status={statusPagamento}
               onStatusChange={handlePaymentStatusChange}
               isList={true}
             />
