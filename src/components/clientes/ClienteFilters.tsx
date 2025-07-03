@@ -50,6 +50,7 @@ export const ClienteFilters = ({
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         {/* Lado esquerdo: Status e botão limpar */}
         <div className="flex gap-2 items-center">
+          <span className="text-sm text-muted-foreground whitespace-nowrap">Filtrar por:</span>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-32">
               <SelectValue />
@@ -63,11 +64,11 @@ export const ClienteFilters = ({
 
           <Button
             variant="outline"
-            size="icon"
             onClick={handleLimparFiltros}
-            title="Limpar filtros"
+            className="flex items-center gap-1"
           >
             <X className="h-4 w-4" />
+            <span className="hidden sm:inline">Limpar filtros</span>
           </Button>
         </div>
 
