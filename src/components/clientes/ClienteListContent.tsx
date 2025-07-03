@@ -1,6 +1,8 @@
 
 import { useState } from "react";
 import { ClienteTable } from "@/components/clientes/ClienteTable";
+import { ClienteCardsGrid } from "@/components/clientes/ClienteCardsGrid";
+import { ClienteViewToggle } from "@/components/clientes/ClienteViewToggle";
 import { EmptyState } from "@/components/clientes/EmptyState";
 import { LoadingState } from "@/components/clientes/LoadingState";
 import { ClienteFilters } from "@/components/clientes/ClienteFilters";
@@ -51,6 +53,9 @@ export const ClienteListContent = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   
+  // Estado para controlar o modo de visualização
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('cards');
+  
   // Resetar página atual quando os filtros mudam
   const handleSearchOrFilterChange = (value: string) => {
     setSearchTerm(value);
@@ -92,18 +97,35 @@ export const ClienteListContent = ({
         </div>
       </div>
 
-      <ClienteFilters 
-        searchTerm={searchTerm}
-        setSearchTerm={handleSearchOrFilterChange}
-        statusFilter={statusFilter}
-        setStatusFilter={handleStatusFilterChange}
-        handleLimparFiltros={handleClearFilters}
-      />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <ClienteFilters 
+          searchTerm={searchTerm}
+          setSearchTerm={handleSearchOrFilterChange}
+          statusFilter={statusFilter}
+          setStatusFilter={handleStatusFilterChange}
+          handleLimparFiltros={handleClearFilters}
+        />
+        
+        <ClienteViewToggle 
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+        />
+      </div>
 
       {loading ? (
         <LoadingState />
       ) : filteredClientes.length === 0 ? (
         <EmptyState />
+      ) : viewMode === 'cards' ? (
+        <ClienteCardsGrid 
+          clientes={filteredClientes}
+          onVerDetalhes={verDetalhes}
+          onConfirmarExclusao={confirmarExclusao}
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={handleItemsPerPageChange}
+        />
       ) : (
         <ClienteTable 
           clientes={filteredClientes}
