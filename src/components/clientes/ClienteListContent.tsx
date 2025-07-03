@@ -1,7 +1,7 @@
 
 import { useState } from "react";
-import { ClienteTable } from "@/components/clientes/ClienteTable";
 import { ClienteCardsGrid } from "@/components/clientes/ClienteCardsGrid";
+import { ClienteMatriz } from "@/components/clientes/ClienteMatriz";
 import { ClienteViewToggle } from "@/components/clientes/ClienteViewToggle";
 import { EmptyState } from "@/components/clientes/EmptyState";
 import { LoadingState } from "@/components/clientes/LoadingState";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { UserPlus } from "lucide-react";
 import { Cliente } from "@/types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ClienteListContentProps {
   loading: boolean;
@@ -48,13 +49,32 @@ export const ClienteListContent = ({
   onImportSuccess
 }: ClienteListContentProps) => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   // Estado para controlar a paginação
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   
-  // Estado para controlar o modo de visualização
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('cards');
+  // Estado para controlar o modo de visualização - agora cards e matriz
+  const [viewMode, setViewMode] = useState<'cards' | 'matriz'>('cards');
+  
+  // Meses para a matriz
+  const meses = [
+    { value: 1, label: "Janeiro" },
+    { value: 2, label: "Fevereiro" },
+    { value: 3, label: "Março" },
+    { value: 4, label: "Abril" },
+    { value: 5, label: "Maio" },
+    { value: 6, label: "Junho" },
+    { value: 7, label: "Julho" },
+    { value: 8, label: "Agosto" },
+    { value: 9, label: "Setembro" },
+    { value: 10, label: "Outubro" },
+    { value: 11, label: "Novembro" },
+    { value: 12, label: "Dezembro" }
+  ];
+  
+  const anoAtual = new Date().getFullYear();
   
   // Resetar página atual quando os filtros mudam
   const handleSearchOrFilterChange = (value: string) => {
@@ -76,7 +96,7 @@ export const ClienteListContent = ({
   // Manipulador para mudar itens por página
   const handleItemsPerPageChange = (value: number) => {
     setItemsPerPage(value);
-    setCurrentPage(1); // Resetar para a primeira página quando mudar itens por página
+    setCurrentPage(1);
   };
 
   return (
@@ -122,18 +142,11 @@ export const ClienteListContent = ({
           onItemsPerPageChange={handleItemsPerPageChange}
         />
       ) : (
-        <ClienteTable 
+        <ClienteMatriz 
           clientes={filteredClientes}
-          verDetalhes={verDetalhes}
-          verTelaAdicional={verTelaAdicional}
-          verObservacoes={verObservacoes}
-          confirmarExclusao={confirmarExclusao}
-          sortOrder={sortOrder}
-          onSortChange={onSortChange}
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={handleItemsPerPageChange}
+          meses={meses}
+          anoAtual={anoAtual}
+          isMobile={isMobile}
         />
       )}
     </div>

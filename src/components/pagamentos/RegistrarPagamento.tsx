@@ -1,9 +1,6 @@
 
-import { useState } from "react";
 import { PagamentosFiltros } from "./PagamentosFiltros";
 import { PagamentosTable } from "./PagamentosTable";
-import { PagamentosMatriz } from "./PagamentosMatriz";
-import { ViewToggle } from "./ViewToggle";
 import { LoadingState } from "@/components/clientes/LoadingState";
 import { EmptyState } from "@/components/clientes/EmptyState";
 import { ClienteComPagamentos } from "@/types";
@@ -45,8 +42,6 @@ export const RegistrarPagamento = ({
   sortOrder = 'data',
   onSortChange
 }: RegistrarPagamentoProps) => {
-  const [viewMode, setViewMode] = useState<'lista' | 'matriz'>('lista');
-
   return (
     <div className="space-y-4">
       {/* Filtros */}
@@ -58,29 +53,20 @@ export const RegistrarPagamento = ({
         searchTerm={searchTerm}
         onSearchChange={onSearchChange}
         onClearSearch={onClearSearch}
-        isListView={viewMode === 'lista'}
+        isListView={true}
         meses={meses}
         anos={anos}
         isMobile={isMobile}
       />
 
-      {/* Toggle Lista/Matriz */}
-      <div className="flex justify-end">
-        <ViewToggle 
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          isMobile={isMobile}
-        />
-      </div>
-
-      {/* Conteúdo */}
+      {/* Conteúdo - apenas lista */}
       {loading ? (
         <LoadingState />
       ) : (
         <div className="border rounded-md overflow-hidden">
           {filteredClientes.length === 0 ? (
             <EmptyState />
-          ) : viewMode === 'lista' ? (
+          ) : (
             <PagamentosTable 
               clientes={filteredClientes}
               mesAtual={mesAtual}
@@ -90,15 +76,6 @@ export const RegistrarPagamento = ({
               isMobile={isMobile}
               sortOrder={sortOrder}
               onSortChange={onSortChange}
-            />
-          ) : (
-            <PagamentosMatriz 
-              clientes={filteredClientes}
-              meses={meses}
-              anoAtual={anoAtual}
-              submitting={submitting}
-              onChangeStatus={onChangeStatus}
-              isMobile={isMobile}
             />
           )}
         </div>
