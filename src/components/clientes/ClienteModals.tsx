@@ -3,6 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Cliente } from "@/types";
 import { formatDate } from "@/utils/dateUtils";
+import { Badge } from "@/components/ui/badge";
+import { formatPhoneNumber } from "./table/PhoneFormatter";
 
 interface ClienteModalsProps {
   clienteDetalhes: Cliente | null;
@@ -31,36 +33,119 @@ export const ClienteModals = ({
 }: ClienteModalsProps) => {
   return (
     <>
-      {/* Modal para visualizar detalhes da tela principal */}
+      {/* Modal para visualizar todos os detalhes do cliente */}
       <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Detalhes da Tela Principal</DialogTitle>
+            <DialogTitle>Detalhes do Cliente</DialogTitle>
           </DialogHeader>
           {clienteDetalhes && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Dispositivo Smart</p>
-                  <p>{clienteDetalhes.dispositivo_smart || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Aplicativo</p>
-                  <p>{clienteDetalhes.aplicativo}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Usuário</p>
-                  <p>{clienteDetalhes.usuario_aplicativo}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Senha</p>
-                  <p>{clienteDetalhes.senha_aplicativo}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Data da Licença</p>
-                  <p>{clienteDetalhes.data_licenca_aplicativo ? formatDate(clienteDetalhes.data_licenca_aplicativo) : "-"}</p>
+            <div className="space-y-6">
+              {/* Informações Básicas */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  Informações Básicas
+                  <Badge variant={clienteDetalhes.status === 'ativo' ? 'default' : 'secondary'}>
+                    {clienteDetalhes.status === 'ativo' ? 'Ativo' : 'Inativo'}
+                  </Badge>
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Nome</p>
+                    <p className="font-medium">{clienteDetalhes.nome}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Telefone</p>
+                    <p>{formatPhoneNumber(clienteDetalhes.telefone) || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">UF</p>
+                    <p>{clienteDetalhes.uf || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Servidor</p>
+                    <p>{clienteDetalhes.servidor}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Dia Vencimento</p>
+                    <p>{clienteDetalhes.dia_vencimento}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Valor do Plano</p>
+                    <p>R$ {clienteDetalhes.valor_plano?.toFixed(2).replace('.', ',') || "0,00"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Data de Cadastro</p>
+                    <p>{formatDate(clienteDetalhes.created_at)}</p>
+                  </div>
                 </div>
               </div>
+
+              {/* Tela Principal */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Tela Principal</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Dispositivo Smart</p>
+                    <p>{clienteDetalhes.dispositivo_smart || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Aplicativo</p>
+                    <p>{clienteDetalhes.aplicativo}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Usuário</p>
+                    <p>{clienteDetalhes.usuario_aplicativo}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Senha</p>
+                    <p>{clienteDetalhes.senha_aplicativo}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-sm font-medium text-muted-foreground">Data da Licença</p>
+                    <p>{clienteDetalhes.data_licenca_aplicativo ? formatDate(clienteDetalhes.data_licenca_aplicativo) : "-"}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tela Adicional */}
+              {clienteDetalhes.possui_tela_adicional && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Tela Adicional</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Dispositivo Smart 2</p>
+                      <p>{clienteDetalhes.dispositivo_smart_2 || "-"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Aplicativo 2</p>
+                      <p>{clienteDetalhes.aplicativo_2 || "-"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Usuário 2</p>
+                      <p>{clienteDetalhes.usuario_2 || "-"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Senha 2</p>
+                      <p>{clienteDetalhes.senha_2 || "-"}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-sm font-medium text-muted-foreground">Data da Licença 2</p>
+                      <p>{clienteDetalhes.data_licenca_2 ? formatDate(clienteDetalhes.data_licenca_2) : "-"}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Observações */}
+              {clienteDetalhes.observacoes && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Observações</h3>
+                  <div className="bg-muted p-3 rounded-md">
+                    <p className="whitespace-pre-wrap">{clienteDetalhes.observacoes}</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>
@@ -126,7 +211,7 @@ export const ClienteModals = ({
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleExcluir}>Excluir</AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
+        </AlertDialogFooter>
       </AlertDialog>
     </>
   );
