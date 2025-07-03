@@ -83,11 +83,15 @@ export const ClienteCard = ({
           filter: `cliente_id=eq.${cliente.id}`
         }, 
         (payload) => {
-          // Verificar se é para o mês/ano correto
-          if (payload.new && 
-              payload.new.mes === mesAtual && 
-              payload.new.ano === anoAtual) {
-            setStatusPagamento(payload.new.status);
+          // Verificar se é para o mês/ano correto com verificações de tipo
+          const newRecord = payload.new as any;
+          if (newRecord && 
+              typeof newRecord.mes === 'number' &&
+              typeof newRecord.ano === 'number' &&
+              typeof newRecord.status === 'string' &&
+              newRecord.mes === mesAtual && 
+              newRecord.ano === anoAtual) {
+            setStatusPagamento(newRecord.status);
           }
         }
       )
