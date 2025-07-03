@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,7 @@ import { formatPhoneNumber } from "./table/PhoneFormatter";
 import { PaymentStatusButton } from "@/components/pagamentos/PaymentStatusButton";
 import { useNavigate } from "react-router-dom";
 import { usePaymentStatus } from "@/hooks/payments/usePaymentStatus";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ClienteCardProps {
   cliente: Cliente;
@@ -35,7 +34,7 @@ export const ClienteCard = ({
 }: ClienteCardProps) => {
   const navigate = useNavigate();
   const { handleChangeStatus } = usePaymentStatus();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
 
   const dataFormatada = format(new Date(cliente.created_at), "dd/MM/yyyy", {
     locale: ptBR
