@@ -2,8 +2,7 @@
 import React from "react";
 import { ClienteCard } from "./ClienteCard";
 import { TablePagination } from "../table/TablePagination";
-import { Cliente, ClienteComPagamentos } from "@/types";
-import { usePagamentos } from "@/hooks/usePagamentos";
+import { Cliente } from "@/types";
 
 interface ClienteCardsGridProps {
   clientes: Cliente[];
@@ -24,19 +23,6 @@ export const ClienteCardsGrid = ({
   onPageChange,
   onItemsPerPageChange,
 }: ClienteCardsGridProps) => {
-  // Usar o hook de pagamentos para obter dados atualizados
-  const { filteredClientes, mesAtual, anoAtual } = usePagamentos();
-  
-  // Função para obter o status de pagamento de um cliente
-  const getClientePaymentStatus = (clienteId: string): string => {
-    const clienteComPagamento = filteredClientes.find(c => c.id === clienteId);
-    if (!clienteComPagamento) return "nao_pago";
-    
-    const chave = `${mesAtual}-${anoAtual}`;
-    const pagamentoAtual = clienteComPagamento.pagamentos[chave];
-    return pagamentoAtual?.status || "nao_pago";
-  };
-
   // Calcular o número total de páginas
   const totalPages = Math.ceil(clientes.length / itemsPerPage);
   
@@ -45,6 +31,10 @@ export const ClienteCardsGrid = ({
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  // Obter mês e ano atuais
+  const mesAtual = new Date().getMonth() + 1;
+  const anoAtual = new Date().getFullYear();
 
   return (
     <div className="space-y-4">
@@ -57,7 +47,6 @@ export const ClienteCardsGrid = ({
             onConfirmarExclusao={onConfirmarExclusao}
             mesAtual={mesAtual}
             anoAtual={anoAtual}
-            statusPagamento={getClientePaymentStatus(cliente.id)}
           />
         ))}
       </div>

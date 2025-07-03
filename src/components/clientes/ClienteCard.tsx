@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ import { PaymentStatusButton } from "@/components/pagamentos/PaymentStatusButton
 import { useNavigate } from "react-router-dom";
 import { usePaymentStatus } from "@/hooks/payments/usePaymentStatus";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ClienteCardProps {
   cliente: Cliente;
@@ -28,7 +29,6 @@ interface ClienteCardProps {
   onConfirmarExclusao: (clienteId: string) => void;
   mesAtual: number;
   anoAtual: number;
-  statusPagamento?: string;
 }
 
 export const ClienteCard = ({ 
@@ -36,16 +36,68 @@ export const ClienteCard = ({
   onVerDetalhes, 
   onConfirmarExclusao,
   mesAtual,
-  anoAtual,
-  statusPagamento = "nao_pago"
+  anoAtual
 }: ClienteCardProps) => {
   const navigate = useNavigate();
   const { handleChangeStatus } = usePaymentStatus();
   const isMobile = useIsMobile();
+  const [statusPagamento, setStatusPagamento] = useState("nao_pago");
 
   const dataFormatada = format(new Date(cliente.created_at), "dd/MM/yyyy", {
     locale: ptBR
   });
+
+  // Buscar status de pagamento inicial e configurar listener em tempo real
+  useEffect(() => {
+    const fetchPaymentStatus = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('pagamentos')
+          .select('status')
+          .eq('cliente_id', cliente.id)
+          .eq('mes', mesAtual)
+          .eq('ano', anoAtual)
+          .single();
+
+        if (error && error.code !== 'PGRST116') { // PGRST116 é "not found"
+          console.error("Erro ao buscar status de pagamento:", error);
+          return;
+        }
+
+        setStatusPagamento(data?.status || "nao_pago");
+      } catch (error) {
+        console.error("Erro ao buscar status de pagamento:", error);
+      }
+    };
+
+    fetchPaymentStatus();
+
+    // Configurar listener em tempo real para este cliente específico
+    const channel = supabase
+      .channel(`pagamento-${cliente.id}-${mesAtual}-${anoAtual}`)
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'pagamentos',
+          filter: `cliente_id=eq.${cliente.id}`
+        }, 
+        (payload) => {
+          // Verificar se é para o mês/ano correto
+          if (payload.new && 
+              payload.new.mes === mesAtual && 
+              payload.new.ano === anoAtual) {
+            setStatusPagamento(payload.new.status);
+          }
+        }
+      )
+      .subscribe();
+
+    // Cleanup na desmontagem
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [cliente.id, mesAtual, anoAtual]);
 
   const handlePaymentStatusChange = async (status: string) => {
     try {
@@ -61,6 +113,8 @@ export const ClienteCard = ({
         anoAtual,
         status
       );
+      
+      // O status será atualizado via realtime listener
     } catch (error) {
       console.error("Erro ao alterar status de pagamento:", error);
     }
