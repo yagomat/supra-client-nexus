@@ -103,8 +103,8 @@ export const ClienteCard = ({
           {cliente.uf && <div><strong>UF:</strong> {cliente.uf}</div>}
         </div>
 
-        <div className="flex gap-2 pt-2">
-          <div className="flex-1">
+        <div className="space-y-2 pt-2">
+          <div className="w-full">
             <PaymentStatusButton
               status={statusPagamento}
               onStatusChange={handlePaymentStatusChange}
@@ -112,35 +112,39 @@ export const ClienteCard = ({
             />
           </div>
 
-          <Button
-            onClick={() => onVerDetalhes(cliente)}
-            size="sm"
-            variant="outline"
-            className="flex-1 min-w-0"
-          >
-            <Eye className="w-4 h-4" />
-            {!isMobile && <span className="ml-1">Detalhes</span>}
-          </Button>
+          <div className="grid grid-cols-4 gap-2">
+            <Button
+              onClick={() => onVerDetalhes(cliente)}
+              size="sm"
+              variant="outline"
+              className="w-full h-9 p-0"
+            >
+              <Eye className="w-4 h-4" />
+              {!isMobile && <span className="ml-1 text-xs">Detalhes</span>}
+            </Button>
 
-          <Button
-            onClick={() => navigate(`/clientes/editar/${cliente.id}`)}
-            size="sm"
-            variant="outline"
-            className="flex-1 min-w-0"
-          >
-            <Pencil className="w-4 h-4" />
-            {!isMobile && <span className="ml-1">Editar</span>}
-          </Button>
+            <Button
+              onClick={() => navigate(`/clientes/editar/${cliente.id}`)}
+              size="sm"
+              variant="outline"
+              className="w-full h-9 p-0"
+            >
+              <Pencil className="w-4 h-4" />
+              {!isMobile && <span className="ml-1 text-xs">Editar</span>}
+            </Button>
 
-          <Button
-            onClick={() => onConfirmarExclusao(cliente.id)}
-            size="sm"
-            variant="destructive"
-            className="flex-1 min-w-0"
-          >
-            <Trash2 className="w-4 h-4" />
-            {!isMobile && <span className="ml-1">Excluir</span>}
-          </Button>
+            <Button
+              onClick={() => onConfirmarExclusao(cliente.id)}
+              size="sm"
+              variant="destructive"
+              className="w-full h-9 p-0"
+            >
+              <Trash2 className="w-4 h-4" />
+              {!isMobile && <span className="ml-1 text-xs">Excluir</span>}
+            </Button>
+
+            <div className="w-full h-9"></div>
+          </div>
         </div>
       </CardContent>
     </Card>

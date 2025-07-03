@@ -110,12 +110,12 @@ export const ClienteExcelButtons = ({ clientes, onImportSuccess }: ClienteExcelB
 
   return (
     <>
-      <div className="flex items-center space-x-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:col-span-2">
         <Button
           variant="outline"
-          size="sm"
           onClick={handleExport}
           disabled={isExporting || clientes.length === 0}
+          className="w-full"
         >
           {isExporting ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -127,9 +127,9 @@ export const ClienteExcelButtons = ({ clientes, onImportSuccess }: ClienteExcelB
         
         <Button
           variant="outline"
-          size="sm"
           onClick={handleImportClick}
           disabled={isImporting}
+          className="w-full"
         >
           {isImporting ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />

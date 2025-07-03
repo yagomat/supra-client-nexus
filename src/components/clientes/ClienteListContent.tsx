@@ -81,17 +81,15 @@ export const ClienteListContent = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-center">
-        <div className="flex flex-col sm:flex-row gap-2">
-          <ClienteExcelButtons 
-            clientes={allClientes} 
-            onImportSuccess={onImportSuccess} 
-          />
-          <Button onClick={() => navigate("/clientes/cadastrar")} className="w-full sm:w-auto">
-            <UserPlus className="mr-2 h-4 w-4" />
-            Novo Cliente
-          </Button>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <ClienteExcelButtons 
+          clientes={allClientes} 
+          onImportSuccess={onImportSuccess} 
+        />
+        <Button onClick={() => navigate("/clientes/cadastrar")} className="w-full">
+          <UserPlus className="mr-2 h-4 w-4" />
+          Novo Cliente
+        </Button>
       </div>
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
