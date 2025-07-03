@@ -115,8 +115,8 @@ export const ClienteCard = ({
           <Button
             onClick={() => onVerDetalhes(cliente)}
             size="sm"
-            className="flex-1"
             variant="outline"
+            className="flex-1 min-w-0"
           >
             <Eye className="w-4 h-4" />
             {!isMobile && <span className="ml-1">Detalhes</span>}
@@ -125,8 +125,8 @@ export const ClienteCard = ({
           <Button
             onClick={() => navigate(`/clientes/editar/${cliente.id}`)}
             size="sm"
-            className="flex-1"
             variant="outline"
+            className="flex-1 min-w-0"
           >
             <Pencil className="w-4 h-4" />
             {!isMobile && <span className="ml-1">Editar</span>}
@@ -135,8 +135,8 @@ export const ClienteCard = ({
           <Button
             onClick={() => onConfirmarExclusao(cliente.id)}
             size="sm"
-            className="flex-1"
             variant="destructive"
+            className="flex-1 min-w-0"
           >
             <Trash2 className="w-4 h-4" />
             {!isMobile && <span className="ml-1">Excluir</span>}
