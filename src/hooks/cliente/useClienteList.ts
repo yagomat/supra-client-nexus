@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { getClientes, deleteCliente } from "@/services/clienteService";
@@ -59,7 +60,6 @@ export const useClienteList = () => {
     // Apply sorting
     const currentDate = new Date();
     const currentDay = currentDate.getDate();
-    const currentMonth = currentDate.getMonth() + 1;
     
     switch (orderBy) {
       case 'nome_asc':
@@ -70,28 +70,37 @@ export const useClienteList = () => {
         break;
       case 'vencimento':
         results.sort((a, b) => {
-          // Calcular "dias desde o vencimento" para cada cliente
-          const calcularDiasDesdeVencimento = (cliente: Cliente) => {
-            const diaVencimento = cliente.dia_vencimento;
-            
-            if (diaVencimento > currentDay) {
-              // Ainda não venceu este mês (próximo vencimento)
-              return diaVencimento - currentDay;
-            } else if (diaVencimento === currentDay) {
-              // Vence hoje
-              return 0;
+          const calcularPrioridadeVencimento = (cliente: Cliente) => {
+            if (cliente.status === 'inativo') {
+              // Cliente inativo - calcular há quantos dias venceu (valor negativo = maior prioridade)
+              const daysPastDue = currentDay - cliente.dia_vencimento;
+              if (daysPastDue > 0) {
+                return -daysPastDue; // Negativo para dar prioridade aos mais vencidos
+              } else {
+                // Venceu no mês passado
+                const lastMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 0);
+                const daysInLastMonth = lastMonth.getDate();
+                const daysPastDueLastMonth = (daysInLastMonth - cliente.dia_vencimento) + currentDay;
+                return -daysPastDueLastMonth;
+              }
             } else {
-              // Já venceu este mês (em atraso)
-              // Calcular quantos dias já se passaram desde o vencimento
-              return -(currentDay - diaVencimento);
+              // Cliente ativo - calcular quando será o próximo vencimento
+              if (currentDay > cliente.dia_vencimento) {
+                // Próximo vencimento é no mês seguinte
+                const nextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, cliente.dia_vencimento);
+                const daysUntilNext = Math.ceil((nextMonth.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
+                return daysUntilNext + 1000; // Somar 1000 para que ativos venham depois dos inativos
+              } else {
+                const daysUntilDue = cliente.dia_vencimento - currentDay;
+                return daysUntilDue + 1000; // Somar 1000 para que ativos venham depois dos inativos
+              }
             }
           };
           
-          const diasA = calcularDiasDesdeVencimento(a);
-          const diasB = calcularDiasDesdeVencimento(b);
+          const prioridadeA = calcularPrioridadeVencimento(a);
+          const prioridadeB = calcularPrioridadeVencimento(b);
           
-          // Ordenar: vencidos primeiro (valores mais negativos), depois os que vão vencer (valores positivos)
-          return diasA - diasB;
+          return prioridadeA - prioridadeB;
         });
         break;
       case 'data':

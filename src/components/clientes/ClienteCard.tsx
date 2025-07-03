@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,30 +43,44 @@ export const ClienteCard = ({
   const isMobile = useIsMobile();
   const [statusPagamento, setStatusPagamento] = useState("nao_pago");
 
-  // Calculate days until due date
-  const calculateDaysUntilDue = () => {
+  // Calculate days based on payment status and client status
+  const calculateDaysInfo = () => {
     const today = new Date();
     const currentDay = today.getDate();
-    const currentMonth = today.getMonth() + 1;
-    const currentYear = today.getFullYear();
     
-    // Create due date for current month
-    const dueDate = new Date(currentYear, currentMonth - 1, cliente.dia_vencimento);
-    
-    // If due date has passed this month, it's overdue
-    if (currentDay > cliente.dia_vencimento) {
+    if (cliente.status === 'inativo') {
+      // Cliente inativo - calcular há quantos dias venceu
       const daysPastDue = currentDay - cliente.dia_vencimento;
-      return { type: 'overdue', days: daysPastDue };
-    } else if (currentDay === cliente.dia_vencimento) {
-      return { type: 'today', days: 0 };
+      if (daysPastDue > 0) {
+        return { type: 'overdue', days: daysPastDue };
+      } else if (daysPastDue === 0) {
+        return { type: 'today', days: 0 };
+      } else {
+        // Se dia atual é menor que vencimento mas cliente está inativo,
+        // significa que venceu no mês passado
+        const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 0);
+        const daysInLastMonth = lastMonth.getDate();
+        const daysPastDueLastMonth = (daysInLastMonth - cliente.dia_vencimento) + currentDay;
+        return { type: 'overdue', days: daysPastDueLastMonth };
+      }
     } else {
-      const daysUntilDue = cliente.dia_vencimento - currentDay;
-      return { type: 'upcoming', days: daysUntilDue };
+      // Cliente ativo - calcular quando será o próximo vencimento
+      if (currentDay > cliente.dia_vencimento) {
+        // Próximo vencimento é no mês seguinte
+        const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, cliente.dia_vencimento);
+        const daysUntilNext = Math.ceil((nextMonth.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        return { type: 'upcoming', days: daysUntilNext };
+      } else if (currentDay === cliente.dia_vencimento) {
+        return { type: 'today', days: 0 };
+      } else {
+        const daysUntilDue = cliente.dia_vencimento - currentDay;
+        return { type: 'upcoming', days: daysUntilDue };
+      }
     }
   };
 
   const formatDueInfo = () => {
-    const dueInfo = calculateDaysUntilDue();
+    const dueInfo = calculateDaysInfo();
     
     if (dueInfo.type === 'overdue') {
       return `Venceu há ${dueInfo.days} dia${dueInfo.days > 1 ? 's' : ''}`;
