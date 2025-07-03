@@ -9,7 +9,6 @@ interface ClienteCardsGridProps {
   clientes: Cliente[];
   onVerDetalhes: (cliente: Cliente) => void;
   onConfirmarExclusao: (clienteId: string) => void;
-  onRegistrarPagamento?: (cliente: Cliente) => void;
   currentPage?: number;
   itemsPerPage?: number;
   onPageChange?: (page: number) => void;
@@ -20,7 +19,6 @@ export const ClienteCardsGrid = ({
   clientes,
   onVerDetalhes,
   onConfirmarExclusao,
-  onRegistrarPagamento,
   currentPage = 1,
   itemsPerPage = 10,
   onPageChange,
@@ -51,7 +49,6 @@ export const ClienteCardsGrid = ({
                   cliente={cliente}
                   onVerDetalhes={onVerDetalhes}
                   onConfirmarExclusao={onConfirmarExclusao}
-                  onRegistrarPagamento={onRegistrarPagamento}
                 />
               ))
             )}

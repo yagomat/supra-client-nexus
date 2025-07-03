@@ -10,41 +10,56 @@ import {
   Server,
   Eye,
   Pencil,
-  Trash2,
-  CreditCard
+  Trash2
 } from "lucide-react";
 import { Cliente } from "@/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ClienteStatusBadge } from "./ClienteStatusBadge";
 import { formatPhoneNumber } from "./table/PhoneFormatter";
+import { PaymentStatusButton } from "@/components/pagamentos/PaymentStatusButton";
 import { useNavigate } from "react-router-dom";
+import { usePaymentStatus } from "@/hooks/payments/usePaymentStatus";
+import { useMobile } from "@/hooks/use-mobile";
 
 interface ClienteCardProps {
   cliente: Cliente;
   onVerDetalhes: (cliente: Cliente) => void;
   onConfirmarExclusao: (clienteId: string) => void;
-  onRegistrarPagamento?: (cliente: Cliente) => void;
 }
 
 export const ClienteCard = ({ 
   cliente, 
   onVerDetalhes, 
-  onConfirmarExclusao,
-  onRegistrarPagamento
+  onConfirmarExclusao
 }: ClienteCardProps) => {
   const navigate = useNavigate();
+  const { handleChangeStatus } = usePaymentStatus();
+  const isMobile = useMobile();
 
   const dataFormatada = format(new Date(cliente.created_at), "dd/MM/yyyy", {
     locale: ptBR
   });
 
-  const handleRegistrarPagamento = () => {
-    if (onRegistrarPagamento) {
-      onRegistrarPagamento(cliente);
-    } else {
-      // Navegar para a aba de pagamentos com o cliente pré-selecionado
-      navigate('/pagamentos', { state: { clienteId: cliente.id } });
+  // Obter o mês e ano atuais para o pagamento
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth() + 1;
+  const currentYear = currentDate.getFullYear();
+
+  // Status de pagamento do mês atual (seria necessário buscar do backend)
+  // Para demonstração, usando um status padrão
+  const currentPaymentStatus = "nao_pago";
+
+  const handlePaymentStatusChange = async (status: string) => {
+    try {
+      await handleChangeStatus(
+        cliente as any, // Casting para ClienteComPagamentos
+        currentMonth,
+        currentYear,
+        status
+      );
+    } catch (error) {
+      console.error("Erro ao alterar status de pagamento:", error);
     }
   };
 
@@ -84,15 +99,13 @@ export const ClienteCard = ({
         </div>
 
         <div className="flex gap-2 pt-2">
-          <Button
-            onClick={handleRegistrarPagamento}
-            size="sm"
-            className="flex-1"
-            variant="default"
-          >
-            <CreditCard className="w-4 h-4 mr-1" />
-            Pagamento
-          </Button>
+          <div className="flex-1">
+            <PaymentStatusButton
+              status={currentPaymentStatus}
+              onStatusChange={handlePaymentStatusChange}
+              isList={true}
+            />
+          </div>
 
           <Button
             onClick={() => onVerDetalhes(cliente)}
@@ -100,8 +113,8 @@ export const ClienteCard = ({
             className="flex-1"
             variant="outline"
           >
-            <Eye className="w-4 h-4 mr-1" />
-            Detalhes
+            <Eye className="w-4 h-4" />
+            {!isMobile && <span className="ml-1">Detalhes</span>}
           </Button>
 
           <Button
@@ -110,8 +123,8 @@ export const ClienteCard = ({
             className="flex-1"
             variant="outline"
           >
-            <Pencil className="w-4 h-4 mr-1" />
-            Editar
+            <Pencil className="w-4 h-4" />
+            {!isMobile && <span className="ml-1">Editar</span>}
           </Button>
 
           <Button
@@ -120,8 +133,8 @@ export const ClienteCard = ({
             className="flex-1"
             variant="destructive"
           >
-            <Trash2 className="w-4 h-4 mr-1" />
-            Excluir
+            <Trash2 className="w-4 h-4" />
+            {!isMobile && <span className="ml-1">Excluir</span>}
           </Button>
         </div>
       </CardContent>
