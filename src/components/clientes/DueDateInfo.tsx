@@ -21,17 +21,20 @@ export const DueDateInfo = ({ cliente }: DueDateInfoProps) => {
     }
   };
 
-  // Determina se deve aplicar formatação em vermelho e negrito
-  const shouldHighlight = () => {
-    return (daysInfo.type === 'upcoming' && daysInfo.days <= 3) || 
-           daysInfo.type === 'today' || 
-           daysInfo.type === 'overdue';
+  // Determina a classe de cor baseada no status e dias
+  const getColorClass = () => {
+    if (daysInfo.type === 'overdue') {
+      return "text-red-500 font-bold";
+    } else if (daysInfo.type === 'today' || (daysInfo.type === 'upcoming' && daysInfo.days <= 3)) {
+      return "text-yellow-500 font-bold";
+    }
+    return "";
   };
 
   return (
     <div className="flex items-center gap-1">
       <Calendar className="w-3 h-3" />
-      <span className={shouldHighlight() ? "text-red-500 font-bold" : ""}>
+      <span className={getColorClass()}>
         {formatDueInfo()}
       </span>
     </div>
