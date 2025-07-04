@@ -18,7 +18,7 @@ export const ClienteViewToggle = ({ viewMode, onViewModeChange }: ClienteViewTog
         className="rounded-r-none"
       >
         <LayoutGrid className="h-4 w-4 mr-1" />
-        Cards
+        Clientes
       </Button>
       <Button
         variant={viewMode === 'matriz' ? 'default' : 'ghost'}
@@ -27,7 +27,7 @@ export const ClienteViewToggle = ({ viewMode, onViewModeChange }: ClienteViewTog
         className="rounded-l-none"
       >
         <Grid3X3 className="h-4 w-4 mr-1" />
-        Matriz
+        Pagamentos
       </Button>
     </div>
   );
