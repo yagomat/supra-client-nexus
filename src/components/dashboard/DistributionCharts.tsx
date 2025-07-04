@@ -25,13 +25,13 @@ export const DistributionCharts = ({ stats, loading }: DistributionChartsProps) 
   return (
     <div className="grid gap-4 grid-cols-1 md:grid-cols-2 w-full">
       <DistributionPieChart
-        title="Distribuição por Dispositivo"
+        title="Distribuição por Dispositivo (Telas 1 e 2)"
         data={safeDispositivos}
         loading={loading}
         nameKey="dispositivo"
       />
       <DistributionPieChart
-        title="Distribuição por Aplicativo"
+        title="Distribuição por Aplicativo (Telas 1 e 2)"
         data={safeAplicativos}
         loading={loading}
         nameKey="aplicativo"
