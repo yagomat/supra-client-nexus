@@ -2,7 +2,7 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, X } from "lucide-react";
+import { Search } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -49,7 +49,7 @@ export const ClienteFilters = ({
       {/* Linha inferior: Filtros e ordenação */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         {/* Lado esquerdo: Status e botão limpar */}
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center flex-wrap">
           <span className="text-sm text-muted-foreground whitespace-nowrap">Filtrar por:</span>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-32">
@@ -65,10 +65,9 @@ export const ClienteFilters = ({
           <Button
             variant="outline"
             onClick={handleLimparFiltros}
-            className="flex items-center gap-1"
+            className="whitespace-nowrap"
           >
-            <X className="h-4 w-4" />
-            <span className="hidden sm:inline">Limpar filtros</span>
+            Limpar filtro
           </Button>
         </div>
 
