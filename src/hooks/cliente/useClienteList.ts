@@ -1,242 +1,63 @@
-import { useState, useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast";
-import { getClientes, deleteCliente } from "@/services/clienteService";
-import { Cliente } from "@/types";
-import { supabase } from "@/integrations/supabase/client";
-import { verificarLicencasCliente } from "@/services/clienteService/clienteLicencaService";
-import { ClienteOrderType } from "@/components/clientes/ClienteOrderSelector";
+
+import { useState } from "react";
+import { useClienteFetch } from "./useClienteFetch";
+import { useClienteFilters } from "./useClienteFilters";
+import { useClienteModals } from "./useClienteModals";
 
 export const useClienteList = () => {
-  const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [filteredClientes, setFilteredClientes] = useState<Cliente[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"todos" | "ativo" | "inativo">("todos");
-  const [clienteDetalhes, setClienteDetalhes] = useState<Cliente | null>(null);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [isTelaAdicionaModalOpen, setIsTelaAdicionaModalOpen] = useState(false);
-  const [isObservacoesModalOpen, setIsObservacoesModalOpen] = useState(false);
-  const [clienteParaExcluir, setClienteParaExcluir] = useState<string | null>(null);
-  const [orderBy, setOrderBy] = useState<ClienteOrderType>('data');
-  const { toast } = useToast();
-
-  // Buscar clientes baseado no filtro de status
-  const fetchClientes = async () => {
-    try {
-      setLoading(true);
-      // Usar a função getClientes com o filtro de status
-      const data = await getClientes(statusFilter);
-      setClientes(data);
-      applyFiltersAndSort(data);
-    } catch (error) {
-      console.error("Erro ao buscar clientes", error);
-      toast({
-        title: "Erro ao carregar clientes",
-        description: "Ocorreu um erro ao buscar a lista de clientes.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Function to apply filters and sorting
-  const applyFiltersAndSort = (clientesData: Cliente[]) => {
-    let results = [...clientesData];
-    
-    // Apply search filter
-    if (searchTerm) {
-      results = results.filter(
-        (cliente) =>
-          cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (cliente.telefone && cliente.telefone.includes(searchTerm)) ||
-          (cliente.uf && cliente.uf.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          cliente.servidor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (cliente.observacoes && cliente.observacoes.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-    }
-    
-    // Apply sorting
-    const currentDate = new Date();
-    const currentDay = currentDate.getDate();
-    const currentMonth = currentDate.getMonth() + 1; // JavaScript months are 0-based
-    const currentYear = currentDate.getFullYear();
-    
-    switch (orderBy) {
-      case 'nome_asc':
-        results.sort((a, b) => a.nome.localeCompare(b.nome));
-        break;
-      case 'nome_desc':
-        results.sort((a, b) => b.nome.localeCompare(a.nome));
-        break;
-      case 'vencimento':
-        results.sort((a, b) => {
-          const calcularPrioridadeVencimento = (cliente: Cliente) => {
-            // Get the last day of current month
-            const lastDayOfMonth = new Date(currentYear, currentMonth, 0).getDate();
-            const adjustedDueDay = Math.min(cliente.dia_vencimento, lastDayOfMonth);
-            
-            if (cliente.status === 'inativo') {
-              // Cliente inativo - calcular há quantos dias venceu (valor negativo = maior prioridade)
-              if (currentDay > adjustedDueDay) {
-                // Venceu neste mês
-                const daysPastDue = currentDay - adjustedDueDay;
-                return -daysPastDue; // Negativo para dar prioridade aos mais vencidos
-              } else if (currentDay === adjustedDueDay) {
-                return 0; // Venceu hoje
-              } else {
-                // Venceu no mês passado
-                const lastMonth = currentMonth === 1 ? 12 : currentMonth - 1;
-                const lastMonthYear = currentMonth === 1 ? currentYear - 1 : currentYear;
-                const lastMonthLastDay = new Date(lastMonthYear, lastMonth, 0).getDate();
-                const lastMonthAdjustedDueDay = Math.min(cliente.dia_vencimento, lastMonthLastDay);
-                
-                const daysFromDueToEndOfLastMonth = lastMonthLastDay - lastMonthAdjustedDueDay;
-                const daysInCurrentMonth = currentDay;
-                const totalDaysPastDue = daysFromDueToEndOfLastMonth + daysInCurrentMonth;
-                
-                return -totalDaysPastDue; // Negativo para dar prioridade aos mais vencidos
-              }
-            } else {
-              // Cliente ativo - calcular quando será o próximo vencimento
-              if (currentDay < adjustedDueDay) {
-                // Próximo vencimento é neste mês
-                const daysUntilDue = adjustedDueDay - currentDay;
-                return daysUntilDue + 1000; // Somar 1000 para que ativos venham depois dos inativos
-              } else if (currentDay === adjustedDueDay) {
-                return 1000; // Vence hoje, mas é ativo
-              } else {
-                // Próximo vencimento é no mês seguinte
-                const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
-                const nextMonthYear = currentMonth === 12 ? currentYear + 1 : currentYear;
-                const nextMonthLastDay = new Date(nextMonthYear, nextMonth, 0).getDate();
-                const nextMonthAdjustedDueDay = Math.min(cliente.dia_vencimento, nextMonthLastDay);
-                
-                const daysToEndOfCurrentMonth = lastDayOfMonth - currentDay;
-                const daysInNextMonth = nextMonthAdjustedDueDay;
-                const totalDaysUntilDue = daysToEndOfCurrentMonth + daysInNextMonth;
-                
-                return totalDaysUntilDue + 1000; // Somar 1000 para que ativos venham depois dos inativos
-              }
-            }
-          };
-          
-          const prioridadeA = calcularPrioridadeVencimento(a);
-          const prioridadeB = calcularPrioridadeVencimento(b);
-          
-          return prioridadeA - prioridadeB;
-        });
-        break;
-      case 'data':
-      default:
-        results.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        break;
-    }
-    
-    setFilteredClientes(results);
-  };
-
-  useEffect(() => {
-    fetchClientes();
-    
-    // Inscrever-se para atualizações em tempo real dos clientes
-    const clientesChannel = supabase
-      .channel('clientes-changes')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'clientes',
-        }, 
-        () => {
-          // Recarregar dados quando houver alterações
-          fetchClientes();
-        }
-      )
-      .subscribe();
-      
-    // Cleanup subscription
-    return () => {
-      supabase.removeChannel(clientesChannel);
-    };
-  }, [statusFilter]);
   
-  // Re-apply filters and sort when any of these dependencies change
-  useEffect(() => {
-    if (clientes.length > 0) {
-      applyFiltersAndSort(clientes);
-    }
-  }, [searchTerm, orderBy]);
+  const { 
+    clientes, 
+    loading, 
+    fetchClientes, 
+    handleExcluir: handleExcluirFromFetch,
+    setClientes 
+  } = useClienteFetch(statusFilter);
+  
+  const {
+    filteredClientes,
+    searchTerm,
+    setSearchTerm,
+    orderBy,
+    handleOrderChange,
+    handleLimparFiltros: handleLimparFiltrosFromFilters,
+    setFilteredClientes
+  } = useClienteFilters(clientes);
 
-  const handleOrderChange = (order: ClienteOrderType) => {
-    setOrderBy(order);
-  };
+  const {
+    clienteDetalhes,
+    isViewModalOpen,
+    setIsViewModalOpen,
+    isTelaAdicionaModalOpen,
+    setIsTelaAdicionaModalOpen,
+    isObservacoesModalOpen,
+    setIsObservacoesModalOpen,
+    clienteParaExcluir,
+    setClienteParaExcluir,
+    verDetalhes,
+    verTelaAdicional,
+    verObservacoes,
+    confirmarExclusao
+  } = useClienteModals();
 
   const handleLimparFiltros = () => {
     setSearchTerm("");
     setStatusFilter("todos");
-    setOrderBy('data');
-  };
-
-  const verDetalhes = async (cliente: Cliente) => {
-    try {
-      // Verificar licenças ao abrir detalhes
-      const licencasResult = await verificarLicencasCliente(cliente.id);
-      
-      // Adicionar informações de licença ao cliente para exibição
-      const clienteComLicencas = {
-        ...cliente,
-        licencaInfo: licencasResult
-      };
-      
-      setClienteDetalhes(clienteComLicencas as any);
-      setIsViewModalOpen(true);
-    } catch (error) {
-      console.error("Erro ao verificar licenças:", error);
-      // Se falhar a verificação de licenças, continua exibindo os detalhes normalmente
-      setClienteDetalhes(cliente);
-      setIsViewModalOpen(true);
-    }
-  };
-
-  const verTelaAdicional = (cliente: Cliente) => {
-    setClienteDetalhes(cliente);
-    setIsTelaAdicionaModalOpen(true);
-  };
-
-  const verObservacoes = (cliente: Cliente) => {
-    setClienteDetalhes(cliente);
-    setIsObservacoesModalOpen(true);
-  };
-
-  const confirmarExclusao = (clienteId: string) => {
-    setClienteParaExcluir(clienteId);
+    handleLimparFiltrosFromFilters();
   };
 
   const handleExcluir = async () => {
     if (!clienteParaExcluir) return;
 
-    try {
-      await deleteCliente(clienteParaExcluir);
-      
-      // Atualizar a lista de clientes
-      setClientes((prev) => prev.filter((cliente) => cliente.id !== clienteParaExcluir));
+    const success = await handleExcluirFromFetch(clienteParaExcluir);
+    
+    if (success) {
+      // Atualizar a lista filtrada também
       setFilteredClientes((prev) => prev.filter((cliente) => cliente.id !== clienteParaExcluir));
-      
-      toast({
-        title: "Cliente excluído",
-        description: "O cliente foi excluído com sucesso.",
-      });
-    } catch (error) {
-      console.error("Erro ao excluir cliente", error);
-      toast({
-        title: "Erro ao excluir cliente",
-        description: "Ocorreu um erro ao excluir o cliente. Por favor, tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setClienteParaExcluir(null);
     }
+    
+    setClienteParaExcluir(null);
   };
 
   return {
