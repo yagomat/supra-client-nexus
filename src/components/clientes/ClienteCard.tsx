@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Cliente } from "@/types";
 import { ClienteStatusBadge } from "./ClienteStatusBadge";
 import { ClienteInfoGrid } from "./ClienteInfoGrid";
 import { ClienteActionButtons } from "./ClienteActionButtons";
+import { WhatsAppTemplateModal } from "./WhatsAppTemplateModal";
 import { PaymentStatusButton } from "@/components/pagamentos/PaymentStatusButton";
 import { usePaymentStatus } from "@/hooks/payments/usePaymentStatus";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +26,7 @@ export const ClienteCard = ({
 }: ClienteCardProps) => {
   const { handleChangeStatus } = usePaymentStatus();
   const [statusPagamento, setStatusPagamento] = useState("nao_pago");
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
 
   // Buscar status de pagamento inicial e configurar listener em tempo real
   useEffect(() => {
@@ -99,34 +100,47 @@ export const ClienteCard = ({
     }
   };
 
+  const handleSendWhatsApp = (cliente: Cliente) => {
+    setIsWhatsAppModalOpen(true);
+  };
+
   return (
-    <Card className="w-full mb-4">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">{cliente.nome}</CardTitle>
-          <ClienteStatusBadge status={cliente.status || 'inativo'} />
-        </div>
-      </CardHeader>
+    <>
+      <Card className="w-full mb-4">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg">{cliente.nome}</CardTitle>
+            <ClienteStatusBadge status={cliente.status || 'inativo'} />
+          </div>
+        </CardHeader>
 
-      <CardContent className="space-y-3">
-        <ClienteInfoGrid cliente={cliente} />
+        <CardContent className="space-y-3">
+          <ClienteInfoGrid cliente={cliente} />
 
-        <div className="flex gap-2 pt-2">
-          <div className="flex-1">
-            <PaymentStatusButton
-              status={statusPagamento}
-              onStatusChange={handlePaymentStatusChange}
-              isList={true}
+          <div className="flex gap-2 pt-2">
+            <div className="flex-1">
+              <PaymentStatusButton
+                status={statusPagamento}
+                onStatusChange={handlePaymentStatusChange}
+                isList={true}
+              />
+            </div>
+
+            <ClienteActionButtons
+              cliente={cliente}
+              onVerDetalhes={onVerDetalhes}
+              onConfirmarExclusao={onConfirmarExclusao}
+              onSendWhatsApp={handleSendWhatsApp}
             />
           </div>
+        </CardContent>
+      </Card>
 
-          <ClienteActionButtons
-            cliente={cliente}
-            onVerDetalhes={onVerDetalhes}
-            onConfirmarExclusao={onConfirmarExclusao}
-          />
-        </div>
-      </CardContent>
-    </Card>
+      <WhatsAppTemplateModal
+        isOpen={isWhatsAppModalOpen}
+        onClose={() => setIsWhatsAppModalOpen(false)}
+        cliente={cliente}
+      />
+    </>
   );
 };
