@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -74,14 +75,9 @@ export const AlertCards = ({ clientesInativos, appsVencendo, clientesEmRiscoDeta
                   </div>
                 </div>
               ) : (
-                <Alert variant="default" className="bg-amber-50 dark:bg-amber-950/20">
-                  <AlertTitle className="text-amber-800 dark:text-amber-300">
-                    Nenhum cliente ficará inativo nos próximos 3 dias
-                  </AlertTitle>
-                  <AlertDescription className="text-amber-700 dark:text-amber-400">
-                    Todos os clientes estão com os pagamentos em dia.
-                  </AlertDescription>
-                </Alert>
+                <p className="text-muted-foreground">
+                  Nenhum cliente ficará inativo nos próximos 3 dias.
+                </p>
               )}
             </div>
           )}

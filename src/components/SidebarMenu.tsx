@@ -32,7 +32,7 @@ export function SidebarMenu({ onCollapseChange }: { onCollapseChange?: (collapse
   const menuItems = [
     { path: "/dashboard", icon: <LayoutDashboard />, text: "Dashboard" },
     { path: "/clientes", icon: <Users />, text: "Clientes" },
-    { path: "/banco-dados", icon: <Database />, text: "Banco de Dados" },
+    { path: "/banco-dados", icon: <Database />, text: "Dados de Cadastro" },
     { path: "/templates", icon: <MessageSquare />, text: "Templates" },
     { path: "/configuracoes", icon: <Settings />, text: "Configurações" }
   ];

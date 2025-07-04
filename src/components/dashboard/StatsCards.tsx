@@ -36,7 +36,7 @@ export const StatsCards = ({ stats, loading }: StatsCardsProps) => {
         loading={loading}
       />
       <StatCard
-        title="Pagamentos Pendentes"
+        title="Pagamentos Pendentes (Mês Atual)"
         value={loading ? "" : stats?.pagamentos_pendentes || "0"}
         icon={<AlertCircle size={24} />}
         loading={loading}

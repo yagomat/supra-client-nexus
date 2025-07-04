@@ -36,7 +36,7 @@ export function MobileMenu() {
       icon: <Users size={20} />,
     },
     {
-      name: "Banco de Dados",
+      name: "Dados de Cadastro",
       href: "/banco-dados",
       icon: <Database size={20} />,
     },

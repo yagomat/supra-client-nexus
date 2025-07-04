@@ -33,10 +33,6 @@ export const DashboardContent = ({ stats, loading }: DashboardContentProps) => {
 
   return (
     <div className="flex flex-col space-y-4 w-full">
-      <p className="text-muted-foreground">
-        Bem-vindo ao seu painel de gestão de clientes. Aqui você encontra um resumo das suas estatísticas.
-      </p>
-
       <StatsCards stats={stats} loading={loading} />
 
       {/* New alert cards */}

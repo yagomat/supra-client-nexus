@@ -16,7 +16,7 @@ import {
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
   { name: "Clientes", href: "/clientes", icon: Users },
-  { name: "Banco de Dados", href: "/banco-dados", icon: Database },
+  { name: "Dados de Cadastro", href: "/banco-dados", icon: Database },
   { name: "Templates", href: "/templates", icon: MessageSquare },
   { name: "Configurações", href: "/configuracoes", icon: Settings },
 ];

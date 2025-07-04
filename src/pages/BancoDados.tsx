@@ -31,7 +31,7 @@ const BancoDados = () => {
   } = useBancoDados();
 
   return (
-    <DashboardLayout title="Banco de Dados">
+    <DashboardLayout title="Dados de Cadastro">
       <div className="space-y-6">
         <div>
           <p className="text-muted-foreground">
