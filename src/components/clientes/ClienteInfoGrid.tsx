@@ -3,6 +3,7 @@ import React from "react";
 import { Phone, Calendar, Server } from "lucide-react";
 import { Cliente } from "@/types";
 import { formatPhoneNumber } from "./table/PhoneFormatter";
+import { DueDateInfo } from "./DueDateInfo";
 
 interface ClienteInfoGridProps {
   cliente: Cliente;
@@ -22,6 +23,9 @@ export const ClienteInfoGrid = ({ cliente }: ClienteInfoGridProps) => {
       <div className="flex items-center gap-1 md:col-span-3">
         <Server className="w-3 h-3" />
         <span className="truncate">{cliente.servidor}</span>
+      </div>
+      <div className="flex items-center gap-1 md:col-span-3">
+        <DueDateInfo cliente={cliente} />
       </div>
     </div>
   );
