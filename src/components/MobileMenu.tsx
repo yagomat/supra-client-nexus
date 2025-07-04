@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   Users,
   Database,
+  MessageSquare,
   Settings,
   LogOut,
   X
@@ -38,6 +39,11 @@ export function MobileMenu() {
       name: "Banco de Dados",
       href: "/banco-dados",
       icon: <Database size={20} />,
+    },
+    {
+      name: "Templates",
+      href: "/templates",
+      icon: <MessageSquare size={20} />,
     },
     {
       name: "Configurações",

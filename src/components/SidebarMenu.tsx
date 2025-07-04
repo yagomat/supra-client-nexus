@@ -5,6 +5,7 @@ import {
   LayoutDashboard, 
   Users, 
   Database, 
+  MessageSquare,
   Settings,
   ChevronLeft, 
   ChevronRight
@@ -32,6 +33,7 @@ export function SidebarMenu({ onCollapseChange }: { onCollapseChange?: (collapse
     { path: "/dashboard", icon: <LayoutDashboard />, text: "Dashboard" },
     { path: "/clientes", icon: <Users />, text: "Clientes" },
     { path: "/banco-dados", icon: <Database />, text: "Banco de Dados" },
+    { path: "/templates", icon: <MessageSquare />, text: "Templates" },
     { path: "/configuracoes", icon: <Settings />, text: "Configurações" }
   ];
 

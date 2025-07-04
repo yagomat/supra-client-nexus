@@ -9,13 +9,15 @@ import {
   Settings,
   Menu,
   X,
-  Database
+  Database,
+  MessageSquare
 } from "lucide-react";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
   { name: "Clientes", href: "/clientes", icon: Users },
   { name: "Banco de Dados", href: "/banco-dados", icon: Database },
+  { name: "Templates", href: "/templates", icon: MessageSquare },
   { name: "Configurações", href: "/configuracoes", icon: Settings },
 ];
 
