@@ -33,12 +33,6 @@ const BancoDados = () => {
   return (
     <DashboardLayout title="Dados de Cadastro">
       <div className="space-y-6">
-        <div>
-          <p className="text-muted-foreground">
-            Gerencie os valores predefinidos utilizados no sistema.
-          </p>
-        </div>
-
         {loading ? (
           <div className="flex items-center justify-center py-10">
             <Loader2 className="mr-2 h-8 w-8 animate-spin text-primary" />

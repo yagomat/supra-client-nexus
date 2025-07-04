@@ -37,7 +37,8 @@ const tiposMensagem: Array<{
 ];
 
 const placeholders = [
-  { placeholder: '{nome}', descricao: 'Nome do cliente' },
+  { placeholder: '{nome}', descricao: 'Nome completo do cliente' },
+  { placeholder: '{primeiro_nome}', descricao: 'Primeiro nome do cliente' },
   { placeholder: '{dias_vencimento}', descricao: 'Dias para vencer ou em atraso' },
   { placeholder: '{data_vencimento}', descricao: 'Data de vencimento (dd/mm/aaaa)' },
   { placeholder: '{valor_plano}', descricao: 'Valor do plano (R$ 00,00)' }
@@ -91,13 +92,6 @@ export const MensagensWhatsAppTab = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium">Templates Padrão do Sistema</h3>
-        <p className="text-sm text-muted-foreground">
-          Configure os templates padrão que serão usados automaticamente pela fila de cobrança.
-        </p>
-      </div>
-
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
