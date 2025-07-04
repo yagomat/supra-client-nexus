@@ -13,7 +13,6 @@ import {
 import {
   LayoutDashboard,
   Users,
-  CreditCard,
   Database,
   Settings,
   LogOut,
@@ -36,11 +35,6 @@ export function MobileMenu() {
       icon: <Users size={20} />,
     },
     {
-      name: "Pagamentos",
-      href: "/pagamentos",
-      icon: <CreditCard size={20} />,
-    },
-    {
       name: "Banco de Dados",
       href: "/banco-dados",
       icon: <Database size={20} />,
@@ -54,7 +48,7 @@ export function MobileMenu() {
 
   // Function to check if a specific route is active
   const isRouteActive = (href: string) => {
-    // Exact match for paths like /dashboard, /pagamentos, etc.
+    // Exact match for paths like /dashboard, /banco-dados, etc.
     if (href === location.pathname) return true;
     
     // Special case for /clientes - match exact path or related routes

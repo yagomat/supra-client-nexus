@@ -8,7 +8,6 @@ import Dashboard from "./pages/Dashboard";
 import CadastrarCliente from "./pages/CadastrarCliente";
 import EditarCliente from "./pages/EditarCliente";
 import ListaClientes from "./pages/ListaClientes";
-import GestaoPagamentos from "./pages/GestaoPagamentos";
 import BancoDados from "./pages/BancoDados";
 import Configuracoes from "./pages/Configuracoes";
 import NotFound from "./pages/NotFound";
@@ -57,7 +56,6 @@ export const AppRoutes = () => {
       <Route path="/clientes" element={<PrivateRoute><ListaClientes /></PrivateRoute>} />
       <Route path="/clientes/cadastrar" element={<PrivateRoute><CadastrarCliente /></PrivateRoute>} />
       <Route path="/clientes/editar/:id" element={<PrivateRoute><EditarCliente /></PrivateRoute>} />
-      <Route path="/pagamentos" element={<PrivateRoute><GestaoPagamentos /></PrivateRoute>} />
       <Route path="/banco-dados" element={<PrivateRoute><BancoDados /></PrivateRoute>} />
       <Route path="/configuracoes" element={<PrivateRoute><Configuracoes /></PrivateRoute>} />
       

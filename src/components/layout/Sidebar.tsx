@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 import { 
   Home, 
   Users, 
-  CreditCard, 
   Settings,
   Menu,
   X,
@@ -16,7 +15,6 @@ import {
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
   { name: "Clientes", href: "/clientes", icon: Users },
-  { name: "Pagamentos", href: "/pagamentos", icon: CreditCard },
   { name: "Banco de Dados", href: "/banco-dados", icon: Database },
   { name: "Configurações", href: "/configuracoes", icon: Settings },
 ];
