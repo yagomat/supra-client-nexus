@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Cliente } from "@/types";
@@ -115,7 +116,7 @@ export const ClienteCard = ({
         </CardHeader>
 
         <CardContent className="space-y-3">
-          <ClienteInfoGrid cliente={cliente} />
+          <ClienteInfoGrid cliente={cliente} statusPagamento={statusPagamento} />
 
           <div className="flex gap-2 pt-2">
             <div className="flex-1">

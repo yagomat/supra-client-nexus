@@ -6,10 +6,11 @@ import { useDaysCalculation } from "@/hooks/cliente/useDaysCalculation";
 
 interface DueDateInfoProps {
   cliente: Cliente;
+  statusPagamento?: string;
 }
 
-export const DueDateInfo = ({ cliente }: DueDateInfoProps) => {
-  const daysInfo = useDaysCalculation(cliente);
+export const DueDateInfo = ({ cliente, statusPagamento }: DueDateInfoProps) => {
+  const daysInfo = useDaysCalculation(cliente, statusPagamento);
   
   const formatDueInfo = () => {
     if (daysInfo.type === 'overdue') {

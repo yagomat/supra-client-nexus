@@ -7,9 +7,10 @@ import { DueDateInfo } from "./DueDateInfo";
 
 interface ClienteInfoGridProps {
   cliente: Cliente;
+  statusPagamento?: string;
 }
 
-export const ClienteInfoGrid = ({ cliente }: ClienteInfoGridProps) => {
+export const ClienteInfoGrid = ({ cliente, statusPagamento }: ClienteInfoGridProps) => {
   return (
     <div className="grid grid-cols-2 gap-3 text-sm">
       <div className="flex items-center gap-2">
@@ -25,7 +26,7 @@ export const ClienteInfoGrid = ({ cliente }: ClienteInfoGridProps) => {
         <span className="truncate">{cliente.servidor}</span>
       </div>
       <div className="flex items-center gap-2">
-        <DueDateInfo cliente={cliente} />
+        <DueDateInfo cliente={cliente} statusPagamento={statusPagamento} />
       </div>
     </div>
   );
