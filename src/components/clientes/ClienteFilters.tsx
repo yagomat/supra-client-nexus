@@ -32,52 +32,48 @@ export const ClienteFilters = ({
   onOrderChange,
 }: ClienteFiltersProps) => {
   return (
-    <div className="bg-muted/50 p-4 rounded-lg">
-      <div className="flex items-center justify-between gap-4">
-        {/* Lado esquerdo: Campo de busca, filtro de status e ordenação */}
-        <div className="flex items-center gap-3 flex-1">
-          {/* Campo de busca */}
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Buscar clientes..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-
-          {/* Filtro de status */}
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos</SelectItem>
-                <SelectItem value="ativo">Ativo</SelectItem>
-                <SelectItem value="inativo">Inativo</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Ordenação */}
-          <div className="flex items-center gap-2">
-            <SortDesc className="h-4 w-4 text-muted-foreground" />
-            <ClienteOrderSelector orderBy={orderBy} onOrderChange={onOrderChange} />
-          </div>
+    <div className="bg-muted/50 p-4 rounded-lg space-y-4">
+      {/* Primeira linha: Campo de busca */}
+      <div className="flex items-center gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Buscar clientes..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
         </div>
-
-        {/* Lado direito: Botão limpar filtro */}
         <Button
           variant="outline"
           onClick={handleLimparFiltros}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 shrink-0"
         >
           <X className="h-4 w-4" />
           Limpar filtro
         </Button>
+      </div>
+
+      {/* Segunda linha: Filtros e ordenação */}
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos</SelectItem>
+              <SelectItem value="ativo">Ativo</SelectItem>
+              <SelectItem value="inativo">Inativo</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <SortDesc className="h-4 w-4 text-muted-foreground" />
+          <ClienteOrderSelector orderBy={orderBy} onOrderChange={onOrderChange} />
+        </div>
       </div>
     </div>
   );
