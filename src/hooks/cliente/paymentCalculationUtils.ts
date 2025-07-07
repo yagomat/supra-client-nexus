@@ -2,7 +2,7 @@
 import { Cliente, Pagamento } from "@/types";
 
 export interface PaymentCalculationResult {
-  type: 'overdue' | 'today' | 'upcoming';
+  type: 'overdue' | 'today' | 'upcoming' | 'no_info';
   days: number;
   lastPaymentDate?: Date;
   nextDueDate?: Date;
@@ -30,17 +30,52 @@ export const calculatePaymentStatus = (
     return calculateOriginalLogic(cliente, currentDay, currentMonth, currentYear);
   }
 
-  // Encontrar último pagamento válido
+  // Separar pagamentos passados/presentes e futuros
+  const pastAndCurrentPayments = validPayments.filter(p => 
+    p.ano < currentYear || (p.ano === currentYear && p.mes <= currentMonth)
+  );
+  
+  const futurePayments = validPayments.filter(p => 
+    p.ano > currentYear || (p.ano === currentYear && p.mes > currentMonth)
+  );
+
+  // Cenário: Cliente com pagamentos futuros mas sem pagamento presente
+  if (futurePayments.length > 0 && pastAndCurrentPayments.length > 0) {
+    // Verificar se tem pagamento no mês atual
+    const currentMonthPayment = validPayments.find(p => 
+      p.ano === currentYear && p.mes === currentMonth
+    );
+
+    if (!currentMonthPayment) {
+      // Não tem pagamento presente - mostrar vencimento baseado no último pagamento passado
+      const lastPastPayment = pastAndCurrentPayments[0];
+      const nextDueDate = calculateNextDueDate(lastPastPayment, cliente.dia_vencimento);
+      const daysDiff = Math.ceil((today.getTime() - nextDueDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      return {
+        type: 'overdue',
+        days: daysDiff,
+        lastPaymentDate: new Date(lastPastPayment.ano, lastPastPayment.mes - 1),
+        nextDueDate
+      };
+    }
+  }
+
+  // Cenário: Cliente com apenas pagamentos futuros (sem histórico passado/presente)
+  if (futurePayments.length > 0 && pastAndCurrentPayments.length === 0) {
+    return {
+      type: 'no_info',
+      days: 0
+    };
+  }
+
+  // Encontrar último pagamento válido (incluindo presente)
   const lastPayment = validPayments[0];
   
   // Calcular data de vencimento baseada no último pagamento
   const nextDueDate = calculateNextDueDate(lastPayment, cliente.dia_vencimento);
   
   // Verificar se há pagamentos futuros
-  const futurePayments = validPayments.filter(p => 
-    p.ano > currentYear || (p.ano === currentYear && p.mes > currentMonth)
-  );
-
   if (futurePayments.length > 0) {
     // Se há pagamentos futuros, calcular baseado no mais próximo
     const nextFuturePayment = futurePayments
@@ -159,6 +194,11 @@ export const calculateSortingPriority = (
   allPayments: Pagamento[]
 ): number => {
   const result = calculatePaymentStatus(cliente, allPayments);
+  
+  // Clientes sem informação de vencimento vão para o final
+  if (result.type === 'no_info') {
+    return 10000;
+  }
   
   if (cliente.status === 'inativo') {
     // Clientes inativos têm prioridade maior (valores negativos)

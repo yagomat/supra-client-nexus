@@ -12,6 +12,11 @@ interface DueDateInfoProps {
 export const DueDateInfo = ({ cliente, allPayments }: DueDateInfoProps) => {
   const daysInfo = useDaysCalculation(cliente, allPayments);
   
+  // Se não há informação de vencimento, não mostrar nada
+  if (daysInfo.type === 'no_info') {
+    return null;
+  }
+  
   const formatDueInfo = () => {
     if (daysInfo.type === 'overdue') {
       return `Venceu há ${daysInfo.days} dia${daysInfo.days !== 1 ? 's' : ''}`;
