@@ -1,16 +1,16 @@
 
 import React from "react";
 import { Calendar } from "lucide-react";
-import { Cliente } from "@/types";
+import { Cliente, Pagamento } from "@/types";
 import { useDaysCalculation } from "@/hooks/cliente/useDaysCalculation";
 
 interface DueDateInfoProps {
   cliente: Cliente;
-  statusPagamento?: string;
+  allPayments: Pagamento[];
 }
 
-export const DueDateInfo = ({ cliente, statusPagamento }: DueDateInfoProps) => {
-  const daysInfo = useDaysCalculation(cliente, statusPagamento);
+export const DueDateInfo = ({ cliente, allPayments }: DueDateInfoProps) => {
+  const daysInfo = useDaysCalculation(cliente, allPayments);
   
   const formatDueInfo = () => {
     if (daysInfo.type === 'overdue') {

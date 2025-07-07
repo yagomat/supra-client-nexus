@@ -8,6 +8,7 @@ import { ClienteActionButtons } from "./ClienteActionButtons";
 import { WhatsAppTemplateModal } from "./WhatsAppTemplateModal";
 import { PaymentStatusButton } from "@/components/pagamentos/PaymentStatusButton";
 import { usePaymentStatus } from "@/hooks/payments/usePaymentStatus";
+import { usePaymentHistory } from "@/hooks/cliente/usePaymentHistory";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ClienteCardProps {
@@ -26,12 +27,13 @@ export const ClienteCard = ({
   anoAtual
 }: ClienteCardProps) => {
   const { handleChangeStatus } = usePaymentStatus();
+  const { payments: allPayments, loading: paymentsLoading } = usePaymentHistory(cliente.id);
   const [statusPagamento, setStatusPagamento] = useState("nao_pago");
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
 
-  // Buscar status de pagamento inicial e configurar listener em tempo real
+  // Buscar status de pagamento do mês atual
   useEffect(() => {
-    const fetchPaymentStatus = async () => {
+    const fetchCurrentMonthPaymentStatus = async () => {
       try {
         const { data, error } = await supabase
           .from('pagamentos')
@@ -52,11 +54,11 @@ export const ClienteCard = ({
       }
     };
 
-    fetchPaymentStatus();
+    fetchCurrentMonthPaymentStatus();
 
-    // Configurar listener em tempo real para este cliente específico
+    // Configurar listener em tempo real para o mês atual
     const channel = supabase
-      .channel(`pagamento-${cliente.id}-${mesAtual}-${anoAtual}`)
+      .channel(`pagamento-atual-${cliente.id}-${mesAtual}-${anoAtual}`)
       .on('postgres_changes', 
         { 
           event: '*', 
@@ -105,6 +107,19 @@ export const ClienteCard = ({
     setIsWhatsAppModalOpen(true);
   };
 
+  if (paymentsLoading) {
+    return (
+      <Card className="w-full mb-4">
+        <CardContent className="p-6">
+          <div className="animate-pulse space-y-3">
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <>
       <Card className="w-full mb-4">
@@ -116,7 +131,7 @@ export const ClienteCard = ({
         </CardHeader>
 
         <CardContent className="space-y-3">
-          <ClienteInfoGrid cliente={cliente} statusPagamento={statusPagamento} />
+          <ClienteInfoGrid cliente={cliente} allPayments={allPayments} />
 
           <div className="flex gap-2 pt-2">
             <div className="flex-1">
