@@ -64,8 +64,10 @@ const CadastrarCliente = () => {
     form.setValue("possui_tela_adicional", possuiTelaAdicional);
   }, [possuiTelaAdicional, form]);
 
-  // Função para validar campos obrigatórios e mostrar mensagem
+  // Função para validar campos obrigatórios e tratar datas
   const handleSubmitWithValidation = (data: ClienteFormValues) => {
+    console.log("Dados do formulário antes da validação:", data);
+    
     const requiredFields = [
       { field: 'nome', name: 'Nome' },
       { field: 'servidor', name: 'Servidor' },
@@ -93,8 +95,17 @@ const CadastrarCliente = () => {
       return;
     }
 
-    // Se todos os campos estão preenchidos, submeter o formulário
-    onSubmit(data);
+    // Tratar campos de data - converter strings vazias para null
+    const sanitizedData = {
+      ...data,
+      data_licenca_aplicativo: data.data_licenca_aplicativo === "" ? null : data.data_licenca_aplicativo,
+      data_licenca_2: data.data_licenca_2 === "" ? null : data.data_licenca_2,
+    };
+
+    console.log("Dados sanitizados:", sanitizedData);
+
+    // Submeter o formulário com dados sanitizados
+    onSubmit(sanitizedData);
   };
 
   if (loading) {
