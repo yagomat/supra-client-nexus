@@ -1,31 +1,68 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, PlusCircle } from "lucide-react";
-import { TextareaField } from "@/components/form/TextareaField";
-import { useCadastrarClienteForm } from "@/hooks/useCadastrarClienteForm";
+import { Loader2, Shield, AlertTriangle } from "lucide-react";
+import { useSecureClienteForm } from "@/hooks/cliente/useSecureClienteForm";
+import { getValoresPredefinidos } from "@/services/valoresPredefinidosService";
+import { ValoresPredefinidos } from "@/types";
+import { useToast } from "@/components/ui/use-toast";
 import { CadastrarClienteBasicInformation } from "@/components/cliente/form-sections/CadastrarClienteBasicInformation";
 import { CadastrarClienteMainScreen } from "@/components/cliente/form-sections/CadastrarClienteMainScreen";
 import { CadastrarClienteAdditionalScreen } from "@/components/cliente/form-sections/CadastrarClienteAdditionalScreen";
 import { ObservationsSection } from "@/components/cliente/form-sections/ObservationsSection";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const CadastrarCliente = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [valoresPredefinidos, setValoresPredefinidos] = useState<ValoresPredefinidos | null>(null);
+  const [possuiTelaAdicional, setPossuiTelaAdicional] = useState(false);
+
+  // Usar o hook seguro para criação de cliente
   const {
     form,
-    loading,
-    submitting,
-    valoresPredefinidos,
-    possuiTelaAdicional,
-    setPossuiTelaAdicional,
-    handleSubmit
-  } = useCadastrarClienteForm();
+    onSubmit,
+    isSubmitting,
+    securityStatus,
+    isFormValid,
+    realTimeValidation,
+    toggleRealTimeValidation
+  } = useSecureClienteForm({ 
+    mode: "create"
+  });
+
+  // Carregar valores predefinidos
+  useEffect(() => {
+    const fetchValoresPredefinidos = async () => {
+      try {
+        setLoading(true);
+        const data = await getValoresPredefinidos();
+        setValoresPredefinidos(data);
+      } catch (error) {
+        console.error("Erro ao buscar valores predefinidos", error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar os valores predefinidos",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchValoresPredefinidos();
+  }, [toast]);
+
+  // Sincronizar switch de tela adicional com formulário
+  useEffect(() => {
+    form.setValue("possui_tela_adicional", possuiTelaAdicional);
+  }, [possuiTelaAdicional, form]);
 
   if (loading) {
     return (
@@ -33,7 +70,7 @@ const CadastrarCliente = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-center h-64">
             <Loader2 className="mr-2 h-8 w-8 animate-spin text-primary" />
-            <span className="text-lg">Carregando...</span>
+            <span className="text-lg">Carregando valores predefinidos...</span>
           </div>
         </div>
       </DashboardLayout>
@@ -43,14 +80,39 @@ const CadastrarCliente = () => {
   return (
     <DashboardLayout title="Cadastrar Cliente">
       <div className="space-y-6">
-        <div>
-          <p className="text-muted-foreground">
-            Preencha os campos abaixo para cadastrar um novo cliente.
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-muted-foreground">
+              Preencha os campos abaixo para cadastrar um novo cliente com validação de segurança.
+            </p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Shield className="h-4 w-4 text-green-600" />
+            <span className="text-sm text-muted-foreground">Validação Segura</span>
+          </div>
         </div>
 
+        {/* Status de Segurança */}
+        {securityStatus.hasErrors && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              {securityStatus.errors.join(", ")}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {securityStatus.hasWarnings && (
+          <Alert>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              {securityStatus.warnings.join(", ")}
+            </AlertDescription>
+          </Alert>
+        )}
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)}>
+          <form onSubmit={onSubmit}>
             <Card className="mb-6">
               <CardHeader>
                 <CardTitle>Informações Básicas</CardTitle>
@@ -59,7 +121,7 @@ const CadastrarCliente = () => {
                 <CadastrarClienteBasicInformation 
                   control={form.control} 
                   valoresPredefinidos={valoresPredefinidos} 
-                  disabled={submitting} 
+                  disabled={isSubmitting} 
                 />
               </CardContent>
             </Card>
@@ -72,7 +134,7 @@ const CadastrarCliente = () => {
                 <CadastrarClienteMainScreen 
                   control={form.control} 
                   valoresPredefinidos={valoresPredefinidos} 
-                  disabled={submitting} 
+                  disabled={isSubmitting} 
                 />
               </CardContent>
             </Card>
@@ -82,7 +144,7 @@ const CadastrarCliente = () => {
                 id="possuiTelaAdicional"
                 checked={possuiTelaAdicional}
                 onCheckedChange={setPossuiTelaAdicional}
-                disabled={submitting}
+                disabled={isSubmitting}
               />
               <label
                 htmlFor="possuiTelaAdicional"
@@ -101,7 +163,7 @@ const CadastrarCliente = () => {
                   <CadastrarClienteAdditionalScreen 
                     control={form.control} 
                     valoresPredefinidos={valoresPredefinidos} 
-                    disabled={submitting} 
+                    disabled={isSubmitting} 
                   />
                 </CardContent>
               </Card>
@@ -112,7 +174,39 @@ const CadastrarCliente = () => {
                 <CardTitle>Observações</CardTitle>
               </CardHeader>
               <CardContent>
-                <ObservationsSection control={form.control} disabled={submitting} />
+                <ObservationsSection control={form.control} disabled={isSubmitting} />
+              </CardContent>
+            </Card>
+
+            {/* Controles de Validação Avançada */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Shield className="h-4 w-4" />
+                  <span>Validação de Segurança</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="realTimeValidation"
+                    checked={realTimeValidation}
+                    onCheckedChange={toggleRealTimeValidation}
+                    disabled={isSubmitting}
+                  />
+                  <label
+                    htmlFor="realTimeValidation"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Validação em tempo real
+                  </label>
+                </div>
+                
+                {securityStatus.lastValidated && (
+                  <div className="text-xs text-muted-foreground">
+                    Última validação: {securityStatus.lastValidated.toLocaleTimeString()}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -121,13 +215,18 @@ const CadastrarCliente = () => {
                 variant="outline"
                 type="button"
                 onClick={() => navigate("/clientes")}
-                disabled={submitting}
+                disabled={isSubmitting}
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={submitting}>
-                {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Cadastrar Cliente
+              <Button 
+                type="submit" 
+                disabled={isSubmitting || !isFormValid}
+                className="flex items-center space-x-2"
+              >
+                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                <Shield className="h-4 w-4" />
+                <span>Cadastrar Cliente</span>
               </Button>
             </div>
           </form>
