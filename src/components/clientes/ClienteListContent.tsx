@@ -7,7 +7,6 @@ import { EmptyState } from "@/components/clientes/EmptyState";
 import { LoadingState } from "@/components/clientes/LoadingState";
 import { ClienteFilters } from "@/components/clientes/ClienteFilters";
 import { ClienteExcelButtons } from "@/components/clientes/ClienteExcelButtons";
-import { PerformanceIndicator } from "@/components/clientes/PerformanceIndicator";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { UserPlus } from "lucide-react";
@@ -123,12 +122,8 @@ export const ClienteListContent = ({
           onOrderChange={onOrderChange}
         />
         
-        <div className="flex justify-between items-center">
-          <PerformanceIndicator 
-            totalClientes={allClientes.length}
-            filteredClientes={filteredClientes.length}
-          />
-          <ClienteViewToggle 
+        <div className="flex justify-end items-center">
+          <ClienteViewToggle
             viewMode={viewMode}
             onViewModeChange={setViewMode}
           />
