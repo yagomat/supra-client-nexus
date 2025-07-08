@@ -19,21 +19,26 @@ const Login = () => {
   } = useLoginForm();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <LoginHeader />
-        <form onSubmit={handleSubmit}>
-          <LoginForm
-            email={email}
-            setEmail={setEmail}
-            password={password}
-            setPassword={setPassword}
-            emailError={emailError}
-            generalError={generalError}
-          />
-          <LoginFooter isLoading={isLoading} />
-        </form>
-      </Card>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-subtle p-4">
+      <div className="w-full max-w-md animate-fade-in">
+        <Card className="card-enhanced shadow-large">
+          <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-lg"></div>
+          <div className="relative">
+            <LoginHeader />
+            <form onSubmit={handleSubmit}>
+              <LoginForm
+                email={email}
+                setEmail={setEmail}
+                password={password}
+                setPassword={setPassword}
+                emailError={emailError}
+                generalError={generalError}
+              />
+              <LoginFooter isLoading={isLoading} />
+            </form>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 };

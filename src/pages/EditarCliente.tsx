@@ -87,10 +87,13 @@ const EditarCliente = () => {
   if (loading) {
     return (
       <DashboardLayout title="Editar Cliente">
-        <div className="space-y-6">
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="mr-2 h-8 w-8 animate-spin text-primary" />
-            <span className="text-lg">Carregando dados do cliente...</span>
+        <div className="space-y-8 animate-fade-in">
+          <div className="flex items-center justify-center py-16">
+            <div className="text-center space-y-4">
+              <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
+              <span className="text-lg font-medium">Carregando dados do cliente...</span>
+              <p className="text-muted-foreground">Aguarde enquanto buscamos as informações</p>
+            </div>
           </div>
         </div>
       </DashboardLayout>
@@ -99,22 +102,31 @@ const EditarCliente = () => {
 
   return (
     <DashboardLayout title="Editar Cliente">
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-muted-foreground">
-              Edite as informações do cliente com validação de segurança.
-            </p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Shield className="h-4 w-4 text-green-600" />
-            <span className="text-sm text-muted-foreground">Validação Segura</span>
+      <div className="space-y-8 animate-fade-in">
+        {/* Header com gradiente */}
+        <div className="relative p-6 bg-gradient-card rounded-lg border shadow-soft">
+          <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-lg"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-semibold mb-2 text-foreground">
+                  Editar Cliente
+                </h2>
+                <p className="text-muted-foreground">
+                  Edite as informações do cliente com validação de segurança.
+                </p>
+              </div>
+              <div className="flex items-center space-x-2 bg-green-50 dark:bg-green-900/20 px-3 py-2 rounded-lg">
+                <Shield className="h-4 w-4 text-green-600" />
+                <span className="text-sm font-medium text-green-700 dark:text-green-300">Validação Segura</span>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Status de Segurança */}
         {securityStatus.hasErrors && (
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="animate-scale-in">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
               {securityStatus.errors.join(", ")}
@@ -123,7 +135,7 @@ const EditarCliente = () => {
         )}
 
         {securityStatus.hasWarnings && (
-          <Alert>
+          <Alert className="animate-scale-in">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
               {securityStatus.warnings.join(", ")}
@@ -132,12 +144,17 @@ const EditarCliente = () => {
         )}
 
         <Form {...form}>
-          <form onSubmit={onSubmit}>
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle>Informações Básicas</CardTitle>
+          <form onSubmit={onSubmit} className="space-y-6">
+            <Card className="card-enhanced animate-slide-up">
+              <CardHeader className="bg-gradient-subtle rounded-t-lg">
+                <CardTitle className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-gradient-primary rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-xs">1</span>
+                  </div>
+                  Informações Básicas
+                </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 <BasicInformationSection 
                   control={form.control} 
                   valoresPredefinidos={valoresPredefinidos} 
@@ -146,11 +163,16 @@ const EditarCliente = () => {
               </CardContent>
             </Card>
 
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle>Tela Principal</CardTitle>
+            <Card className="card-enhanced animate-slide-up">
+              <CardHeader className="bg-gradient-subtle rounded-t-lg">
+                <CardTitle className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-gradient-primary rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-xs">2</span>
+                  </div>
+                  Tela Principal
+                </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 <MainScreenSection 
                   control={form.control} 
                   valoresPredefinidos={valoresPredefinidos} 
@@ -159,7 +181,7 @@ const EditarCliente = () => {
               </CardContent>
             </Card>
 
-            <div className="flex items-center space-x-2 mb-6">
+            <div className="flex items-center space-x-3 p-4 bg-gradient-card rounded-lg border border-border/50 animate-slide-up">
               <Switch
                 id="possuiTelaAdicional"
                 checked={possuiTelaAdicional}
@@ -175,11 +197,16 @@ const EditarCliente = () => {
             </div>
 
             {possuiTelaAdicional && (
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle>Tela Adicional</CardTitle>
+              <Card className="card-enhanced animate-scale-in">
+                <CardHeader className="bg-gradient-subtle rounded-t-lg">
+                  <CardTitle className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-gradient-primary rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-xs">3</span>
+                    </div>
+                    Tela Adicional
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-6">
                   <AdditionalScreenSection 
                     control={form.control} 
                     valoresPredefinidos={valoresPredefinidos} 
@@ -189,25 +216,32 @@ const EditarCliente = () => {
               </Card>
             )}
 
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle>Observações</CardTitle>
+            <Card className="card-enhanced animate-slide-up">
+              <CardHeader className="bg-gradient-subtle rounded-t-lg">
+                <CardTitle className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-gradient-primary rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-xs">4</span>
+                  </div>
+                  Observações
+                </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 <ObservationsSection control={form.control} disabled={isSubmitting} />
               </CardContent>
             </Card>
 
             {/* Controles de Validação Avançada */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Shield className="h-4 w-4" />
-                  <span>Validação de Segurança</span>
+            <Card className="card-enhanced animate-slide-up">
+              <CardHeader className="bg-gradient-subtle rounded-t-lg">
+                <CardTitle className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-gradient-primary rounded-full flex items-center justify-center">
+                    <Shield className="h-3 w-3 text-white" />
+                  </div>
+                  Validação de Segurança
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center space-x-2">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center space-x-3 p-3 bg-gradient-card rounded border border-border/50">
                   <Switch
                     id="realTimeValidation"
                     checked={realTimeValidation}
@@ -223,26 +257,27 @@ const EditarCliente = () => {
                 </div>
                 
                 {securityStatus.lastValidated && (
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded">
                     Última validação: {securityStatus.lastValidated.toLocaleTimeString()}
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            <div className="flex justify-end space-x-4">
+            <div className="flex justify-end space-x-4 pt-6 border-t border-border/50">
               <Button
                 variant="outline"
                 type="button"
                 onClick={() => navigate("/clientes")}
                 disabled={isSubmitting}
+                className="transition-all duration-300 hover:shadow-soft"
               >
                 Cancelar
               </Button>
               <Button 
                 type="submit" 
                 disabled={isSubmitting || !isFormValid}
-                className="flex items-center space-x-2"
+                className="btn-enhanced bg-gradient-primary hover:bg-gradient-primary/90 text-white shadow-soft hover:shadow-medium transition-all duration-300 flex items-center space-x-2"
               >
                 {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 <Shield className="h-4 w-4" />
