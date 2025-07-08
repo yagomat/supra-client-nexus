@@ -1,3 +1,4 @@
+
 import { Cliente, Pagamento } from "@/types";
 
 export interface PaymentCalculationResult {
@@ -12,7 +13,7 @@ export const calculatePaymentStatus = (
   allPayments: Pagamento[]
 ): PaymentCalculationResult => {
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // Normalizar para início do dia
+  today.setHours(0, 0, 0, 0);
   const currentDay = today.getDate();
   const currentMonth = today.getMonth() + 1;
   const currentYear = today.getFullYear();
@@ -21,8 +22,8 @@ export const calculatePaymentStatus = (
   const validPayments = allPayments
     .filter(p => p.status === 'pago' || p.status === 'pago_confianca')
     .sort((a, b) => {
-      if (a.ano !== b.ano) return b.ano - a.ano;
-      return b.mes - a.mes;
+      if (a.ano !== b.ano) return a.ano - b.ano;
+      return a.mes - b.mes;
     });
 
   // Se não há pagamentos válidos, não mostrar informação de vencimento
@@ -33,15 +34,6 @@ export const calculatePaymentStatus = (
     };
   }
 
-  // Separar pagamentos passados/presentes e futuros
-  const pastAndCurrentPayments = validPayments.filter(p => 
-    p.ano < currentYear || (p.ano === currentYear && p.mes <= currentMonth)
-  );
-  
-  const futurePayments = validPayments.filter(p => 
-    p.ano > currentYear || (p.ano === currentYear && p.mes > currentMonth)
-  );
-
   // Verificar se tem pagamento no mês atual
   const currentMonthPayment = validPayments.find(p => 
     p.ano === currentYear && p.mes === currentMonth
@@ -49,13 +41,13 @@ export const calculatePaymentStatus = (
 
   // Para clientes ATIVOS (com pagamento no mês atual)
   if (currentMonthPayment && cliente.status === 'ativo') {
-    // Encontrar a sequência consecutiva mais longa começando do mês atual
-    const consecutiveSequence = findConsecutiveSequence(validPayments, currentYear, currentMonth);
+    // Encontrar a sequência consecutiva mais longa A PARTIR do mês atual
+    const consecutiveSequence = findConsecutiveSequenceFromCurrent(validPayments, currentYear, currentMonth);
     
     // O vencimento será baseado no último mês da sequência consecutiva
     const lastConsecutivePayment = consecutiveSequence[consecutiveSequence.length - 1];
     const nextDueDate = calculateNextDueDate(lastConsecutivePayment, cliente.dia_vencimento);
-    nextDueDate.setHours(0, 0, 0, 0); // Normalizar para início do dia
+    nextDueDate.setHours(0, 0, 0, 0);
     
     const daysDiff = Math.floor((nextDueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
@@ -82,24 +74,17 @@ export const calculatePaymentStatus = (
 
   // Para clientes INATIVOS (sem pagamento no mês atual ou status inativo)
   
+  // Separar pagamentos passados/presentes dos futuros
+  const pastAndCurrentPayments = validPayments.filter(p => 
+    p.ano < currentYear || (p.ano === currentYear && p.mes <= currentMonth)
+  );
+  
+  const futurePayments = validPayments.filter(p => 
+    p.ano > currentYear || (p.ano === currentYear && p.mes > currentMonth)
+  );
+
   // Cenário: Cliente com pagamentos futuros mas sem pagamento presente
-  if (futurePayments.length > 0 && pastAndCurrentPayments.length > 0) {
-    // Mostrar vencimento baseado no último pagamento passado (em atraso)
-    const lastPastPayment = pastAndCurrentPayments[0];
-    const nextDueDate = calculateNextDueDate(lastPastPayment, cliente.dia_vencimento);
-    nextDueDate.setHours(0, 0, 0, 0); // Normalizar para início do dia
-    
-    const daysDiff = Math.floor((today.getTime() - nextDueDate.getTime()) / (1000 * 60 * 60 * 24));
-
-    return {
-      type: 'overdue',
-      days: Math.max(daysDiff, 1), // Garantir que seja pelo menos 1 dia
-      lastPaymentDate: new Date(lastPastPayment.ano, lastPastPayment.mes - 1),
-      nextDueDate
-    };
-  }
-
-  // Cenário: Cliente com apenas pagamentos futuros (sem histórico passado/presente)
+  // IGNORAR pagamentos futuros isolados para cálculo de vencimento
   if (futurePayments.length > 0 && pastAndCurrentPayments.length === 0) {
     return {
       type: 'no_info',
@@ -107,11 +92,21 @@ export const calculatePaymentStatus = (
     };
   }
 
-  // Cliente inativo com histórico de pagamentos
+  // Cliente com histórico de pagamentos (mas sem pagamento atual)
   if (pastAndCurrentPayments.length > 0) {
-    const lastPayment = pastAndCurrentPayments[0];
+    // Encontrar a sequência consecutiva mais recente que termina no passado/presente
+    const lastConsecutiveSequence = findLastConsecutiveSequence(pastAndCurrentPayments, currentYear, currentMonth);
+    
+    if (lastConsecutiveSequence.length === 0) {
+      return {
+        type: 'no_info',
+        days: 0
+      };
+    }
+
+    const lastPayment = lastConsecutiveSequence[lastConsecutiveSequence.length - 1];
     const nextDueDate = calculateNextDueDate(lastPayment, cliente.dia_vencimento);
-    nextDueDate.setHours(0, 0, 0, 0); // Normalizar para início do dia
+    nextDueDate.setHours(0, 0, 0, 0);
     
     const daysDiff = Math.floor((today.getTime() - nextDueDate.getTime()) / (1000 * 60 * 60 * 24));
 
@@ -144,7 +139,8 @@ export const calculatePaymentStatus = (
   };
 };
 
-const findConsecutiveSequence = (payments: Pagamento[], startYear: number, startMonth: number): Pagamento[] => {
+// Nova função para encontrar sequência consecutiva A PARTIR do mês atual
+const findConsecutiveSequenceFromCurrent = (payments: Pagamento[], startYear: number, startMonth: number): Pagamento[] => {
   const sequence: Pagamento[] = [];
   let currentYear = startYear;
   let currentMonth = startMonth;
@@ -164,6 +160,39 @@ const findConsecutiveSequence = (payments: Pagamento[], startYear: number, start
     if (currentMonth > 12) {
       currentMonth = 1;
       currentYear++;
+    }
+  }
+
+  return sequence;
+};
+
+// Nova função para encontrar a última sequência consecutiva no passado/presente
+const findLastConsecutiveSequence = (payments: Pagamento[], currentYear: number, currentMonth: number): Pagamento[] => {
+  if (payments.length === 0) return [];
+
+  // Ordenar por data decrescente
+  const sortedPayments = [...payments].sort((a, b) => {
+    if (a.ano !== b.ano) return b.ano - a.ano;
+    return b.mes - a.mes;
+  });
+
+  // Começar do pagamento mais recente e ir para trás
+  const sequence: Pagamento[] = [];
+  let expectedYear = sortedPayments[0].ano;
+  let expectedMonth = sortedPayments[0].mes;
+
+  for (const payment of sortedPayments) {
+    if (payment.ano === expectedYear && payment.mes === expectedMonth) {
+      sequence.unshift(payment); // Adicionar no início para manter ordem cronológica
+      
+      // Calcular mês anterior
+      expectedMonth--;
+      if (expectedMonth < 1) {
+        expectedMonth = 12;
+        expectedYear--;
+      }
+    } else {
+      break; // Gap encontrado, parar a sequência
     }
   }
 
