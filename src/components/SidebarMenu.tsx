@@ -42,16 +42,17 @@ export function SidebarMenu({ onCollapseChange }: { onCollapseChange?: (collapse
   };
 
   return (
-    <aside className={`fixed inset-y-0 left-0 z-20 flex flex-col border-r border-gray-800 shadow-sm transition-all duration-300 bg-black ${isCollapsed ? "w-[70px]" : "w-64"}`}>
+    <aside className={`fixed inset-y-0 left-0 z-20 flex flex-col border-r border-border bg-sidebar shadow-soft transition-all duration-300 ${isCollapsed ? "w-[70px]" : "w-64"}`}>
       <div className={`flex items-center p-4 ${isCollapsed ? "justify-center" : "justify-between"}`}>
         {!isCollapsed && (
-          <span className="text-xl font-semibold text-white">
+          <span className="text-xl font-semibold text-sidebar-foreground">
             Gestor Connect
           </span>
         )}
         <button 
           onClick={toggleCollapse} 
-          className="p-2 rounded-lg text-white hover:bg-gray-800"
+          className="p-2 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+          title={isCollapsed ? "Expandir menu" : "Recolher menu"}
         >
           {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
         </button>
@@ -62,14 +63,21 @@ export function SidebarMenu({ onCollapseChange }: { onCollapseChange?: (collapse
           <Link
             key={item.path}
             to={item.path}
-            className={`flex items-center p-2 rounded-lg transition-colors ${
+            className={`flex items-center p-3 rounded-lg transition-all duration-200 group ${
               isActive(item.path)
-                ? "bg-blue-600 text-white"
-                : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-soft"
+                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-soft hover:scale-[1.02]"
             } ${isCollapsed ? "justify-center" : ""}`}
+            title={isCollapsed ? item.text : undefined}
           >
-            <div className="w-5 h-5">{item.icon}</div>
-            {!isCollapsed && <span className="ml-3">{item.text}</span>}
+            <div className={`w-5 h-5 ${isActive(item.path) ? "text-sidebar-primary-foreground" : "text-sidebar-foreground group-hover:text-sidebar-accent-foreground"} transition-colors`}>
+              {item.icon}
+            </div>
+            {!isCollapsed && (
+              <span className="ml-3 font-medium transition-all duration-200 group-hover:translate-x-0.5">
+                {item.text}
+              </span>
+            )}
           </Link>
         ))}
       </nav>

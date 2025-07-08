@@ -3,6 +3,11 @@ import { ReactNode, useState } from "react";
 import { SidebarMenu } from "@/components/SidebarMenu";
 import { MobileMenu } from "@/components/MobileMenu";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { Breadcrumb } from "@/components/navigation/Breadcrumb";
+import { QuickActions } from "@/components/navigation/QuickActions";
+import { NavigationHints } from "@/components/navigation/NavigationHints";
+import { BackButton } from "@/components/navigation/BackButton";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { LogOut } from "lucide-react";
@@ -21,6 +26,9 @@ export function DashboardLayout({ children, className, title }: DashboardLayoutP
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { signOut } = useAuth();
   const navigate = useNavigate();
+
+  // Enable keyboard shortcuts
+  useKeyboardShortcuts();
 
   // Listen for sidebar collapse state changes
   const handleSidebarStateChange = (collapsed: boolean) => {
@@ -78,9 +86,15 @@ export function DashboardLayout({ children, className, title }: DashboardLayoutP
           "w-full", 
           isMobile ? "px-0" : "container px-4 py-6"
         )}>
+          <Breadcrumb />
+          <BackButton />
           {children}
         </div>
       </main>
+      
+      {/* Navigation enhancements */}
+      <QuickActions />
+      <NavigationHints />
     </div>
   );
 }
