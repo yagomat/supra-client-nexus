@@ -91,9 +91,7 @@ const EditarCliente = () => {
     const requiredFields = [
       { field: 'nome', name: 'Nome' },
       { field: 'servidor', name: 'Servidor' },
-      { field: 'aplicativo', name: 'Aplicativo' },
-      { field: 'usuario_aplicativo', name: 'Usuário (MAC)' },
-      { field: 'senha_aplicativo', name: 'Senha (Id)' }
+      { field: 'aplicativo', name: 'Aplicativo' }
     ];
 
     const missingFields = requiredFields.filter(({ field }) => !data[field as keyof ClienteFormValues]);
@@ -125,6 +123,8 @@ const EditarCliente = () => {
       uf: data.uf?.trim() === "" ? null : data.uf,
       valor_plano: data.valor_plano?.trim() === "" ? null : data.valor_plano,
       dispositivo_smart: data.dispositivo_smart?.trim() === "" ? null : data.dispositivo_smart,
+      usuario_aplicativo: data.usuario_aplicativo?.trim() === "" ? null : data.usuario_aplicativo,
+      senha_aplicativo: data.senha_aplicativo?.trim() === "" ? null : data.senha_aplicativo,
       dispositivo_smart_2: data.dispositivo_smart_2?.trim() === "" ? null : data.dispositivo_smart_2,
       aplicativo_2: data.aplicativo_2?.trim() === "" ? null : data.aplicativo_2,
       usuario_2: data.usuario_2?.trim() === "" ? null : data.usuario_2,
