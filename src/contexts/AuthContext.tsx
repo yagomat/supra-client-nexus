@@ -36,8 +36,8 @@ const calculateExpiryTime = (session: Session | null): Date | null => {
     return new Date(session.expires_at * 1000);
   }
   
-  // Fallback para 8 horas se não houver informação
-  return new Date(new Date().getTime() + 8 * 60 * 60 * 1000);
+  // Fallback para 24 horas se não houver informação (período mais longo)
+  return new Date(new Date().getTime() + 24 * 60 * 60 * 1000);
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -87,6 +87,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Auto logout silencioso apenas quando a sessão realmente expira
+  useEffect(() => {
+    if (!sessionExpiresAt || !user) return;
+
+    const checkSessionValidity = () => {
+      const now = new Date();
+      const timeLeft = sessionExpiresAt.getTime() - now.getTime();
+      
+      // Só desconecta quando realmente expira (sem margem de tempo)
+      if (timeLeft <= 0) {
+        console.log('Sessão expirada, fazendo logout automático');
+        signOut();
+      }
+    };
+
+    // Verificar a cada 5 minutos se a sessão ainda é válida
+    const interval = setInterval(checkSessionValidity, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, [sessionExpiresAt, user]);
 
   const signIn = async (email: string, password: string) => {
     setLoading(true);
