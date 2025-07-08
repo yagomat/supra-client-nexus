@@ -299,6 +299,14 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: boolean
       }
+      check_profile_rate_limit: {
+        Args: {
+          p_user_id: string
+          p_max_requests?: number
+          p_time_window_minutes?: number
+        }
+        Returns: boolean
+      }
       check_rate_limit: {
         Args: {
           p_user_id: string
@@ -576,6 +584,10 @@ export type Database = {
         }
         Returns: Json
       }
+      secure_update_profile: {
+        Args: { p_user_id: string; p_nome: string; p_telefone: string }
+        Returns: Json
+      }
       secure_update_template: {
         Args: { p_user_id: string; p_tipo: string; p_mensagem: string }
         Returns: Json
@@ -607,6 +619,10 @@ export type Database = {
           p_valor_plano?: number
           p_user_id?: string
         }
+        Returns: Json
+      }
+      validate_profile_data: {
+        Args: { p_nome: string; p_telefone: string }
         Returns: Json
       }
       validate_template_content: {

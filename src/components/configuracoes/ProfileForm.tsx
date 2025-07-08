@@ -3,12 +3,12 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useSecureProfile } from "@/hooks/useSecureProfile";
 
 const profileFormSchema = z.object({
   nome: z
@@ -32,8 +32,7 @@ export type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export function ProfileForm() {
   const { user } = useAuth();
-  const { toast } = useToast();
-  const [isSaving, setIsSaving] = useState(false);
+  const { updateProfile, isUpdating } = useSecureProfile();
 
   const defaultValues: Partial<ProfileFormValues> = {
     nome: user?.nome || "",
@@ -70,40 +69,15 @@ export function ProfileForm() {
     loadUserProfile();
   }, [user?.id, form]);
 
-  const onSubmit = async (data: ProfileFormValues) => {
-    setIsSaving(true);
+const onSubmit = async (data: ProfileFormValues) => {
     try {
-      // Atualiza o nome no metadata do usuário
-      const { error: authError } = await supabase.auth.updateUser({
-        data: { nome: data.nome }
+      await updateProfile({
+        nome: data.nome,
+        telefone: data.telefone || undefined
       });
-
-      if (authError) throw authError;
-
-      // Atualiza o telefone na tabela profiles
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .upsert({
-          id: user?.id,
-          telefone: data.telefone || null
-        });
-
-      if (profileError) throw profileError;
-
-      toast({
-        title: "Perfil atualizado",
-        description: "Suas informações foram salvas com sucesso.",
-      });
-
-    } catch (error: any) {
-      console.error("Erro ao salvar perfil:", error);
-      toast({
-        variant: "destructive",
-        title: "Erro ao salvar",
-        description: error.message || "Não foi possível atualizar o perfil",
-      });
-    } finally {
-      setIsSaving(false);
+    } catch (error) {
+      // Erro já tratado no hook
+      console.error("Erro ao submeter formulário:", error);
     }
   };
 
@@ -160,8 +134,8 @@ export function ProfileForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" disabled={isSaving}>
-          {isSaving ? "Salvando..." : "Salvar alterações"}
+        <Button type="submit" disabled={isUpdating}>
+          {isUpdating ? "Salvando..." : "Salvar alterações"}
         </Button>
       </form>
     </Form>
