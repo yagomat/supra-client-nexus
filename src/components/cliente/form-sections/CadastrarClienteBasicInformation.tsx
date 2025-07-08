@@ -18,6 +18,21 @@ export const CadastrarClienteBasicInformation = ({
   valoresPredefinidos, 
   disabled = false 
 }: CadastrarClienteBasicInformationProps) => {
+  // Format phone number as user types
+  const formatPhoneNumber = (value: string) => {
+    // Remove all non-digit characters
+    const digits = value.replace(/\D/g, '');
+    
+    // Format based on length
+    if (digits.length <= 2) {
+      return digits;
+    } else if (digits.length <= 7) {
+      return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    } else {
+      return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
+    }
+  };
+
   return (
     <div className="space-y-4">
       <FormField
@@ -60,12 +75,23 @@ export const CadastrarClienteBasicInformation = ({
             <FormItem className="md:col-span-2">
               <FormLabel>Telefone</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="11999999999" 
-                  {...field} 
-                  value={field.value || ""} 
-                  disabled={disabled}
-                />
+                <div>
+                  <Input 
+                    placeholder="(00) 00000-0000" 
+                    value={formatPhoneNumber(field.value || '')} 
+                    onChange={(e) => {
+                      // For phone numbers, only allow digits and limit to 11 characters
+                      const digits = e.target.value.replace(/\D/g, '');
+                      if (digits.length <= 11) {
+                        field.onChange(digits);
+                      }
+                    }}
+                    disabled={disabled}
+                  />
+                  <div className="text-xs text-gray-500 text-right mt-0.5">
+                    {(field.value?.length || 0)}/11
+                  </div>
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
