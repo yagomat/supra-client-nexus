@@ -46,24 +46,35 @@ export const useMobileClient = () => {
   const formatarTemplate = (template: MobileTemplate): string => {
     if (!cliente) return template.mensagem;
 
-    // Converter dados do mobile para o formato Cliente
+    // Converter dados do mobile para o formato Cliente completo
     const clienteFormatado = {
       id: cliente.id,
       nome: cliente.nome,
       telefone: cliente.telefone,
+      codigo_pais_telefone: '+55', // Valor padrão
+      uf: null, // Campo opcional
       servidor: cliente.servidor,
       status: cliente.status,
       dia_vencimento: cliente.dia_vencimento,
       valor_plano: cliente.valor_plano,
+      dispositivo_smart: null, // Campo opcional
+      aplicativo: cliente.aplicativo || '',
+      usuario_aplicativo: cliente.usuario_aplicativo || '',
+      senha_aplicativo: cliente.senha_aplicativo || '',
+      data_licenca_aplicativo: null, // Campo opcional
+      possui_tela_adicional: false, // Valor padrão
+      dispositivo_smart_2: null, // Campo opcional
+      aplicativo_2: null, // Campo opcional
+      usuario_2: null, // Campo opcional
+      senha_2: null, // Campo opcional
+      data_licenca_2: null, // Campo opcional
+      observacoes: null, // Campo opcional
       // Campos obrigatórios com valores padrão
       created_at: new Date().toISOString(),
-      user_id: '',
-      aplicativo: '',
-      usuario_aplicativo: '',
-      senha_aplicativo: ''
+      user_id: ''
     };
 
-    // Usar a nova função que calcula corretamente os dados de vencimento
+    // Usar a função que calcula corretamente os dados de vencimento
     return formatarMensagemWhatsAppComCliente(template.mensagem, clienteFormatado, allPayments);
   };
 
