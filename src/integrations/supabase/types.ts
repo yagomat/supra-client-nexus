@@ -308,6 +308,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_valores_predefinidos_rate_limit: {
+        Args: {
+          p_user_id: string
+          p_operation: string
+          p_max_requests?: number
+          p_time_window_minutes?: number
+        }
+        Returns: boolean
+      }
       cliente_pertence_ao_usuario: {
         Args: { cliente_id_param: string }
         Returns: boolean
@@ -508,6 +517,21 @@ export type Database = {
       }
       log_export_attempt: {
         Args: { p_user_id: string; p_count: number }
+        Returns: undefined
+      }
+      log_valores_predefinidos_export: {
+        Args: { p_user_id: string; p_tipo: string; p_count: number }
+        Returns: undefined
+      }
+      log_valores_predefinidos_operation: {
+        Args: {
+          p_user_id: string
+          p_operation: string
+          p_tipo: string
+          p_valor?: string
+          p_valores_count?: number
+          p_ip_address?: string
+        }
         Returns: undefined
       }
       recalculate_all_client_status: {

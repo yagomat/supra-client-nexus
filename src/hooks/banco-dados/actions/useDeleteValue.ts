@@ -71,11 +71,21 @@ export const useDeleteValue = (
       
       if (!typedResult.success) {
         console.error(`Erro na exclusão após todas as tentativas: ${typedResult.message}`);
-        toast({
-          title: "Erro ao excluir valor",
-          description: typedResult.message || "Valor não encontrado no banco de dados.",
-          variant: "destructive",
-        });
+        
+        // Verificar se é erro de rate limiting
+        if (typedResult.message?.includes('Limite de')) {
+          toast({
+            title: "Limite excedido",
+            description: typedResult.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Erro ao excluir valor",
+            description: typedResult.message || "Valor não encontrado no banco de dados.",
+            variant: "destructive",
+          });
+        }
         return false;
       }
       

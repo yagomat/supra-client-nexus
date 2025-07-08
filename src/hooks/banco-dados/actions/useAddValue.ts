@@ -95,7 +95,11 @@ export const useAddValue = (
               return newValues;
             });
           } else {
-            if (typedResult.message === 'Valor já existe') {
+            // Verificar se é erro de rate limiting
+            if (typedResult.message?.includes('Limite de')) {
+              errorCount++;
+              errors.push(`Rate limit: ${typedResult.message}`);
+            } else if (typedResult.message === 'Valor já existe') {
               duplicateCount++;
               duplicateValues.push(value);
             } else {
