@@ -60,19 +60,33 @@ export const useCadastrarClienteForm = () => {
     // Tratar campos de data - converter strings vazias para null
     const sanitizedData = {
       ...data,
-      data_licenca_aplicativo: data.data_licenca_aplicativo === "" ? null : data.data_licenca_aplicativo,
-      data_licenca_2: data.data_licenca_2 === "" ? null : data.data_licenca_2,
+      data_licenca_aplicativo: data.data_licenca_aplicativo?.trim() === "" ? null : data.data_licenca_aplicativo,
+      data_licenca_2: data.data_licenca_2?.trim() === "" ? null : data.data_licenca_2,
+      // Garantir que campos opcionais não sejam strings vazias
+      telefone: data.telefone?.trim() === "" ? null : data.telefone,
+      uf: data.uf?.trim() === "" ? null : data.uf,
+      valor_plano: data.valor_plano?.trim() === "" ? null : data.valor_plano,
+      dispositivo_smart: data.dispositivo_smart?.trim() === "" ? null : data.dispositivo_smart,
+      dispositivo_smart_2: data.dispositivo_smart_2?.trim() === "" ? null : data.dispositivo_smart_2,
+      aplicativo_2: data.aplicativo_2?.trim() === "" ? null : data.aplicativo_2,
+      usuario_2: data.usuario_2?.trim() === "" ? null : data.usuario_2,
+      senha_2: data.senha_2?.trim() === "" ? null : data.senha_2,
+      observacoes: data.observacoes?.trim() === "" ? null : data.observacoes
     };
 
     console.log("Dados sanitizados:", sanitizedData);
 
-    // Submeter usando o método correto do formulário
-    form.setValue("data_licenca_aplicativo", sanitizedData.data_licenca_aplicativo || "");
-    form.setValue("data_licenca_2", sanitizedData.data_licenca_2 || "");
-    
-    // Chamar o onSubmit que já está preparado para ser usado como handler
-    const formEvent = new Event('submit') as any;
-    await originalOnSubmit(formEvent);
+    // Submeter usando o método seguro do hook
+    try {
+      await originalOnSubmit(sanitizedData);
+    } catch (error) {
+      console.error("Erro ao submeter formulário:", error);
+      toast({
+        title: "Erro ao cadastrar cliente",
+        description: "Ocorreu um erro interno. Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCancel = () => {

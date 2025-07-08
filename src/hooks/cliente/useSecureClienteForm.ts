@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -59,10 +60,23 @@ export const useSecureClienteForm = ({
 
   // Converter dados do formulário para Cliente
   const convertFormToCliente = (data: ClienteFormValues): Partial<Cliente> => {
-    return {
+    // Garantir que strings vazias sejam convertidas para null
+    const cleanData = {
       ...data,
-      valor_plano: data.valor_plano ? parseFloat(data.valor_plano) : undefined
+      telefone: data.telefone?.trim() === "" ? null : data.telefone,
+      uf: data.uf?.trim() === "" ? null : data.uf,
+      valor_plano: data.valor_plano?.trim() === "" ? null : parseFloat(data.valor_plano || "0"),
+      dispositivo_smart: data.dispositivo_smart?.trim() === "" ? null : data.dispositivo_smart,
+      data_licenca_aplicativo: data.data_licenca_aplicativo?.trim() === "" ? null : data.data_licenca_aplicativo,
+      dispositivo_smart_2: data.dispositivo_smart_2?.trim() === "" ? null : data.dispositivo_smart_2,
+      aplicativo_2: data.aplicativo_2?.trim() === "" ? null : data.aplicativo_2,
+      usuario_2: data.usuario_2?.trim() === "" ? null : data.usuario_2,
+      senha_2: data.senha_2?.trim() === "" ? null : data.senha_2,
+      data_licenca_2: data.data_licenca_2?.trim() === "" ? null : data.data_licenca_2,
+      observacoes: data.observacoes?.trim() === "" ? null : data.observacoes
     };
+
+    return cleanData;
   };
 
   // Validação em tempo real (debounced)
@@ -93,13 +107,16 @@ export const useSecureClienteForm = ({
   }, [form, realTimeValidation]);
 
   // Submissão do formulário com validação de segurança
-  const onSubmit = async (data: ClienteFormValues) => {
+  const onSubmit = async (data: ClienteFormValues | Partial<Cliente>) => {
     try {
       // Limpar mensagens anteriores
       clearValidationMessages();
       
       // Converter e validar dados antes de submeter
-      const clienteData = convertFormToCliente(data);
+      const clienteData = 'nome' in data ? convertFormToCliente(data as ClienteFormValues) : data as Partial<Cliente>;
+      
+      console.log("Dados convertidos para envio:", clienteData);
+      
       const validation = await validateCliente(clienteData);
       
       if (!validation.valid) {
@@ -164,7 +181,7 @@ export const useSecureClienteForm = ({
     form,
     
     // Funções de submissão
-    onSubmit: form.handleSubmit(onSubmit),
+    onSubmit,
     
     // Estados de loading
     isSubmitting: form.formState.isSubmitting || securityLoading,
