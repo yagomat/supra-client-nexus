@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { ProfileTab } from "@/components/configuracoes/ProfileTab";
 import { PreferencesTab } from "@/components/configuracoes/PreferencesTab";
+import { SecurityAuditTab } from "@/components/configuracoes/SecurityAuditTab";
 
 const Configuracoes = () => {
   return (
@@ -15,9 +16,10 @@ const Configuracoes = () => {
         </div>
 
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile">Perfil</TabsTrigger>
             <TabsTrigger value="preferences">Preferências</TabsTrigger>
+            <TabsTrigger value="security">Segurança</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="space-y-4">
@@ -26,6 +28,10 @@ const Configuracoes = () => {
 
           <TabsContent value="preferences" className="space-y-4">
             <PreferencesTab />
+          </TabsContent>
+
+          <TabsContent value="security" className="space-y-4">
+            <SecurityAuditTab />
           </TabsContent>
         </Tabs>
       </div>

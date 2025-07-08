@@ -295,6 +295,15 @@ export type Database = {
         Args: { p_user_id: string; p_tipo: string; p_valor: string }
         Returns: Json
       }
+      check_auth_rate_limit: {
+        Args: {
+          p_email: string
+          p_operation: string
+          p_max_requests?: number
+          p_time_window_minutes?: number
+        }
+        Returns: boolean
+      }
       check_export_rate_limit: {
         Args: { p_user_id: string }
         Returns: boolean
@@ -520,6 +529,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      log_auth_attempt: {
+        Args: {
+          p_email: string
+          p_operation: string
+          p_success: boolean
+          p_error_message?: string
+          p_ip_address?: string
+          p_user_agent?: string
+        }
+        Returns: undefined
+      }
       log_cliente_operation: {
         Args: {
           p_user_id: string
@@ -565,6 +585,17 @@ export type Database = {
           p_tipo_aviso: string
           p_mes: number
           p_ano: number
+        }
+        Returns: Json
+      }
+      secure_auth_attempt: {
+        Args: {
+          p_email: string
+          p_password: string
+          p_operation: string
+          p_nome?: string
+          p_ip_address?: string
+          p_user_agent?: string
         }
         Returns: Json
       }
@@ -619,6 +650,10 @@ export type Database = {
           p_valor_plano?: number
           p_user_id?: string
         }
+        Returns: Json
+      }
+      validate_password_strength: {
+        Args: { p_password: string }
         Returns: Json
       }
       validate_profile_data: {
