@@ -16,6 +16,7 @@ import { CadastrarClienteMainScreen } from "@/components/cliente/form-sections/C
 import { CadastrarClienteAdditionalScreen } from "@/components/cliente/form-sections/CadastrarClienteAdditionalScreen";
 import { ObservationsSection } from "@/components/cliente/form-sections/ObservationsSection";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ClienteFormValues } from "@/hooks/cliente/clienteFormSchema";
 
 const CadastrarCliente = () => {
   const navigate = useNavigate();
@@ -64,10 +65,7 @@ const CadastrarCliente = () => {
   }, [possuiTelaAdicional, form]);
 
   // Função para validar campos obrigatórios e mostrar mensagem
-  const handleSubmitWithValidation = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const formData = form.getValues();
+  const handleSubmitWithValidation = (data: ClienteFormValues) => {
     const requiredFields = [
       { field: 'nome', name: 'Nome' },
       { field: 'servidor', name: 'Servidor' },
@@ -76,7 +74,7 @@ const CadastrarCliente = () => {
       { field: 'senha_aplicativo', name: 'Senha (Id)' }
     ];
 
-    const missingFields = requiredFields.filter(({ field }) => !formData[field as keyof typeof formData]);
+    const missingFields = requiredFields.filter(({ field }) => !data[field as keyof ClienteFormValues]);
 
     if (missingFields.length > 0) {
       // Destacar campos obrigatórios
@@ -96,7 +94,7 @@ const CadastrarCliente = () => {
     }
 
     // Se todos os campos estão preenchidos, submeter o formulário
-    form.handleSubmit(onSubmit)(e);
+    onSubmit(data);
   };
 
   if (loading) {
@@ -118,7 +116,7 @@ const CadastrarCliente = () => {
       <div className="max-w-4xl mx-auto space-y-6 pb-8">
         {/* Status de Segurança */}
         {securityStatus.hasWarnings && (
-          <Alert className="animate-scale-in">
+          <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
               {securityStatus.warnings.join(", ")}
@@ -127,12 +125,12 @@ const CadastrarCliente = () => {
         )}
 
         <Form {...form}>
-          <form onSubmit={handleSubmitWithValidation} className="space-y-6">
-            <Card className="card-enhanced">
-              <CardHeader className="bg-gradient-subtle rounded-t-lg">
+          <form onSubmit={form.handleSubmit(handleSubmitWithValidation)} className="space-y-6">
+            <Card>
+              <CardHeader>
                 <CardTitle>Informações Básicas</CardTitle>
               </CardHeader>
-              <CardContent className="p-6">
+              <CardContent>
                 <CadastrarClienteBasicInformation 
                   control={form.control} 
                   valoresPredefinidos={valoresPredefinidos} 
@@ -141,11 +139,11 @@ const CadastrarCliente = () => {
               </CardContent>
             </Card>
 
-            <Card className="card-enhanced">
-              <CardHeader className="bg-gradient-subtle rounded-t-lg">
+            <Card>
+              <CardHeader>
                 <CardTitle>Tela Principal</CardTitle>
               </CardHeader>
-              <CardContent className="p-6">
+              <CardContent>
                 <CadastrarClienteMainScreen 
                   control={form.control} 
                   valoresPredefinidos={valoresPredefinidos} 
@@ -154,7 +152,7 @@ const CadastrarCliente = () => {
               </CardContent>
             </Card>
 
-            <div className="flex items-center space-x-3 p-4 bg-gradient-card rounded-lg border border-border/50">
+            <div className="flex items-center space-x-3 p-4 border rounded-lg">
               <Switch
                 id="possuiTelaAdicional"
                 checked={possuiTelaAdicional}
@@ -170,11 +168,11 @@ const CadastrarCliente = () => {
             </div>
 
             {possuiTelaAdicional && (
-              <Card className="card-enhanced animate-scale-in">
-                <CardHeader className="bg-gradient-subtle rounded-t-lg">
+              <Card>
+                <CardHeader>
                   <CardTitle>Tela Adicional</CardTitle>
                 </CardHeader>
-                <CardContent className="p-6">
+                <CardContent>
                   <CadastrarClienteAdditionalScreen 
                     control={form.control} 
                     valoresPredefinidos={valoresPredefinidos} 
@@ -184,29 +182,28 @@ const CadastrarCliente = () => {
               </Card>
             )}
 
-            <Card className="card-enhanced">
-              <CardHeader className="bg-gradient-subtle rounded-t-lg">
+            <Card>
+              <CardHeader>
                 <CardTitle>Observações</CardTitle>
               </CardHeader>
-              <CardContent className="p-6">
+              <CardContent>
                 <ObservationsSection control={form.control} disabled={isSubmitting} />
               </CardContent>
             </Card>
 
-            <div className="flex justify-end space-x-4 pt-6 border-t border-border/50">
+            <div className="flex justify-end space-x-4 pt-6 border-t">
               <Button
                 variant="outline"
                 type="button"
                 onClick={() => navigate("/clientes")}
                 disabled={isSubmitting}
-                className="transition-all duration-300 hover:shadow-soft"
               >
                 Cancelar
               </Button>
               <Button 
                 type="submit" 
                 disabled={isSubmitting}
-                className="btn-enhanced bg-gradient-primary hover:bg-gradient-primary/90 text-white shadow-soft hover:shadow-medium transition-all duration-300 flex items-center space-x-2"
+                className="flex items-center space-x-2"
               >
                 {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 <Shield className="h-4 w-4" />
