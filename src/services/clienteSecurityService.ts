@@ -11,6 +11,7 @@ export interface SecurityValidationResult {
 export interface SecureOperationResult {
   success: boolean;
   error?: string;
+  message?: string;
   validation?: SecurityValidationResult;
   cliente?: Cliente;
 }
@@ -155,6 +156,91 @@ export class ClienteSecurityService {
         success: false,
         error: 'Erro interno do servidor'
       };
+    }
+  }
+
+  /**
+   * Exclui cliente com validação de segurança no backend
+   */
+  static async secureDeleteCliente(clienteId: string): Promise<SecureOperationResult> {
+    try {
+      const { data: result, error } = await supabase.rpc('secure_delete_cliente', {
+        p_cliente_id: clienteId,
+        p_ip_address: this.getClientIP()
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      return result as unknown as SecureOperationResult;
+    } catch (error) {
+      console.error('Erro na exclusão segura do cliente:', error);
+      return {
+        success: false,
+        error: 'Erro interno do servidor'
+      };
+    }
+  }
+
+  /**
+   * Verifica rate limit para exportação
+   */
+  static async checkExportRateLimit(): Promise<boolean> {
+    try {
+      const { data: currentUser } = await supabase.auth.getUser();
+      if (!currentUser.user) return false;
+
+      const { data: rateLimitOk, error } = await supabase.rpc('check_export_rate_limit', {
+        p_user_id: currentUser.user.id
+      });
+
+      if (error) {
+        console.error('Erro ao verificar rate limit de exportação:', error);
+        return false;
+      }
+
+      return rateLimitOk;
+    } catch (error) {
+      console.error('Erro ao verificar rate limit de exportação:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Registra tentativa de exportação
+   */
+  static async logExportAttempt(count: number): Promise<void> {
+    try {
+      const { data: currentUser } = await supabase.auth.getUser();
+      if (!currentUser.user) return;
+
+      await supabase.rpc('log_export_attempt', {
+        p_user_id: currentUser.user.id,
+        p_count: count
+      });
+    } catch (error) {
+      console.error('Erro ao registrar tentativa de exportação:', error);
+    }
+  }
+
+  /**
+   * Importa clientes via Edge Function segura
+   */
+  static async secureImportClientes(clientes: any[]): Promise<any> {
+    try {
+      const { data, error } = await supabase.functions.invoke('secure-excel-import', {
+        body: { clientes }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Erro na importação segura:', error);
+      throw error;
     }
   }
 

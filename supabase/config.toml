@@ -52,3 +52,6 @@ enabled = false
 
 [functions.whatsapp-bot]
 verify_jwt = false
+
+[functions.secure-excel-import]
+verify_jwt = true

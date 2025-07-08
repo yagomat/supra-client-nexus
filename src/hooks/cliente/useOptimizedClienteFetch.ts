@@ -1,9 +1,9 @@
 
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { deleteCliente } from "@/services/clienteService";
 import { Cliente } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
+import { ClienteSecurityService } from "@/services/clienteSecurityService";
 
 export const useOptimizedClienteFetch = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -36,17 +36,27 @@ export const useOptimizedClienteFetch = () => {
 
   const handleExcluir = async (clienteParaExcluir: string) => {
     try {
-      await deleteCliente(clienteParaExcluir);
+      // Usar função segura de exclusão
+      const result = await ClienteSecurityService.secureDeleteCliente(clienteParaExcluir);
       
-      // Atualizar a lista de clientes localmente (otimização)
-      setClientes((prev) => prev.filter((cliente) => cliente.id !== clienteParaExcluir));
-      
-      toast({
-        title: "Cliente excluído",
-        description: "O cliente foi excluído com sucesso.",
-      });
-      
-      return true;
+      if (result.success) {
+        // Atualizar a lista de clientes localmente (otimização)
+        setClientes((prev) => prev.filter((cliente) => cliente.id !== clienteParaExcluir));
+        
+        toast({
+          title: "Cliente excluído",
+          description: result.message || "O cliente foi excluído com sucesso.",
+        });
+        
+        return true;
+      } else {
+        toast({
+          title: "Erro ao excluir cliente",
+          description: result.error || "Erro desconhecido",
+          variant: "destructive",
+        });
+        return false;
+      }
     } catch (error) {
       console.error("Erro ao excluir cliente", error);
       toast({
