@@ -47,9 +47,11 @@
 
 ### 🗑️ Arquivos Removidos:
 - `src/hooks/useCadastrarClienteForm.ts` (substituído por implementação segura)
+- `src/hooks/useClienteForm.ts` (substituído por implementação segura)
 
 ### 📁 Arquivos Modificados:
 - `src/pages/CadastrarCliente.tsx` (migração completa para implementação segura)
+- `src/pages/EditarCliente.tsx` (migração completa para implementação segura)
 
 ### 🎯 Benefícios da Migração:
 
@@ -61,7 +63,7 @@
 
 ### 🔧 Como usar:
 
-A página de cadastro agora inclui:
+As páginas de cadastro e edição agora incluem:
 1. Validação automática de segurança
 2. Opção de validação em tempo real
 3. Indicadores visuais de status
