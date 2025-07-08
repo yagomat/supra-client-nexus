@@ -189,39 +189,6 @@ const CadastrarCliente = () => {
               </CardContent>
             </Card>
 
-            {/* Controles de Validação Avançada */}
-            <Card className="card-enhanced animate-slide-up">
-              <CardHeader className="bg-gradient-subtle rounded-t-lg">
-                <CardTitle className="flex items-center gap-2">
-                  <div className="w-6 h-6 bg-gradient-primary rounded-full flex items-center justify-center">
-                    <Shield className="h-3 w-3 text-white" />
-                  </div>
-                  Validação de Segurança
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 space-y-4">
-                <div className="flex items-center space-x-3 p-3 bg-gradient-card rounded border border-border/50">
-                  <Switch
-                    id="realTimeValidation"
-                    checked={realTimeValidation}
-                    onCheckedChange={toggleRealTimeValidation}
-                    disabled={isSubmitting}
-                  />
-                  <label
-                    htmlFor="realTimeValidation"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Validação em tempo real
-                  </label>
-                </div>
-                
-                {securityStatus.lastValidated && (
-                  <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded">
-                    Última validação: {securityStatus.lastValidated.toLocaleTimeString()}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
 
             <div className="flex justify-end space-x-4 pt-6 border-t border-border/50">
               <Button
