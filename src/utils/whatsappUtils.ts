@@ -89,20 +89,12 @@ const calcularProximaDataVencimento = (
       return calcularProximaData(ultimoPagamento, cliente.dia_vencimento);
     }
   } else {
-    // CLIENTE INATIVO: Mostrar a última data de vencimento que já passou
-    // Filtrar apenas pagamentos passados/presentes (ignorar futuros)
-    const pagamentosPassados = validPayments.filter(p => 
-      p.ano < currentYear || (p.ano === currentYear && p.mes <= currentMonth)
-    );
+    // CLIENTE INATIVO: Mostrar data de vencimento baseada no último pagamento consecutivo
+    const ultimaSequenciaConsecutiva = encontrarUltimaSequenciaConsecutiva(validPayments);
     
-    if (pagamentosPassados.length > 0) {
-      const ultimaSequenciaConsecutiva = encontrarUltimaSequenciaConsecutiva(pagamentosPassados);
-      
-      if (ultimaSequenciaConsecutiva.length > 0) {
-        const ultimoPagamento = ultimaSequenciaConsecutiva[ultimaSequenciaConsecutiva.length - 1];
-        // Para clientes inativos, mostrar a data de vencimento que já passou
-        return calcularProximaData(ultimoPagamento, cliente.dia_vencimento);
-      }
+    if (ultimaSequenciaConsecutiva.length > 0) {
+      const ultimoPagamento = ultimaSequenciaConsecutiva[ultimaSequenciaConsecutiva.length - 1];
+      return calcularProximaData(ultimoPagamento, cliente.dia_vencimento);
     }
   }
 
