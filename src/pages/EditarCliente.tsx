@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -33,22 +34,7 @@ const EditarCliente = () => {
     }
   }, [id, navigate]);
 
-  // Usar o hook seguro para edição de cliente
-  const {
-    form,
-    onSubmit: originalOnSubmit,
-    isSubmitting,
-    securityStatus,
-    isFormValid,
-    realTimeValidation,
-    toggleRealTimeValidation
-  } = useSecureClienteForm({ 
-    clienteId: id,
-    initialData: cliente || undefined,
-    mode: "edit"
-  });
-
-  // Carregar dados do cliente e valores predefinidos
+  // Carregar dados do cliente e valores predefinidos primeiro
   useEffect(() => {
     const fetchData = async () => {
       if (!id) return;
@@ -60,6 +46,7 @@ const EditarCliente = () => {
           getValoresPredefinidos()
         ]);
         
+        console.log("Dados do cliente carregados:", clienteData);
         setCliente(clienteData);
         setValoresPredefinidos(valoresData);
         setPossuiTelaAdicional(clienteData.possui_tela_adicional || false);
@@ -79,9 +66,57 @@ const EditarCliente = () => {
     fetchData();
   }, [id, toast, navigate]);
 
+  // Usar o hook seguro para edição de cliente APÓS carregar os dados
+  const {
+    form,
+    onSubmit: originalOnSubmit,
+    isSubmitting,
+    securityStatus,
+    isFormValid,
+    realTimeValidation,
+    toggleRealTimeValidation
+  } = useSecureClienteForm({ 
+    clienteId: id,
+    initialData: cliente || undefined,
+    mode: "edit"
+  });
+
+  // Preencher o formulário quando os dados do cliente forem carregados
+  useEffect(() => {
+    if (cliente && form) {
+      console.log("Preenchendo formulário com dados do cliente:", cliente);
+      
+      // Resetar o formulário com os dados do cliente
+      form.reset({
+        nome: cliente.nome || "",
+        telefone: cliente.telefone || "",
+        codigo_pais_telefone: cliente.codigo_pais_telefone || "+55",
+        uf: cliente.uf || "",
+        servidor: cliente.servidor || "",
+        dia_vencimento: cliente.dia_vencimento || 1,
+        valor_plano: cliente.valor_plano?.toString() || "",
+        dispositivo_smart: cliente.dispositivo_smart || "",
+        aplicativo: cliente.aplicativo || "",
+        usuario_aplicativo: cliente.usuario_aplicativo || "",
+        senha_aplicativo: cliente.senha_aplicativo || "",
+        data_licenca_aplicativo: cliente.data_licenca_aplicativo || "",
+        possui_tela_adicional: cliente.possui_tela_adicional || false,
+        dispositivo_smart_2: cliente.dispositivo_smart_2 || "",
+        aplicativo_2: cliente.aplicativo_2 || "",
+        usuario_2: cliente.usuario_2 || "",
+        senha_2: cliente.senha_2 || "",
+        data_licenca_2: cliente.data_licenca_2 || "",
+        observacoes: cliente.observacoes || "",
+        status: (cliente.status as "ativo" | "inativo") || "inativo"
+      });
+    }
+  }, [cliente, form]);
+
   // Sincronizar switch de tela adicional com formulário
   useEffect(() => {
-    form.setValue("possui_tela_adicional", possuiTelaAdicional);
+    if (form) {
+      form.setValue("possui_tela_adicional", possuiTelaAdicional);
+    }
   }, [possuiTelaAdicional, form]);
 
   // Função para lidar com o submit do formulário
@@ -158,6 +193,25 @@ const EditarCliente = () => {
               <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
               <span className="text-lg font-medium">Carregando dados do cliente...</span>
               <p className="text-muted-foreground">Aguarde enquanto buscamos as informações</p>
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!cliente) {
+    return (
+      <DashboardLayout title="Editar Cliente">
+        <div className="space-y-8 animate-fade-in">
+          <div className="flex items-center justify-center py-16">
+            <div className="text-center space-y-4">
+              <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
+              <span className="text-lg font-medium">Cliente não encontrado</span>
+              <p className="text-muted-foreground">Não foi possível carregar os dados do cliente</p>
+              <Button onClick={() => navigate("/clientes")} variant="outline">
+                Voltar para lista de clientes
+              </Button>
             </div>
           </div>
         </div>

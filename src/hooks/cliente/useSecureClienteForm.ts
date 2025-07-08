@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,32 +31,73 @@ export const useSecureClienteForm = ({
     clearValidationMessages
   } = useSecureClienteOperations();
 
+  // Preparar valores padrão baseados nos dados iniciais
+  const getDefaultValues = () => {
+    if (initialData && mode === "edit") {
+      return {
+        nome: initialData.nome || "",
+        telefone: initialData.telefone || "",
+        codigo_pais_telefone: initialData.codigo_pais_telefone || "+55",
+        uf: initialData.uf || "",
+        servidor: initialData.servidor || "",
+        dia_vencimento: initialData.dia_vencimento || 1,
+        valor_plano: initialData.valor_plano?.toString() || "",
+        dispositivo_smart: initialData.dispositivo_smart || "",
+        aplicativo: initialData.aplicativo || "",
+        usuario_aplicativo: initialData.usuario_aplicativo || "",
+        senha_aplicativo: initialData.senha_aplicativo || "",
+        data_licenca_aplicativo: initialData.data_licenca_aplicativo || "",
+        possui_tela_adicional: initialData.possui_tela_adicional || false,
+        dispositivo_smart_2: initialData.dispositivo_smart_2 || "",
+        aplicativo_2: initialData.aplicativo_2 || "",
+        usuario_2: initialData.usuario_2 || "",
+        senha_2: initialData.senha_2 || "",
+        data_licenca_2: initialData.data_licenca_2 || "",
+        observacoes: initialData.observacoes || "",
+        status: (initialData.status as "ativo" | "inativo") || "inativo"
+      };
+    }
+    
+    // Valores padrão para criação
+    return {
+      nome: "",
+      telefone: "",
+      codigo_pais_telefone: "+55",
+      uf: "",
+      servidor: "",
+      dia_vencimento: 1,
+      valor_plano: "",
+      dispositivo_smart: "",
+      aplicativo: "",
+      usuario_aplicativo: "",
+      senha_aplicativo: "",
+      data_licenca_aplicativo: "",
+      possui_tela_adicional: false,
+      dispositivo_smart_2: "",
+      aplicativo_2: "",
+      usuario_2: "",
+      senha_2: "",
+      data_licenca_2: "",
+      observacoes: "",
+      status: "inativo" as const
+    };
+  };
+
   // Configurar formulário com validação local + backend
   const form = useForm<ClienteFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      nome: initialData?.nome || "",
-      telefone: initialData?.telefone || "",
-      codigo_pais_telefone: initialData?.codigo_pais_telefone || "+55",
-      uf: initialData?.uf || "",
-      servidor: initialData?.servidor || "",
-      dia_vencimento: initialData?.dia_vencimento || 1,
-      valor_plano: initialData?.valor_plano?.toString() || "",
-      dispositivo_smart: initialData?.dispositivo_smart || "",
-      aplicativo: initialData?.aplicativo || "",
-      usuario_aplicativo: initialData?.usuario_aplicativo || "",
-      senha_aplicativo: initialData?.senha_aplicativo || "",
-      data_licenca_aplicativo: initialData?.data_licenca_aplicativo || "",
-      possui_tela_adicional: initialData?.possui_tela_adicional || false,
-      dispositivo_smart_2: initialData?.dispositivo_smart_2 || "",
-      aplicativo_2: initialData?.aplicativo_2 || "",
-      usuario_2: initialData?.usuario_2 || "",
-      senha_2: initialData?.senha_2 || "",
-      data_licenca_2: initialData?.data_licenca_2 || "",
-      observacoes: initialData?.observacoes || "",
-      status: (initialData?.status as "ativo" | "inativo") || "inativo"
-    }
+    defaultValues: getDefaultValues(),
+    mode: 'onChange'
   });
+
+  // Atualizar os valores do formulário quando initialData mudar
+  useEffect(() => {
+    if (initialData && mode === "edit") {
+      const newValues = getDefaultValues();
+      console.log("Atualizando valores do formulário:", newValues);
+      form.reset(newValues);
+    }
+  }, [initialData, mode, form]);
 
   // Converter dados do formulário para Cliente com sanitização adequada
   const convertFormToCliente = (data: ClienteFormValues): Partial<Cliente> => {
@@ -207,7 +249,7 @@ export const useSecureClienteForm = ({
 
   // Resetar formulário e validações
   function resetForm() {
-    form.reset();
+    form.reset(getDefaultValues());
     clearValidationMessages();
     setLastValidationTime(null);
   }
