@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -17,6 +16,7 @@ import { MainScreenSection } from "@/components/cliente/form-sections/MainScreen
 import { AdditionalScreenSection } from "@/components/cliente/form-sections/AdditionalScreenSection";
 import { ObservationsSection } from "@/components/cliente/form-sections/ObservationsSection";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ClienteFormValues } from "@/hooks/cliente/clienteFormSchema";
 
 const EditarCliente = () => {
   const { id } = useParams<{ id: string }>();
@@ -36,7 +36,7 @@ const EditarCliente = () => {
   // Usar o hook seguro para edição de cliente
   const {
     form,
-    onSubmit,
+    onSubmit: originalOnSubmit,
     isSubmitting,
     securityStatus,
     isFormValid,
@@ -84,6 +84,69 @@ const EditarCliente = () => {
     form.setValue("possui_tela_adicional", possuiTelaAdicional);
   }, [possuiTelaAdicional, form]);
 
+  // Função para lidar com o submit do formulário
+  const handleFormSubmit = async (data: ClienteFormValues) => {
+    console.log("Dados do formulário antes da validação:", data);
+    
+    const requiredFields = [
+      { field: 'nome', name: 'Nome' },
+      { field: 'servidor', name: 'Servidor' },
+      { field: 'aplicativo', name: 'Aplicativo' },
+      { field: 'usuario_aplicativo', name: 'Usuário (MAC)' },
+      { field: 'senha_aplicativo', name: 'Senha (Id)' }
+    ];
+
+    const missingFields = requiredFields.filter(({ field }) => !data[field as keyof ClienteFormValues]);
+
+    if (missingFields.length > 0) {
+      // Destacar campos obrigatórios
+      missingFields.forEach(({ field }) => {
+        form.setError(field as any, {
+          type: 'required',
+          message: 'Este campo é obrigatório'
+        });
+      });
+
+      toast({
+        title: "Campos obrigatórios não preenchidos",
+        description: `Por favor, preencha: ${missingFields.map(f => f.name).join(', ')}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Tratar campos de data - converter strings vazias para null
+    const sanitizedData = {
+      ...data,
+      data_licenca_aplicativo: data.data_licenca_aplicativo?.trim() === "" ? null : data.data_licenca_aplicativo,
+      data_licenca_2: data.data_licenca_2?.trim() === "" ? null : data.data_licenca_2,
+      // Garantir que campos opcionais não sejam strings vazias
+      telefone: data.telefone?.trim() === "" ? null : data.telefone,
+      uf: data.uf?.trim() === "" ? null : data.uf,
+      valor_plano: data.valor_plano?.trim() === "" ? null : data.valor_plano,
+      dispositivo_smart: data.dispositivo_smart?.trim() === "" ? null : data.dispositivo_smart,
+      dispositivo_smart_2: data.dispositivo_smart_2?.trim() === "" ? null : data.dispositivo_smart_2,
+      aplicativo_2: data.aplicativo_2?.trim() === "" ? null : data.aplicativo_2,
+      usuario_2: data.usuario_2?.trim() === "" ? null : data.usuario_2,
+      senha_2: data.senha_2?.trim() === "" ? null : data.senha_2,
+      observacoes: data.observacoes?.trim() === "" ? null : data.observacoes
+    };
+
+    console.log("Dados sanitizados:", sanitizedData);
+
+    // Submeter usando o método seguro do hook
+    try {
+      await originalOnSubmit(sanitizedData);
+    } catch (error) {
+      console.error("Erro ao submeter formulário:", error);
+      toast({
+        title: "Erro ao atualizar cliente",
+        description: "Ocorreu um erro interno. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <DashboardLayout title="Editar Cliente">
@@ -123,7 +186,7 @@ const EditarCliente = () => {
         )}
 
         <Form {...form}>
-          <form onSubmit={onSubmit} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
             <Card className="card-enhanced animate-slide-up">
               <CardHeader className="bg-gradient-subtle rounded-t-lg">
                 <CardTitle className="flex items-center gap-2">
