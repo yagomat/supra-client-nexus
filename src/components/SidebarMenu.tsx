@@ -42,16 +42,16 @@ export function SidebarMenu({ onCollapseChange }: { onCollapseChange?: (collapse
   };
 
   return (
-    <aside className={`fixed inset-y-0 left-0 z-20 flex flex-col border-r border-gray-800 shadow-sm transition-all duration-300 bg-black ${isCollapsed ? "w-[70px]" : "w-64"}`}>
+    <aside className={`fixed inset-y-0 left-0 z-20 flex flex-col border-r border-sidebar-border shadow-soft transition-all duration-300 bg-sidebar ${isCollapsed ? "w-[70px]" : "w-64"}`}>
       <div className={`flex items-center p-4 ${isCollapsed ? "justify-center" : "justify-between"}`}>
         {!isCollapsed && (
-          <span className="text-xl font-semibold text-white">
+          <span className="text-xl font-semibold text-sidebar-foreground">
             Gestor Connect
           </span>
         )}
         <button 
           onClick={toggleCollapse} 
-          className="p-2 rounded-lg text-white hover:bg-gray-800"
+          className="p-2 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
         >
           {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
         </button>
@@ -64,8 +64,8 @@ export function SidebarMenu({ onCollapseChange }: { onCollapseChange?: (collapse
             to={item.path}
             className={`flex items-center p-2 rounded-lg transition-colors ${
               isActive(item.path)
-                ? "bg-blue-600 text-white"
-                : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             } ${isCollapsed ? "justify-center" : ""}`}
           >
             <div className="w-5 h-5">{item.icon}</div>
