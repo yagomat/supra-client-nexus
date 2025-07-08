@@ -120,13 +120,7 @@ export const useSecureClienteForm = ({
 
   // Verificar se o formulário está válido para submissão
   const isFormValid = () => {
-    const formData = form.getValues();
-    const clienteData = convertFormToCliente(formData);
-    return (
-      form.formState.isValid && 
-      isDataValid(clienteData) && 
-      validationErrors.length === 0
-    );
+    return form.formState.isValid;
   };
 
   // Obter status de segurança do formulário
