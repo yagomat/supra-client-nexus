@@ -295,6 +295,15 @@ export type Database = {
         Args: { p_user_id: string; p_tipo: string; p_valor: string }
         Returns: Json
       }
+      check_rate_limit: {
+        Args: {
+          p_user_id: string
+          p_operation: string
+          p_max_requests?: number
+          p_time_window_minutes?: number
+        }
+        Returns: boolean
+      }
       cliente_pertence_ao_usuario: {
         Args: { cliente_id_param: string }
         Returns: boolean
@@ -482,6 +491,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      log_cliente_operation: {
+        Args: {
+          p_user_id: string
+          p_operation: string
+          p_cliente_id?: string
+          p_old_data?: Json
+          p_new_data?: Json
+          p_ip_address?: string
+        }
+        Returns: undefined
+      }
       recalculate_all_client_status: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -511,6 +531,21 @@ export type Database = {
           p_aplicativo: string
           p_usuario_aplicativo: string
           p_senha_aplicativo: string
+        }
+        Returns: Json
+      }
+      validate_cliente_security: {
+        Args: {
+          p_nome: string
+          p_servidor: string
+          p_dia_vencimento: number
+          p_aplicativo: string
+          p_usuario_aplicativo: string
+          p_senha_aplicativo: string
+          p_telefone?: string
+          p_uf?: string
+          p_valor_plano?: number
+          p_user_id?: string
         }
         Returns: Json
       }
