@@ -12,7 +12,6 @@ import BancoDados from "./pages/BancoDados";
 import Templates from "./pages/Templates";
 import Configuracoes from "./pages/Configuracoes";
 import NotFound from "./pages/NotFound";
-import { SessionExpireAlert } from "./components/SessionExpireAlert";
 
 interface PrivateRouteProps {
   children: React.ReactNode;
@@ -35,12 +34,7 @@ const PrivateRoute = ({ children }: PrivateRouteProps) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
   
-  return (
-    <>
-      {children}
-      <SessionExpireAlert />
-    </>
-  );
+  return <>{children}</>;
 };
 
 export const AppRoutes = () => {
