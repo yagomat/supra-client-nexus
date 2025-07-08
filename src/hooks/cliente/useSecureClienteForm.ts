@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -58,24 +57,55 @@ export const useSecureClienteForm = ({
     }
   });
 
-  // Converter dados do formulário para Cliente
+  // Converter dados do formulário para Cliente com sanitização adequada
   const convertFormToCliente = (data: ClienteFormValues): Partial<Cliente> => {
-    // Garantir que strings vazias sejam convertidas para null
-    const cleanData = {
-      ...data,
-      telefone: data.telefone?.trim() === "" ? null : data.telefone,
-      uf: data.uf?.trim() === "" ? null : data.uf,
-      valor_plano: data.valor_plano?.trim() === "" ? null : parseFloat(data.valor_plano || "0"),
-      dispositivo_smart: data.dispositivo_smart?.trim() === "" ? null : data.dispositivo_smart,
-      data_licenca_aplicativo: data.data_licenca_aplicativo?.trim() === "" ? null : data.data_licenca_aplicativo,
-      dispositivo_smart_2: data.dispositivo_smart_2?.trim() === "" ? null : data.dispositivo_smart_2,
-      aplicativo_2: data.aplicativo_2?.trim() === "" ? null : data.aplicativo_2,
-      usuario_2: data.usuario_2?.trim() === "" ? null : data.usuario_2,
-      senha_2: data.senha_2?.trim() === "" ? null : data.senha_2,
-      data_licenca_2: data.data_licenca_2?.trim() === "" ? null : data.data_licenca_2,
-      observacoes: data.observacoes?.trim() === "" ? null : data.observacoes
+    console.log("Convertendo dados do formulário:", data);
+    
+    // Função helper para sanitizar strings
+    const sanitizeString = (value: string | undefined | null) => {
+      if (!value || typeof value !== 'string' || value.trim() === '') {
+        return null;
+      }
+      return value.trim();
     };
 
+    // Função helper para sanitizar números
+    const sanitizeNumber = (value: string | number | undefined | null) => {
+      if (!value || (typeof value === 'string' && value.trim() === '')) {
+        return null;
+      }
+      if (typeof value === 'string') {
+        const parsed = parseFloat(value);
+        return isNaN(parsed) ? null : parsed;
+      }
+      return value;
+    };
+
+    const cleanData = {
+      nome: data.nome, // obrigatório
+      servidor: data.servidor, // obrigatório
+      dia_vencimento: data.dia_vencimento, // obrigatório
+      aplicativo: data.aplicativo, // obrigatório
+      usuario_aplicativo: data.usuario_aplicativo, // obrigatório
+      senha_aplicativo: data.senha_aplicativo, // obrigatório
+      codigo_pais_telefone: data.codigo_pais_telefone || "+55",
+      possui_tela_adicional: data.possui_tela_adicional || false,
+      status: data.status || "inativo",
+      // Campos opcionais sanitizados
+      telefone: sanitizeString(data.telefone),
+      uf: sanitizeString(data.uf),
+      valor_plano: sanitizeNumber(data.valor_plano),
+      dispositivo_smart: sanitizeString(data.dispositivo_smart),
+      data_licenca_aplicativo: sanitizeString(data.data_licenca_aplicativo),
+      dispositivo_smart_2: sanitizeString(data.dispositivo_smart_2),
+      aplicativo_2: sanitizeString(data.aplicativo_2),
+      usuario_2: sanitizeString(data.usuario_2),
+      senha_2: sanitizeString(data.senha_2),
+      data_licenca_2: sanitizeString(data.data_licenca_2),
+      observacoes: sanitizeString(data.observacoes)
+    };
+
+    console.log("Dados limpos:", cleanData);
     return cleanData;
   };
 
@@ -109,6 +139,8 @@ export const useSecureClienteForm = ({
   // Submissão do formulário com validação de segurança
   const onSubmit = async (data: ClienteFormValues | Partial<Cliente>) => {
     try {
+      console.log("OnSubmit chamado com dados:", data);
+      
       // Limpar mensagens anteriores
       clearValidationMessages();
       
@@ -120,14 +152,18 @@ export const useSecureClienteForm = ({
       const validation = await validateCliente(clienteData);
       
       if (!validation.valid) {
-        // Os erros já foram definidos no hook useSecureClienteOperations
+        console.log("Validação falhou:", validation);
         return;
       }
 
+      console.log("Validação passou, executando operação...");
+      
       // Executar operação baseada no modo
       if (mode === "create") {
+        console.log("Criando cliente...");
         await createCliente(clienteData);
       } else if (mode === "edit" && clienteId) {
+        console.log("Atualizando cliente...");
         await updateCliente(clienteId, clienteData, initialData);
       }
     } catch (error) {
@@ -136,12 +172,12 @@ export const useSecureClienteForm = ({
   };
 
   // Verificar se o formulário está válido para submissão
-  const isFormValid = () => {
+  function isFormValid() {
     return form.formState.isValid;
-  };
+  }
 
   // Obter status de segurança do formulário
-  const getSecurityStatus = () => {
+  function getSecurityStatus() {
     const hasErrors = validationErrors.length > 0;
     const hasWarnings = validationWarnings.length > 0;
     
@@ -153,28 +189,28 @@ export const useSecureClienteForm = ({
       warnings: validationWarnings,
       lastValidated: lastValidationTime
     };
-  };
+  }
 
   // Habilitar/desabilitar validação em tempo real
-  const toggleRealTimeValidation = (enabled: boolean) => {
+  function toggleRealTimeValidation(enabled: boolean) {
     setRealTimeValidation(enabled);
     if (!enabled) {
       clearValidationMessages();
     }
-  };
+  }
 
   // Força uma validação manual
-  const forceValidation = async () => {
+  async function forceValidation() {
     const data = form.getValues();
     await performRealTimeValidation(data);
-  };
+  }
 
   // Resetar formulário e validações
-  const resetForm = () => {
+  function resetForm() {
     form.reset();
     clearValidationMessages();
     setLastValidationTime(null);
-  };
+  }
 
   return {
     // Formulário React Hook Form

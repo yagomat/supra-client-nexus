@@ -57,28 +57,10 @@ export const useCadastrarClienteForm = () => {
       return;
     }
 
-    // Tratar campos de data - converter strings vazias para null
-    const sanitizedData = {
-      ...data,
-      data_licenca_aplicativo: data.data_licenca_aplicativo?.trim() === "" ? null : data.data_licenca_aplicativo,
-      data_licenca_2: data.data_licenca_2?.trim() === "" ? null : data.data_licenca_2,
-      // Garantir que campos opcionais não sejam strings vazias
-      telefone: data.telefone?.trim() === "" ? null : data.telefone,
-      uf: data.uf?.trim() === "" ? null : data.uf,
-      valor_plano: data.valor_plano?.trim() === "" ? null : data.valor_plano,
-      dispositivo_smart: data.dispositivo_smart?.trim() === "" ? null : data.dispositivo_smart,
-      dispositivo_smart_2: data.dispositivo_smart_2?.trim() === "" ? null : data.dispositivo_smart_2,
-      aplicativo_2: data.aplicativo_2?.trim() === "" ? null : data.aplicativo_2,
-      usuario_2: data.usuario_2?.trim() === "" ? null : data.usuario_2,
-      senha_2: data.senha_2?.trim() === "" ? null : data.senha_2,
-      observacoes: data.observacoes?.trim() === "" ? null : data.observacoes
-    };
-
-    console.log("Dados sanitizados:", sanitizedData);
-
-    // Submeter usando o método seguro do hook
+    // Submeter diretamente os dados processados - o useSecureClienteForm já faz a sanitização
     try {
-      await originalOnSubmit(sanitizedData);
+      console.log("Chamando originalOnSubmit com dados:", data);
+      await originalOnSubmit(data);
     } catch (error) {
       console.error("Erro ao submeter formulário:", error);
       toast({
