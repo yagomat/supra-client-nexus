@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { Cliente } from "@/types";
-import { verificarLicencasCliente } from "@/services/clienteService/clienteLicencaService";
 
 export const useClienteModals = () => {
   const [clienteDetalhes, setClienteDetalhes] = useState<Cliente | null>(null);
@@ -10,25 +9,9 @@ export const useClienteModals = () => {
   const [isObservacoesModalOpen, setIsObservacoesModalOpen] = useState(false);
   const [clienteParaExcluir, setClienteParaExcluir] = useState<string | null>(null);
 
-  const verDetalhes = async (cliente: Cliente) => {
-    try {
-      // Verificar licenças ao abrir detalhes
-      const licencasResult = await verificarLicencasCliente(cliente.id);
-      
-      // Adicionar informações de licença ao cliente para exibição
-      const clienteComLicencas = {
-        ...cliente,
-        licencaInfo: licencasResult
-      };
-      
-      setClienteDetalhes(clienteComLicencas as any);
-      setIsViewModalOpen(true);
-    } catch (error) {
-      console.error("Erro ao verificar licenças:", error);
-      // Se falhar a verificação de licenças, continua exibindo os detalhes normalmente
-      setClienteDetalhes(cliente);
-      setIsViewModalOpen(true);
-    }
+  const verDetalhes = (cliente: Cliente) => {
+    setClienteDetalhes(cliente);
+    setIsViewModalOpen(true);
   };
 
   const verTelaAdicional = (cliente: Cliente) => {

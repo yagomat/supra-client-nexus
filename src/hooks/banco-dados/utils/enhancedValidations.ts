@@ -1,5 +1,82 @@
 
-import { VALIDATION_CONFIG, UFS_VALIDAS, VALIDATION_ERROR_CODES, VALIDATION_ERROR_MESSAGES } from "../config/validationConfig";
+// Configuração local de validação (migrada do arquivo removido)
+const UFS_VALIDAS = [
+  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 
+  'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 
+  'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+];
+
+const VALIDATION_ERROR_CODES = {
+  INVALID_TYPE: 'INVALID_TYPE',
+  EMPTY_VALUE: 'EMPTY_VALUE',
+  INVALID_LENGTH: 'INVALID_LENGTH',
+  INVALID_RANGE: 'INVALID_RANGE',
+  INVALID_NUMBER: 'INVALID_NUMBER',
+  INVALID_UF: 'INVALID_UF',
+  INVALID_CHARACTERS: 'INVALID_CHARACTERS',
+  SUCCESS: 'SUCCESS'
+};
+
+const VALIDATION_ERROR_MESSAGES = {
+  INVALID_TYPE: 'Tipo de valor não reconhecido',
+  EMPTY_VALUE: 'Valor não pode estar vazio',
+  INVALID_LENGTH: 'Comprimento inválido',
+  INVALID_RANGE: 'Valor fora do intervalo permitido',
+  INVALID_NUMBER: 'Número inválido',
+  INVALID_UF: 'UF inválida',
+  INVALID_CHARACTERS: 'Caracteres inválidos',
+  SUCCESS: 'Sucesso'
+};
+
+const VALIDATION_CONFIG = {
+  tipos: {
+    ufs: {
+      tipo: 'string',
+      maxLength: 2,
+      maxItemsPerOperation: 10,
+      description: 'Estados brasileiros (sigla)',
+      example: 'SP;RJ;MG'
+    },
+    servidores: {
+      tipo: 'string',
+      maxLength: 25,
+      maxItemsPerOperation: 10,
+      description: 'Nomes de servidores',
+      example: 'Servidor1;Servidor2'
+    },
+    dias_vencimento: {
+      tipo: 'integer',
+      minValue: 1,
+      maxValue: 31,
+      maxItemsPerOperation: 10,
+      description: 'Dias de vencimento (1-31)',
+      example: '10;15;20'
+    },
+    valores_plano: {
+      tipo: 'decimal',
+      minValue: 0.01,
+      maxValue: 1000,
+      decimalPlaces: 2,
+      maxItemsPerOperation: 10,
+      description: 'Valores de plano (até R$ 1.000)',
+      example: '49.90;99.90;199.90'
+    },
+    dispositivos_smart: {
+      tipo: 'string',
+      maxLength: 25,
+      maxItemsPerOperation: 10,
+      description: 'Nomes de dispositivos',
+      example: 'TV Box;Smart TV'
+    },
+    aplicativos: {
+      tipo: 'string',
+      maxLength: 25,
+      maxItemsPerOperation: 10,
+      description: 'Nomes de aplicativos',
+      example: 'Netflix;YouTube'
+    }
+  }
+};
 
 export interface ValidationResult {
   isValid: boolean;

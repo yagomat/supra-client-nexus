@@ -1,5 +1,41 @@
 
-import { VALIDATION_CONFIG } from "../config/validationConfig";
+// Configuração local de validação (migrada do arquivo removido)
+const VALIDATION_CONFIG = {
+  tipos: {
+    ufs: {
+      tipo: 'string',
+      maxLength: 2,
+      decimalPlaces: 2
+    },
+    servidores: {
+      tipo: 'string',
+      maxLength: 25,
+      decimalPlaces: 2
+    },
+    dias_vencimento: {
+      tipo: 'integer',
+      minValue: 1,
+      maxValue: 31,
+      decimalPlaces: 2
+    },
+    valores_plano: {
+      tipo: 'decimal',
+      minValue: 0.01,
+      maxValue: 1000,
+      decimalPlaces: 2
+    },
+    dispositivos_smart: {
+      tipo: 'string',
+      maxLength: 25,
+      decimalPlaces: 2
+    },
+    aplicativos: {
+      tipo: 'string',
+      maxLength: 25,
+      decimalPlaces: 2
+    }
+  }
+};
 
 /**
  * Utilitários para normalização de valores antes de operações no banco de dados
