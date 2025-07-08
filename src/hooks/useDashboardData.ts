@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useCacheOptimized } from "@/hooks/useCacheOptimized";
 
 interface DashboardStats {
   clientes_ativos: number;
@@ -25,47 +26,50 @@ export const useDashboardData = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const cache = useCacheOptimized<DashboardStats>({ ttl: 2 * 60 * 1000 }); // 2 minutos
+
+  const fetchDashboardStats = useCallback(async (forceRefresh: boolean = false) => {
+    if (!user?.id) return;
+
+    const cacheKey = `dashboard_stats_${user.id}`;
+    
+    // Verificar cache se não for refresh forçado
+    if (!forceRefresh) {
+      const cachedStats = cache.get(cacheKey);
+      if (cachedStats) {
+        setStats(cachedStats);
+        setLoading(false);
+        return;
+      }
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data, error } = await supabase.rpc('get_dashboard_stats', {
+        user_id_param: user.id
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      const processedStats = data as unknown as DashboardStats;
+      setStats(processedStats);
+      cache.set(cacheKey, processedStats);
+      console.log("Dashboard stats processados:", data);
+    } catch (err) {
+      console.error("Erro ao carregar estatísticas:", err);
+      setError("Erro ao carregar estatísticas do dashboard");
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id, cache]);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const fetchDashboardStats = async () => {
-      if (!user?.id) return;
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const { data, error } = await supabase.rpc('get_dashboard_stats', {
-          user_id_param: user.id
-        });
-
-        if (error) {
-          throw error;
-        }
-
-        if (isMounted) {
-          setStats(data as unknown as DashboardStats);
-          console.log("Dashboard stats processados:", data);
-        }
-      } catch (err) {
-        console.error("Erro ao carregar estatísticas:", err);
-        if (isMounted) {
-          setError("Erro ao carregar estatísticas do dashboard");
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
     fetchDashboardStats();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [user?.id]);
+  }, [fetchDashboardStats]);
 
   // Memoizar dados processados para evitar recálculos desnecessários
   const processedStats = useMemo(() => {
@@ -85,32 +89,15 @@ export const useDashboardData = () => {
     };
   }, [stats]);
 
-  const refresh = async () => {
-    if (!user?.id) return;
-
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.rpc('get_dashboard_stats', {
-        user_id_param: user.id
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      setStats(data as unknown as DashboardStats);
-    } catch (err) {
-      console.error("Erro ao atualizar estatísticas:", err);
-      setError("Erro ao atualizar estatísticas do dashboard");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const refresh = useCallback(async () => {
+    await fetchDashboardStats(true);
+  }, [fetchDashboardStats]);
 
   return {
     stats: processedStats,
     loading,
     error,
-    refresh
+    refresh,
+    clearCache: () => cache.clear()
   };
 };

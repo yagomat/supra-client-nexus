@@ -9,32 +9,42 @@ interface SanitizationResponse<T> {
 }
 
 /**
- * Sanitiza dados no backend antes de usá-los em outras operações
- * Esta função centraliza toda a sanitização no servidor para garantir consistência
+ * Sanitiza dados usando a função centralizada do backend
  */
 export const sanitizeInBackend = async <T>(data: any): Promise<T> => {
   try {
-    const { data: response, error } = await supabase.functions.invoke<SanitizationResponse<T>>(
-      'sanitize-input',
-      {
-        body: data,
+    // Usar a nova função centralizada do backend
+    if (typeof data === 'string') {
+      const { data: response, error } = await supabase.rpc('sanitize_input_centralized', {
+        p_input: data
+      });
+
+      if (error) {
+        console.error("Erro ao sanitizar dados no backend:", error);
+        throw new Error(error.message || "Erro ao sanitizar dados");
       }
-    );
 
-    if (error) {
-      console.error("Erro ao sanitizar dados no backend:", error);
-      throw new Error(error.message || "Erro ao sanitizar dados");
+      return response as T;
     }
 
-    if (!response.success) {
-      throw new Error(response.error || "Falha na sanitização de dados");
+    // Para objetos, sanitizar cada propriedade string
+    const sanitizedData = { ...data };
+    for (const key in sanitizedData) {
+      if (typeof sanitizedData[key] === 'string') {
+        const { data: response, error } = await supabase.rpc('sanitize_input_centralized', {
+          p_input: sanitizedData[key]
+        });
+        
+        if (!error) {
+          sanitizedData[key] = response;
+        }
+      }
     }
 
-    return response.data as T;
+    return sanitizedData as T;
   } catch (error) {
     console.error("Erro durante sanitização no backend:", error);
     // Em caso de falha na sanitização do backend, usamos o fallback do frontend
-    // Isso garante resiliência, mas mantém a centralização da lógica
     console.warn("Usando sanitização do frontend como fallback");
     const { sanitizeObject } = await import("./dataSanitization");
     return sanitizeObject(data) as T;
@@ -42,16 +52,15 @@ export const sanitizeInBackend = async <T>(data: any): Promise<T> => {
 };
 
 /**
- * Sanitiza dados de login no backend e então passa para a função de autenticação
- * Centraliza toda a lógica de sanitização para dados de autenticação
+ * Sanitiza dados de login no backend 
  */
 export const sanitizeLoginDataBackend = async (email: string, password: string): Promise<{ email: string | null | undefined; password: string }> => {
   try {
-    // Sanitiza apenas o email no backend (a senha não deve ser sanitizada para não afetar o hash)
-    const sanitizedData = await sanitizeInBackend<{ email: string | null | undefined; }>({ email });
+    // Sanitiza apenas o email no backend (a senha não deve ser sanitizada)
+    const sanitizedEmail = await sanitizeInBackend<string>(email);
     
     return {
-      email: sanitizedData.email,
+      email: sanitizedEmail,
       password // Password não é sanitizado para não interferir no hash
     };
   } catch (error) {
@@ -63,8 +72,7 @@ export const sanitizeLoginDataBackend = async (email: string, password: string):
 };
 
 /**
- * Sanitiza dados de cadastro no backend e então passa para a função de autenticação
- * Centraliza toda a lógica de sanitização para dados de cadastro
+ * Sanitiza dados de cadastro no backend
  */
 export const sanitizeSignupDataBackend = async (email: string, password: string, nome: string): Promise<{ 
   email: string | null | undefined; 
@@ -73,14 +81,12 @@ export const sanitizeSignupDataBackend = async (email: string, password: string,
 }> => {
   try {
     // Sanitiza email e nome no backend (a senha não deve ser sanitizada)
-    const sanitizedData = await sanitizeInBackend<{ 
-      email: string | null | undefined; 
-      nome: string | null | undefined; 
-    }>({ email, nome });
+    const sanitizedEmail = await sanitizeInBackend<string>(email);
+    const sanitizedNome = await sanitizeInBackend<string>(nome);
     
     return {
-      email: sanitizedData.email,
-      nome: sanitizedData.nome,
+      email: sanitizedEmail,
+      nome: sanitizedNome,
       password // Password não é sanitizado para não interferir no hash
     };
   } catch (error) {

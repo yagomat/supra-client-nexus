@@ -27,8 +27,16 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Calcular hora de expiração da sessão (8 horas a partir de agora)
-const calculateExpiryTime = (): Date => {
+// Calcular hora de expiração da sessão baseada no token JWT
+const calculateExpiryTime = (session: Session | null): Date | null => {
+  if (!session) return null;
+  
+  // Usar a expiração do token JWT se disponível
+  if (session.expires_at) {
+    return new Date(session.expires_at * 1000);
+  }
+  
+  // Fallback para 8 horas se não houver informação
   return new Date(new Date().getTime() + 8 * 60 * 60 * 1000);
 };
 
@@ -50,8 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             email: currentSession.user.email || "",
             nome: currentSession.user.user_metadata.nome
           });
-          // Atualizar tempo de expiração da sessão
-          setSessionExpiresAt(calculateExpiryTime());
+          // Calcular tempo de expiração baseado no token JWT
+          setSessionExpiresAt(calculateExpiryTime(currentSession));
         } else {
           setUser(null);
           setSessionExpiresAt(null);
@@ -69,8 +77,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: currentSession.user.email || "",
           nome: currentSession.user.user_metadata.nome
         });
-        // Atualizar tempo de expiração da sessão
-        setSessionExpiresAt(calculateExpiryTime());
+        // Calcular tempo de expiração baseado no token JWT
+        setSessionExpiresAt(calculateExpiryTime(currentSession));
       }
       setLoading(false);
     });

@@ -1,6 +1,5 @@
 
-import { useState } from "react";
-import { validateClienteData } from "@/services/valoresPredefinidosService/valoresPredefinidosActions";
+import { useValidationCentralized } from "@/hooks/useValidationCentralized";
 
 interface ValidationResult {
   valid: boolean;
@@ -8,7 +7,7 @@ interface ValidationResult {
 }
 
 export const useClienteValidation = () => {
-  const [validating, setValidating] = useState(false);
+  const { validating, validateCliente: validateClienteCentralized } = useValidationCentralized();
 
   const validateCliente = async (
     nome: string, 
@@ -22,28 +21,28 @@ export const useClienteValidation = () => {
     senhaAplicativo: string
   ): Promise<ValidationResult> => {
     try {
-      setValidating(true);
-      const result = await validateClienteData(
-        nome, 
-        telefone, 
-        uf, 
-        servidor, 
-        diaVencimento, 
-        valorPlano, 
-        aplicativo, 
-        usuarioAplicativo, 
-        senhaAplicativo
+      const result = await validateClienteCentralized(
+        nome,
+        servidor,
+        diaVencimento,
+        aplicativo,
+        usuarioAplicativo,
+        senhaAplicativo,
+        telefone || undefined,
+        uf || undefined,
+        valorPlano || undefined
       );
       
-      return result as unknown as ValidationResult;
+      return {
+        valid: result.valid,
+        errors: result.errors
+      };
     } catch (error) {
       console.error("Erro ao validar cliente:", error);
       return {
         valid: false,
         errors: ["Erro de conexão ao validar dados do cliente"]
       };
-    } finally {
-      setValidating(false);
     }
   };
 

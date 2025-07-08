@@ -9,11 +9,11 @@ export interface BackendValidationResult {
 }
 
 /**
- * Chama a função de validação do backend para garantir consistência
+ * Chama a função de validação centralizada do backend
  */
 export async function validateValueOnBackend(tipo: string, valor: string): Promise<BackendValidationResult> {
   try {
-    const { data, error } = await supabase.rpc('validate_valor_predefinido', {
+    const { data, error } = await supabase.rpc('validate_valor_predefinido_centralized', {
       p_tipo: tipo,
       p_valor: valor
     });
@@ -27,9 +27,7 @@ export async function validateValueOnBackend(tipo: string, valor: string): Promi
       };
     }
 
-    // A função SQL retorna um JSON, então precisamos fazer parse se necessário
-    const result = typeof data === 'string' ? JSON.parse(data) : data;
-    return result as BackendValidationResult;
+    return data as unknown as BackendValidationResult;
   } catch (error) {
     console.error("Erro na validação do backend:", error);
     return {
@@ -42,16 +40,17 @@ export async function validateValueOnBackend(tipo: string, valor: string): Promi
 
 /**
  * Obtém a configuração de validação do backend
- * Removida temporariamente até que a função seja adicionada aos tipos do Supabase
  */
 export async function getValidationConfigFromBackend() {
   try {
-    // Temporariamente comentado até os tipos serem atualizados
-    // const { data, error } = await supabase.rpc('get_validation_config');
+    const { data, error } = await supabase.rpc('get_validation_config');
     
-    // Por enquanto, retornar null - a configuração está centralizada no frontend
-    console.log("Configuração obtida do frontend - função backend será habilitada após atualização dos tipos");
-    return null;
+    if (error) {
+      console.error("Erro ao obter configuração de validação:", error);
+      return null;
+    }
+
+    return data;
   } catch (error) {
     console.error("Erro ao obter configuração de validação:", error);
     return null;

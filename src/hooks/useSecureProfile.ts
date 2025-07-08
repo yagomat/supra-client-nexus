@@ -33,7 +33,7 @@ export const useSecureProfile = () => {
         throw error;
       }
 
-      const typedResult = result as { 
+      const typedResult = result as unknown as { 
         success: boolean; 
         error?: string; 
         validation?: { errors: string[]; warnings: string[] }; 

@@ -498,6 +498,10 @@ export type Database = {
           user_id: string | null
         }[]
       }
+      get_validation_config: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_valores_predefinidos: {
         Args: { p_user_id: string }
         Returns: Json
@@ -588,6 +592,10 @@ export type Database = {
         }
         Returns: Json
       }
+      sanitize_input_centralized: {
+        Args: { p_input: string }
+        Returns: string
+      }
       secure_auth_attempt: {
         Args: {
           p_email: string
@@ -637,6 +645,20 @@ export type Database = {
         }
         Returns: Json
       }
+      validate_cliente_data_centralized: {
+        Args: {
+          p_nome: string
+          p_servidor: string
+          p_dia_vencimento: number
+          p_aplicativo: string
+          p_usuario_aplicativo: string
+          p_senha_aplicativo: string
+          p_telefone?: string
+          p_uf?: string
+          p_valor_plano?: number
+        }
+        Returns: Json
+      }
       validate_cliente_security: {
         Args: {
           p_nome: string
@@ -667,6 +689,10 @@ export type Database = {
       validate_valor_predefinido: {
         Args: { p_tipo: string; p_valor: string }
         Returns: boolean
+      }
+      validate_valor_predefinido_centralized: {
+        Args: { p_tipo: string; p_valor: string }
+        Returns: Json
       }
     }
     Enums: {
