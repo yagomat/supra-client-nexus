@@ -64,24 +64,31 @@ export const updateMensagemWhatsApp = async (tipo: TipoMensagem, mensagem: strin
       throw new Error("Usuário não autenticado");
     }
 
-    const { error } = await supabase
-      .from('mensagens_whatsapp')
-      .upsert({
-        user_id: userId,
-        tipo_mensagem: tipo,
-        mensagem: mensagem,
-        is_template_padrao: true,
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'user_id,tipo_mensagem'
-      });
+    // Usar função segura com validação e auditoria
+    const { data: result, error } = await supabase.rpc('secure_update_template', {
+      p_user_id: userId,
+      p_tipo: tipo,
+      p_mensagem: mensagem
+    });
 
     if (error) {
-      console.error("Erro ao atualizar mensagem WhatsApp:", error);
+      console.error("Erro ao atualizar template:", error);
       throw error;
     }
 
-    console.log(`Mensagem ${tipo} atualizada com sucesso`);
+    const typedResult = result as { success: boolean; error?: string; validation?: any };
+    
+    if (!typedResult.success) {
+      if (typedResult.error?.includes('Limite de')) {
+        throw new Error(`Rate limit: ${typedResult.error}`);
+      } else if (typedResult.validation?.errors?.length > 0) {
+        throw new Error(`Validação: ${typedResult.validation.errors.join(', ')}`);
+      } else {
+        throw new Error(typedResult.error || 'Erro desconhecido');
+      }
+    }
+
+    console.log(`Template ${tipo} atualizado com sucesso e auditado`);
   } catch (error) {
     console.error("Erro em updateMensagemWhatsApp:", error);
     throw error;
