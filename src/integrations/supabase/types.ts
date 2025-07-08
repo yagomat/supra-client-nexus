@@ -295,6 +295,10 @@ export type Database = {
         Args: { p_user_id: string; p_tipo: string; p_valor: string }
         Returns: Json
       }
+      check_export_rate_limit: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
       check_rate_limit: {
         Args: {
           p_user_id: string
@@ -502,6 +506,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      log_export_attempt: {
+        Args: { p_user_id: string; p_count: number }
+        Returns: undefined
+      }
       recalculate_all_client_status: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -522,6 +530,10 @@ export type Database = {
       }
       secure_create_cliente: {
         Args: { p_cliente_data: Json; p_ip_address?: string }
+        Returns: Json
+      }
+      secure_delete_cliente: {
+        Args: { p_cliente_id: string; p_ip_address?: string }
         Returns: Json
       }
       secure_update_cliente: {
