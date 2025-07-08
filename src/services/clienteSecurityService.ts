@@ -41,7 +41,7 @@ export class ClienteSecurityService {
         throw error;
       }
 
-      return result as SecurityValidationResult;
+      return result as unknown as SecurityValidationResult;
     } catch (error) {
       console.error('Erro na validação de segurança:', error);
       return {
@@ -95,7 +95,7 @@ export class ClienteSecurityService {
         throw error;
       }
 
-      return result as SecureOperationResult;
+      return result as unknown as SecureOperationResult;
     } catch (error) {
       console.error('Erro na criação segura do cliente:', error);
       return {
@@ -148,7 +148,7 @@ export class ClienteSecurityService {
         throw error;
       }
 
-      return result as SecureOperationResult;
+      return result as unknown as SecureOperationResult;
     } catch (error) {
       console.error('Erro na atualização segura do cliente:', error);
       return {

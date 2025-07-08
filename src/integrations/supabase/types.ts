@@ -520,6 +520,18 @@ export type Database = {
         }
         Returns: Json
       }
+      secure_create_cliente: {
+        Args: { p_cliente_data: Json; p_ip_address?: string }
+        Returns: Json
+      }
+      secure_update_cliente: {
+        Args: {
+          p_cliente_id: string
+          p_cliente_data: Json
+          p_ip_address?: string
+        }
+        Returns: Json
+      }
       validate_cliente_data: {
         Args: {
           p_nome: string
