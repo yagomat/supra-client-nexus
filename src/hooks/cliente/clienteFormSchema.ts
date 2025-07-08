@@ -33,8 +33,8 @@ export const formSchema = z.object({
     return val.length <= 25;
   }, "Dispositivo deve ter no máximo 25 caracteres"),
   aplicativo: z.string().min(1, "Aplicativo é obrigatório").max(25, "Aplicativo deve ter no máximo 25 caracteres"),
-  usuario_aplicativo: z.string().optional(),
-  senha_aplicativo: z.string().optional(),
+  usuario_aplicativo: z.string().min(1, "Usuário do aplicativo é obrigatório"),
+  senha_aplicativo: z.string().min(1, "Senha do aplicativo é obrigatória"),
   data_licenca_aplicativo: z.string().optional(),
   
   possui_tela_adicional: z.boolean().default(false),

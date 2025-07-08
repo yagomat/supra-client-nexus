@@ -59,7 +59,7 @@ const CadastrarCliente = () => {
 
   return (
     <DashboardLayout title="Cadastrar Cliente">
-      <div className="max-w-4xl mx-auto space-y-6 pb-20">
+      <div className="max-w-4xl mx-auto space-y-6">
         <CadastrarClienteSecurityAlert securityStatus={securityStatus} />
 
         <Form {...form}>
@@ -120,12 +120,10 @@ const CadastrarCliente = () => {
               </CardContent>
             </Card>
 
-            <div className="pb-4">
-              <CadastrarClienteActions 
-                isSubmitting={isSubmitting}
-                onCancel={handleCancel}
-              />
-            </div>
+            <CadastrarClienteActions 
+              isSubmitting={isSubmitting}
+              onCancel={handleCancel}
+            />
           </form>
         </Form>
       </div>
