@@ -8,29 +8,51 @@ import { SecurityAuditTab } from "@/components/configuracoes/SecurityAuditTab";
 const Configuracoes = () => {
   return (
     <DashboardLayout title="Configurações">
-      <div className="space-y-6">
-        <div>
-          <p className="text-muted-foreground">
-            Gerencie suas configurações e preferências do sistema.
-          </p>
+      <div className="space-y-8 animate-fade-in">
+        {/* Header com gradiente */}
+        <div className="relative p-6 bg-gradient-card rounded-lg border shadow-soft">
+          <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-lg"></div>
+          <div className="relative">
+            <h2 className="text-2xl font-semibold mb-2 text-foreground">
+              Configurações do Sistema
+            </h2>
+            <p className="text-muted-foreground">
+              Personalize sua experiência e gerencie as configurações do sistema.
+            </p>
+          </div>
         </div>
 
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="profile">Perfil</TabsTrigger>
-            <TabsTrigger value="preferences">Preferências</TabsTrigger>
-            <TabsTrigger value="security">Segurança</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 bg-gradient-subtle shadow-soft border-0 p-1">
+            <TabsTrigger 
+              value="profile" 
+              className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-medium transition-all duration-300 font-medium"
+            >
+              Perfil
+            </TabsTrigger>
+            <TabsTrigger 
+              value="preferences" 
+              className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-medium transition-all duration-300 font-medium"
+            >
+              Preferências
+            </TabsTrigger>
+            <TabsTrigger 
+              value="security" 
+              className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-medium transition-all duration-300 font-medium"
+            >
+              Segurança
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="profile" className="space-y-4">
+          <TabsContent value="profile" className="space-y-4 animate-slide-up">
             <ProfileTab />
           </TabsContent>
 
-          <TabsContent value="preferences" className="space-y-4">
+          <TabsContent value="preferences" className="space-y-4 animate-slide-up">
             <PreferencesTab />
           </TabsContent>
 
-          <TabsContent value="security" className="space-y-4">
+          <TabsContent value="security" className="space-y-4 animate-slide-up">
             <SecurityAuditTab />
           </TabsContent>
         </Tabs>

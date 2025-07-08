@@ -18,6 +18,7 @@
 
     --primary: 210 100% 50%;
     --primary-foreground: 210 40% 98%;
+    --primary-glow: 210 100% 65%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -45,6 +46,19 @@
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217.2 32.6% 17.5%;
     --sidebar-ring: 212.7 26.8% 83.9%;
+
+    /* Design System Enhancements */
+    --gradient-primary: linear-gradient(135deg, hsl(210 100% 50%), hsl(210 100% 65%));
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 100%), hsl(210 40% 99%));
+    --gradient-subtle: linear-gradient(180deg, hsl(210 40% 98%), hsl(210 40% 96%));
+    
+    --shadow-soft: 0 4px 6px -1px hsl(210 40% 20% / 0.1), 0 2px 4px -1px hsl(210 40% 20% / 0.06);
+    --shadow-medium: 0 10px 15px -3px hsl(210 40% 20% / 0.1), 0 4px 6px -2px hsl(210 40% 20% / 0.05);
+    --shadow-large: 0 20px 25px -5px hsl(210 40% 20% / 0.1), 0 10px 10px -5px hsl(210 40% 20% / 0.04);
+    --shadow-glow: 0 0 20px hsl(210 100% 50% / 0.3);
+    
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
@@ -59,6 +73,7 @@
 
     --primary: 210 100% 50%;
     --primary-foreground: 210 40% 98%;
+    --primary-glow: 210 100% 65%;
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -84,6 +99,16 @@
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217.2 32.6% 17.5%;
     --sidebar-ring: 212.7 26.8% 83.9%;
+
+    /* Dark Mode Design System */
+    --gradient-primary: linear-gradient(135deg, hsl(210 100% 50%), hsl(210 100% 65%));
+    --gradient-card: linear-gradient(135deg, hsl(222.2 84% 9.9%), hsl(217.2 32.6% 17.5%));
+    --gradient-subtle: linear-gradient(180deg, hsl(217.2 32.6% 17.5%), hsl(222.2 84% 9.9%));
+    
+    --shadow-soft: 0 4px 6px -1px hsl(0 0% 0% / 0.3), 0 2px 4px -1px hsl(0 0% 0% / 0.2);
+    --shadow-medium: 0 10px 15px -3px hsl(0 0% 0% / 0.3), 0 4px 6px -2px hsl(0 0% 0% / 0.2);
+    --shadow-large: 0 20px 25px -5px hsl(0 0% 0% / 0.3), 0 10px 10px -5px hsl(0 0% 0% / 0.2);
+    --shadow-glow: 0 0 20px hsl(210 100% 50% / 0.4);
   }
 
   * {
@@ -112,5 +137,120 @@
   
   .payment-unpaid {
     @apply bg-danger text-danger-foreground;
+  }
+
+  /* Visual Enhancement Classes */
+  .card-enhanced {
+    background: var(--gradient-card);
+    box-shadow: var(--shadow-soft);
+    transition: var(--transition-smooth);
+  }
+
+  .card-enhanced:hover {
+    box-shadow: var(--shadow-medium);
+    transform: translateY(-2px);
+  }
+
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+
+  .gradient-subtle {
+    background: var(--gradient-subtle);
+  }
+
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .transition-smooth {
+    transition: var(--transition-smooth);
+  }
+
+  .transition-fast {
+    transition: var(--transition-fast);
+  }
+
+  /* Animation Classes */
+  .animate-fade-in {
+    animation: fade-in 0.6s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.5s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.4s ease-out;
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Form Enhancements */
+  .form-enhanced {
+    position: relative;
+  }
+
+  .form-enhanced input:focus {
+    box-shadow: var(--shadow-glow);
+    border-color: hsl(var(--primary));
+  }
+
+  .form-enhanced .form-label {
+    font-weight: 500;
+    color: hsl(var(--foreground));
+  }
+
+  /* Button Enhancements */
+  .btn-enhanced {
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition-smooth);
+  }
+
+  .btn-enhanced::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+
+  .btn-enhanced:hover::before {
+    left: 100%;
   }
 }

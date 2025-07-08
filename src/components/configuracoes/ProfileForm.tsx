@@ -83,15 +83,19 @@ const onSubmit = async (data: ProfileFormValues) => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 form-enhanced">
         <FormField
           control={form.control}
           name="nome"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nome</FormLabel>
+            <FormItem className="space-y-2">
+              <FormLabel className="form-label text-sm font-semibold">Nome Completo</FormLabel>
               <FormControl>
-                <Input placeholder="Seu nome completo" {...field} />
+                <Input 
+                  placeholder="Digite seu nome completo" 
+                  {...field} 
+                  className="transition-all duration-300 border-2 focus:border-primary focus:ring-0 focus:shadow-glow bg-gradient-card hover:bg-gradient-subtle"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -101,17 +105,18 @@ const onSubmit = async (data: ProfileFormValues) => {
           control={form.control}
           name="email"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>E-mail</FormLabel>
+            <FormItem className="space-y-2">
+              <FormLabel className="form-label text-sm font-semibold">E-mail</FormLabel>
               <FormControl>
                 <Input 
                   placeholder="seuemail@exemplo.com" 
                   {...field} 
-                  disabled // Email não pode ser alterado diretamente
+                  disabled
+                  className="transition-all duration-300 border-2 bg-muted/50 text-muted-foreground cursor-not-allowed"
                 />
               </FormControl>
-              <FormDescription>
-                O e-mail é usado para login e não pode ser alterado.
+              <FormDescription className="text-xs text-muted-foreground bg-muted/30 p-2 rounded border-l-2 border-primary/30">
+                O e-mail é usado para login e não pode ser alterado por questões de segurança.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -121,22 +126,36 @@ const onSubmit = async (data: ProfileFormValues) => {
           control={form.control}
           name="telefone"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Telefone</FormLabel>
+            <FormItem className="space-y-2">
+              <FormLabel className="form-label text-sm font-semibold">Telefone</FormLabel>
               <FormControl>
                 <Input 
                   placeholder="(99) 99999-9999" 
                   {...field}
                   value={field.value || ""}
+                  className="transition-all duration-300 border-2 focus:border-primary focus:ring-0 focus:shadow-glow bg-gradient-card hover:bg-gradient-subtle"
                 />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit" disabled={isUpdating}>
-          {isUpdating ? "Salvando..." : "Salvar alterações"}
-        </Button>
+        <div className="pt-4 border-t border-border/50">
+          <Button 
+            type="submit" 
+            disabled={isUpdating}
+            className="btn-enhanced w-full bg-gradient-primary hover:bg-gradient-primary/90 text-white shadow-soft hover:shadow-medium transition-all duration-300"
+          >
+            {isUpdating ? (
+              <span className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Salvando...
+              </span>
+            ) : (
+              "Salvar Alterações"
+            )}
+          </Button>
+        </div>
       </form>
     </Form>
   );
