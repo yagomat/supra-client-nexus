@@ -33,19 +33,6 @@ const BancoDados = () => {
   return (
     <DashboardLayout title="Dados de Cadastro">
       <div className="space-y-8 animate-fade-in">
-        {/* Header com gradiente */}
-        <div className="relative p-6 bg-gradient-card rounded-lg border shadow-soft">
-          <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-lg"></div>
-          <div className="relative">
-            <h2 className="text-2xl font-semibold mb-2 text-foreground">
-              Dados de Cadastro
-            </h2>
-            <p className="text-muted-foreground">
-              Gerencie valores predefinidos para agilizar o cadastro de clientes.
-            </p>
-          </div>
-        </div>
-
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <div className="text-center space-y-4">

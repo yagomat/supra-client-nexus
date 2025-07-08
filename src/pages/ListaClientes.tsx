@@ -38,21 +38,8 @@ const ListaClientes = () => {
   return (
     <DashboardLayout title="Clientes">
       <div className="space-y-8 animate-fade-in">
-        {/* Header com gradiente */}
-        <div className="relative p-6 bg-gradient-card rounded-lg border shadow-soft">
-          <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-lg"></div>
-          <div className="relative">
-            <h2 className="text-2xl font-semibold mb-2 text-foreground">
-              Gestão de Clientes
-            </h2>
-            <p className="text-muted-foreground">
-              Gerencie todos os seus clientes, visualize status e histórico de pagamentos.
-            </p>
-          </div>
-        </div>
-
         <div className="animate-slide-up">
-          <ClienteListContent 
+          <ClienteListContent
             loading={loading}
             filteredClientes={filteredClientes}
             allClientes={clientes}

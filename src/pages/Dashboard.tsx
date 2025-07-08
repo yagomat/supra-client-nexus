@@ -74,22 +74,9 @@ const Dashboard = () => {
   return (
     <DashboardLayout title="Dashboard">
       <div className="space-y-8 animate-fade-in">
-        {/* Header com gradiente */}
-        <div className="relative p-6 bg-gradient-card rounded-lg border shadow-soft">
-          <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-lg"></div>
-          <div className="relative">
-            <h2 className="text-2xl font-semibold mb-2 text-foreground">
-              Visão Geral do Sistema
-            </h2>
-            <p className="text-muted-foreground">
-              Acompanhe suas métricas e estatísticas em tempo real.
-            </p>
-          </div>
-        </div>
-
-        <div className="animate-slide-up">
-          <DashboardContent stats={stats} loading={loading} />
-        </div>
+      <div className="animate-slide-up">
+        <DashboardContent stats={stats} loading={loading} />
+      </div>
       </div>
     </DashboardLayout>
   );

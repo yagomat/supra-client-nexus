@@ -83,27 +83,6 @@ const CadastrarCliente = () => {
   return (
     <DashboardLayout title="Cadastrar Cliente">
       <div className="space-y-8 animate-fade-in">
-        {/* Header com gradiente */}
-        <div className="relative p-6 bg-gradient-card rounded-lg border shadow-soft">
-          <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-lg"></div>
-          <div className="relative">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-semibold mb-2 text-foreground">
-                  Cadastrar Novo Cliente
-                </h2>
-                <p className="text-muted-foreground">
-                  Preencha os campos abaixo para cadastrar um novo cliente com validação de segurança.
-                </p>
-              </div>
-              <div className="flex items-center space-x-2 bg-green-50 dark:bg-green-900/20 px-3 py-2 rounded-lg">
-                <Shield className="h-4 w-4 text-green-600" />
-                <span className="text-sm font-medium text-green-700 dark:text-green-300">Validação Segura</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Status de Segurança */}
         {securityStatus.hasErrors && (
           <Alert variant="destructive" className="animate-scale-in">

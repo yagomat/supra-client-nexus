@@ -9,19 +9,6 @@ const Configuracoes = () => {
   return (
     <DashboardLayout title="Configurações">
       <div className="space-y-8 animate-fade-in">
-        {/* Header com gradiente */}
-        <div className="relative p-6 bg-gradient-card rounded-lg border shadow-soft">
-          <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-lg"></div>
-          <div className="relative">
-            <h2 className="text-2xl font-semibold mb-2 text-foreground">
-              Configurações do Sistema
-            </h2>
-            <p className="text-muted-foreground">
-              Personalize sua experiência e gerencie as configurações do sistema.
-            </p>
-          </div>
-        </div>
-
         <Tabs defaultValue="profile" className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-gradient-subtle shadow-soft border-0 p-1">
             <TabsTrigger 
