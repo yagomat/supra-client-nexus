@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Form } from "@/components/ui/form";
@@ -64,8 +63,8 @@ const CadastrarCliente = () => {
     form.setValue("possui_tela_adicional", possuiTelaAdicional);
   }, [possuiTelaAdicional, form]);
 
-  // Função para validar campos obrigatórios e tratar datas
-  const handleSubmitWithValidation = (data: ClienteFormValues) => {
+  // Função personalizada para validar e processar dados antes da submissão
+  const handleFormSubmission = async (data: ClienteFormValues) => {
     console.log("Dados do formulário antes da validação:", data);
     
     const requiredFields = [
@@ -104,8 +103,8 @@ const CadastrarCliente = () => {
 
     console.log("Dados sanitizados:", sanitizedData);
 
-    // Submeter o formulário com dados sanitizados
-    onSubmit(sanitizedData);
+    // Chamar o onSubmit do hook que já está preparado para receber os dados
+    await onSubmit(sanitizedData);
   };
 
   if (loading) {
@@ -136,7 +135,7 @@ const CadastrarCliente = () => {
         )}
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmitWithValidation)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleFormSubmission)} className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Informações Básicas</CardTitle>
