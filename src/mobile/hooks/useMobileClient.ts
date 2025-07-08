@@ -58,9 +58,9 @@ export const useMobileClient = () => {
       dia_vencimento: cliente.dia_vencimento,
       valor_plano: cliente.valor_plano,
       dispositivo_smart: null, // Campo opcional
-      aplicativo: cliente.aplicativo || '',
-      usuario_aplicativo: cliente.usuario_aplicativo || '',
-      senha_aplicativo: cliente.senha_aplicativo || '',
+      aplicativo: (cliente as any).aplicativo || '', // Usar fallback se não existir
+      usuario_aplicativo: (cliente as any).usuario_aplicativo || '', // Usar fallback se não existir
+      senha_aplicativo: (cliente as any).senha_aplicativo || '', // Usar fallback se não existir
       data_licenca_aplicativo: null, // Campo opcional
       possui_tela_adicional: false, // Valor padrão
       dispositivo_smart_2: null, // Campo opcional
