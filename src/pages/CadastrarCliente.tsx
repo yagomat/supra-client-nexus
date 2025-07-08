@@ -103,8 +103,13 @@ const CadastrarCliente = () => {
 
     console.log("Dados sanitizados:", sanitizedData);
 
-    // Chamar o onSubmit do hook que já está preparado para receber os dados
-    await onSubmit(sanitizedData);
+    // Submeter usando o método correto do formulário
+    form.setValue("data_licenca_aplicativo", sanitizedData.data_licenca_aplicativo || "");
+    form.setValue("data_licenca_2", sanitizedData.data_licenca_2 || "");
+    
+    // Chamar o onSubmit que já está preparado para ser usado como handler
+    const formEvent = new Event('submit') as any;
+    await onSubmit(formEvent);
   };
 
   if (loading) {
@@ -135,7 +140,7 @@ const CadastrarCliente = () => {
         )}
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleFormSubmission)} className="space-y-6">
+          <form onSubmit={onSubmit} className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Informações Básicas</CardTitle>
