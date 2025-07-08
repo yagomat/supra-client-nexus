@@ -2,12 +2,15 @@
 import { useState, useEffect } from 'react';
 import { mobileApiService, MobileClienteInfo, MobileTemplate } from '../services/mobileApiService';
 import { useWhatsAppDetection } from './useWhatsAppDetection';
+import { formatarMensagemWhatsAppComCliente } from '@/utils/whatsappUtils';
+import { usePaymentHistory } from '@/hooks/cliente/usePaymentHistory';
 
 export const useMobileClient = () => {
   const [cliente, setCliente] = useState<MobileClienteInfo | null>(null);
   const [templates, setTemplates] = useState<MobileTemplate[]>([]);
   const [loading, setLoading] = useState(false);
   const { currentContact } = useWhatsAppDetection();
+  const { payments: allPayments } = usePaymentHistory(cliente?.id || '');
 
   useEffect(() => {
     loadTemplates();
@@ -43,11 +46,25 @@ export const useMobileClient = () => {
   const formatarTemplate = (template: MobileTemplate): string => {
     if (!cliente) return template.mensagem;
 
-    return template.mensagem
-      .replace('{{nome}}', cliente.nome)
-      .replace('{{dia_vencimento}}', cliente.dia_vencimento.toString())
-      .replace('{{valor_plano}}', cliente.valor_plano?.toFixed(2) || '0.00')
-      .replace('{{servidor}}', cliente.servidor);
+    // Converter dados do mobile para o formato Cliente
+    const clienteFormatado = {
+      id: cliente.id,
+      nome: cliente.nome,
+      telefone: cliente.telefone,
+      servidor: cliente.servidor,
+      status: cliente.status,
+      dia_vencimento: cliente.dia_vencimento,
+      valor_plano: cliente.valor_plano,
+      // Campos obrigatórios com valores padrão
+      created_at: new Date().toISOString(),
+      user_id: '',
+      aplicativo: '',
+      usuario_aplicativo: '',
+      senha_aplicativo: ''
+    };
+
+    // Usar a nova função que calcula corretamente os dados de vencimento
+    return formatarMensagemWhatsAppComCliente(template.mensagem, clienteFormatado, allPayments);
   };
 
   return {

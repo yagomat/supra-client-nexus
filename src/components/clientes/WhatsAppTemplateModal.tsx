@@ -13,8 +13,9 @@ import { Label } from "@/components/ui/label";
 import { MessageCircle, Send } from "lucide-react";
 import { Cliente } from "@/types";
 import { useMensagensWhatsApp } from "@/hooks/useMensagensWhatsApp";
-import { formatarMensagemWhatsApp, gerarLinkWhatsApp, abrirWhatsApp } from "@/utils/whatsappUtils";
+import { formatarMensagemWhatsAppComCliente, gerarLinkWhatsApp, abrirWhatsApp } from "@/utils/whatsappUtils";
 import { useToast } from "@/components/ui/use-toast";
+import { usePaymentHistory } from "@/hooks/cliente/usePaymentHistory";
 
 interface WhatsAppTemplateModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ export const WhatsAppTemplateModal = ({
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [customMessage, setCustomMessage] = useState<string>("");
   const { toast } = useToast();
+  const { payments: allPayments } = usePaymentHistory(cliente.id);
 
   const tiposTemplate = [
     { key: 'a_vencer', label: 'A Vencer' },
@@ -42,17 +44,11 @@ export const WhatsAppTemplateModal = ({
   const handleTemplateSelect = (templateKey: string) => {
     setSelectedTemplate(templateKey);
     if (mensagens[templateKey as keyof typeof mensagens]) {
-      // Simular dados de cobrança para formatação
-      const mockFilaCobranca = {
-        cliente_nome: cliente.nome,
-        dias_para_vencimento: Math.abs(new Date().getDay() - cliente.dia_vencimento),
-        data_proximo_pagamento: new Date().toISOString(),
-        valor_plano: cliente.valor_plano || 0
-      };
-      
-      const mensagemFormatada = formatarMensagemWhatsApp(
+      // Usar a nova função que calcula corretamente os dados de vencimento
+      const mensagemFormatada = formatarMensagemWhatsAppComCliente(
         mensagens[templateKey as keyof typeof mensagens],
-        mockFilaCobranca as any
+        cliente,
+        allPayments
       );
       setCustomMessage(mensagemFormatada);
     }
