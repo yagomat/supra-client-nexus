@@ -1,4 +1,5 @@
 
+
 -- Atualizar função de exclusão segura para aumentar o limite de rate limiting
 CREATE OR REPLACE FUNCTION public.secure_delete_cliente(
   p_cliente_id UUID,
@@ -115,3 +116,4 @@ BEGIN
   RETURN v_request_count < p_max_requests;
 END;
 $$;
+
