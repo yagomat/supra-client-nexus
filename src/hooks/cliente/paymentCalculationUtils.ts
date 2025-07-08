@@ -12,6 +12,7 @@ export const calculatePaymentStatus = (
   allPayments: Pagamento[]
 ): PaymentCalculationResult => {
   const today = new Date();
+  today.setHours(0, 0, 0, 0); // Normalizar para início do dia
   const currentDay = today.getDate();
   const currentMonth = today.getMonth() + 1;
   const currentYear = today.getFullYear();
@@ -24,9 +25,12 @@ export const calculatePaymentStatus = (
       return b.mes - a.mes;
     });
 
-  // Se não há pagamentos válidos, usar lógica original
+  // Se não há pagamentos válidos, não mostrar informação de vencimento
   if (validPayments.length === 0) {
-    return calculateOriginalLogic(cliente, currentDay, currentMonth, currentYear);
+    return {
+      type: 'no_info',
+      days: 0
+    };
   }
 
   // Separar pagamentos passados/presentes e futuros
@@ -44,14 +48,16 @@ export const calculatePaymentStatus = (
   );
 
   // Para clientes ATIVOS (com pagamento no mês atual)
-  if (currentMonthPayment) {
+  if (currentMonthPayment && cliente.status === 'ativo') {
     // Encontrar a sequência consecutiva mais longa começando do mês atual
     const consecutiveSequence = findConsecutiveSequence(validPayments, currentYear, currentMonth);
     
     // O vencimento será baseado no último mês da sequência consecutiva
     const lastConsecutivePayment = consecutiveSequence[consecutiveSequence.length - 1];
     const nextDueDate = calculateNextDueDate(lastConsecutivePayment, cliente.dia_vencimento);
-    const daysDiff = Math.ceil((nextDueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    nextDueDate.setHours(0, 0, 0, 0); // Normalizar para início do dia
+    
+    const daysDiff = Math.floor((nextDueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
     if (daysDiff > 0) {
       return {
@@ -74,18 +80,20 @@ export const calculatePaymentStatus = (
     }
   }
 
-  // Para clientes INATIVOS (sem pagamento no mês atual)
+  // Para clientes INATIVOS (sem pagamento no mês atual ou status inativo)
   
   // Cenário: Cliente com pagamentos futuros mas sem pagamento presente
   if (futurePayments.length > 0 && pastAndCurrentPayments.length > 0) {
     // Mostrar vencimento baseado no último pagamento passado (em atraso)
     const lastPastPayment = pastAndCurrentPayments[0];
     const nextDueDate = calculateNextDueDate(lastPastPayment, cliente.dia_vencimento);
-    const daysDiff = Math.ceil((today.getTime() - nextDueDate.getTime()) / (1000 * 60 * 60 * 24));
+    nextDueDate.setHours(0, 0, 0, 0); // Normalizar para início do dia
+    
+    const daysDiff = Math.floor((today.getTime() - nextDueDate.getTime()) / (1000 * 60 * 60 * 24));
 
     return {
       type: 'overdue',
-      days: daysDiff,
+      days: Math.max(daysDiff, 1), // Garantir que seja pelo menos 1 dia
       lastPaymentDate: new Date(lastPastPayment.ano, lastPastPayment.mes - 1),
       nextDueDate
     };
@@ -99,38 +107,43 @@ export const calculatePaymentStatus = (
     };
   }
 
-  // Encontrar último pagamento válido (incluindo presente)
-  const lastPayment = validPayments[0];
-  
-  // Calcular data de vencimento baseada no último pagamento
-  const nextDueDate = calculateNextDueDate(lastPayment, cliente.dia_vencimento);
-  
-  // Calcular diferença de dias desde o vencimento do último pagamento
-  const daysDiff = Math.ceil((today.getTime() - nextDueDate.getTime()) / (1000 * 60 * 60 * 24));
+  // Cliente inativo com histórico de pagamentos
+  if (pastAndCurrentPayments.length > 0) {
+    const lastPayment = pastAndCurrentPayments[0];
+    const nextDueDate = calculateNextDueDate(lastPayment, cliente.dia_vencimento);
+    nextDueDate.setHours(0, 0, 0, 0); // Normalizar para início do dia
+    
+    const daysDiff = Math.floor((today.getTime() - nextDueDate.getTime()) / (1000 * 60 * 60 * 24));
 
-  if (daysDiff > 0) {
-    return {
-      type: 'overdue',
-      days: daysDiff,
-      lastPaymentDate: new Date(lastPayment.ano, lastPayment.mes - 1),
-      nextDueDate
-    };
-  } else if (daysDiff === 0) {
-    return {
-      type: 'today',
-      days: 0,
-      nextDueDate
-    };
-  } else {
-    return {
-      type: 'upcoming',
-      days: Math.abs(daysDiff),
-      nextDueDate
-    };
+    if (daysDiff > 0) {
+      return {
+        type: 'overdue',
+        days: daysDiff,
+        lastPaymentDate: new Date(lastPayment.ano, lastPayment.mes - 1),
+        nextDueDate
+      };
+    } else if (daysDiff === 0) {
+      return {
+        type: 'today',
+        days: 0,
+        nextDueDate
+      };
+    } else {
+      return {
+        type: 'upcoming',
+        days: Math.abs(daysDiff),
+        nextDueDate
+      };
+    }
   }
+
+  // Fallback: sem informação
+  return {
+    type: 'no_info',
+    days: 0
+  };
 };
 
-// Nova função para encontrar sequência consecutiva de pagamentos
 const findConsecutiveSequence = (payments: Pagamento[], startYear: number, startMonth: number): Pagamento[] => {
   const sequence: Pagamento[] = [];
   let currentYear = startYear;
@@ -172,58 +185,6 @@ const calculateNextDueDate = (payment: Pagamento, diaVencimento: number): Date =
   const adjustedDueDay = Math.min(diaVencimento, lastDayOfMonth);
   
   return new Date(nextYear, nextMonth - 1, adjustedDueDay);
-};
-
-const calculateOriginalLogic = (
-  cliente: Cliente,
-  currentDay: number,
-  currentMonth: number,
-  currentYear: number
-): PaymentCalculationResult => {
-  const lastDayOfMonth = new Date(currentYear, currentMonth, 0).getDate();
-  const adjustedDueDay = Math.min(cliente.dia_vencimento, lastDayOfMonth);
-  
-  if (cliente.status === 'inativo') {
-    if (currentDay > adjustedDueDay) {
-      const daysPastDue = currentDay - adjustedDueDay;
-      return { type: 'overdue', days: daysPastDue };
-    } 
-    else if (currentDay === adjustedDueDay) {
-      return { type: 'today', days: 0 };
-    } 
-    else {
-      const lastMonth = currentMonth === 1 ? 12 : currentMonth - 1;
-      const lastMonthYear = currentMonth === 1 ? currentYear - 1 : currentYear;
-      const lastMonthLastDay = new Date(lastMonthYear, lastMonth, 0).getDate();
-      const lastMonthAdjustedDueDay = Math.min(cliente.dia_vencimento, lastMonthLastDay);
-      
-      const daysFromDueToEndOfLastMonth = lastMonthLastDay - lastMonthAdjustedDueDay;
-      const daysInCurrentMonth = currentDay;
-      
-      const totalDaysPastDue = daysFromDueToEndOfLastMonth + daysInCurrentMonth;
-      return { type: 'overdue', days: totalDaysPastDue };
-    }
-  } else {
-    if (currentDay < adjustedDueDay) {
-      const daysUntilDue = adjustedDueDay - currentDay;
-      return { type: 'upcoming', days: daysUntilDue };
-    } 
-    else if (currentDay === adjustedDueDay) {
-      return { type: 'today', days: 0 };
-    } 
-    else {
-      const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
-      const nextMonthYear = currentMonth === 12 ? currentYear + 1 : currentYear;
-      const nextMonthLastDay = new Date(nextMonthYear, nextMonth, 0).getDate();
-      const nextMonthAdjustedDueDay = Math.min(cliente.dia_vencimento, nextMonthLastDay);
-      
-      const daysToEndOfCurrentMonth = lastDayOfMonth - currentDay;
-      const daysInNextMonth = nextMonthAdjustedDueDay;
-      
-      const totalDaysUntilDue = daysToEndOfCurrentMonth + daysInNextMonth;
-      return { type: 'upcoming', days: totalDaysUntilDue };
-    }
-  }
 };
 
 export const calculateSortingPriority = (
