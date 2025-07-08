@@ -38,7 +38,7 @@ const BancoDados = () => {
           <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-lg"></div>
           <div className="relative">
             <h2 className="text-2xl font-semibold mb-2 text-foreground">
-              Banco de Dados
+              Dados de Cadastro
             </h2>
             <p className="text-muted-foreground">
               Gerencie valores predefinidos para agilizar o cadastro de clientes.
