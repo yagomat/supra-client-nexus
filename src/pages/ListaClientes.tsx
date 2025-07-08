@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { ClienteModals } from "@/components/clientes/ClienteModals";
 import { ClienteListContent } from "@/components/clientes/ClienteListContent";
-import { useClienteList } from "@/hooks/cliente/useClienteList";
+import { useOptimizedClienteList } from "@/hooks/cliente/useOptimizedClienteList";
 
 const ListaClientes = () => {
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ const ListaClientes = () => {
     confirmarExclusao,
     handleExcluir,
     fetchClientes
-  } = useClienteList();
+  } = useOptimizedClienteList();
 
   return (
     <DashboardLayout title="Clientes">

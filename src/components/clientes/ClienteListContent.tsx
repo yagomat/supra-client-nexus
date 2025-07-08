@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/clientes/EmptyState";
 import { LoadingState } from "@/components/clientes/LoadingState";
 import { ClienteFilters } from "@/components/clientes/ClienteFilters";
 import { ClienteExcelButtons } from "@/components/clientes/ClienteExcelButtons";
+import { PerformanceIndicator } from "@/components/clientes/PerformanceIndicator";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { UserPlus } from "lucide-react";
@@ -88,13 +89,11 @@ export const ClienteListContent = ({
     setCurrentPage(1);
   };
   
-  // Manipulador para limpar filtros
   const handleClearFilters = () => {
     handleLimparFiltros();
     setCurrentPage(1);
   };
   
-  // Manipulador para mudar itens por página
   const handleItemsPerPageChange = (value: number) => {
     setItemsPerPage(value);
     setCurrentPage(1);
@@ -124,7 +123,11 @@ export const ClienteListContent = ({
           onOrderChange={onOrderChange}
         />
         
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center">
+          <PerformanceIndicator 
+            totalClientes={allClientes.length}
+            filteredClientes={filteredClientes.length}
+          />
           <ClienteViewToggle 
             viewMode={viewMode}
             onViewModeChange={setViewMode}
