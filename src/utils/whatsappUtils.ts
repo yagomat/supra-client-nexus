@@ -1,4 +1,3 @@
-
 import { FilaCobranca } from "@/services/cobrancaService";
 import { Cliente, Pagamento } from "@/types";
 import { format } from "date-fns";
@@ -82,24 +81,28 @@ const calcularProximaDataVencimento = (
       pontoInicio = { mes: mesAnterior, ano: anoAnterior };
     }
 
-    // Encontrar sequência consecutiva a partir do ponto de início
-    const sequenciaConsecutiva = encontrarSequenciaConsecutiva(validPayments, pontoInicio);
+    // Encontrar sequência consecutiva SOMENTE para frente a partir do ponto de início
+    const sequenciaConsecutiva = encontrarSequenciaConsecutivaParaFrente(validPayments, pontoInicio);
     
     if (sequenciaConsecutiva.length > 0) {
       const ultimoPagamento = sequenciaConsecutiva[sequenciaConsecutiva.length - 1];
       return calcularProximaData(ultimoPagamento, cliente.dia_vencimento);
     }
   } else {
-    // CLIENTE INATIVO: Mostrar data de vencimento baseada no último pagamento
-    const ultimoPagamento = validPayments[validPayments.length - 1];
-    return calcularProximaData(ultimoPagamento, cliente.dia_vencimento);
+    // CLIENTE INATIVO: Mostrar data de vencimento baseada no último pagamento consecutivo
+    const ultimaSequenciaConsecutiva = encontrarUltimaSequenciaConsecutiva(validPayments);
+    
+    if (ultimaSequenciaConsecutiva.length > 0) {
+      const ultimoPagamento = ultimaSequenciaConsecutiva[ultimaSequenciaConsecutiva.length - 1];
+      return calcularProximaData(ultimoPagamento, cliente.dia_vencimento);
+    }
   }
 
   return null;
 };
 
-// Função para encontrar sequência consecutiva a partir de um ponto específico
-const encontrarSequenciaConsecutiva = (
+// Nova função para encontrar sequência consecutiva APENAS para frente (sem gaps)
+const encontrarSequenciaConsecutivaParaFrente = (
   validPayments: Pagamento[], 
   pontoInicio: { mes: number, ano: number }
 ): Pagamento[] => {
@@ -107,7 +110,7 @@ const encontrarSequenciaConsecutiva = (
   let mesAtual = pontoInicio.mes;
   let anoAtual = pontoInicio.ano;
 
-  // Continuar a sequência enquanto houver pagamentos consecutivos
+  // Continuar a sequência enquanto houver pagamentos consecutivos (SEM GAPS)
   while (true) {
     const pagamento = validPayments.find(p => p.mes === mesAtual && p.ano === anoAtual);
     
@@ -122,6 +125,39 @@ const encontrarSequenciaConsecutiva = (
     if (mesAtual > 12) {
       mesAtual = 1;
       anoAtual++;
+    }
+  }
+
+  return sequencia;
+};
+
+// Nova função para encontrar a última sequência consecutiva válida (para clientes inativos)
+const encontrarUltimaSequenciaConsecutiva = (validPayments: Pagamento[]): Pagamento[] => {
+  if (validPayments.length === 0) return [];
+
+  // Começar do pagamento mais recente e ir para trás procurando a sequência
+  const sortedPayments = [...validPayments].sort((a, b) => {
+    if (a.ano !== b.ano) return b.ano - a.ano;
+    return b.mes - a.mes;
+  });
+
+  // Encontrar a maior sequência consecutiva terminando no pagamento mais recente
+  const sequencia: Pagamento[] = [];
+  let expectedYear = sortedPayments[0].ano;
+  let expectedMonth = sortedPayments[0].mes;
+
+  for (const payment of sortedPayments) {
+    if (payment.ano === expectedYear && payment.mes === expectedMonth) {
+      sequencia.unshift(payment); // Adicionar no início para manter ordem cronológica
+      
+      // Calcular mês anterior
+      expectedMonth--;
+      if (expectedMonth < 1) {
+        expectedMonth = 12;
+        expectedYear--;
+      }
+    } else {
+      break; // Gap encontrado, parar a sequência
     }
   }
 
