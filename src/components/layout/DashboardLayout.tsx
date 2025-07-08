@@ -8,7 +8,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -20,7 +19,6 @@ export function DashboardLayout({ children, className, title }: DashboardLayoutP
   const isMobile = useIsMobile();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { signOut } = useAuth();
-  const navigate = useNavigate();
 
   // Listen for sidebar collapse state changes
   const handleSidebarStateChange = (collapsed: boolean) => {
@@ -28,18 +26,18 @@ export function DashboardLayout({ children, className, title }: DashboardLayoutP
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background overflow-hidden">
       {/* Only show sidebar in desktop mode */}
       {!isMobile && <SidebarMenu onCollapseChange={handleSidebarStateChange} />}
       
       <main className={cn(
-        "flex-1 overflow-auto transition-all duration-300", 
-        isMobile ? "w-full px-3 py-2" : 
+        "flex-1 flex flex-col overflow-hidden transition-all duration-300", 
+        isMobile ? "w-full" : 
           sidebarCollapsed ? "ml-[70px]" : "ml-64", 
         className
       )}>
         {isMobile ? (
-          <div className="mb-4 flex items-center justify-between">
+          <div className="flex-shrink-0 p-3 flex items-center justify-between border-b">
             <div className="flex items-center">
               <MobileMenu />
               {title && <h1 className="text-xl font-bold ml-4">{title}</h1>}
@@ -58,7 +56,7 @@ export function DashboardLayout({ children, className, title }: DashboardLayoutP
             </div>
           </div>
         ) : (
-          <div className="flex justify-between items-center container px-4 pt-2">
+          <div className="flex-shrink-0 flex justify-between items-center px-4 py-2 border-b">
             {title && <h1 className="text-2xl font-bold">{title}</h1>}
             <div className="flex items-center gap-1 ml-auto">
               <ThemeToggle />
@@ -74,9 +72,10 @@ export function DashboardLayout({ children, className, title }: DashboardLayoutP
             </div>
           </div>
         )}
+        
         <div className={cn(
-          "w-full", 
-          isMobile ? "px-0" : "container px-4 py-6"
+          "flex-1 overflow-y-auto", 
+          isMobile ? "px-3 py-2" : "px-4 py-6"
         )}>
           {children}
         </div>

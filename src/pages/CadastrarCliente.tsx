@@ -30,7 +30,6 @@ const CadastrarCliente = () => {
     onSubmit,
     isSubmitting,
     securityStatus,
-    isFormValid,
     realTimeValidation,
     toggleRealTimeValidation
   } = useSecureClienteForm({ 
@@ -64,16 +63,50 @@ const CadastrarCliente = () => {
     form.setValue("possui_tela_adicional", possuiTelaAdicional);
   }, [possuiTelaAdicional, form]);
 
+  // Função para validar campos obrigatórios e mostrar mensagem
+  const handleSubmitWithValidation = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const formData = form.getValues();
+    const requiredFields = [
+      { field: 'nome', name: 'Nome' },
+      { field: 'servidor', name: 'Servidor' },
+      { field: 'aplicativo', name: 'Aplicativo' },
+      { field: 'usuario_aplicativo', name: 'Usuário (MAC)' },
+      { field: 'senha_aplicativo', name: 'Senha (Id)' }
+    ];
+
+    const missingFields = requiredFields.filter(({ field }) => !formData[field as keyof typeof formData]);
+
+    if (missingFields.length > 0) {
+      // Destacar campos obrigatórios
+      missingFields.forEach(({ field }) => {
+        form.setError(field as any, {
+          type: 'required',
+          message: 'Este campo é obrigatório'
+        });
+      });
+
+      toast({
+        title: "Campos obrigatórios não preenchidos",
+        description: `Por favor, preencha: ${missingFields.map(f => f.name).join(', ')}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Se todos os campos estão preenchidos, submeter o formulário
+    form.handleSubmit(onSubmit)(e);
+  };
+
   if (loading) {
     return (
       <DashboardLayout title="Cadastrar Cliente">
-        <div className="space-y-8 animate-fade-in">
-          <div className="flex items-center justify-center py-16">
-            <div className="text-center space-y-4">
-              <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
-              <span className="text-lg font-medium">Carregando valores predefinidos...</span>
-              <p className="text-muted-foreground">Aguarde enquanto preparamos o formulário</p>
-            </div>
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center space-y-4">
+            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
+            <span className="text-lg font-medium">Carregando valores predefinidos...</span>
+            <p className="text-muted-foreground">Aguarde enquanto preparamos o formulário</p>
           </div>
         </div>
       </DashboardLayout>
@@ -82,17 +115,8 @@ const CadastrarCliente = () => {
 
   return (
     <DashboardLayout title="Cadastrar Cliente">
-      <div className="space-y-8 animate-fade-in">
+      <div className="max-w-4xl mx-auto space-y-6 pb-8">
         {/* Status de Segurança */}
-        {securityStatus.hasErrors && (
-          <Alert variant="destructive" className="animate-scale-in">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              {securityStatus.errors.join(", ")}
-            </AlertDescription>
-          </Alert>
-        )}
-
         {securityStatus.hasWarnings && (
           <Alert className="animate-scale-in">
             <AlertTriangle className="h-4 w-4" />
@@ -103,15 +127,10 @@ const CadastrarCliente = () => {
         )}
 
         <Form {...form}>
-          <form onSubmit={onSubmit} className="space-y-6">
-            <Card className="card-enhanced animate-slide-up">
+          <form onSubmit={handleSubmitWithValidation} className="space-y-6">
+            <Card className="card-enhanced">
               <CardHeader className="bg-gradient-subtle rounded-t-lg">
-                <CardTitle className="flex items-center gap-2">
-                  <div className="w-6 h-6 bg-gradient-primary rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-xs">1</span>
-                  </div>
-                  Informações Básicas
-                </CardTitle>
+                <CardTitle>Informações Básicas</CardTitle>
               </CardHeader>
               <CardContent className="p-6">
                 <CadastrarClienteBasicInformation 
@@ -122,14 +141,9 @@ const CadastrarCliente = () => {
               </CardContent>
             </Card>
 
-            <Card className="card-enhanced animate-slide-up">
+            <Card className="card-enhanced">
               <CardHeader className="bg-gradient-subtle rounded-t-lg">
-                <CardTitle className="flex items-center gap-2">
-                  <div className="w-6 h-6 bg-gradient-primary rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-xs">2</span>
-                  </div>
-                  Tela Principal
-                </CardTitle>
+                <CardTitle>Tela Principal</CardTitle>
               </CardHeader>
               <CardContent className="p-6">
                 <CadastrarClienteMainScreen 
@@ -140,7 +154,7 @@ const CadastrarCliente = () => {
               </CardContent>
             </Card>
 
-            <div className="flex items-center space-x-3 p-4 bg-gradient-card rounded-lg border border-border/50 animate-slide-up">
+            <div className="flex items-center space-x-3 p-4 bg-gradient-card rounded-lg border border-border/50">
               <Switch
                 id="possuiTelaAdicional"
                 checked={possuiTelaAdicional}
@@ -158,12 +172,7 @@ const CadastrarCliente = () => {
             {possuiTelaAdicional && (
               <Card className="card-enhanced animate-scale-in">
                 <CardHeader className="bg-gradient-subtle rounded-t-lg">
-                  <CardTitle className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-gradient-primary rounded-full flex items-center justify-center">
-                      <span className="text-white font-bold text-xs">3</span>
-                    </div>
-                    Tela Adicional
-                  </CardTitle>
+                  <CardTitle>Tela Adicional</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
                   <CadastrarClienteAdditionalScreen 
@@ -175,20 +184,14 @@ const CadastrarCliente = () => {
               </Card>
             )}
 
-            <Card className="card-enhanced animate-slide-up">
+            <Card className="card-enhanced">
               <CardHeader className="bg-gradient-subtle rounded-t-lg">
-                <CardTitle className="flex items-center gap-2">
-                  <div className="w-6 h-6 bg-gradient-primary rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-xs">4</span>
-                  </div>
-                  Observações
-                </CardTitle>
+                <CardTitle>Observações</CardTitle>
               </CardHeader>
               <CardContent className="p-6">
                 <ObservationsSection control={form.control} disabled={isSubmitting} />
               </CardContent>
             </Card>
-
 
             <div className="flex justify-end space-x-4 pt-6 border-t border-border/50">
               <Button
@@ -202,7 +205,7 @@ const CadastrarCliente = () => {
               </Button>
               <Button 
                 type="submit" 
-                disabled={isSubmitting || !isFormValid}
+                disabled={isSubmitting}
                 className="btn-enhanced bg-gradient-primary hover:bg-gradient-primary/90 text-white shadow-soft hover:shadow-medium transition-all duration-300 flex items-center space-x-2"
               >
                 {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
