@@ -16,7 +16,6 @@ import { BasicInformationSection } from "@/components/cliente/form-sections/Basi
 import { MainScreenSection } from "@/components/cliente/form-sections/MainScreenSection";
 import { AdditionalScreenSection } from "@/components/cliente/form-sections/AdditionalScreenSection";
 import { ObservationsSection } from "@/components/cliente/form-sections/ObservationsSection";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ClienteFormValues } from "@/hooks/cliente/clienteFormSchema";
 
 const EditarCliente = () => {
@@ -71,7 +70,6 @@ const EditarCliente = () => {
     form,
     onSubmit: originalOnSubmit,
     isSubmitting,
-    securityStatus,
     isFormValid
   } = useSecureClienteForm({ 
     clienteId: id,
@@ -185,7 +183,7 @@ const EditarCliente = () => {
   if (loading) {
     return (
       <DashboardLayout title="Editar Cliente">
-        <div className="space-y-8 animate-fade-in">
+        <div className="w-full p-4">
           <div className="flex items-center justify-center py-16">
             <div className="text-center space-y-4">
               <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
@@ -201,7 +199,7 @@ const EditarCliente = () => {
   if (!cliente) {
     return (
       <DashboardLayout title="Editar Cliente">
-        <div className="space-y-8 animate-fade-in">
+        <div className="w-full p-4">
           <div className="flex items-center justify-center py-16">
             <div className="text-center space-y-4">
               <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
@@ -219,24 +217,14 @@ const EditarCliente = () => {
 
   return (
     <DashboardLayout title="Editar Cliente">
-      <div className="space-y-8 animate-fade-in">
-        {/* Status de Segurança - Apenas erros críticos */}
-        {securityStatus.hasErrors && (
-          <Alert variant="destructive" className="animate-scale-in">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              {securityStatus.errors.join(", ")}
-            </AlertDescription>
-          </Alert>
-        )}
-
+      <div className="w-full max-w-4xl mx-auto space-y-6 p-4">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
-            <Card className="card-enhanced animate-slide-up">
-              <CardHeader className="bg-gradient-subtle rounded-t-lg">
+            <Card>
+              <CardHeader>
                 <CardTitle>Informações Básicas</CardTitle>
               </CardHeader>
-              <CardContent className="p-6">
+              <CardContent>
                 <BasicInformationSection 
                   control={form.control} 
                   valoresPredefinidos={valoresPredefinidos} 
@@ -245,11 +233,11 @@ const EditarCliente = () => {
               </CardContent>
             </Card>
 
-            <Card className="card-enhanced animate-slide-up">
-              <CardHeader className="bg-gradient-subtle rounded-t-lg">
+            <Card>
+              <CardHeader>
                 <CardTitle>Tela Principal</CardTitle>
               </CardHeader>
-              <CardContent className="p-6">
+              <CardContent>
                 <MainScreenSection 
                   control={form.control} 
                   valoresPredefinidos={valoresPredefinidos} 
@@ -258,7 +246,7 @@ const EditarCliente = () => {
               </CardContent>
             </Card>
 
-            <div className="flex items-center space-x-3 p-4 bg-gradient-card rounded-lg border border-border/50 animate-slide-up">
+            <div className="flex items-center space-x-3 p-4 bg-gradient-card rounded-lg border border-border/50">
               <Switch
                 id="possuiTelaAdicional"
                 checked={possuiTelaAdicional}
@@ -274,11 +262,11 @@ const EditarCliente = () => {
             </div>
 
             {possuiTelaAdicional && (
-              <Card className="card-enhanced animate-scale-in">
-                <CardHeader className="bg-gradient-subtle rounded-t-lg">
+              <Card>
+                <CardHeader>
                   <CardTitle>Tela Adicional</CardTitle>
                 </CardHeader>
-                <CardContent className="p-6">
+                <CardContent>
                   <AdditionalScreenSection 
                     control={form.control} 
                     valoresPredefinidos={valoresPredefinidos} 
@@ -288,11 +276,11 @@ const EditarCliente = () => {
               </Card>
             )}
 
-            <Card className="card-enhanced animate-slide-up">
-              <CardHeader className="bg-gradient-subtle rounded-t-lg">
+            <Card>
+              <CardHeader>
                 <CardTitle>Observações</CardTitle>
               </CardHeader>
-              <CardContent className="p-6">
+              <CardContent>
                 <ObservationsSection control={form.control} disabled={isSubmitting} />
               </CardContent>
             </Card>
@@ -303,14 +291,13 @@ const EditarCliente = () => {
                 type="button"
                 onClick={() => navigate("/clientes")}
                 disabled={isSubmitting}
-                className="transition-all duration-300 hover:shadow-soft"
               >
                 Cancelar
               </Button>
               <Button 
                 type="submit" 
                 disabled={isSubmitting || !isFormValid}
-                className="btn-enhanced bg-gradient-primary hover:bg-gradient-primary/90 text-white shadow-soft hover:shadow-medium transition-all duration-300 flex items-center space-x-2"
+                className="flex items-center space-x-2"
               >
                 {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 <span>Salvar Alterações</span>

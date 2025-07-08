@@ -59,7 +59,7 @@ const CadastrarCliente = () => {
 
   return (
     <DashboardLayout title="Cadastrar Cliente">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="w-full max-w-4xl mx-auto space-y-6 p-4">
         <CadastrarClienteSecurityAlert securityStatus={securityStatus} />
 
         <Form {...form}>
