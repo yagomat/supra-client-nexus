@@ -27,7 +27,7 @@ const Configuracoes = () => {
               value="security" 
               className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-medium transition-all duration-300 font-medium"
             >
-              Segurança
+              Logs
             </TabsTrigger>
           </TabsList>
 

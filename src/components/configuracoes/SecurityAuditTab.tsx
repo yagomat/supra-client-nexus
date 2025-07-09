@@ -108,7 +108,7 @@ export function SecurityAuditTab() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Auditoria de Segurança
+            Logs
           </CardTitle>
           <CardDescription>
             Histórico detalhado de atividades de segurança da sua conta.
