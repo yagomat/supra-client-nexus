@@ -32,26 +32,28 @@ const EditarCliente = () => {
 
   return (
     <DashboardLayout title="Editar Cliente">
-      <div className="w-full max-w-4xl mx-auto space-y-6 p-4">
-        <EditClienteHeader 
-          clienteNome={cliente.nome}
-          onBack={() => navigate("/clientes")}
-        />
-
-        <EditClienteForm
-          form={form}
-          valoresPredefinidos={valoresPredefinidos}
-          possuiTelaAdicional={possuiTelaAdicional}
-          setPossuiTelaAdicional={setPossuiTelaAdicional}
-          onSubmit={handleFormSubmit}
-          isSubmitting={isSubmitting}
-        >
-          <EditClienteActions
-            isSubmitting={isSubmitting}
-            isFormValid={isFormValid}
-            onCancel={() => navigate("/clientes")}
+      <div className="h-full overflow-y-auto">
+        <div className="w-full max-w-4xl mx-auto space-y-6 p-4 pb-8">
+          <EditClienteHeader 
+            clienteNome={cliente.nome}
+            onBack={() => navigate("/clientes")}
           />
-        </EditClienteForm>
+
+          <EditClienteForm
+            form={form}
+            valoresPredefinidos={valoresPredefinidos}
+            possuiTelaAdicional={possuiTelaAdicional}
+            setPossuiTelaAdicional={setPossuiTelaAdicional}
+            onSubmit={handleFormSubmit}
+            isSubmitting={isSubmitting}
+          >
+            <EditClienteActions
+              isSubmitting={isSubmitting}
+              isFormValid={isFormValid}
+              onCancel={() => navigate("/clientes")}
+            />
+          </EditClienteForm>
+        </div>
       </div>
     </DashboardLayout>
   );
