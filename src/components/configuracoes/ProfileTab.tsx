@@ -14,9 +14,6 @@ export function ProfileTab() {
       <Card className="card-enhanced animate-scale-in">
         <CardHeader className="bg-gradient-subtle rounded-t-lg">
           <CardTitle className="text-xl font-semibold flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">P</span>
-            </div>
             Informações do Perfil
           </CardTitle>
           <CardDescription className="text-base">
@@ -31,9 +28,7 @@ export function ProfileTab() {
       <Card className="card-enhanced animate-scale-in">
         <CardHeader className="bg-gradient-subtle rounded-t-lg">
           <CardTitle className="text-xl font-semibold flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
-              <Shield className="h-4 w-4 text-white" />
-            </div>
+            <Shield className="h-5 w-5 text-primary" />
             Segurança da Conta
           </CardTitle>
           <CardDescription className="text-base">

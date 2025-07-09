@@ -46,9 +46,6 @@ const BancoDados = () => {
             <CardHeader className={`${isMobile ? "px-3 pt-6 pb-4" : "pb-0"} bg-gradient-subtle rounded-t-lg`}>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                 <CardTitle className="text-xl font-semibold flex items-center gap-2">
-                  <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">D</span>
-                  </div>
                   Valores Predefinidos
                 </CardTitle>
                 <ValueManagerToolbar 
