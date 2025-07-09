@@ -3,7 +3,6 @@ import React from "react";
 import { Control } from "react-hook-form";
 import { SelectField } from "@/components/form/SelectField";
 import { InputField } from "@/components/form/InputField";
-import { SwitchField } from "@/components/form/SwitchField";
 import { ValoresPredefinidos } from "@/types";
 
 interface BasicInformationSectionProps {
@@ -103,14 +102,6 @@ export const BasicInformationSection: React.FC<BasicInformationSectionProps> = (
           />
         )}
       </div>
-
-      <SwitchField
-        name="status"
-        control={control}
-        label="Status do Cliente"
-        description="Cliente está ativo ou inativo no sistema"
-        disabled={disabled}
-      />
     </div>
   );
 };

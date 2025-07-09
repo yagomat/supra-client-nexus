@@ -220,18 +220,11 @@ const EditarCliente = () => {
       <div className="w-full max-w-4xl mx-auto space-y-6 p-4">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Informações Básicas</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <BasicInformationSection 
-                  control={form.control} 
-                  valoresPredefinidos={valoresPredefinidos} 
-                  disabled={isSubmitting} 
-                />
-              </CardContent>
-            </Card>
+            <BasicInformationSection 
+              control={form.control} 
+              valoresPredefinidos={valoresPredefinidos} 
+              disabled={isSubmitting} 
+            />
 
             <Card>
               <CardHeader>
