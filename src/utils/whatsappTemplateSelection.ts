@@ -29,17 +29,18 @@ export const determinarTemplatePadrao = (
       (p.status === 'pago' || p.status === 'pago_confianca')
     );
     
-    // Regra 1: "Pago" (prioridade máxima) - até 3 dias antes do próximo vencimento
+    // Regra 1: "Pago" (prioridade máxima) - até 3 dias após o dia de vencimento
     if (currentMonthPayment) {
-      const nextDueDate = new Date(paymentStatus.nextDueDate);
-      nextDueDate.setHours(0, 0, 0, 0);
+      // Calcular a data de vencimento do mês atual
+      const currentDueDate = new Date(currentYear, currentMonth - 1, cliente.dia_vencimento);
+      currentDueDate.setHours(0, 0, 0, 0);
       
-      // Calcular data limite (3 dias antes do vencimento)
-      const threeDaysBeforeDue = new Date(nextDueDate);
-      threeDaysBeforeDue.setDate(threeDaysBeforeDue.getDate() - 3);
+      // Calcular data limite (3 dias após o vencimento)
+      const threeDaysAfterDue = new Date(currentDueDate);
+      threeDaysAfterDue.setDate(threeDaysAfterDue.getDate() + 3);
       
-      // Se ainda estamos dentro dos 3 dias após pagamento, mostrar "pago"
-      if (today <= threeDaysBeforeDue) {
+      // Se ainda estamos dentro dos 3 dias após o vencimento, mostrar "pago"
+      if (today <= threeDaysAfterDue) {
         return 'pago';
       }
     }
