@@ -40,7 +40,7 @@ const placeholders = [
   { placeholder: '{nome}', descricao: 'Nome completo do cliente' },
   { placeholder: '{primeiro_nome}', descricao: 'Primeiro nome do cliente' },
   { placeholder: '{dias_vencimento}', descricao: 'Dias para vencer ou em atraso' },
-  { placeholder: '{data_vencimento}', descricao: 'Data de vencimento (dd/mm/aaaa)' },
+  { placeholder: '{data_vencimento}', descricao: 'Data exata de vencimento (dd/mm/aaaa) - mesma lógica do "vence em X dias"' },
   { placeholder: '{valor_plano}', descricao: 'Valor do plano (R$ 00,00)' }
 ];
 
