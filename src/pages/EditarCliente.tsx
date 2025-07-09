@@ -34,26 +34,28 @@ const EditarCliente = () => {
     <DashboardLayout title="Editar Cliente">
       <div className="flex flex-col h-full max-h-screen overflow-hidden">
         <div className="flex-1 overflow-y-auto">
-          <div className="w-full max-w-4xl mx-auto space-y-6 p-4 pb-4">
-            <EditClienteHeader 
-              clienteNome={cliente.nome}
-              onBack={() => navigate("/clientes")}
-            />
-
-            <EditClienteForm
-              form={form}
-              valoresPredefinidos={valoresPredefinidos}
-              possuiTelaAdicional={possuiTelaAdicional}
-              setPossuiTelaAdicional={setPossuiTelaAdicional}
-              onSubmit={handleFormSubmit}
-              isSubmitting={isSubmitting}
-            >
-              <EditClienteActions
-                isSubmitting={isSubmitting}
-                isFormValid={isFormValid}
-                onCancel={() => navigate("/clientes")}
+          <div className="w-full max-w-4xl mx-auto p-4">
+            <div className="space-y-6">
+              <EditClienteHeader 
+                clienteNome={cliente.nome}
+                onBack={() => navigate("/clientes")}
               />
-            </EditClienteForm>
+
+              <EditClienteForm
+                form={form}
+                valoresPredefinidos={valoresPredefinidos}
+                possuiTelaAdicional={possuiTelaAdicional}
+                setPossuiTelaAdicional={setPossuiTelaAdicional}
+                onSubmit={handleFormSubmit}
+                isSubmitting={isSubmitting}
+              >
+                <EditClienteActions
+                  isSubmitting={isSubmitting}
+                  isFormValid={isFormValid}
+                  onCancel={() => navigate("/clientes")}
+                />
+              </EditClienteForm>
+            </div>
           </div>
         </div>
       </div>
