@@ -7,35 +7,38 @@ export const usePaymentHistory = (clienteId: string) => {
   const [payments, setPayments] = useState<Pagamento[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchPayments = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from('pagamentos')
-          .select('*')
-          .eq('cliente_id', clienteId)
-          .order('ano', { ascending: false })
-          .order('mes', { ascending: false });
+  const fetchPayments = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('pagamentos')
+        .select('*')
+        .eq('cliente_id', clienteId)
+        .order('ano', { ascending: false })
+        .order('mes', { ascending: false });
 
-        if (error) {
-          console.error("Erro ao buscar histórico de pagamentos:", error);
-          return;
-        }
-
-        setPayments(data || []);
-      } catch (error) {
+      if (error) {
         console.error("Erro ao buscar histórico de pagamentos:", error);
-      } finally {
-        setLoading(false);
+        return;
       }
-    };
+
+      console.log(`Payments fetched for ${clienteId}:`, data);
+      setPayments(data || []);
+    } catch (error) {
+      console.error("Erro ao buscar histórico de pagamentos:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!clienteId) return;
 
     fetchPayments();
 
     // Configurar listener em tempo real para todos os pagamentos do cliente
     const channel = supabase
-      .channel(`pagamentos-${clienteId}`)
+      .channel(`pagamentos-history-${clienteId}`)
       .on('postgres_changes', 
         { 
           event: '*', 
@@ -44,8 +47,9 @@ export const usePaymentHistory = (clienteId: string) => {
           filter: `cliente_id=eq.${clienteId}`
         }, 
         (payload) => {
-          console.log('Payment change detected:', payload);
-          fetchPayments(); // Recarregar todos os pagamentos
+          console.log('Payment history change detected:', payload);
+          // Sempre recarregar todos os pagamentos para garantir sincronização
+          fetchPayments();
         }
       )
       .subscribe();
@@ -55,5 +59,5 @@ export const usePaymentHistory = (clienteId: string) => {
     };
   }, [clienteId]);
 
-  return { payments, loading };
+  return { payments, loading, refetch: fetchPayments };
 };

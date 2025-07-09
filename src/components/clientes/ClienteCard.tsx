@@ -27,7 +27,7 @@ export const ClienteCard = ({
   anoAtual
 }: ClienteCardProps) => {
   const { handleChangeStatus } = usePaymentStatus();
-  const { payments: allPayments, loading: paymentsLoading } = usePaymentHistory(cliente.id);
+  const { payments: allPayments, loading: paymentsLoading, refetch: refetchPayments } = usePaymentHistory(cliente.id);
   const [statusPagamento, setStatusPagamento] = useState("nao_pago");
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
 
@@ -80,8 +80,9 @@ export const ClienteCard = ({
             setStatusPagamento(newRecord.status);
           }
           
-          // Recarregar status para garantir sincronização
+          // Recarregar status e histórico de pagamentos para garantir sincronização
           fetchCurrentMonthPaymentStatus();
+          refetchPayments();
         }
       )
       .subscribe();
@@ -89,7 +90,7 @@ export const ClienteCard = ({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [cliente.id, mesAtual, anoAtual]);
+  }, [cliente.id, mesAtual, anoAtual, refetchPayments]);
 
   const handlePaymentStatusChange = async (status: string) => {
     try {
