@@ -23,7 +23,7 @@ export const usePaymentHistory = (clienteId: string) => {
       }
 
       console.log(`Payments fetched for ${clienteId}:`, data);
-      setPayments(data || []);
+      setPayments([...(data || [])]);
     } catch (error) {
       console.error("Erro ao buscar histórico de pagamentos:", error);
     } finally {
