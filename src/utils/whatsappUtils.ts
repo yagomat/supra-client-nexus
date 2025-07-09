@@ -45,48 +45,127 @@ const calcularProximaDataVencimento = (
     return null;
   }
 
-  // Encontrar a sequência consecutiva mais longa que inclui o mês atual ou vai além
-  let sequenciaConsecutiva: Pagamento[] = [];
-  let melhorSequencia: Pagamento[] = [];
+  // Verificar se cliente tem pagamento no mês atual
+  const temPagamentoAtual = validPayments.some(p => 
+    p.ano === currentYear && p.mes === currentMonth
+  );
 
-  for (let i = 0; i < validPayments.length; i++) {
-    const pagamento = validPayments[i];
+  // Verificar se cliente tem pagamento no mês anterior
+  let mesAnterior = currentMonth - 1;
+  let anoAnterior = currentYear;
+  if (mesAnterior === 0) {
+    mesAnterior = 12;
+    anoAnterior = currentYear - 1;
+  }
+
+  const temPagamentoAnterior = validPayments.some(p => 
+    p.ano === anoAnterior && p.mes === mesAnterior
+  );
+
+  // Verificar se ainda não chegou o dia de vencimento no mês atual
+  const diaAtual = today.getDate();
+  const ultimoDiaDoMes = new Date(currentYear, currentMonth, 0).getDate();
+  const diaVencimentoAjustado = Math.min(cliente.dia_vencimento, ultimoDiaDoMes);
+  const aindaNaoVenceu = diaAtual <= diaVencimentoAjustado;
+
+  // Determinar se cliente é ativo
+  const clienteAtivo = temPagamentoAtual || (temPagamentoAnterior && aindaNaoVenceu);
+
+  if (clienteAtivo) {
+    // CLIENTE ATIVO: Encontrar sequência consecutiva a partir do mês atual ou anterior
+    let pontoInicio: { mes: number, ano: number };
     
-    // Se é o primeiro pagamento da sequência atual
-    if (sequenciaConsecutiva.length === 0) {
-      sequenciaConsecutiva = [pagamento];
+    if (temPagamentoAtual) {
+      pontoInicio = { mes: currentMonth, ano: currentYear };
     } else {
+      pontoInicio = { mes: mesAnterior, ano: anoAnterior };
+    }
+
+    // Encontrar sequência consecutiva SOMENTE para frente a partir do ponto de início
+    const sequenciaConsecutiva = encontrarSequenciaConsecutivaParaFrente(validPayments, pontoInicio);
+    
+    if (sequenciaConsecutiva.length > 0) {
       const ultimoPagamento = sequenciaConsecutiva[sequenciaConsecutiva.length - 1];
-      const proximoMesEsperado = ultimoPagamento.mes === 12 ? 1 : ultimoPagamento.mes + 1;
-      const proximoAnoEsperado = ultimoPagamento.mes === 12 ? ultimoPagamento.ano + 1 : ultimoPagamento.ano;
-      
-      // Se o pagamento continua a sequência
-      if (pagamento.mes === proximoMesEsperado && pagamento.ano === proximoAnoEsperado) {
-        sequenciaConsecutiva.push(pagamento);
-      } else {
-        // A sequência foi quebrada, vamos verificar se a atual é melhor
-        if (sequenciaValida(sequenciaConsecutiva, currentMonth, currentYear) && 
-            sequenciaConsecutiva.length > melhorSequencia.length) {
-          melhorSequencia = [...sequenciaConsecutiva];
-        }
-        // Iniciar nova sequência
-        sequenciaConsecutiva = [pagamento];
-      }
+      return calcularProximaData(ultimoPagamento, cliente.dia_vencimento);
+    }
+  } else {
+    // CLIENTE INATIVO: Mostrar data de vencimento baseada no último pagamento consecutivo
+    const ultimaSequenciaConsecutiva = encontrarUltimaSequenciaConsecutiva(validPayments);
+    
+    if (ultimaSequenciaConsecutiva.length > 0) {
+      const ultimoPagamento = ultimaSequenciaConsecutiva[ultimaSequenciaConsecutiva.length - 1];
+      return calcularProximaData(ultimoPagamento, cliente.dia_vencimento);
     }
   }
 
-  // Verificar a última sequência
-  if (sequenciaValida(sequenciaConsecutiva, currentMonth, currentYear) && 
-      sequenciaConsecutiva.length > melhorSequencia.length) {
-    melhorSequencia = [...sequenciaConsecutiva];
+  return null;
+};
+
+// Nova função para encontrar sequência consecutiva APENAS para frente (sem gaps)
+const encontrarSequenciaConsecutivaParaFrente = (
+  validPayments: Pagamento[], 
+  pontoInicio: { mes: number, ano: number }
+): Pagamento[] => {
+  const sequencia: Pagamento[] = [];
+  let mesAtual = pontoInicio.mes;
+  let anoAtual = pontoInicio.ano;
+
+  // Continuar a sequência enquanto houver pagamentos consecutivos (SEM GAPS)
+  while (true) {
+    const pagamento = validPayments.find(p => p.mes === mesAtual && p.ano === anoAtual);
+    
+    if (!pagamento) {
+      break; // Gap encontrado, parar sequência
+    }
+    
+    sequencia.push(pagamento);
+    
+    // Avançar para o próximo mês
+    mesAtual++;
+    if (mesAtual > 12) {
+      mesAtual = 1;
+      anoAtual++;
+    }
   }
 
-  if (melhorSequencia.length === 0) {
-    return null;
+  return sequencia;
+};
+
+// Nova função para encontrar a última sequência consecutiva válida (para clientes inativos)
+const encontrarUltimaSequenciaConsecutiva = (validPayments: Pagamento[]): Pagamento[] => {
+  if (validPayments.length === 0) return [];
+
+  // Começar do pagamento mais recente e ir para trás procurando a sequência
+  const sortedPayments = [...validPayments].sort((a, b) => {
+    if (a.ano !== b.ano) return b.ano - a.ano;
+    return b.mes - a.mes;
+  });
+
+  // Encontrar a maior sequência consecutiva terminando no pagamento mais recente
+  const sequencia: Pagamento[] = [];
+  let expectedYear = sortedPayments[0].ano;
+  let expectedMonth = sortedPayments[0].mes;
+
+  for (const payment of sortedPayments) {
+    if (payment.ano === expectedYear && payment.mes === expectedMonth) {
+      sequencia.unshift(payment); // Adicionar no início para manter ordem cronológica
+      
+      // Calcular mês anterior
+      expectedMonth--;
+      if (expectedMonth < 1) {
+        expectedMonth = 12;
+        expectedYear--;
+      }
+    } else {
+      break; // Gap encontrado, parar a sequência
+    }
   }
 
-  // Calcular a próxima data de vencimento baseada no último pagamento da sequência
-  const ultimoPagamento = melhorSequencia[melhorSequencia.length - 1];
+  return sequencia;
+};
+
+// Função para calcular a próxima data baseada no último pagamento
+const calcularProximaData = (ultimoPagamento: Pagamento, diaVencimento: number): Date => {
   let proximoMes = ultimoPagamento.mes + 1;
   let proximoAno = ultimoPagamento.ano;
   
@@ -97,20 +176,9 @@ const calcularProximaDataVencimento = (
   
   // Ajustar dia de vencimento para o último dia do mês se necessário
   const ultimoDiaDoMes = new Date(proximoAno, proximoMes, 0).getDate();
-  const diaVencimentoAjustado = Math.min(cliente.dia_vencimento, ultimoDiaDoMes);
+  const diaVencimentoAjustado = Math.min(diaVencimento, ultimoDiaDoMes);
   
   return new Date(proximoAno, proximoMes - 1, diaVencimentoAjustado);
-};
-
-// Função auxiliar para verificar se uma sequência é válida (inclui ou vai além do mês atual)
-const sequenciaValida = (sequencia: Pagamento[], currentMonth: number, currentYear: number): boolean => {
-  if (sequencia.length === 0) return false;
-  
-  const ultimoPagamento = sequencia[sequencia.length - 1];
-  
-  // A sequência é válida se o último pagamento é do mês atual ou posterior
-  return (ultimoPagamento.ano > currentYear) || 
-         (ultimoPagamento.ano === currentYear && ultimoPagamento.mes >= currentMonth);
 };
 
 // Nova função para formatar mensagem usando dados do cliente e pagamentos
