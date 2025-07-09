@@ -42,15 +42,19 @@ export function sortValoresPredefinidos(valoresPredefinidos: ValoresPredefinidos
     return numA - numB;
   });
   
-  // Ordenar arrays de strings em ordem alfabética
-  valoresPredefinidos.ufs.sort();
-  valoresPredefinidos.servidores.sort();
-  valoresPredefinidos.dispositivos_smart.sort();
-  valoresPredefinidos.aplicativos.sort();
+  // Ordenar arrays de strings em ordem alfabética (case-insensitive)
+  valoresPredefinidos.ufs.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  valoresPredefinidos.servidores.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  valoresPredefinidos.dispositivos_smart.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  valoresPredefinidos.aplicativos.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
   
   console.log('Valores ordenados:', {
     dias_vencimento: valoresPredefinidos.dias_vencimento,
-    valores_plano: valoresPredefinidos.valores_plano
+    valores_plano: valoresPredefinidos.valores_plano,
+    ufs: valoresPredefinidos.ufs,
+    servidores: valoresPredefinidos.servidores,
+    dispositivos_smart: valoresPredefinidos.dispositivos_smart,
+    aplicativos: valoresPredefinidos.aplicativos
   });
 }
 
@@ -99,7 +103,7 @@ export function processValoresPredefinidos(
     }
   });
   
-  // Ordenar arrays
+  // Ordenar arrays após processar todos os dados
   sortValoresPredefinidos(valoresPredefinidos);
   
   return valoresPredefinidos;

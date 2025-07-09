@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { ValoresPredefinidos } from "@/types";
 import { getValoresPredefinidos } from "@/services/valoresPredefinidosService/valoresPredefinidosActions";
+import { sortValoresPredefinidos } from "@/services/valoresPredefinidosService/utils";
 
 export const useValoresPredefinidosData = () => {
   const [loading, setLoading] = useState(true);
@@ -13,7 +14,14 @@ export const useValoresPredefinidosData = () => {
     try {
       setLoading(true);
       const data = await getValoresPredefinidos();
-      setValoresPredefinidos(data as unknown as ValoresPredefinidos);
+      const valoresData = data as unknown as ValoresPredefinidos;
+      
+      // Garantir que os dados estejam sempre ordenados
+      if (valoresData) {
+        sortValoresPredefinidos(valoresData);
+      }
+      
+      setValoresPredefinidos(valoresData);
     } catch (error) {
       console.error("Erro ao buscar valores predefinidos", error);
       toast({
@@ -33,7 +41,12 @@ export const useValoresPredefinidosData = () => {
   return {
     loading,
     valoresPredefinidos,
-    setValoresPredefinidos,
+    setValoresPredefinidos: (valores: ValoresPredefinidos | null) => {
+      if (valores) {
+        sortValoresPredefinidos(valores);
+      }
+      setValoresPredefinidos(valores);
+    },
     refreshValoresPredefinidos: fetchValoresPredefinidos
   };
 };

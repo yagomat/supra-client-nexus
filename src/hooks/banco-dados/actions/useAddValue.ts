@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ValoresPredefinidos } from "@/types";
 import { ValorPredefinidoResponse } from "@/types/supabase-responses";
 import { addValorPredefinido } from "@/services/valoresPredefinidosService/valoresPredefinidosActions";
-import { convertToSingularType } from "@/services/valoresPredefinidosService/utils";
+import { convertToSingularType, sortValoresPredefinidos } from "@/services/valoresPredefinidosService/utils";
 import { validateMultipleValuesEnhanced } from "../utils/enhancedValidations";
 import { normalizeValueForDatabase } from "../utils/valueNormalization";
 import { generateValuePreview } from "../utils/multipleValueUtils";
