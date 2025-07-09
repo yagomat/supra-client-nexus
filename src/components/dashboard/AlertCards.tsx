@@ -6,6 +6,7 @@ import { AlertTriangle, Calendar } from "lucide-react";
 import { AppVencendo, ClienteEmRisco } from "@/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatUtils } from "@/utils/dashboardUtils";
 
 interface AlertCardsProps {
   clientesInativos: number;
@@ -19,20 +20,6 @@ export const AlertCards = ({ clientesInativos, appsVencendo, clientesEmRiscoDeta
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return format(date, "dd/MM/yyyy", { locale: ptBR });
-  };
-  
-  // Format singular/plural text correctly
-  const getClientText = (count: number) => {
-    return count === 1 ? "cliente ficará inativo" : "clientes ficarão inativos";
-  };
-  
-  const getAppText = (count: number) => {
-    return count === 1 ? "aplicativo vencerá" : "aplicativos vencerão";
-  };
-  
-  const getDayText = (days: number) => {
-    if (days === 0) return "hoje";
-    return days === 1 ? "amanhã" : `em ${days} dias`;
   };
   
   return (
@@ -53,7 +40,7 @@ export const AlertCards = ({ clientesInativos, appsVencendo, clientesEmRiscoDeta
               {clientesEmRiscoDetalhes && clientesEmRiscoDetalhes.length > 0 ? (
                 <div>
                   <p className="font-medium mb-2 text-amber-800 dark:text-amber-300">
-                    {clientesEmRiscoDetalhes.length} {getClientText(clientesEmRiscoDetalhes.length)} nos próximos 3 dias
+                    {clientesEmRiscoDetalhes.length} {formatUtils.getClientText(clientesEmRiscoDetalhes.length)} nos próximos 3 dias
                   </p>
                   <div className="text-sm space-y-1 max-h-32 overflow-y-auto pr-1">
                     {clientesEmRiscoDetalhes.slice(0, 4).map((cliente, index) => (
@@ -62,7 +49,7 @@ export const AlertCards = ({ clientesInativos, appsVencendo, clientesEmRiscoDeta
                         <div>
                           <span className="text-muted-foreground">{cliente.servidor}</span>
                           <span className="ml-2 text-amber-600 dark:text-amber-400">
-                            {getDayText(cliente.dias_restantes)}
+                            {formatUtils.getDayText(cliente.dias_restantes)}
                           </span>
                         </div>
                       </div>
@@ -100,7 +87,7 @@ export const AlertCards = ({ clientesInativos, appsVencendo, clientesEmRiscoDeta
               {appsVencendo && appsVencendo.length > 0 ? (
                 <div>
                   <p className="font-medium mb-2 text-blue-800 dark:text-blue-300">
-                    {appsVencendo.length} {getAppText(appsVencendo.length)} nos próximos 30 dias
+                    {appsVencendo.length} {formatUtils.getAppText(appsVencendo.length)} nos próximos 30 dias
                   </p>
                   <div className="text-sm space-y-1 max-h-32 overflow-y-auto pr-1">
                     {appsVencendo.slice(0, 4).map((app, index) => (

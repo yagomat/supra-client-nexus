@@ -6,6 +6,7 @@ import { DistributionCharts } from "./DistributionCharts";
 import { AlertCards } from "./AlertCards";
 import { DashboardStats } from "@/types";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useSafeDashboardData } from "@/utils/dashboardUtils";
 
 interface DashboardContentProps {
   stats: DashboardStats | null;
@@ -15,21 +16,13 @@ interface DashboardContentProps {
 export const DashboardContent = ({ stats, loading }: DashboardContentProps) => {
   const isMobile = useIsMobile();
   
-  // Safe getter function to handle potential null values
-  const getSafeData = (dataArray: any[] | null | undefined, defaultValue: any[] = []) => {
-    return Array.isArray(dataArray) ? dataArray : defaultValue;
-  };
-
-  // Create a safe version of evolution data
-  const safeEvolucaoClientes = stats?.evolucao_clientes ? getSafeData(stats.evolucao_clientes) : [];
-  
-  // Create a safe version of payment evolution data
-  const safePagamentosPorMes = stats?.pagamentos_por_mes ? getSafeData(stats.pagamentos_por_mes) : [];
-
-  // Create safe versions of new alert data
-  const safeClientesInativos = stats?.clientes_inativos_proximos_dias || 0;
-  const safeAppsVencendo = stats?.apps_vencendo_proximos_dias ? getSafeData(stats.apps_vencendo_proximos_dias) : [];
-  const safeClientesEmRiscoDetalhes = stats?.clientes_em_risco_detalhes ? getSafeData(stats.clientes_em_risco_detalhes) : [];
+  const {
+    safeEvolucaoClientes,
+    safePagamentosPorMes,
+    safeClientesInativos,
+    safeAppsVencendo,
+    safeClientesEmRiscoDetalhes
+  } = useSafeDashboardData(stats);
 
   return (
     <div className="flex flex-col space-y-4 w-full">
