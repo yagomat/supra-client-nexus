@@ -1,4 +1,3 @@
-
 import { FilaCobranca } from "@/services/cobrancaService";
 import { Cliente, Pagamento } from "@/types";
 import { format } from "date-fns";
@@ -24,6 +23,96 @@ export const formatarMensagemWhatsApp = (
     .replace(/{valor_plano}/g, valorPlano);
 };
 
+// Função para calcular a próxima data de vencimento baseada nos pagamentos
+const calcularProximaDataVencimento = (
+  cliente: Cliente,
+  allPayments: Pagamento[]
+): Date | null => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const currentMonth = today.getMonth() + 1;
+  const currentYear = today.getFullYear();
+
+  // Filtrar apenas pagamentos válidos e ordenar por data
+  const validPayments = allPayments
+    .filter(p => p.status === 'pago' || p.status === 'pago_confianca')
+    .sort((a, b) => {
+      if (a.ano !== b.ano) return a.ano - b.ano;
+      return a.mes - b.mes;
+    });
+
+  if (validPayments.length === 0) {
+    return null;
+  }
+
+  // Encontrar a sequência consecutiva mais longa que inclui o mês atual ou vai além
+  let sequenciaConsecutiva: Pagamento[] = [];
+  let melhorSequencia: Pagamento[] = [];
+
+  for (let i = 0; i < validPayments.length; i++) {
+    const pagamento = validPayments[i];
+    
+    // Se é o primeiro pagamento da sequência atual
+    if (sequenciaConsecutiva.length === 0) {
+      sequenciaConsecutiva = [pagamento];
+    } else {
+      const ultimoPagamento = sequenciaConsecutiva[sequenciaConsecutiva.length - 1];
+      const proximoMesEsperado = ultimoPagamento.mes === 12 ? 1 : ultimoPagamento.mes + 1;
+      const proximoAnoEsperado = ultimoPagamento.mes === 12 ? ultimoPagamento.ano + 1 : ultimoPagamento.ano;
+      
+      // Se o pagamento continua a sequência
+      if (pagamento.mes === proximoMesEsperado && pagamento.ano === proximoAnoEsperado) {
+        sequenciaConsecutiva.push(pagamento);
+      } else {
+        // A sequência foi quebrada, vamos verificar se a atual é melhor
+        if (sequenciaValida(sequenciaConsecutiva, currentMonth, currentYear) && 
+            sequenciaConsecutiva.length > melhorSequencia.length) {
+          melhorSequencia = [...sequenciaConsecutiva];
+        }
+        // Iniciar nova sequência
+        sequenciaConsecutiva = [pagamento];
+      }
+    }
+  }
+
+  // Verificar a última sequência
+  if (sequenciaValida(sequenciaConsecutiva, currentMonth, currentYear) && 
+      sequenciaConsecutiva.length > melhorSequencia.length) {
+    melhorSequencia = [...sequenciaConsecutiva];
+  }
+
+  if (melhorSequencia.length === 0) {
+    return null;
+  }
+
+  // Calcular a próxima data de vencimento baseada no último pagamento da sequência
+  const ultimoPagamento = melhorSequencia[melhorSequencia.length - 1];
+  let proximoMes = ultimoPagamento.mes + 1;
+  let proximoAno = ultimoPagamento.ano;
+  
+  if (proximoMes > 12) {
+    proximoMes = 1;
+    proximoAno += 1;
+  }
+  
+  // Ajustar dia de vencimento para o último dia do mês se necessário
+  const ultimoDiaDoMes = new Date(proximoAno, proximoMes, 0).getDate();
+  const diaVencimentoAjustado = Math.min(cliente.dia_vencimento, ultimoDiaDoMes);
+  
+  return new Date(proximoAno, proximoMes - 1, diaVencimentoAjustado);
+};
+
+// Função auxiliar para verificar se uma sequência é válida (inclui ou vai além do mês atual)
+const sequenciaValida = (sequencia: Pagamento[], currentMonth: number, currentYear: number): boolean => {
+  if (sequencia.length === 0) return false;
+  
+  const ultimoPagamento = sequencia[sequencia.length - 1];
+  
+  // A sequência é válida se o último pagamento é do mês atual ou posterior
+  return (ultimoPagamento.ano > currentYear) || 
+         (ultimoPagamento.ano === currentYear && ultimoPagamento.mes >= currentMonth);
+};
+
 // Nova função para formatar mensagem usando dados do cliente e pagamentos
 export const formatarMensagemWhatsAppComCliente = (
   mensagem: string,
@@ -35,7 +124,22 @@ export const formatarMensagemWhatsAppComCliente = (
   let diasVencimento = 0;
   let dataVencimento = '';
   
-  if (paymentStatus.type !== 'no_info' && paymentStatus.nextDueDate) {
+  // Usar a nova função para calcular a próxima data de vencimento
+  const proximaDataVencimento = calcularProximaDataVencimento(cliente, allPayments);
+  
+  if (proximaDataVencimento) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    proximaDataVencimento.setHours(0, 0, 0, 0);
+    
+    const daysDiff = Math.floor((proximaDataVencimento.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    diasVencimento = Math.abs(daysDiff);
+    
+    dataVencimento = format(proximaDataVencimento, "dd/MM/yyyy", {
+      locale: ptBR
+    });
+  } else if (paymentStatus.type !== 'no_info' && paymentStatus.nextDueDate) {
+    // Fallback para a lógica anterior se não conseguir calcular
     diasVencimento = paymentStatus.days;
     dataVencimento = format(paymentStatus.nextDueDate, "dd/MM/yyyy", {
       locale: ptBR
