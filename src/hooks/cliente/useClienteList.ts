@@ -1,10 +1,9 @@
-
-import { useState } from "react";
 import { useOptimizedClienteFetch } from "./useOptimizedClienteFetch";
 import { useOptimizedClienteFilters } from "./useOptimizedClienteFilters";
 import { useClienteModals } from "./useClienteModals";
+import { useClienteActions } from "./useClienteActions";
 
-export const useOptimizedClienteList = () => {
+export const useClienteList = () => {
   const { 
     clientes, 
     loading, 
@@ -21,7 +20,7 @@ export const useOptimizedClienteList = () => {
     setStatusFilter,
     orderBy,
     handleOrderChange,
-    handleLimparFiltros: handleLimparFiltrosFromFilters
+    handleLimparFiltros: resetFilters
   } = useOptimizedClienteFilters(clientes);
 
   const {
@@ -40,21 +39,15 @@ export const useOptimizedClienteList = () => {
     confirmarExclusao
   } = useClienteModals();
 
-  const handleLimparFiltros = () => {
-    handleLimparFiltrosFromFilters();
-  };
+  const { handleLimparFiltros, handleExcluir } = useClienteActions();
 
-  const handleExcluir = async () => {
-    if (!clienteParaExcluir) return;
+  const onLimparFiltros = () => handleLimparFiltros(resetFilters);
 
-    const success = await handleExcluirFromFetch(clienteParaExcluir);
-    
-    if (success) {
-      // Não precisa atualizar filteredClientes pois é calculado automaticamente
-    }
-    
-    setClienteParaExcluir(null);
-  };
+  const onExcluir = () => handleExcluir(
+    clienteParaExcluir,
+    handleExcluirFromFetch,
+    () => setClienteParaExcluir(null)
+  );
 
   return {
     clientes,
@@ -75,12 +68,12 @@ export const useOptimizedClienteList = () => {
     setClienteParaExcluir,
     orderBy,
     handleOrderChange,
-    handleLimparFiltros,
+    handleLimparFiltros: onLimparFiltros,
     verDetalhes,
     verTelaAdicional,
     verObservacoes,
     confirmarExclusao,
-    handleExcluir,
+    handleExcluir: onExcluir,
     fetchClientes
   };
 };
