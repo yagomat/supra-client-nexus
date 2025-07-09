@@ -8,7 +8,8 @@ export const useBancoDados = () => {
   const { 
     loading, 
     valoresPredefinidos, 
-    setValoresPredefinidos 
+    setValoresPredefinidos,
+    refreshValoresPredefinidos
   } = useValoresPredefinidosData();
   
   // Get UI state from the UI hook
@@ -32,7 +33,7 @@ export const useBancoDados = () => {
     handleDeleteValue: baseHandleDeleteValue,
     handleImport: baseHandleImport,
     handleExport: baseHandleExport
-  } = useValoresPredefinidosActions({ valoresPredefinidos, setValoresPredefinidos });
+  } = useValoresPredefinidosActions({ valoresPredefinidos, setValoresPredefinidos, refreshValoresPredefinidos });
   
   // Wrapper functions to simplify component usage and handle dialog state
   const handleAddValue = async (value: string | number, tabType: string) => {

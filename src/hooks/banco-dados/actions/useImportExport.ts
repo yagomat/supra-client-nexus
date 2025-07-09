@@ -9,7 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const useImportExport = (
   valoresPredefinidos: ValoresPredefinidos | null,
-  setValoresPredefinidos: React.Dispatch<React.SetStateAction<ValoresPredefinidos | null>>
+  setValoresPredefinidos: React.Dispatch<React.SetStateAction<ValoresPredefinidos | null>>,
+  refreshValoresPredefinidos: () => Promise<void>
 ) => {
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
@@ -42,11 +43,8 @@ export const useImportExport = (
         return false;
       }
       
-      // Recarregar valores predefinidos após importação
-      const updatedData = await getValoresPredefinidos();
-      if (updatedData) {
-        setValoresPredefinidos(updatedData as unknown as ValoresPredefinidos);
-      }
+      // Recarregar dados do servidor para manter ordenação correta
+      await refreshValoresPredefinidos();
       
       toast({
         title: "Importação concluída",

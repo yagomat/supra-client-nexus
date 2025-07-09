@@ -11,7 +11,8 @@ import { generateValuePreview } from "../utils/multipleValueUtils";
 
 export const useAddValue = (
   valoresPredefinidos: ValoresPredefinidos | null,
-  setValoresPredefinidos: React.Dispatch<React.SetStateAction<ValoresPredefinidos | null>>
+  setValoresPredefinidos: React.Dispatch<React.SetStateAction<ValoresPredefinidos | null>>,
+  refreshValoresPredefinidos: () => Promise<void>
 ) => {
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
@@ -65,35 +66,6 @@ export const useAddValue = (
           
           if (typedResult.success) {
             addedCount++;
-            
-            // Atualizar estado local imediatamente
-            setValoresPredefinidos(prev => {
-              if (!prev) return prev;
-              
-              const newValues = { ...prev };
-              const tabKey = activeTab as keyof ValoresPredefinidos;
-              
-              // Adicionar o novo valor ao array correspondente
-              if (tabKey === 'dias_vencimento') {
-                const numericValue = Number(value);
-                if (!newValues[tabKey].includes(numericValue)) {
-                  newValues[tabKey] = [...newValues[tabKey], numericValue].sort((a, b) => Number(a) - Number(b));
-                }
-              } else if (tabKey === 'valores_plano') {
-                const numericValue = Number(value);
-                if (!newValues[tabKey].includes(numericValue)) {
-                  newValues[tabKey] = [...newValues[tabKey], numericValue].sort((a, b) => Number(a) - Number(b));
-                }
-              } else {
-                const stringValue = String(value);
-                const currentArray = newValues[tabKey] as string[];
-                if (!currentArray.includes(stringValue)) {
-                  (newValues[tabKey] as string[]) = [...currentArray, stringValue].sort();
-                }
-              }
-              
-              return newValues;
-            });
           } else {
             // Verificar se é erro de rate limiting
             if (typedResult.message?.includes('Limite de')) {
@@ -114,8 +86,10 @@ export const useAddValue = (
         }
       }
       
-      // Feedback detalhado para o usuário
+      // Recarregar dados do servidor para manter ordenação correta
       if (addedCount > 0) {
+        await refreshValoresPredefinidos();
+        
         const addedPreview = generateValuePreview(validationResult.values.slice(0, addedCount));
         let message = "";
         

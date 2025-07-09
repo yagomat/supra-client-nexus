@@ -9,7 +9,8 @@ import { normalizeValueForDatabase } from "../utils/valueNormalization";
 
 export const useDeleteValue = (
   valoresPredefinidos: ValoresPredefinidos | null,
-  setValoresPredefinidos: React.Dispatch<React.SetStateAction<ValoresPredefinidos | null>>
+  setValoresPredefinidos: React.Dispatch<React.SetStateAction<ValoresPredefinidos | null>>,
+  refreshValoresPredefinidos: () => Promise<void>
 ) => {
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
@@ -89,23 +90,8 @@ export const useDeleteValue = (
         return false;
       }
       
-      // Atualizar estado local imediatamente
-      setValoresPredefinidos(prev => {
-        if (!prev) return prev;
-        
-        const newValues = { ...prev };
-        const tabKey = activeTab as keyof ValoresPredefinidos;
-        
-        // Remover o valor do array correspondente
-        if (tabKey === 'dias_vencimento' || tabKey === 'valores_plano') {
-          newValues[tabKey] = (newValues[tabKey] as number[]).filter(v => v !== Number(valueToDelete));
-        } else {
-          (newValues[tabKey] as string[]) = (newValues[tabKey] as string[]).filter(v => v !== String(valueToDelete));
-        }
-        
-        console.log(`Valor removido do estado local. Array atualizado:`, newValues[tabKey]);
-        return newValues;
-      });
+      // Recarregar dados do servidor para manter ordenação correta
+      await refreshValoresPredefinidos();
       
       toast({
         title: "Sucesso",

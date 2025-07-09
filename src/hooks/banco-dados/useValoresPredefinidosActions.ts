@@ -8,18 +8,20 @@ import { useImportExport } from "./actions/useImportExport";
 export interface ValoresPredefinidosActionsProps {
   valoresPredefinidos: ValoresPredefinidos | null;
   setValoresPredefinidos: React.Dispatch<React.SetStateAction<ValoresPredefinidos | null>>;
+  refreshValoresPredefinidos: () => Promise<void>;
 }
 
 export const useValoresPredefinidosActions = ({ 
   valoresPredefinidos, 
-  setValoresPredefinidos 
+  setValoresPredefinidos,
+  refreshValoresPredefinidos
 }: ValoresPredefinidosActionsProps) => {
   const [saving, setSaving] = useState(false);
   
   // Hooks para as diferentes ações
-  const { handleAddValue: addValue, saving: addSaving } = useAddValue(valoresPredefinidos, setValoresPredefinidos);
-  const { handleDeleteValue: deleteValue, saving: deleteSaving } = useDeleteValue(valoresPredefinidos, setValoresPredefinidos);
-  const { handleImport: importValues, handleExport: exportValues, saving: importExportSaving } = useImportExport(valoresPredefinidos, setValoresPredefinidos);
+  const { handleAddValue: addValue, saving: addSaving } = useAddValue(valoresPredefinidos, setValoresPredefinidos, refreshValoresPredefinidos);
+  const { handleDeleteValue: deleteValue, saving: deleteSaving } = useDeleteValue(valoresPredefinidos, setValoresPredefinidos, refreshValoresPredefinidos);
+  const { handleImport: importValues, handleExport: exportValues, saving: importExportSaving } = useImportExport(valoresPredefinidos, setValoresPredefinidos, refreshValoresPredefinidos);
   
   // Combinar todos os estados de salvamento
   const isSaving = saving || addSaving || deleteSaving || importExportSaving;
