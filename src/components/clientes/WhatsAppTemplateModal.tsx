@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +16,7 @@ import { useMensagensWhatsApp } from "@/hooks/useMensagensWhatsApp";
 import { formatarMensagemWhatsAppComCliente, gerarLinkWhatsApp, abrirWhatsApp } from "@/utils/whatsappUtils";
 import { useToast } from "@/components/ui/use-toast";
 import { usePaymentHistory } from "@/hooks/cliente/usePaymentHistory";
+import { determinarTemplatePadrao } from "@/utils/whatsappTemplateSelection";
 
 interface WhatsAppTemplateModalProps {
   isOpen: boolean;
@@ -41,10 +42,29 @@ export const WhatsAppTemplateModal = ({
     { key: 'pago', label: 'Pago' }
   ];
 
+  // Auto-selecionar template baseado no histórico do cliente
+  useEffect(() => {
+    if (isOpen && !loading && allPayments.length >= 0) {
+      const templatePadrao = determinarTemplatePadrao(cliente, allPayments);
+      console.log(`Template padrão selecionado para ${cliente.nome}: ${templatePadrao}`);
+      
+      setSelectedTemplate(templatePadrao);
+      
+      // Aplicar a mensagem automaticamente
+      if (mensagens[templatePadrao as keyof typeof mensagens]) {
+        const mensagemFormatada = formatarMensagemWhatsAppComCliente(
+          mensagens[templatePadrao as keyof typeof mensagens],
+          cliente,
+          allPayments
+        );
+        setCustomMessage(mensagemFormatada);
+      }
+    }
+  }, [isOpen, loading, allPayments, mensagens, cliente]);
+
   const handleTemplateSelect = (templateKey: string) => {
     setSelectedTemplate(templateKey);
     if (mensagens[templateKey as keyof typeof mensagens]) {
-      // Usar a nova função que calcula corretamente os dados de vencimento
       const mensagemFormatada = formatarMensagemWhatsAppComCliente(
         mensagens[templateKey as keyof typeof mensagens],
         cliente,
