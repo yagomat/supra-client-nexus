@@ -80,8 +80,7 @@ export const ClienteCard = ({
             setStatusPagamento(newRecord.status);
           }
           
-          // Recarregar status e histórico de pagamentos para garantir sincronização
-          fetchCurrentMonthPaymentStatus();
+          // Recarregar pagamentos para atualizar informações de vencimento
           refetchPayments();
         }
       )
@@ -105,6 +104,9 @@ export const ClienteCard = ({
         anoAtual,
         status
       );
+      
+      // Atualizar o status local imediatamente para feedback visual
+      setStatusPagamento(status);
     } catch (error) {
       console.error("Erro ao alterar status de pagamento:", error);
     }

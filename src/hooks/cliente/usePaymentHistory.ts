@@ -48,8 +48,25 @@ export const usePaymentHistory = (clienteId: string) => {
         }, 
         (payload) => {
           console.log('Payment history change detected:', payload);
-          // Sempre recarregar todos os pagamentos para garantir sincronização
-          fetchPayments();
+          
+          // Atualizar o estado local de forma otimizada
+          if (payload.eventType === 'INSERT') {
+            setPayments(prev => {
+              const newPayment = payload.new as Pagamento;
+              // Verificar se o pagamento já existe para evitar duplicatas
+              const exists = prev.some(p => p.id === newPayment.id);
+              if (!exists) {
+                return [...prev, newPayment];
+              }
+              return prev;
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            setPayments(prev => prev.map(p => 
+              p.id === payload.new.id ? payload.new as Pagamento : p
+            ));
+          } else if (payload.eventType === 'DELETE') {
+            setPayments(prev => prev.filter(p => p.id !== payload.old.id));
+          }
         }
       )
       .subscribe();
