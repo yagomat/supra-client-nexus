@@ -1,14 +1,10 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Lock, Shield } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Shield } from "lucide-react";
 import { ProfileForm } from "./ProfileForm";
+import { ChangePasswordForm } from "./ChangePasswordForm";
 
 export function ProfileTab() {
-  const navigate = useNavigate();
-
   return (
     <div className="space-y-6">
       <Card className="card-enhanced animate-scale-in">
@@ -32,27 +28,11 @@ export function ProfileTab() {
             Segurança da Conta
           </CardTitle>
           <CardDescription className="text-base">
-            Gerencie as configurações de segurança e proteja sua conta.
+            Altere sua senha para manter sua conta segura.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="flex items-center justify-between p-4 bg-gradient-subtle rounded-lg border border-border/50">
-            <div className="space-y-1">
-              <p className="text-sm font-semibold text-foreground">Senha</p>
-              <p className="text-sm text-muted-foreground">
-                Altere sua senha regularmente para manter sua conta segura.
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/alterar-senha")}
-              className="btn-enhanced flex items-center gap-2 shadow-soft hover:shadow-medium transition-all duration-300"
-            >
-              <Lock className="h-4 w-4" />
-              Alterar Senha
-            </Button>
-          </div>
+          <ChangePasswordForm />
         </CardContent>
       </Card>
     </div>
