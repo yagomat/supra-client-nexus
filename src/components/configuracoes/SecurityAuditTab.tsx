@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { Shield, Eye, RefreshCw, Clock, User, Globe, Smartphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -193,6 +193,61 @@ export function SecurityAuditTab() {
               )}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Configurações de Segurança</CardTitle>
+          <CardDescription>
+            Configurações avançadas de segurança e proteção.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Content Security Policy (CSP)</p>
+            <p className="text-sm text-muted-foreground">
+              As políticas de segurança de conteúdo estão ativas e protegendo contra ataques XSS.
+            </p>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-green-600 border-green-600">
+                <Shield className="h-3 w-3 mr-1" />
+                Ativo
+              </Badge>
+            </div>
+          </div>
+          
+          <Separator />
+          
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Rate Limiting</p>
+            <p className="text-sm text-muted-foreground">
+              Proteção contra tentativas excessivas de login e outras operações sensíveis.
+            </p>
+            <div className="grid grid-cols-2 gap-4 text-xs">
+              <div>
+                <p className="font-medium">Login:</p>
+                <p className="text-muted-foreground">5 tentativas / 15 min</p>
+              </div>
+              <div>
+                <p className="font-medium">Perfil:</p>
+                <p className="text-muted-foreground">10 atualizações / 60 min</p>
+              </div>
+            </div>
+          </div>
+          
+          <Separator />
+          
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Validação de Dados</p>
+            <p className="text-sm text-muted-foreground">
+              Todos os dados são sanitizados e validados no backend antes do processamento.
+            </p>
+            <Badge variant="outline" className="text-green-600 border-green-600">
+              <Shield className="h-3 w-3 mr-1" />
+              Ativo
+            </Badge>
+          </div>
         </CardContent>
       </Card>
     </div>
