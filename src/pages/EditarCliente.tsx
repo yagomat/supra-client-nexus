@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -226,18 +225,11 @@ const EditarCliente = () => {
               disabled={isSubmitting} 
             />
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Tela Principal</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <MainScreenSection 
-                  control={form.control} 
-                  valoresPredefinidos={valoresPredefinidos} 
-                  disabled={isSubmitting} 
-                />
-              </CardContent>
-            </Card>
+            <MainScreenSection 
+              control={form.control} 
+              valoresPredefinidos={valoresPredefinidos} 
+              disabled={isSubmitting} 
+            />
 
             <div className="flex items-center space-x-3 p-4 bg-gradient-card rounded-lg border border-border/50">
               <Switch
@@ -255,18 +247,11 @@ const EditarCliente = () => {
             </div>
 
             {possuiTelaAdicional && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Tela Adicional</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <AdditionalScreenSection 
-                    control={form.control} 
-                    valoresPredefinidos={valoresPredefinidos} 
-                    disabled={isSubmitting} 
-                  />
-                </CardContent>
-              </Card>
+              <AdditionalScreenSection 
+                control={form.control} 
+                valoresPredefinidos={valoresPredefinidos} 
+                disabled={isSubmitting} 
+              />
             )}
 
             <Card>
