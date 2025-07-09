@@ -592,6 +592,10 @@ export type Database = {
         }
         Returns: Json
       }
+      sanitize_auth_input: {
+        Args: { p_email: string; p_nome?: string }
+        Returns: Json
+      }
       sanitize_input_centralized: {
         Args: { p_input: string }
         Returns: string
