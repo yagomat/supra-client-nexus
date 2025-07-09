@@ -1,78 +1,31 @@
 
 import React from "react";
+import { Phone, Calendar, Server } from "lucide-react";
 import { Cliente, Pagamento } from "@/types";
+import { formatPhoneNumber } from "./table/PhoneFormatter";
 import { DueDateInfo } from "./DueDateInfo";
-import { 
-  Phone, 
-  MapPin, 
-  Server, 
-  DollarSign, 
-  Smartphone, 
-  PlayCircle,
-  User,
-  Lock
-} from "lucide-react";
 
 interface ClienteInfoGridProps {
   cliente: Cliente;
-  allPayments?: Pagamento[];
+  allPayments: Pagamento[];
 }
 
-export const ClienteInfoGrid = ({ cliente, allPayments = [] }: ClienteInfoGridProps) => {
-  const valorPlanoFormatado = cliente.valor_plano 
-    ? `R$ ${cliente.valor_plano.toFixed(2).replace('.', ',')}`
-    : "Não informado";
-
+export const ClienteInfoGrid = ({ cliente, allPayments }: ClienteInfoGridProps) => {
   return (
-    <div className="grid grid-cols-2 gap-2 text-xs">
-      {cliente.telefone && (
-        <div className="flex items-center gap-1">
-          <Phone className="w-3 h-3" />
-          <span className="truncate">{cliente.telefone}</span>
-        </div>
-      )}
-      
-      {cliente.uf && (
-        <div className="flex items-center gap-1">
-          <MapPin className="w-3 h-3" />
-          <span>{cliente.uf}</span>
-        </div>
-      )}
-      
-      <div className="flex items-center gap-1">
-        <Server className="w-3 h-3" />
+    <div className="grid grid-cols-2 gap-3 text-sm">
+      <div className="flex items-center gap-2">
+        <Phone className="w-4 h-4 flex-shrink-0" />
+        <span className="truncate">{formatPhoneNumber(cliente.telefone) || "N/A"}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <Calendar className="w-4 h-4 flex-shrink-0" />
+        <span>Dia {cliente.dia_vencimento}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <Server className="w-4 h-4 flex-shrink-0" />
         <span className="truncate">{cliente.servidor}</span>
       </div>
-      
-      <div className="flex items-center gap-1">
-        <DollarSign className="w-3 h-3" />
-        <span>{valorPlanoFormatado}</span>
-      </div>
-      
-      {cliente.dispositivo_smart && (
-        <div className="flex items-center gap-1">
-          <Smartphone className="w-3 h-3" />
-          <span className="truncate">{cliente.dispositivo_smart}</span>
-        </div>
-      )}
-      
-      <div className="flex items-center gap-1">
-        <PlayCircle className="w-3 h-3" />
-        <span className="truncate">{cliente.aplicativo}</span>
-      </div>
-      
-      <div className="flex items-center gap-1">
-        <User className="w-3 h-3" />
-        <span className="truncate">{cliente.usuario_aplicativo}</span>
-      </div>
-      
-      <div className="flex items-center gap-1">
-        <Lock className="w-3 h-3" />
-        <span className="truncate">••••••••</span>
-      </div>
-
-      {/* Informação de vencimento sempre presente */}
-      <div className="col-span-2">
+      <div className="flex items-center gap-2">
         <DueDateInfo cliente={cliente} allPayments={allPayments} />
       </div>
     </div>
