@@ -80,7 +80,8 @@ export const ClienteCard = ({
             setStatusPagamento(newRecord.status);
           }
           
-          // Recarregar pagamentos para atualizar informações de vencimento
+          // Sempre recarregar os pagamentos para atualizar as informações de vencimento
+          // Isso é importante porque o cálculo de vencimento depende do histórico completo
           refetchPayments();
         }
       )
@@ -107,6 +108,12 @@ export const ClienteCard = ({
       
       // Atualizar o status local imediatamente para feedback visual
       setStatusPagamento(status);
+      
+      // Aguardar um pouco para garantir que o banco de dados foi atualizado
+      // e então recarregar os pagamentos para recalcular as informações de vencimento
+      setTimeout(() => {
+        refetchPayments();
+      }, 100);
     } catch (error) {
       console.error("Erro ao alterar status de pagamento:", error);
     }
