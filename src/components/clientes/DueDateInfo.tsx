@@ -12,6 +12,8 @@ interface DueDateInfoProps {
 export const DueDateInfo = ({ cliente, allPayments }: DueDateInfoProps) => {
   const daysInfo = useDaysCalculation(cliente, allPayments);
   
+  console.log(`DueDateInfo for ${cliente.nome}:`, daysInfo);
+  
   // Se não há informação de vencimento, não mostrar nada
   if (daysInfo.type === 'no_info') {
     return null;

@@ -56,9 +56,9 @@ export const ClienteCard = ({
 
     fetchCurrentMonthPaymentStatus();
 
-    // Configurar listener em tempo real para o mês atual
+    // Configurar listener em tempo real para mudanças de pagamento
     const channel = supabase
-      .channel(`pagamento-atual-${cliente.id}-${mesAtual}-${anoAtual}`)
+      .channel(`pagamento-card-${cliente.id}`)
       .on('postgres_changes', 
         { 
           event: '*', 
@@ -67,7 +67,10 @@ export const ClienteCard = ({
           filter: `cliente_id=eq.${cliente.id}`
         }, 
         (payload) => {
+          console.log('Payment change detected for card:', payload);
           const newRecord = payload.new as any;
+          
+          // Atualizar status se for do mês atual
           if (newRecord && 
               typeof newRecord.mes === 'number' &&
               typeof newRecord.ano === 'number' &&
@@ -76,6 +79,9 @@ export const ClienteCard = ({
               newRecord.ano === anoAtual) {
             setStatusPagamento(newRecord.status);
           }
+          
+          // Recarregar status para garantir sincronização
+          fetchCurrentMonthPaymentStatus();
         }
       )
       .subscribe();
