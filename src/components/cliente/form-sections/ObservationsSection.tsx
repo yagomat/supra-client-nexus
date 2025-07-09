@@ -13,9 +13,7 @@ export const ObservationsSection: React.FC<ObservationsSectionProps> = ({
   disabled = false,
 }) => {
   return (
-    <div className="border p-4 rounded-md space-y-4">
-      <h2 className="text-xl font-semibold">Observações</h2>
-
+    <div className="space-y-4">
       <TextareaField
         name="observacoes"
         control={control}
