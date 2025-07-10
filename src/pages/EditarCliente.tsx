@@ -32,8 +32,8 @@ const EditarCliente = () => {
 
   return (
     <DashboardLayout title="Editar Cliente">
-      <div className="w-full max-w-4xl mx-auto">
-        <div className="space-y-6">
+      <div className="w-full max-w-4xl mx-auto h-fit">
+        <div className="space-y-6 pb-6">
           <EditClienteHeader 
             clienteNome={cliente.nome}
             onBack={() => navigate("/clientes")}
