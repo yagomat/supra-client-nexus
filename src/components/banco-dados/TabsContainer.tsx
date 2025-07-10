@@ -40,13 +40,43 @@ export const TabsContainer = ({ activeTab, onTabChange, valoresPredefinidos, onD
       {isMobile ? (
         <div className="space-y-2">
           <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pb-1">
-            <TabsList className="grid grid-cols-2 gap-1 h-auto p-1">
-              <TabsTrigger value="ufs" className="text-xs px-2 py-2">UF</TabsTrigger>
-              <TabsTrigger value="servidores" className="text-xs px-2 py-2">Servidores</TabsTrigger>
-              <TabsTrigger value="dias_vencimento" className="text-xs px-2 py-2">Vencimentos</TabsTrigger>
-              <TabsTrigger value="valores_plano" className="text-xs px-2 py-2">Plano</TabsTrigger>
-              <TabsTrigger value="dispositivos_smart" className="text-xs px-2 py-2">Dispositivos</TabsTrigger>
-              <TabsTrigger value="aplicativos" className="text-xs px-2 py-2">Aplicativos</TabsTrigger>
+            <TabsList className="grid grid-cols-2 gap-2 h-auto p-2 bg-transparent">
+              <TabsTrigger 
+                value="ufs" 
+                className="text-xs px-3 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                UF
+              </TabsTrigger>
+              <TabsTrigger 
+                value="servidores" 
+                className="text-xs px-3 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Servidores
+              </TabsTrigger>
+              <TabsTrigger 
+                value="dias_vencimento" 
+                className="text-xs px-3 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Vencimentos
+              </TabsTrigger>
+              <TabsTrigger 
+                value="valores_plano" 
+                className="text-xs px-3 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Plano
+              </TabsTrigger>
+              <TabsTrigger 
+                value="dispositivos_smart" 
+                className="text-xs px-3 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Dispositivos
+              </TabsTrigger>
+              <TabsTrigger 
+                value="aplicativos" 
+                className="text-xs px-3 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Aplicativos
+              </TabsTrigger>
             </TabsList>
           </div>
           {/* Content with minimal spacing for mobile */}
@@ -60,15 +90,45 @@ export const TabsContainer = ({ activeTab, onTabChange, valoresPredefinidos, onD
           </div>
         </div>
       ) : (
-        // Desktop view: unchanged
+        // Desktop view: updated styling
         <>
-          <TabsList className="grid grid-cols-6">
-            <TabsTrigger value="ufs">UF</TabsTrigger>
-            <TabsTrigger value="servidores">Servidores</TabsTrigger>
-            <TabsTrigger value="dias_vencimento">Vencimentos</TabsTrigger>
-            <TabsTrigger value="valores_plano">Plano</TabsTrigger>
-            <TabsTrigger value="dispositivos_smart">Dispositivos</TabsTrigger>
-            <TabsTrigger value="aplicativos">Aplicativos</TabsTrigger>
+          <TabsList className="grid grid-cols-6 gap-2 p-2 bg-transparent h-auto">
+            <TabsTrigger 
+              value="ufs"
+              className="px-4 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              UF
+            </TabsTrigger>
+            <TabsTrigger 
+              value="servidores"
+              className="px-4 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Servidores
+            </TabsTrigger>
+            <TabsTrigger 
+              value="dias_vencimento"
+              className="px-4 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Vencimentos
+            </TabsTrigger>
+            <TabsTrigger 
+              value="valores_plano"
+              className="px-4 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Plano
+            </TabsTrigger>
+            <TabsTrigger 
+              value="dispositivos_smart"
+              className="px-4 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Dispositivos
+            </TabsTrigger>
+            <TabsTrigger 
+              value="aplicativos"
+              className="px-4 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Aplicativos
+            </TabsTrigger>
           </TabsList>
           <div className="mt-4">
             <TabsContent value="ufs">{renderValues("ufs")}</TabsContent>
