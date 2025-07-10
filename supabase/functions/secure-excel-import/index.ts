@@ -60,11 +60,11 @@ serve(async (req) => {
       )
     }
 
-    // Check rate limiting - máximo 50 importações por hora (aumentado de 5)
+    // Check rate limiting - máximo 200 importações por hora
     const { data: rateLimitOk, error: rateLimitError } = await supabaseClient.rpc('check_rate_limit', {
       p_user_id: user.id,
       p_operation: 'import_excel',
-      p_max_requests: 50,
+      p_max_requests: 200,
       p_time_window_minutes: 60
     });
 
@@ -76,7 +76,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'Limite de importações excedido (máximo 50 por hora). Tente novamente mais tarde.' 
+          error: 'Limite de importações excedido (máximo 200 por hora). Tente novamente mais tarde.' 
         }),
         { 
           status: 429, 
