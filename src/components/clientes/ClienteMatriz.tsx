@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { PaymentStatusButton } from "@/components/pagamentos/PaymentStatusButton";
 import { Cliente } from "@/types";
 import { ClienteStatusBadge } from "./ClienteStatusBadge";
@@ -159,65 +160,64 @@ export const ClienteMatriz = ({
   return (
     <div className="w-full">
       <div className="rounded-lg shadow-sm border border-border/50 overflow-hidden">
-        <div className="w-full overflow-x-auto">
-          <div className="min-w-max">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="font-medium sticky left-0 bg-muted/50 z-30 border-r-2 border-border shadow-xl min-w-[200px]">Nome</TableHead>
-                  <TableHead className="min-w-[80px]">
-                    <div className="leading-tight font-medium">
-                      <div>Dia de</div>
-                      <div>Venc.</div>
-                    </div>
+        <ScrollArea className="w-full whitespace-nowrap">
+          <Table className="min-w-max">
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead className="font-medium sticky left-0 bg-muted/50 z-30 border-r-2 border-border shadow-xl min-w-[200px]">Nome</TableHead>
+                <TableHead className="min-w-[80px]">
+                  <div className="leading-tight font-medium">
+                    <div>Dia de</div>
+                    <div>Venc.</div>
+                  </div>
+                </TableHead>
+                <TableHead className="font-medium min-w-[100px]">Status</TableHead>
+                {displayMeses.map((mes) => (
+                  <TableHead key={mes.value} className="text-center font-medium min-w-[80px]">
+                    {isMobile ? mes.label.substring(0, 3) : mes.label.substring(0, 3)}
                   </TableHead>
-                  <TableHead className="font-medium min-w-[100px]">Status</TableHead>
-                  {displayMeses.map((mes) => (
-                    <TableHead key={mes.value} className="text-center font-medium min-w-[80px]">
-                      {isMobile ? mes.label.substring(0, 3) : mes.label.substring(0, 3)}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedClientes.map((cliente, index) => {
-                  const isOdd = index % 2 === 1;
-                  const rowBgClass = isOdd ? "bg-muted/10" : "bg-background";
-                  const nameCellBgClass = isOdd ? "bg-muted" : "bg-background";
-                  
-                  return (
-                    <TableRow key={cliente.id} className={rowBgClass}>
-                      <TableCell className={`font-medium sticky left-0 ${nameCellBgClass} z-30 border-r-2 border-border shadow-xl min-w-[200px]`}>
-                        {cliente.nome}
-                      </TableCell>
-                      <TableCell className="min-w-[80px]">{cliente.dia_vencimento}</TableCell>
-                      <TableCell className="min-w-[100px]">
-                        <ClienteStatusBadge status={cliente.status || 'inativo'} />
-                      </TableCell>
-                      {displayMeses.map((mes) => {
-                        const status = getStatusForClient(cliente.id, mes.value);
-                        
-                        return (
-                          <TableCell key={mes.value} className="min-w-[80px]">
-                            <div className="flex justify-center">
-                              <PaymentStatusButton
-                                status={status}
-                                onStatusChange={(newStatus) => 
-                                  handlePaymentStatusChange(cliente, mes.value, newStatus)
-                                }
-                                minimal={true}
-                              />
-                            </div>
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedClientes.map((cliente, index) => {
+                const isOdd = index % 2 === 1;
+                const rowBgClass = isOdd ? "bg-muted/10" : "bg-background";
+                const nameCellBgClass = isOdd ? "bg-muted" : "bg-background";
+                
+                return (
+                  <TableRow key={cliente.id} className={rowBgClass}>
+                    <TableCell className={`font-medium sticky left-0 ${nameCellBgClass} z-30 border-r-2 border-border shadow-xl min-w-[200px]`}>
+                      {cliente.nome}
+                    </TableCell>
+                    <TableCell className="min-w-[80px]">{cliente.dia_vencimento}</TableCell>
+                    <TableCell className="min-w-[100px]">
+                      <ClienteStatusBadge status={cliente.status || 'inativo'} />
+                    </TableCell>
+                    {displayMeses.map((mes) => {
+                      const status = getStatusForClient(cliente.id, mes.value);
+                      
+                      return (
+                        <TableCell key={mes.value} className="min-w-[80px]">
+                          <div className="flex justify-center">
+                            <PaymentStatusButton
+                              status={status}
+                              onStatusChange={(newStatus) => 
+                                handlePaymentStatusChange(cliente, mes.value, newStatus)
+                              }
+                              minimal={true}
+                            />
+                          </div>
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
         
         <div className="border-t p-2 bg-muted/10">
           <TablePagination
