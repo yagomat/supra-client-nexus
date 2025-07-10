@@ -104,7 +104,7 @@ export const ClienteListContent = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-full overflow-x-hidden">
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
           <ClienteExcelButtons 

@@ -37,7 +37,7 @@ const ListaClientes = () => {
 
   return (
     <DashboardLayout title="Clientes">
-      <div className="space-y-8 animate-fade-in">
+      <div className="space-y-8 animate-fade-in max-w-full overflow-x-hidden">
         <div className="animate-slide-up">
           <ClienteListContent
             loading={loading}
