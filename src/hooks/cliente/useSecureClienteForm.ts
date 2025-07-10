@@ -4,6 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { formSchema, ClienteFormValues } from "./clienteFormSchema";
 import { useSecureClienteOperations } from "./useSecureClienteOperations";
+import { getDefaultValues, convertFormToCliente } from "./clienteFormUtils";
+import { useRealTimeValidation } from "./clienteFormValidation";
 import { Cliente } from "@/types";
 
 interface UseSecureClienteFormProps {
@@ -31,152 +33,29 @@ export const useSecureClienteForm = ({
     clearValidationMessages
   } = useSecureClienteOperations();
 
-  // Preparar valores padrão baseados nos dados iniciais
-  const getDefaultValues = () => {
-    if (initialData && mode === "edit") {
-      return {
-        nome: initialData.nome || "",
-        telefone: initialData.telefone || "",
-        codigo_pais_telefone: initialData.codigo_pais_telefone || "+55",
-        uf: initialData.uf || "",
-        servidor: initialData.servidor || "",
-        dia_vencimento: initialData.dia_vencimento || 1,
-        valor_plano: initialData.valor_plano?.toString() || "",
-        dispositivo_smart: initialData.dispositivo_smart || "",
-        aplicativo: initialData.aplicativo || "",
-        usuario_aplicativo: initialData.usuario_aplicativo || "",
-        senha_aplicativo: initialData.senha_aplicativo || "",
-        data_licenca_aplicativo: initialData.data_licenca_aplicativo || "",
-        possui_tela_adicional: initialData.possui_tela_adicional || false,
-        dispositivo_smart_2: initialData.dispositivo_smart_2 || "",
-        aplicativo_2: initialData.aplicativo_2 || "",
-        usuario_2: initialData.usuario_2 || "",
-        senha_2: initialData.senha_2 || "",
-        data_licenca_2: initialData.data_licenca_2 || "",
-        observacoes: initialData.observacoes || "",
-        status: (initialData.status as "ativo" | "inativo") || "inativo"
-      };
-    }
-    
-    // Valores padrão para criação
-    return {
-      nome: "",
-      telefone: "",
-      codigo_pais_telefone: "+55",
-      uf: "",
-      servidor: "",
-      dia_vencimento: 1,
-      valor_plano: "",
-      dispositivo_smart: "",
-      aplicativo: "",
-      usuario_aplicativo: "",
-      senha_aplicativo: "",
-      data_licenca_aplicativo: "",
-      possui_tela_adicional: false,
-      dispositivo_smart_2: "",
-      aplicativo_2: "",
-      usuario_2: "",
-      senha_2: "",
-      data_licenca_2: "",
-      observacoes: "",
-      status: "inativo" as const
-    };
-  };
-
   // Configurar formulário com validação local + backend
   const form = useForm<ClienteFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: getDefaultValues(),
+    defaultValues: getDefaultValues(initialData, mode),
     mode: 'onChange'
   });
 
   // Atualizar os valores do formulário quando initialData mudar
   useEffect(() => {
     if (initialData && mode === "edit") {
-      const newValues = getDefaultValues();
+      const newValues = getDefaultValues(initialData, mode);
       console.log("Atualizando valores do formulário:", newValues);
       form.reset(newValues);
     }
   }, [initialData, mode, form]);
 
-  // Converter dados do formulário para Cliente com sanitização adequada
-  const convertFormToCliente = (data: ClienteFormValues): Partial<Cliente> => {
-    console.log("Convertendo dados do formulário:", data);
-    
-    // Função helper para sanitizar strings
-    const sanitizeString = (value: string | undefined | null) => {
-      if (!value || typeof value !== 'string' || value.trim() === '') {
-        return null;
-      }
-      return value.trim();
-    };
-
-    // Função helper para sanitizar números
-    const sanitizeNumber = (value: string | number | undefined | null) => {
-      if (!value || (typeof value === 'string' && value.trim() === '')) {
-        return null;
-      }
-      if (typeof value === 'string') {
-        const parsed = parseFloat(value);
-        return isNaN(parsed) ? null : parsed;
-      }
-      return value;
-    };
-
-    const cleanData = {
-      nome: data.nome, // obrigatório
-      servidor: data.servidor, // obrigatório
-      dia_vencimento: data.dia_vencimento, // obrigatório
-      aplicativo: data.aplicativo, // obrigatório
-      usuario_aplicativo: data.usuario_aplicativo, // obrigatório
-      senha_aplicativo: data.senha_aplicativo, // obrigatório
-      codigo_pais_telefone: data.codigo_pais_telefone || "+55",
-      possui_tela_adicional: data.possui_tela_adicional || false,
-      status: data.status || "inativo",
-      // Campos opcionais sanitizados
-      telefone: sanitizeString(data.telefone),
-      uf: sanitizeString(data.uf),
-      valor_plano: sanitizeNumber(data.valor_plano),
-      dispositivo_smart: sanitizeString(data.dispositivo_smart),
-      data_licenca_aplicativo: sanitizeString(data.data_licenca_aplicativo),
-      dispositivo_smart_2: sanitizeString(data.dispositivo_smart_2),
-      aplicativo_2: sanitizeString(data.aplicativo_2),
-      usuario_2: sanitizeString(data.usuario_2),
-      senha_2: sanitizeString(data.senha_2),
-      data_licenca_2: sanitizeString(data.data_licenca_2),
-      observacoes: sanitizeString(data.observacoes)
-    };
-
-    console.log("Dados limpos:", cleanData);
-    return cleanData;
-  };
-
-  // Validação em tempo real (debounced)
-  const performRealTimeValidation = async (data: ClienteFormValues) => {
-    if (!realTimeValidation) return;
-    
-    try {
-      await validateCliente(convertFormToCliente(data));
-      setLastValidationTime(new Date());
-    } catch (error) {
-      console.error("Erro na validação em tempo real:", error);
-    }
-  };
-
-  // Debounced validation
-  useEffect(() => {
-    if (!realTimeValidation) return;
-
-    const subscription = form.watch((data) => {
-      const timeoutId = setTimeout(() => {
-        performRealTimeValidation(data as ClienteFormValues);
-      }, 1000); // Debounce de 1 segundo
-
-      return () => clearTimeout(timeoutId);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [form, realTimeValidation]);
+  // Hook para validação em tempo real
+  const { forceValidation } = useRealTimeValidation({
+    form,
+    validateCliente,
+    enabled: realTimeValidation,
+    setLastValidationTime
+  });
 
   // Submissão do formulário com validação de segurança
   const onSubmit = async (data: ClienteFormValues | Partial<Cliente>) => {
@@ -241,15 +120,9 @@ export const useSecureClienteForm = ({
     }
   }
 
-  // Força uma validação manual
-  async function forceValidation() {
-    const data = form.getValues();
-    await performRealTimeValidation(data);
-  }
-
   // Resetar formulário e validações
   function resetForm() {
-    form.reset(getDefaultValues());
+    form.reset(getDefaultValues(initialData, mode));
     clearValidationMessages();
     setLastValidationTime(null);
   }
