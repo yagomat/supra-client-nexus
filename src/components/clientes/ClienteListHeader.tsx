@@ -19,7 +19,7 @@ export const ClienteListHeader = ({ clientes, onImportSuccess }: ClienteListHead
         <h1 className="text-2xl font-bold">Clientes</h1>
         <p className="text-gray-500">Gerencie seus clientes</p>
       </div>
-      <div className="flex flex-col sm:flex-row gap-2">
+      <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
         <ClienteExcelButtons 
           clientes={clientes} 
           onImportSuccess={onImportSuccess} 
