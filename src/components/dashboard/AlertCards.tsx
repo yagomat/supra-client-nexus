@@ -21,6 +21,12 @@ export const AlertCards = ({ clientesInativos, appsVencendo, clientesEmRiscoDeta
     const date = new Date(dateString);
     return format(date, "dd/MM/yyyy", { locale: ptBR });
   };
+
+  // Format days remaining text
+  const formatDaysRemaining = (days: number) => {
+    if (days === 0) return "hoje";
+    return days === 1 ? "1 dia" : `${days} dias`;
+  };
   
   return (
     <div className="grid gap-4 md:grid-cols-2">
@@ -96,7 +102,7 @@ export const AlertCards = ({ clientesInativos, appsVencendo, clientesEmRiscoDeta
                         <div>
                           <span className="text-muted-foreground">{app.aplicativo} ({app.tipo_tela})</span>
                           <span className="ml-2 text-blue-600 dark:text-blue-400">
-                            {app.dias_restantes} {app.dias_restantes === 1 ? 'dia' : 'dias'}
+                            {formatDaysRemaining(app.dias_restantes)}
                           </span>
                         </div>
                       </div>

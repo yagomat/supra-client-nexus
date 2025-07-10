@@ -1,5 +1,6 @@
+
 import { Button } from "@/components/ui/button";
-import { Check, X, ShieldCheck } from "lucide-react";
+import { Check, X, Gift } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -51,10 +52,10 @@ export const PaymentStatusButton = ({
       case "pago_confianca":
         return {
           variant: "outline" as const,
-          className: "border-amber-500 text-amber-600 hover:bg-amber-100 bg-amber-50",
-          icon: <ShieldCheck className="size-4" />,
-          label: "Pago (confiança)",
-          shortLabel: "PC"
+          className: "border-blue-500 text-blue-600 hover:bg-blue-100 bg-blue-50",
+          icon: <Gift className="size-4" />,
+          label: "Promoção",
+          shortLabel: "PR"
         };
       default: // nao_pago
         return {
