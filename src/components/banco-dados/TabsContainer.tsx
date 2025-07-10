@@ -40,7 +40,7 @@ export const TabsContainer = ({ activeTab, onTabChange, valoresPredefinidos, onD
       {isMobile ? (
         <div className="space-y-2">
           <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pb-1">
-            <TabsList className="grid grid-cols-2 gap-2 h-auto p-0 bg-transparent mx-4">
+            <TabsList className="grid grid-cols-2 gap-2 h-auto p-2 bg-transparent">
               <TabsTrigger 
                 value="ufs" 
                 className="text-xs px-3 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
@@ -92,7 +92,7 @@ export const TabsContainer = ({ activeTab, onTabChange, valoresPredefinidos, onD
       ) : (
         // Desktop view: updated styling
         <>
-          <TabsList className="grid grid-cols-6 gap-2 p-0 bg-transparent h-auto mx-4">
+          <TabsList className="grid grid-cols-6 gap-2 p-2 bg-transparent h-auto">
             <TabsTrigger 
               value="ufs"
               className="px-4 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
