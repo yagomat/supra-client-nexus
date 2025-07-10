@@ -40,7 +40,7 @@ export const CadastrarClienteMainScreen: React.FC<MainScreenProps> = ({
         <SelectField
           name="aplicativo"
           control={control}
-          label="Aplicativo"
+          label="Aplicativo *"
           placeholder="Selecione o aplicativo"
           options={aplicativoOptions}
           disabled={disabled}
