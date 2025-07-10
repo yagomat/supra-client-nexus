@@ -32,10 +32,8 @@ export const PaymentMatrixRow = ({
 
   return (
     <TableRow key={cliente.id} className={rowBgClass}>
-      <TableCell className={`font-medium sticky left-0 ${nameCellBgClass} z-40 border-r-2 border-border shadow-xl min-w-[200px] max-w-[200px] truncate`}>
-        <div className="truncate" title={cliente.nome}>
-          {cliente.nome}
-        </div>
+      <TableCell className={`font-medium sticky left-0 ${nameCellBgClass} z-30 border-r-2 border-border shadow-xl`}>
+        {cliente.nome}
       </TableCell>
       <TableCell>{cliente.dia_vencimento}</TableCell>
       <TableCell>
