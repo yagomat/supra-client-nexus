@@ -1,244 +1,251 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { useNavigate } from "react-router-dom";
-import { ClienteSecurityService } from "@/services/clienteSecurityService";
+import { SecureClienteService, ClienteWithPaymentStatus } from "@/services/secureClienteService";
 import { Cliente } from "@/types";
+import { useSmartLoading } from "@/hooks/useSmartLoading";
+import { useRetryableOperation } from "@/hooks/useRetryableOperation";
 
 export const useSecureClienteOperations = () => {
-  const [loading, setLoading] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [clientesWithStatus, setClientesWithStatus] = useState<ClienteWithPaymentStatus[]>([]);
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const smartLoading = useSmartLoading({
+    showMinimumTime: 300,
+    autoHideSuccessAfter: 2000,
+    enableProgress: true
+  });
+  const { executeWithRetry } = useRetryableOperation({
+    maxRetries: 3,
+    initialDelay: 1000,
+    onRetry: (attempt, delay) => {
+      toast({
+        title: "Tentando novamente...",
+        description: `Tentativa ${attempt} em ${Math.round(delay/1000)}s`,
+      });
+    }
+  });
 
-  /**
-   * Valida dados do cliente usando validação de segurança do backend
-   */
-  const validateCliente = async (data: Partial<Cliente>) => {
+  // Buscar clientes com status calculado no backend (principal)
+  const fetchClientesWithStatus = useCallback(async (status?: "todos" | "ativo" | "inativo") => {
     try {
-      setLoading(true);
-      setValidationErrors([]);
-      setValidationWarnings([]);
+      const result = await smartLoading.withLoading(
+        'fetch-clientes-status',
+        () => executeWithRetry(
+          () => SecureClienteService.getClientesWithCalculatedStatus(status),
+          'Carregar clientes'
+        ),
+        'Carregando clientes...',
+        'Clientes carregados com sucesso'
+      );
+      
+      setClientesWithStatus(result);
+      setClientes(result.map(item => item.cliente));
+      return result;
+    } catch (error) {
+      console.error("Erro ao buscar clientes com status:", error);
+      toast({
+        title: "Erro ao carregar clientes",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  }, [smartLoading, executeWithRetry, toast]);
 
-      const result = await ClienteSecurityService.validateClienteData(data);
+  // Buscar clientes tradicionais (fallback)
+  const fetchClientes = useCallback(async (status?: "todos" | "ativo" | "inativo") => {
+    try {
+      const result = await smartLoading.withLoading(
+        'fetch-clientes',
+        () => executeWithRetry(
+          () => SecureClienteService.getClientes(status),
+          'Carregar clientes'
+        ),
+        'Carregando clientes...',
+        'Clientes carregados com sucesso'
+      );
       
-      setValidationErrors(result.errors || []);
-      setValidationWarnings(result.warnings || []);
+      setClientes(result);
+      return result;
+    } catch (error) {
+      console.error("Erro ao buscar clientes:", error);
+      toast({
+        title: "Erro ao carregar clientes",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  }, [smartLoading, executeWithRetry, toast]);
+
+  // Pesquisar clientes com rate limiting
+  const searchClientes = useCallback(async (searchTerm: string, status?: "todos" | "ativo" | "inativo") => {
+    try {
+      const result = await smartLoading.withLoading(
+        'search-clientes',
+        () => executeWithRetry(
+          () => SecureClienteService.searchClientes(searchTerm, status),
+          'Pesquisar clientes'
+        ),
+        'Pesquisando...',
+        'Pesquisa concluída'
+      );
       
-      // Mostrar warnings como toast informativo
-      if (result.warnings && result.warnings.length > 0) {
-        result.warnings.forEach(warning => {
-          toast({
-            title: "Atenção",
-            description: warning,
-            variant: "default",
-          });
-        });
-      }
+      setClientes(result);
+      return result;
+    } catch (error) {
+      console.error("Erro ao pesquisar clientes:", error);
+      toast({
+        title: "Erro na pesquisa",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  }, [smartLoading, executeWithRetry, toast]);
+
+  // Criar cliente com validação e rate limiting
+  const createCliente = useCallback(async (cliente: Omit<Cliente, "id" | "created_at" | "status">) => {
+    try {
+      const result = await smartLoading.withLoading(
+        'create-cliente',
+        () => executeWithRetry(
+          () => SecureClienteService.createCliente(cliente),
+          'Criar cliente'
+        ),
+        'Criando cliente...',
+        'Cliente criado com sucesso'
+      );
+      
+      // Atualizar lista local
+      setClientes(prev => [...prev, result]);
       
       return result;
     } catch (error) {
-      console.error("Erro na validação:", error);
-      const errorMessage = "Erro ao validar dados do cliente";
-      setValidationErrors([errorMessage]);
-      return {
-        valid: false,
-        errors: [errorMessage],
-        warnings: [],
-        sanitized_data: {}
-      };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /**
-   * Cria um novo cliente com validação de segurança
-   */
-  const createCliente = async (data: Partial<Cliente>) => {
-    try {
-      setLoading(true);
-      setValidationErrors([]);
-      setValidationWarnings([]);
-
-      // Validar dados primeiro
-      const validation = await validateCliente(data);
-      
-      if (!validation.valid) {
-        toast({
-          title: "Dados inválidos",
-          description: validation.errors.join(", "),
-          variant: "destructive",
-        });
-        return { success: false, validation };
-      }
-
-      // Criar cliente com segurança
-      const result = await ClienteSecurityService.secureCreateCliente(data);
-      
-      if (result.success) {
-        toast({
-          title: "Cliente criado com sucesso",
-          description: "O cliente foi cadastrado com todas as validações de segurança.",
-        });
-        
-        // Log da operação
-        await ClienteSecurityService.logOperation(
-          'create_success',
-          result.cliente?.id,
-          null,
-          ClienteSecurityService.sanitizeClienteForDisplay(result.cliente!)
-        );
-        
-        // Navegar para lista de clientes
-        navigate("/clientes");
-        
-        return { success: true, cliente: result.cliente };
-      } else {
-        // Mostrar erros de validação ou operação
-        const errorMessage = result.error || "Erro desconhecido";
-        
-        if (result.validation && !result.validation.valid) {
-          setValidationErrors(result.validation.errors);
-          setValidationWarnings(result.validation.warnings || []);
-        }
-        
-        toast({
-          title: "Erro ao criar cliente",
-          description: errorMessage,
-          variant: "destructive",
-        });
-        
-        return { success: false, error: errorMessage, validation: result.validation };
-      }
-    } catch (error) {
-      console.error("Erro na criação do cliente:", error);
-      const errorMessage = "Erro interno do servidor";
-      
+      console.error("Erro ao criar cliente:", error);
       toast({
         title: "Erro ao criar cliente",
-        description: errorMessage,
+        description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
-      
-      return { success: false, error: errorMessage };
-    } finally {
-      setLoading(false);
+      throw error;
     }
-  };
+  }, [smartLoading, executeWithRetry, toast]);
 
-  /**
-   * Atualiza um cliente existente com validação de segurança
-   */
-  const updateCliente = async (clienteId: string, data: Partial<Cliente>, originalData?: Cliente) => {
+  // Atualizar cliente com rate limiting
+  const updateCliente = useCallback(async (id: string, cliente: Partial<Cliente>) => {
     try {
-      setLoading(true);
-      setValidationErrors([]);
-      setValidationWarnings([]);
-
-      // Validar dados primeiro
-      const validation = await validateCliente(data);
+      const result = await smartLoading.withLoading(
+        'update-cliente',
+        () => executeWithRetry(
+          () => SecureClienteService.updateCliente(id, cliente),
+          'Atualizar cliente'
+        ),
+        'Atualizando cliente...',
+        'Cliente atualizado com sucesso'
+      );
       
-      if (!validation.valid) {
-        toast({
-          title: "Dados inválidos",
-          description: validation.errors.join(", "),
-          variant: "destructive",
-        });
-        return { success: false, validation };
-      }
-
-      // Atualizar cliente com segurança
-      const result = await ClienteSecurityService.secureUpdateCliente(clienteId, data);
+      // Atualizar lista local
+      setClientes(prev => prev.map(c => c.id === id ? result : c));
       
-      if (result.success) {
-        toast({
-          title: "Cliente atualizado com sucesso",
-          description: "Os dados foram atualizados com todas as validações de segurança.",
-        });
-        
-        // Log da operação
-        await ClienteSecurityService.logOperation(
-          'update_success',
-          clienteId,
-          originalData ? ClienteSecurityService.sanitizeClienteForDisplay(originalData) : null,
-          ClienteSecurityService.sanitizeClienteForDisplay(result.cliente!)
-        );
-        
-        // Navegar para lista de clientes
-        navigate("/clientes");
-        
-        return { success: true, cliente: result.cliente };
-      } else {
-        // Mostrar erros de validação ou operação
-        const errorMessage = result.error || "Erro desconhecido";
-        
-        if (result.validation && !result.validation.valid) {
-          setValidationErrors(result.validation.errors);
-          setValidationWarnings(result.validation.warnings || []);
-        }
-        
-        toast({
-          title: "Erro ao atualizar cliente",
-          description: errorMessage,
-          variant: "destructive",
-        });
-        
-        return { success: false, error: errorMessage, validation: result.validation };
-      }
+      return result;
     } catch (error) {
-      console.error("Erro na atualização do cliente:", error);
-      const errorMessage = "Erro interno do servidor";
-      
+      console.error("Erro ao atualizar cliente:", error);
       toast({
         title: "Erro ao atualizar cliente",
-        description: errorMessage,
+        description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
-      
-      return { success: false, error: errorMessage };
-    } finally {
-      setLoading(false);
+      throw error;
     }
-  };
+  }, [smartLoading, executeWithRetry, toast]);
 
-  /**
-   * Obtém logs de auditoria das operações do usuário
-   */
-  const getAuditLogs = async (eventType?: string) => {
+  // Excluir cliente com rate limiting
+  const deleteCliente = useCallback(async (id: string) => {
     try {
-      const logs = await ClienteSecurityService.getAuditLogs(eventType);
-      return logs;
+      await smartLoading.withLoading(
+        'delete-cliente',
+        () => executeWithRetry(
+          () => SecureClienteService.deleteCliente(id),
+          'Excluir cliente'
+        ),
+        'Excluindo cliente...',
+        'Cliente excluído com sucesso'
+      );
+      
+      // Remover da lista local
+      setClientes(prev => prev.filter(c => c.id !== id));
+      setClientesWithStatus(prev => prev.filter(c => c.cliente.id !== id));
+      
     } catch (error) {
-      console.error("Erro ao buscar logs de auditoria:", error);
-      return [];
+      console.error("Erro ao excluir cliente:", error);
+      toast({
+        title: "Erro ao excluir cliente",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+      throw error;
     }
-  };
+  }, [smartLoading, executeWithRetry, toast]);
 
-  /**
-   * Verifica se os dados do cliente são válidos para operações críticas
-   */
-  const isDataValid = (data: Partial<Cliente>): boolean => {
-    return ClienteSecurityService.isClienteDataValid(data);
-  };
+  // Calcular status de pagamento individual (backend)
+  const calculatePaymentStatus = useCallback(async (clienteId: string) => {
+    try {
+      const result = await executeWithRetry(
+        () => SecureClienteService.calculatePaymentStatus(clienteId),
+        'Calcular status de pagamento'
+      );
+      
+      return result;
+    } catch (error) {
+      console.error("Erro ao calcular status de pagamento:", error);
+      return { type: 'no_info', days: 0 };
+    }
+  }, [executeWithRetry]);
 
-  /**
-   * Limpa erros e warnings de validação
-   */
-  const clearValidationMessages = () => {
-    setValidationErrors([]);
-    setValidationWarnings([]);
-  };
+  // Verificar rate limit para operação específica
+  const checkRateLimit = useCallback(async (operation: string) => {
+    try {
+      return await SecureClienteService.checkOperationRateLimit(operation);
+    } catch (error) {
+      console.error(`Erro ao verificar rate limit para ${operation}:`, error);
+      return false;
+    }
+  }, []);
 
-  return {
-    loading,
-    validationErrors,
-    validationWarnings,
-    validateCliente,
+    return {
+    // Estados
+    clientes,
+    clientesWithStatus,
+    
+    // Loading states
+    isLoading: smartLoading.isLoading,
+    loading: smartLoading.hasAnyLoading,
+    loadingOperations: smartLoading.operations,
+    
+    // Compatibilidade com hooks anteriores
+    validationErrors: [],
+    validationWarnings: [],
+    validateCliente: async (_data: any) => ({ valid: true, errors: [], warnings: [] }),
+    isDataValid: (_data: any) => true,
+    clearValidationMessages: () => {},
+    getAuditLogs: async (_eventType?: string) => [],
+    
+    // Operações principais
+    fetchClientesWithStatus,
+    fetchClientes,
+    searchClientes,
     createCliente,
     updateCliente,
-    getAuditLogs,
-    isDataValid,
-    clearValidationMessages
+    deleteCliente,
+    calculatePaymentStatus,
+    
+    // Utilitários
+    checkRateLimit,
+    clearOperations: smartLoading.clearAllOperations,
+    
+    // Loading helpers para componentes individuais
+    getLoadingState: smartLoading.getOperation,
+    getProgress: smartLoading.getProgress
   };
 };

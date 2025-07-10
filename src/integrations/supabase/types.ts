@@ -295,6 +295,14 @@ export type Database = {
         Args: { p_user_id: string; p_tipo: string; p_valor: string }
         Returns: Json
       }
+      calculate_cliente_payment_status: {
+        Args: { p_cliente_id: string; p_user_id?: string }
+        Returns: Json
+      }
+      calculate_cliente_sorting_priority: {
+        Args: { p_cliente_id: string; p_user_id?: string }
+        Returns: number
+      }
       check_auth_rate_limit: {
         Args: {
           p_email: string
@@ -303,6 +311,15 @@ export type Database = {
           p_time_window_minutes?: number
         }
         Returns: boolean
+      }
+      check_comprehensive_rate_limit: {
+        Args: {
+          p_user_id: string
+          p_operation: string
+          p_max_requests?: number
+          p_time_window_minutes?: number
+        }
+        Returns: Json
       }
       check_dashboard_rate_limit: {
         Args: {
@@ -314,6 +331,10 @@ export type Database = {
       }
       check_export_rate_limit: {
         Args: { p_user_id: string }
+        Returns: boolean
+      }
+      check_operation_rate_limit: {
+        Args: { p_user_id: string; p_operation: string }
         Returns: boolean
       }
       check_profile_rate_limit: {
@@ -469,6 +490,14 @@ export type Database = {
           cliente_data_licenca_2: string
           cliente_observacoes: string
           cliente_user_id: string
+        }[]
+      }
+      get_clientes_with_calculated_status: {
+        Args: { p_user_id?: string; p_status?: string }
+        Returns: {
+          cliente_data: Json
+          payment_status: Json
+          sorting_priority: number
         }[]
       }
       get_dashboard_chart_data: {
