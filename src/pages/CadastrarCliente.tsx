@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { getValoresPredefinidos } from "@/services/valoresPredefinidosService";
 import { ValoresPredefinidos } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
+import { CadastrarClienteHeader } from "@/components/cliente/cadastrar/CadastrarClienteHeader";
 import { CadastrarClienteBasicInformation } from "@/components/cliente/form-sections/CadastrarClienteBasicInformation";
 import { CadastrarClienteMainScreen } from "@/components/cliente/form-sections/CadastrarClienteMainScreen";
 import { CadastrarClienteAdditionalScreen } from "@/components/cliente/form-sections/CadastrarClienteAdditionalScreen";
@@ -63,6 +64,8 @@ const CadastrarCliente = () => {
       <div className="h-full flex flex-col">
         <ScrollArea className="flex-1">
           <div className="w-full max-w-4xl mx-auto space-y-6 p-0 pb-8">
+            <CadastrarClienteHeader onBack={handleCancel} />
+            
             <CadastrarClienteSecurityAlert securityStatus={securityStatus} />
 
             <Form {...form}>

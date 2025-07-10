@@ -3,13 +3,11 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
-interface EditClienteHeaderProps {
-  clienteNome: string;
+interface CadastrarClienteHeaderProps {
   onBack: () => void;
 }
 
-export const EditClienteHeader: React.FC<EditClienteHeaderProps> = ({
-  clienteNome,
+export const CadastrarClienteHeader: React.FC<CadastrarClienteHeaderProps> = ({
   onBack,
 }) => {
   return (
@@ -18,7 +16,7 @@ export const EditClienteHeader: React.FC<EditClienteHeaderProps> = ({
         <ArrowLeft className="h-4 w-4 mr-2" />
         Voltar
       </Button>
-      <h1 className="text-2xl font-bold">Editar: {clienteNome}</h1>
+      <h1 className="text-2xl font-bold">Cadastrar Cliente</h1>
     </div>
   );
 };
