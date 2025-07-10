@@ -1,3 +1,4 @@
+
 import {
   ArrowDown,
   ArrowUp,
@@ -28,6 +29,7 @@ export function StatsCards({ data }: StatsCardsProps) {
       trendValue: data.percentualCrescimento,
       trendIcon: data.percentualCrescimento >= 0 ? <ArrowUp className="h-3 w-3 text-success" /> : <ArrowDown className="h-3 w-3 text-danger" />,
       description: "Clientes ativos",
+      loading: false,
     },
     {
       title: "Faturamento Total",
@@ -37,6 +39,7 @@ export function StatsCards({ data }: StatsCardsProps) {
       trendValue: data.percentualCrescimento,
       trendIcon: data.percentualCrescimento >= 0 ? <ArrowUp className="h-3 w-3 text-success" /> : <ArrowDown className="h-3 w-3 text-danger" />,
       description: "Faturamento total",
+      loading: false,
     },
     {
       title: "Crescimento",
@@ -46,6 +49,7 @@ export function StatsCards({ data }: StatsCardsProps) {
       trendValue: data.percentualCrescimento,
       trendIcon: data.percentualCrescimento >= 0 ? <TrendingUp className="h-5 w-5 text-success" /> : <TrendingDown className="h-5 w-5 text-danger" />,
       description: "Comparado com o mês anterior",
+      loading: false,
     },
     {
       title: "Ticket Médio",
@@ -55,6 +59,7 @@ export function StatsCards({ data }: StatsCardsProps) {
       trendValue: data.percentualCrescimento,
       trendIcon: data.percentualCrescimento >= 0 ? <ArrowUp className="h-3 w-3 text-success" /> : <ArrowDown className="h-3 w-3 text-danger" />,
       description: "Valor médio por cliente",
+      loading: false,
     },
   ];
 

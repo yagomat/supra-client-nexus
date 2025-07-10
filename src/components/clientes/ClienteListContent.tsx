@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Cliente } from "@/types";
@@ -8,8 +9,8 @@ import { ClienteFilters } from "@/components/clientes/ClienteFilters";
 import { ClienteOrderSelector } from "@/components/clientes/ClienteOrderSelector";
 import { ClienteViewToggle } from "@/components/clientes/ClienteViewToggle";
 import { ClienteListHeader } from "@/components/clientes/ClienteListHeader";
-import { ItemsPerPageSelector } from "@/components/ItemsPerPageSelector";
-import { TablePagination } from "@/components/TablePagination";
+import { ItemsPerPageSelector } from "@/components/table/ItemsPerPageSelector";
+import { TablePagination } from "@/components/table/TablePagination";
 
 interface ClienteListContentProps {
   clientes: Cliente[];
@@ -47,7 +48,7 @@ export const ClienteListContent = ({
   isMobile = false
 }: ClienteListContentProps) => {
   const navigate = useNavigate();
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<"todos" | "ativo" | "inativo">('todos');
   const [searchFilter, setSearchFilter] = useState<string>('');
 
   return (
@@ -87,25 +88,34 @@ export const ClienteListContent = ({
         
         <div className="flex flex-col sm:flex-row items-start sm:items-center tight-spacing mt-4 sm:mt-0">
           <ClienteOrderSelector 
-            currentOrder={order}
+            order={order}
             onOrderChange={onOrderChange}
           />
-          <ClienteViewToggle />
+          <ClienteViewToggle 
+            viewMode="list"
+            onViewModeChange={() => {}}
+          />
         </div>
       </div>
 
-      <ClienteListHeader clientes={clientes} loading={loading} error={error} />
+      <ClienteListHeader 
+        clientes={clientes} 
+        loading={loading} 
+        error={error || ""} 
+      />
       
       <div className="component-spacing">
         <ItemsPerPageSelector
-          itemsPerPage={itemsPerPage}
-          onItemsPerPageChange={onItemsPerPageChange}
+          value={itemsPerPage}
+          onChange={onItemsPerPageChange}
         />
         
         <TablePagination
           currentPage={currentPage}
           totalPages={totalPages}
+          itemsPerPage={itemsPerPage}
           onPageChange={onPageChange}
+          onItemsPerPageChange={onItemsPerPageChange}
         />
       </div>
     </div>

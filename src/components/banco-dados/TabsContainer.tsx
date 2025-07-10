@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -208,9 +209,14 @@ export function TabsContainer() {
                 />
                 
                 <ValuesTable
-                  tipo={tipo}
-                  valores={getValoresForTipo(tipo)}
-                  onDelete={handleDeleteValue}
+                  values={getValoresForTipo(tipo).map(v => v.valor)}
+                  type={tipo}
+                  onDelete={(type: string, value: string | number) => {
+                    const valorObj = getValoresForTipo(type).find(v => v.valor === value);
+                    if (valorObj) {
+                      handleDeleteValue(type, valorObj.id);
+                    }
+                  }}
                   isLoading={isLoading}
                 />
               </CardContent>

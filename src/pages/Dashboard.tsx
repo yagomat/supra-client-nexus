@@ -74,9 +74,9 @@ const Dashboard = () => {
   return (
     <DashboardLayout title="Dashboard">
       <div className="space-y-8 animate-fade-in">
-      <div className="animate-slide-up">
-        <DashboardContent stats={stats} loading={loading} />
-      </div>
+        <div className="animate-slide-up">
+          <DashboardContent stats={stats} loading={loading} />
+        </div>
       </div>
     </DashboardLayout>
   );

@@ -40,21 +40,20 @@ const ListaClientes = () => {
       <div className="space-y-8 animate-fade-in">
         <div className="animate-slide-up">
           <ClienteListContent
-            loading={loading}
-            filteredClientes={filteredClientes}
+            clientes={filteredClientes}
             allClientes={clientes}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-            handleLimparFiltros={handleLimparFiltros}
-            verDetalhes={verDetalhes}
-            verTelaAdicional={verTelaAdicional}
-            verObservacoes={verObservacoes}
-            confirmarExclusao={confirmarExclusao}
-            orderBy={orderBy}
-            onOrderChange={handleOrderChange}
+            loading={loading}
+            error={null}
+            totalClientes={filteredClientes.length}
+            currentPage={1}
+            totalPages={1}
+            itemsPerPage={10}
+            onPageChange={() => {}}
+            onItemsPerPageChange={() => {}}
             onImportSuccess={fetchClientes}
+            onOrderChange={handleOrderChange}
+            order={orderBy}
+            isFiltered={filteredClientes.length !== clientes.length}
           />
         </div>
       </div>

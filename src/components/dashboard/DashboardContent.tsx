@@ -1,44 +1,23 @@
+
 import { AlertCards } from "@/components/dashboard/AlertCards";
 import { ClientEvolutionChart } from "@/components/dashboard/ClientEvolutionChart";
 import { PaymentEvolutionChart } from "@/components/dashboard/PaymentEvolutionChart";
 import { StatsCards } from "@/components/dashboard/StatsCards";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DistributionCharts } from "@/components/dashboard/DistributionCharts";
-
-interface DashboardData {
-  totalClients: number;
-  activeClients: number;
-  inactiveClients: number;
-  totalRevenue: number;
-  newClients: number;
-  paymentEvolution: { date: string; value: number }[];
-  evolutionData: { date: string; active: number; inactive: number }[];
-  paymentDistribution: { status: string; count: number }[];
-  clientDistribution: { status: string; count: number }[];
-  alerts: { type: string; message: string }[];
-}
+import { DashboardStats } from "@/types";
 
 interface DashboardContentProps {
-  data: DashboardData | null;
-  isLoading: boolean;
-  error: any;
-  dateRange: {
-    from: Date | undefined;
-    to: Date | undefined;
-  };
-  onDateRangeChange: (date: { from: Date | undefined; to: Date | undefined }) => void;
+  stats: DashboardStats | null;
+  loading: boolean;
 }
 
 export function DashboardContent({ 
-  data, 
-  isLoading, 
-  error,
-  dateRange,
-  onDateRangeChange 
+  stats, 
+  loading
 }: DashboardContentProps) {
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="section-spacing">
         <div className="component-spacing">
@@ -66,7 +45,7 @@ export function DashboardContent({
     );
   }
 
-  if (error) {
+  if (!stats) {
     return (
       <div className="section-spacing">
         <div className="card-standard p-6 text-center">
@@ -74,10 +53,6 @@ export function DashboardContent({
         </div>
       </div>
     );
-  }
-
-  if (!data) {
-    return null;
   }
 
   return (
@@ -90,22 +65,45 @@ export function DashboardContent({
               Acompanhe o desempenho dos seus clientes e pagamentos
             </p>
           </div>
-          
-          <div className="mt-4 sm:mt-0">
-            <DateRangePicker date={dateRange} onDateChange={onDateRangeChange} />
-          </div>
         </div>
 
-        <StatsCards data={data} />
+        <StatsCards 
+          data={{
+            totalClientes: stats.clientes_total,
+            totalFaturamento: stats.valor_recebido_mes,
+            percentualCrescimento: 0,
+            ticketMedio: stats.clientes_total > 0 ? stats.valor_recebido_mes / stats.clientes_total : 0
+          }} 
+        />
         
-        <AlertCards data={data} />
+        <AlertCards 
+          clientesInativos={stats.clientes_inativos_proximos_dias}
+          appsVencendo={stats.apps_vencendo_proximos_dias}
+          clientesEmRiscoDetalhes={stats.clientes_em_risco_detalhes || []}
+          loading={loading}
+        />
         
         <div className="grid grid-cols-1 lg:grid-cols-2 element-spacing">
-          <ClientEvolutionChart data={data.evolutionData} />
-          <PaymentEvolutionChart data={data.paymentEvolution} />
+          <ClientEvolutionChart 
+            data={stats.evolucao_clientes.map(item => ({
+              mes: item.mes,
+              quantidade: item.quantidade
+            }))} 
+            loading={loading}
+          />
+          <PaymentEvolutionChart 
+            data={stats.pagamentos_por_mes?.map(item => ({
+              mes: item.mes,
+              valor: item.valor
+            })) || []} 
+            loading={loading}
+          />
         </div>
         
-        <DistributionCharts data={data} />
+        <DistributionCharts 
+          stats={stats} 
+          loading={loading}
+        />
       </div>
     </div>
   );
