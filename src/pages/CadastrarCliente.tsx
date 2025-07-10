@@ -62,7 +62,7 @@ const CadastrarCliente = () => {
     <DashboardLayout title="Cadastrar Cliente">
       <div className="h-full flex flex-col">
         <ScrollArea className="flex-1">
-          <div className="w-full max-w-4xl mx-auto space-y-6 p-1 pb-8">
+          <div className="w-full max-w-4xl mx-auto space-y-6 p-0 pb-8">
             <CadastrarClienteSecurityAlert securityStatus={securityStatus} />
 
             <Form {...form}>
