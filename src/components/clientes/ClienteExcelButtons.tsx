@@ -1,12 +1,12 @@
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Import, FileUp, Loader2 } from "lucide-react";
+import { Import, FileUp, Loader2, Info } from "lucide-react";
 import { Cliente } from "@/types";
 import { exportClientesToExcel, importClientesFromExcel } from "@/services/clienteExcel";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface ClienteExcelButtonsProps {
   clientes: Cliente[];
@@ -110,43 +110,98 @@ export const ClienteExcelButtons = ({ clientes, onImportSuccess }: ClienteExcelB
 
   return (
     <>
-      <div className="flex justify-between gap-2 sm:col-span-2">
-        <Button
-          variant="outline"
-          onClick={handleExport}
-          disabled={isExporting || clientes.length === 0}
-          className="flex-1"
-        >
-          {isExporting ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <FileUp className="h-4 w-4 mr-2" />
-          )}
-          Exportar Excel
-        </Button>
-        
-        <Button
-          variant="outline"
-          onClick={handleImportClick}
-          disabled={isImporting}
-          className="flex-1"
-        >
-          {isImporting ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <Import className="h-4 w-4 mr-2" />
-          )}
-          Importar Excel
-        </Button>
-        
-        {/* Input de arquivo oculto - aceita apenas arquivos Excel */}
-        <input
-          type="file"
-          accept=".xlsx,.xls"
-          onChange={handleFileChange}
-          ref={fileInputRef}
-          className="hidden"
-        />
+      <div className="flex flex-col gap-2">
+        <div className="flex justify-between gap-2 sm:col-span-2">
+          <Button
+            variant="outline"
+            onClick={handleExport}
+            disabled={isExporting || clientes.length === 0}
+            className="flex-1"
+          >
+            {isExporting ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <FileUp className="h-4 w-4 mr-2" />
+            )}
+            Exportar Excel
+          </Button>
+          
+          <Button
+            variant="outline"
+            onClick={handleImportClick}
+            disabled={isImporting}
+            className="flex-1"
+          >
+            {isImporting ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Import className="h-4 w-4 mr-2" />
+            )}
+            Importar Excel
+          </Button>
+          
+          {/* Input de arquivo oculto - aceita apenas arquivos Excel */}
+          <input
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={handleFileChange}
+            ref={fileInputRef}
+            className="hidden"
+          />
+        </div>
+
+        {/* Informações sobre importação/exportação */}
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span>Para mais informações sobre importação e exportação</span>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                <Info className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-96" align="start">
+              <div className="space-y-3">
+                <div>
+                  <h4 className="font-semibold text-sm mb-2">Importação de Clientes</h4>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Para importar clientes, o arquivo Excel deve conter as colunas na seguinte ordem:
+                  </p>
+                </div>
+                <ScrollArea className="h-48">
+                  <div className="space-y-1 text-xs">
+                    <div className="grid grid-cols-2 gap-2 font-medium">
+                      <span>Coluna</span>
+                      <span>Campo</span>
+                    </div>
+                    <hr className="my-2" />
+                    <div className="grid grid-cols-2 gap-2"><span>A</span><span>Data de cadastro</span></div>
+                    <div className="grid grid-cols-2 gap-2"><span>B</span><span>Nome</span></div>
+                    <div className="grid grid-cols-2 gap-2"><span>C</span><span>Telefone</span></div>
+                    <div className="grid grid-cols-2 gap-2"><span>D</span><span>UF</span></div>
+                    <div className="grid grid-cols-2 gap-2"><span>E</span><span>Servidor</span></div>
+                    <div className="grid grid-cols-2 gap-2"><span>F</span><span>Dia de Vencimento</span></div>
+                    <div className="grid grid-cols-2 gap-2"><span>G</span><span>Plano</span></div>
+                    <div className="grid grid-cols-2 gap-2"><span>H</span><span>Dispositivo smart</span></div>
+                    <div className="grid grid-cols-2 gap-2"><span>I</span><span>Aplicativo</span></div>
+                    <div className="grid grid-cols-2 gap-2"><span>J</span><span>Usuário</span></div>
+                    <div className="grid grid-cols-2 gap-2"><span>K</span><span>Senha</span></div>
+                    <div className="grid grid-cols-2 gap-2"><span>L</span><span>Vencimento da licença do app</span></div>
+                    <div className="grid grid-cols-2 gap-2"><span>M</span><span>Dispositivo smart 2</span></div>
+                    <div className="grid grid-cols-2 gap-2"><span>N</span><span>Aplicativo 2</span></div>
+                    <div className="grid grid-cols-2 gap-2"><span>O</span><span>Usuário 2</span></div>
+                    <div className="grid grid-cols-2 gap-2"><span>P</span><span>Senha 2</span></div>
+                    <div className="grid grid-cols-2 gap-2"><span>Q</span><span>Vencimento da licença do app 2</span></div>
+                    <div className="grid grid-cols-2 gap-2"><span>R</span><span>Observações</span></div>
+                  </div>
+                </ScrollArea>
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <p><strong>Dica:</strong> Exporte um arquivo para ver o formato correto.</p>
+                  <p><strong>Importante:</strong> A primeira linha deve conter os cabeçalhos das colunas.</p>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
       {/* Diálogo de erros de importação */}
