@@ -16,7 +16,6 @@ export const CadastrarClienteHeader: React.FC<CadastrarClienteHeaderProps> = ({
         <ArrowLeft className="h-4 w-4 mr-2" />
         Voltar
       </Button>
-      <h1 className="text-2xl font-bold">Cadastrar Cliente</h1>
     </div>
   );
 };
