@@ -62,10 +62,13 @@ export const ClienteFilters = ({
           </div>
 
           {/* Seletor de ordenação */}
-          <ClienteOrderSelector 
-            orderBy={orderBy}
-            onOrderChange={onOrderChange}
-          />
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Ordenar por</label>
+            <ClienteOrderSelector 
+              orderBy={orderBy}
+              onOrderChange={onOrderChange}
+            />
+          </div>
 
           {/* Seletor de ano - apenas para modo matriz */}
           {viewMode === 'matriz' && anoMatriz !== undefined && onAnoMatrizChange && (
