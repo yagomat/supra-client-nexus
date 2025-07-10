@@ -59,6 +59,9 @@ export const ClienteListContent = ({
   // Estado para controlar o modo de visualização - agora cards e matriz
   const [viewMode, setViewMode] = useState<'cards' | 'matriz'>('cards');
   
+  // Estado para o ano atual na matriz
+  const [anoAtual, setAnoAtual] = useState(new Date().getFullYear());
+  
   // Meses para a matriz
   const meses = [
     { value: 1, label: "Janeiro" },
@@ -74,8 +77,6 @@ export const ClienteListContent = ({
     { value: 11, label: "Novembro" },
     { value: 12, label: "Dezembro" }
   ];
-  
-  const anoAtual = new Date().getFullYear();
   
   // Resetar página atual quando os filtros mudam
   const handleSearchOrFilterChange = (value: string) => {
@@ -96,6 +97,10 @@ export const ClienteListContent = ({
   const handleItemsPerPageChange = (value: number) => {
     setItemsPerPage(value);
     setCurrentPage(1);
+  };
+
+  const handleAnoChange = (ano: number) => {
+    setAnoAtual(ano);
   };
 
   return (
@@ -120,6 +125,9 @@ export const ClienteListContent = ({
           handleLimparFiltros={handleClearFilters}
           orderBy={orderBy}
           onOrderChange={onOrderChange}
+          viewMode={viewMode}
+          anoAtual={anoAtual}
+          onAnoChange={handleAnoChange}
         />
         
         <div className="flex justify-end items-center">

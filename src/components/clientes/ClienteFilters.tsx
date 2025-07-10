@@ -20,6 +20,9 @@ interface ClienteFiltersProps {
   handleLimparFiltros: () => void;
   orderBy: ClienteOrderType;
   onOrderChange: (order: ClienteOrderType) => void;
+  viewMode?: 'cards' | 'matriz';
+  anoAtual?: number;
+  onAnoChange?: (ano: number) => void;
 }
 
 export const ClienteFilters = ({
@@ -30,7 +33,17 @@ export const ClienteFilters = ({
   handleLimparFiltros,
   orderBy,
   onOrderChange,
+  viewMode,
+  anoAtual,
+  onAnoChange,
 }: ClienteFiltersProps) => {
+  // Gerar anos de 4 anos atrás até 4 anos à frente do ano atual
+  const currentYear = new Date().getFullYear();
+  const years = Array.from(
+    { length: 9 }, 
+    (_, i) => currentYear - 4 + i
+  );
+
   return (
     <div className="bg-muted/50 p-4 rounded-lg space-y-4">
       {/* Primeira linha: Campo de busca */}
@@ -69,6 +82,25 @@ export const ClienteFilters = ({
             </SelectContent>
           </Select>
         </div>
+
+        {/* Seletor de ano - apenas no modo matriz */}
+        {viewMode === 'matriz' && anoAtual && onAnoChange && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground">Ano:</span>
+            <Select value={anoAtual.toString()} onValueChange={(value) => onAnoChange(parseInt(value))}>
+              <SelectTrigger className="w-24">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {years.map((year) => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div className="flex items-center gap-2">
           <SortDesc className="h-4 w-4 text-muted-foreground" />
