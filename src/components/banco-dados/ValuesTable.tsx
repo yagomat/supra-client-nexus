@@ -9,9 +9,10 @@ interface ValuesTableProps {
   onDelete: (type: string, value: string | number) => void;
   isNumeric?: boolean;
   isPlano?: boolean;
+  isLoading?: boolean;
 }
 
-export const ValuesTable = ({ values, type, onDelete, isNumeric = false, isPlano = false }: ValuesTableProps) => {
+export const ValuesTable = ({ values, type, onDelete, isNumeric = false, isPlano = false, isLoading = false }: ValuesTableProps) => {
   // Format the value display based on type
   const formatValue = (value: string | number) => {
     if (isPlano && typeof value === 'number') {
@@ -54,6 +55,7 @@ export const ValuesTable = ({ values, type, onDelete, isNumeric = false, isPlano
                     variant="ghost"
                     size="icon"
                     onClick={() => onDelete(type, value)}
+                    disabled={isLoading}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

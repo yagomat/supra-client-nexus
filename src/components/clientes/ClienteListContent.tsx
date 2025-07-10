@@ -49,7 +49,7 @@ export const ClienteListContent = ({
 }: ClienteListContentProps) => {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<"todos" | "ativo" | "inativo">('todos');
-  const [searchFilter, setSearchFilter] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
   return (
     <div className="section-spacing">
@@ -71,9 +71,15 @@ export const ClienteListContent = ({
 
       <ClienteFilters
         statusFilter={statusFilter}
-        searchFilter={searchFilter}
-        onStatusFilterChange={setStatusFilter}
-        onSearchFilterChange={setSearchFilter}
+        searchTerm={searchTerm}
+        setStatusFilter={setStatusFilter}
+        setSearchTerm={setSearchTerm}
+        handleLimparFiltros={() => {
+          setStatusFilter('todos');
+          setSearchTerm('');
+        }}
+        orderBy={order as any}
+        onOrderChange={onOrderChange as any}
       />
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center element-spacing">
@@ -88,11 +94,11 @@ export const ClienteListContent = ({
         
         <div className="flex flex-col sm:flex-row items-start sm:items-center tight-spacing mt-4 sm:mt-0">
           <ClienteOrderSelector 
-            order={order}
-            onOrderChange={onOrderChange}
+            orderBy={order as any}
+            onOrderChange={onOrderChange as any}
           />
           <ClienteViewToggle 
-            viewMode="list"
+            viewMode="cards"
             onViewModeChange={() => {}}
           />
         </div>
@@ -100,8 +106,7 @@ export const ClienteListContent = ({
 
       <ClienteListHeader 
         clientes={clientes} 
-        loading={loading} 
-        error={error || ""} 
+        onImportSuccess={onImportSuccess}
       />
       
       <div className="component-spacing">
