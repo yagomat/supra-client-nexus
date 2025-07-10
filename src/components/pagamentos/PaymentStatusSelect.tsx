@@ -1,7 +1,13 @@
 
 import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { paymentStatusOptions } from "./PaymentStatusBadge";
+
+// Define payment status options locally
+const paymentStatusOptions = [
+  { value: "nao_pago", label: "Não Pago", className: "text-red-600" },
+  { value: "pago", label: "Pago", className: "text-green-600" },
+  { value: "pago_confianca", label: "Promoção", className: "text-blue-600" },
+];
 
 interface PaymentStatusSelectProps {
   status: string | undefined;
