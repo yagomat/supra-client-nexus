@@ -1,4 +1,3 @@
-
 import React from "react";
 import { ClienteCard } from "./ClienteCard";
 import { TablePagination } from "../table/TablePagination";
