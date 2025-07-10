@@ -73,7 +73,7 @@ export function DashboardLayout({ children, className, title }: DashboardLayoutP
           </div>
         )}
         
-        <div className="flex-1 px-4 py-4 min-h-0 overflow-x-hidden">
+        <div className="flex-1 px-4 py-4 min-h-0">
           {children}
         </div>
       </main>
