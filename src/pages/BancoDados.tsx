@@ -42,7 +42,7 @@ const BancoDados = () => {
           </div>
         ) : valoresPredefinidos ? (
           <div className="animate-slide-up">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 mb-4">
               <div></div>
               <ValueManagerToolbar 
                 onAddClick={() => setIsAddDialogOpen(true)}
