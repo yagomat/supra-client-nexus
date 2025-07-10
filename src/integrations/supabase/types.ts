@@ -104,14 +104,14 @@ export type Database = {
           observacoes: string | null
           possui_tela_adicional: boolean | null
           senha_2: string | null
-          senha_aplicativo: string
+          senha_aplicativo: string | null
           servidor: string
           status: string | null
           telefone: string | null
           uf: string | null
           user_id: string
           usuario_2: string | null
-          usuario_aplicativo: string
+          usuario_aplicativo: string | null
           valor_plano: number | null
         }
         Insert: {
@@ -129,14 +129,14 @@ export type Database = {
           observacoes?: string | null
           possui_tela_adicional?: boolean | null
           senha_2?: string | null
-          senha_aplicativo: string
+          senha_aplicativo?: string | null
           servidor: string
           status?: string | null
           telefone?: string | null
           uf?: string | null
           user_id: string
           usuario_2?: string | null
-          usuario_aplicativo: string
+          usuario_aplicativo?: string | null
           valor_plano?: number | null
         }
         Update: {
@@ -154,14 +154,14 @@ export type Database = {
           observacoes?: string | null
           possui_tela_adicional?: boolean | null
           senha_2?: string | null
-          senha_aplicativo?: string
+          senha_aplicativo?: string | null
           servidor?: string
           status?: string | null
           telefone?: string | null
           uf?: string | null
           user_id?: string
           usuario_2?: string | null
-          usuario_aplicativo?: string
+          usuario_aplicativo?: string | null
           valor_plano?: number | null
         }
         Relationships: []
@@ -416,14 +416,14 @@ export type Database = {
           observacoes: string | null
           possui_tela_adicional: boolean | null
           senha_2: string | null
-          senha_aplicativo: string
+          senha_aplicativo: string | null
           servidor: string
           status: string | null
           telefone: string | null
           uf: string | null
           user_id: string
           usuario_2: string | null
-          usuario_aplicativo: string
+          usuario_aplicativo: string | null
           valor_plano: number | null
         }[]
       }
