@@ -14,7 +14,7 @@ export async function exportClientesToExcel(clientes: Cliente[]): Promise<void> 
     const canExport = await ClienteSecurityService.checkExportRateLimit();
     
     if (!canExport) {
-      throw new Error('Limite de exportações excedido (máximo 10 por hora). Tente novamente mais tarde.');
+      throw new Error('Limite de exportações excedido (máximo 50 por hora). Tente novamente mais tarde.');
     }
 
     // Registrar tentativa de exportação

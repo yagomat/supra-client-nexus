@@ -330,7 +330,13 @@ export type Database = {
         Returns: boolean
       }
       check_export_rate_limit: {
-        Args: { p_user_id: string }
+        Args:
+          | { p_user_id: string }
+          | {
+              p_user_id: string
+              p_max_requests?: number
+              p_time_window_minutes?: number
+            }
         Returns: boolean
       }
       check_operation_rate_limit: {

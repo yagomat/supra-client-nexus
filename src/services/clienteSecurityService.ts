@@ -191,8 +191,11 @@ export class ClienteSecurityService {
       const { data: currentUser } = await supabase.auth.getUser();
       if (!currentUser.user) return false;
 
+      // Usar o novo limite padrão de 50 exportações por hora
       const { data: rateLimitOk, error } = await supabase.rpc('check_export_rate_limit', {
-        p_user_id: currentUser.user.id
+        p_user_id: currentUser.user.id,
+        p_max_requests: 50,
+        p_time_window_minutes: 60
       });
 
       if (error) {
