@@ -11,11 +11,16 @@ import { ClienteSecurityService } from '@/services/clienteSecurityService';
 export async function exportClientesToExcel(clientes: Cliente[]): Promise<void> {
   try {
     // Verificar rate limiting antes da exportação
+    console.log('Verificando rate limit de exportação...');
     const canExport = await ClienteSecurityService.checkExportRateLimit();
+    console.log('Rate limit check result:', canExport);
     
     if (!canExport) {
+      console.error('Rate limit atingido - bloqueando exportação');
       throw new Error('Limite de exportações excedido (máximo 50 por hora). Tente novamente mais tarde.');
     }
+
+    console.log('Rate limit OK - prosseguindo com exportação');
 
     // Registrar tentativa de exportação
     await ClienteSecurityService.logExportAttempt(clientes.length);

@@ -188,8 +188,15 @@ export class ClienteSecurityService {
    */
   static async checkExportRateLimit(): Promise<boolean> {
     try {
+      console.log('checkExportRateLimit: Iniciando verificação...');
       const { data: currentUser } = await supabase.auth.getUser();
-      if (!currentUser.user) return false;
+      if (!currentUser.user) {
+        console.log('checkExportRateLimit: Usuário não autenticado');
+        return false;
+      }
+
+      console.log('checkExportRateLimit: Usuário autenticado:', currentUser.user.id);
+      console.log('checkExportRateLimit: Chamando check_export_rate_limit com limites padrão...');
 
       // Usar o novo limite padrão de 50 exportações por hora
       const { data: rateLimitOk, error } = await supabase.rpc('check_export_rate_limit', {
@@ -198,14 +205,17 @@ export class ClienteSecurityService {
         p_time_window_minutes: 60
       });
 
+      console.log('checkExportRateLimit: Resposta da função:', { rateLimitOk, error });
+
       if (error) {
-        console.error('Erro ao verificar rate limit de exportação:', error);
+        console.error('checkExportRateLimit: Erro ao verificar rate limit de exportação:', error);
         return false;
       }
 
+      console.log('checkExportRateLimit: Resultado final:', rateLimitOk);
       return rateLimitOk;
     } catch (error) {
-      console.error('Erro ao verificar rate limit de exportação:', error);
+      console.error('checkExportRateLimit: Erro ao verificar rate limit de exportação:', error);
       return false;
     }
   }
