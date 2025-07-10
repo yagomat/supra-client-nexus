@@ -111,9 +111,7 @@ export const useEditCliente = () => {
     const requiredFields = [
       { field: 'nome', name: 'Nome' },
       { field: 'servidor', name: 'Servidor' },
-      { field: 'aplicativo', name: 'Aplicativo' },
-      { field: 'usuario_aplicativo', name: 'Usuário (MAC)' },
-      { field: 'senha_aplicativo', name: 'Senha (Id)' }
+      { field: 'aplicativo', name: 'Aplicativo' }
     ];
 
     const missingFields = requiredFields.filter(({ field }) => !data[field as keyof ClienteFormValues]);
