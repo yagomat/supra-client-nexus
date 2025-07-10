@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +6,6 @@ import { Shield, Eye, RefreshCw, Clock, User, Globe, Smartphone } from "lucide-r
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-
 interface AuditLog {
   id: string;
   event_type: string;
@@ -16,22 +14,21 @@ interface AuditLog {
   ip_address?: string;
   user_agent?: string;
 }
-
 export function SecurityAuditTab() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAllLogs, setShowAllLogs] = useState(false);
-
   const loadAuditLogs = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc('get_user_audit_logs');
-      
+      const {
+        data,
+        error
+      } = await supabase.rpc('get_user_audit_logs');
       if (error) {
         console.error("Erro ao carregar logs:", error);
         return;
       }
-      
       setLogs(data || []);
     } catch (error) {
       console.error("Erro ao carregar logs de auditoria:", error);
@@ -39,11 +36,9 @@ export function SecurityAuditTab() {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     loadAuditLogs();
   }, []);
-
   const getEventBadgeVariant = (eventType: string) => {
     if (eventType.includes('login') || eventType.includes('signup')) {
       return eventType.includes('success') ? "default" : "destructive";
@@ -59,7 +54,6 @@ export function SecurityAuditTab() {
     }
     return "secondary";
   };
-
   const getEventIcon = (eventType: string) => {
     if (eventType.includes('auth_') || eventType.includes('login') || eventType.includes('signup')) {
       return <User className="h-4 w-4" />;
@@ -72,10 +66,8 @@ export function SecurityAuditTab() {
     }
     return <Globe className="h-4 w-4" />;
   };
-
   const getEventDescription = (log: AuditLog) => {
     const details = log.details || {};
-    
     switch (log.event_type) {
       case 'auth_login_attempt':
         return `Tentativa de login${details.success ? ' bem-sucedida' : ' falhada'} para ${details.email}`;
@@ -99,54 +91,36 @@ export function SecurityAuditTab() {
         return `Evento: ${log.event_type}`;
     }
   };
-
   const displayedLogs = showAllLogs ? logs : logs.slice(0, 10);
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
             Logs
           </CardTitle>
-          <CardDescription>
-            Histórico detalhado de atividades de segurança da sua conta.
-          </CardDescription>
+          <CardDescription>Histórico detalhado de atividades da sua conta.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex justify-between items-center mb-4">
             <p className="text-sm text-muted-foreground">
               {logs.length} evento{logs.length !== 1 ? 's' : ''} registrado{logs.length !== 1 ? 's' : ''}
             </p>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={loadAuditLogs}
-              disabled={loading}
-            >
+            <Button variant="outline" size="sm" onClick={loadAuditLogs} disabled={loading}>
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               Atualizar
             </Button>
           </div>
 
-          {loading ? (
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="animate-pulse">
+          {loading ? <div className="space-y-3">
+              {[...Array(5)].map((_, i) => <div key={i} className="animate-pulse">
                   <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
                   <div className="h-3 bg-muted rounded w-1/2"></div>
-                </div>
-              ))}
-            </div>
-          ) : logs.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">
+                </div>)}
+            </div> : logs.length === 0 ? <p className="text-center text-muted-foreground py-8">
               Nenhum evento de auditoria encontrado.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {displayedLogs.map((log) => (
-                <div key={log.id} className="border rounded-lg p-4 space-y-2">
+            </p> : <div className="space-y-3">
+              {displayedLogs.map(log => <div key={log.id} className="border rounded-lg p-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {getEventIcon(log.event_type)}
@@ -156,45 +130,33 @@ export function SecurityAuditTab() {
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Clock className="h-3 w-3" />
-                      {format(new Date(log.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                      {format(new Date(log.created_at), "dd/MM/yyyy 'às' HH:mm", {
+                  locale: ptBR
+                })}
                     </div>
                   </div>
                   
                   <p className="text-sm">{getEventDescription(log)}</p>
                   
-                  {(log.ip_address || log.user_agent) && (
-                    <div className="text-xs text-muted-foreground space-y-1 mt-2 pt-2 border-t">
-                      {log.ip_address && log.ip_address !== 'client-side' && (
-                        <div className="flex items-center gap-2">
+                  {(log.ip_address || log.user_agent) && <div className="text-xs text-muted-foreground space-y-1 mt-2 pt-2 border-t">
+                      {log.ip_address && log.ip_address !== 'client-side' && <div className="flex items-center gap-2">
                           <Globe className="h-3 w-3" />
                           IP: {log.ip_address}
-                        </div>
-                      )}
-                      {log.user_agent && (
-                        <div className="flex items-center gap-2">
+                        </div>}
+                      {log.user_agent && <div className="flex items-center gap-2">
                           <Smartphone className="h-3 w-3" />
                           Dispositivo: {log.user_agent.includes('Mobile') ? 'Mobile' : 'Desktop'}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
+                        </div>}
+                    </div>}
+                </div>)}
               
-              {logs.length > 10 && !showAllLogs && (
-                <div className="text-center pt-4">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setShowAllLogs(true)}
-                  >
+              {logs.length > 10 && !showAllLogs && <div className="text-center pt-4">
+                  <Button variant="outline" onClick={() => setShowAllLogs(true)}>
                     Mostrar todos os {logs.length} eventos
                   </Button>
-                </div>
-              )}
-            </div>
-          )}
+                </div>}
+            </div>}
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 }
