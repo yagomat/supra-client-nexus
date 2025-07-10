@@ -1,62 +1,70 @@
-
-import { StatCard } from "./StatCard";
-import { Users, UserCheck, UserX, UserPlus, AlertCircle, DollarSign } from "lucide-react";
-import { DashboardStats } from "@/types";
-import { useSafeDashboardData, formatUtils } from "@/utils/dashboardUtils";
+import {
+  ArrowDown,
+  ArrowUp,
+  Users,
+  DollarSign,
+  PercentCircle,
+  TrendingUp,
+  TrendingDown,
+} from "lucide-react";
+import { StatCard } from "@/components/dashboard/StatCard";
 
 interface StatsCardsProps {
-  stats: DashboardStats | null;
-  loading: boolean;
+  data: {
+    totalClientes: number;
+    totalFaturamento: number;
+    percentualCrescimento: number;
+    ticketMedio: number;
+  };
 }
 
-export const StatsCards = ({ stats, loading }: StatsCardsProps) => {
-  const {
-    safeClientesTotal,
-    safeClientesAtivos,
-    safeClientesInativosTotal,
-    safeClientesNovos,
-    safePagamentosPendentes,
-    safeValorRecebidoMes
-  } = useSafeDashboardData(stats);
+export function StatsCards({ data }: StatsCardsProps) {
+  const stats = [
+    {
+      title: "Total de Clientes",
+      value: data.totalClientes,
+      icon: <Users className="h-5 w-5 text-primary" />,
+      trend: "up",
+      trendValue: data.percentualCrescimento,
+      trendIcon: data.percentualCrescimento >= 0 ? <ArrowUp className="h-3 w-3 text-success" /> : <ArrowDown className="h-3 w-3 text-danger" />,
+      description: "Clientes ativos",
+    },
+    {
+      title: "Faturamento Total",
+      value: data.totalFaturamento,
+      icon: <DollarSign className="h-5 w-5 text-primary" />,
+      trend: "up",
+      trendValue: data.percentualCrescimento,
+      trendIcon: data.percentualCrescimento >= 0 ? <ArrowUp className="h-3 w-3 text-success" /> : <ArrowDown className="h-3 w-3 text-danger" />,
+      description: "Faturamento total",
+    },
+    {
+      title: "Crescimento",
+      value: data.percentualCrescimento,
+      icon: <PercentCircle className="h-5 w-5 text-primary" />,
+      trend: data.percentualCrescimento >= 0 ? "up" : "down",
+      trendValue: data.percentualCrescimento,
+      trendIcon: data.percentualCrescimento >= 0 ? <TrendingUp className="h-5 w-5 text-success" /> : <TrendingDown className="h-5 w-5 text-danger" />,
+      description: "Comparado com o mês anterior",
+    },
+    {
+      title: "Ticket Médio",
+      value: data.ticketMedio,
+      icon: <DollarSign className="h-5 w-5 text-primary" />,
+      trend: "up",
+      trendValue: data.percentualCrescimento,
+      trendIcon: data.percentualCrescimento >= 0 ? <ArrowUp className="h-3 w-3 text-success" /> : <ArrowDown className="h-3 w-3 text-danger" />,
+      description: "Valor médio por cliente",
+    },
+  ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <StatCard
-        title="Total de Clientes"
-        value={loading ? "" : safeClientesTotal.toString()}
-        icon={<Users size={24} />}
-        loading={loading}
-      />
-      <StatCard
-        title="Clientes Ativos"
-        value={loading ? "" : safeClientesAtivos.toString()}
-        icon={<UserCheck size={24} />}
-        loading={loading}
-      />
-      <StatCard
-        title="Clientes Inativos"
-        value={loading ? "" : safeClientesInativosTotal.toString()}
-        icon={<UserX size={24} />}
-        loading={loading}
-      />
-      <StatCard
-        title="Clientes Novos (30 dias)"
-        value={loading ? "" : safeClientesNovos.toString()}
-        icon={<UserPlus size={24} />}
-        loading={loading}
-      />
-      <StatCard
-        title="Pagamentos Pendentes (Mês Atual)"
-        value={loading ? "" : safePagamentosPendentes.toString()}
-        icon={<AlertCircle size={24} />}
-        loading={loading}
-      />
-      <StatCard
-        title="Valor Recebido (Mês Atual)"
-        value={loading ? "" : formatUtils.formatCurrency(safeValorRecebidoMes)}
-        icon={<DollarSign size={24} />}
-        loading={loading}
-      />
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 element-spacing mb-6">
+      {stats.map((stat, index) => (
+        <div key={index} className="animate-scale-in" style={{ animationDelay: `${index * 0.1}s` }}>
+          <StatCard {...stat} />
+        </div>
+      ))}
     </div>
   );
-};
+}

@@ -1,157 +1,113 @@
-
 import { useState } from "react";
-import { ClienteCardsGrid } from "@/components/clientes/ClienteCardsGrid";
-import { ClienteMatriz } from "@/components/clientes/ClienteMatriz";
-import { ClienteViewToggle } from "@/components/clientes/ClienteViewToggle";
-import { EmptyState } from "@/components/clientes/EmptyState";
-import { LoadingState } from "@/components/clientes/LoadingState";
-import { ClienteFilters } from "@/components/clientes/ClienteFilters";
-import { ClienteExcelButtons } from "@/components/clientes/ClienteExcelButtons";
-import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { UserPlus } from "lucide-react";
 import { Cliente } from "@/types";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { ClienteOrderType } from "@/components/clientes/ClienteOrderSelector";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { ClienteExcelButtons } from "@/components/clientes/ClienteExcelButtons";
+import { ClienteFilters } from "@/components/clientes/ClienteFilters";
+import { ClienteOrderSelector } from "@/components/clientes/ClienteOrderSelector";
+import { ClienteViewToggle } from "@/components/clientes/ClienteViewToggle";
+import { ClienteListHeader } from "@/components/clientes/ClienteListHeader";
+import { ItemsPerPageSelector } from "@/components/ItemsPerPageSelector";
+import { TablePagination } from "@/components/TablePagination";
 
 interface ClienteListContentProps {
-  loading: boolean;
-  filteredClientes: Cliente[];
+  clientes: Cliente[];
   allClientes: Cliente[];
-  searchTerm: string;
-  setSearchTerm: (value: string) => void;
-  statusFilter: "todos" | "ativo" | "inativo";
-  setStatusFilter: (value: "todos" | "ativo" | "inativo") => void;
-  handleLimparFiltros: () => void;
-  verDetalhes: (cliente: Cliente) => void;
-  verTelaAdicional: (cliente: Cliente) => void;
-  verObservacoes: (cliente: Cliente) => void;
-  confirmarExclusao: (clienteId: string) => void;
-  orderBy: ClienteOrderType;
-  onOrderChange: (order: ClienteOrderType) => void;
+  loading: boolean;
+  error: string | null;
+  totalClientes: number;
+  currentPage: number;
+  totalPages: number;
+  itemsPerPage: number;
+  onPageChange: (page: number) => void;
+  onItemsPerPageChange: (items: number) => void;
   onImportSuccess: () => void;
+  onOrderChange: (order: string) => void;
+  order: string;
+  isFiltered: boolean;
+  isMobile?: boolean;
 }
 
 export const ClienteListContent = ({
-  loading,
-  filteredClientes,
+  clientes,
   allClientes,
-  searchTerm,
-  setSearchTerm,
-  statusFilter,
-  setStatusFilter,
-  handleLimparFiltros,
-  verDetalhes,
-  verTelaAdicional,
-  verObservacoes,
-  confirmarExclusao,
-  orderBy,
+  loading,
+  error,
+  totalClientes,
+  currentPage,
+  totalPages,
+  itemsPerPage,
+  onPageChange,
+  onItemsPerPageChange,
+  onImportSuccess,
   onOrderChange,
-  onImportSuccess
+  order,
+  isFiltered,
+  isMobile = false
 }: ClienteListContentProps) => {
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
-  
-  // Estado para controlar a paginação
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  
-  // Estado para controlar o modo de visualização - agora cards e matriz
-  const [viewMode, setViewMode] = useState<'cards' | 'matriz'>('cards');
-  
-  // Meses para a matriz
-  const meses = [
-    { value: 1, label: "Janeiro" },
-    { value: 2, label: "Fevereiro" },
-    { value: 3, label: "Março" },
-    { value: 4, label: "Abril" },
-    { value: 5, label: "Maio" },
-    { value: 6, label: "Junho" },
-    { value: 7, label: "Julho" },
-    { value: 8, label: "Agosto" },
-    { value: 9, label: "Setembro" },
-    { value: 10, label: "Outubro" },
-    { value: 11, label: "Novembro" },
-    { value: 12, label: "Dezembro" }
-  ];
-  
-  const anoAtual = new Date().getFullYear();
-  
-  // Resetar página atual quando os filtros mudam
-  const handleSearchOrFilterChange = (value: string) => {
-    setSearchTerm(value);
-    setCurrentPage(1);
-  };
-  
-  const handleStatusFilterChange = (value: "todos" | "ativo" | "inativo") => {
-    setStatusFilter(value);
-    setCurrentPage(1);
-  };
-  
-  const handleClearFilters = () => {
-    handleLimparFiltros();
-    setCurrentPage(1);
-  };
-  
-  const handleItemsPerPageChange = (value: number) => {
-    setItemsPerPage(value);
-    setCurrentPage(1);
-  };
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [searchFilter, setSearchFilter] = useState<string>('');
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className="section-spacing">
+      <div className="grid grid-cols-1 sm:grid-cols-3 element-spacing">
         <ClienteExcelButtons 
           clientes={allClientes} 
           onImportSuccess={onImportSuccess} 
         />
-        <Button onClick={() => navigate("/clientes/cadastrar")} className="w-full">
-          <UserPlus className="mr-2 h-4 w-4" />
-          Novo Cliente
-        </Button>
-      </div>
-
-      <div className="flex flex-col gap-4">
-        <ClienteFilters 
-          searchTerm={searchTerm}
-          setSearchTerm={handleSearchOrFilterChange}
-          statusFilter={statusFilter}
-          setStatusFilter={handleStatusFilterChange}
-          handleLimparFiltros={handleClearFilters}
-          orderBy={orderBy}
-          onOrderChange={onOrderChange}
-        />
-        
-        <div className="flex justify-end items-center">
-          <ClienteViewToggle
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-          />
+        <div className="flex justify-center sm:justify-end">
+          <Button 
+            onClick={() => navigate('/clientes/cadastrar')}
+            className="btn-primary w-full sm:w-auto"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Cliente
+          </Button>
         </div>
       </div>
 
-      {loading ? (
-        <LoadingState />
-      ) : filteredClientes.length === 0 ? (
-        <EmptyState />
-      ) : viewMode === 'cards' ? (
-        <ClienteCardsGrid 
-          clientes={filteredClientes}
-          onVerDetalhes={verDetalhes}
-          onConfirmarExclusao={confirmarExclusao}
-          currentPage={currentPage}
+      <ClienteFilters
+        statusFilter={statusFilter}
+        searchFilter={searchFilter}
+        onStatusFilterChange={setStatusFilter}
+        onSearchFilterChange={setSearchFilter}
+      />
+
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center element-spacing">
+        <div>
+          <p className="text-sm text-muted-foreground">
+            {isFiltered 
+              ? `Mostrando ${totalClientes} cliente${totalClientes !== 1 ? 's' : ''} (filtrado)`
+              : `Total de ${totalClientes} cliente${totalClientes !== 1 ? 's' : ''}`
+            }
+          </p>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row items-start sm:items-center tight-spacing mt-4 sm:mt-0">
+          <ClienteOrderSelector 
+            currentOrder={order}
+            onOrderChange={onOrderChange}
+          />
+          <ClienteViewToggle />
+        </div>
+      </div>
+
+      <ClienteListHeader clientes={clientes} loading={loading} error={error} />
+      
+      <div className="component-spacing">
+        <ItemsPerPageSelector
           itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={handleItemsPerPageChange}
+          onItemsPerPageChange={onItemsPerPageChange}
         />
-      ) : (
-        <ClienteMatriz 
-          clientes={filteredClientes}
-          meses={meses}
-          anoAtual={anoAtual}
-          isMobile={isMobile}
+        
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
         />
-      )}
+      </div>
     </div>
   );
 };
