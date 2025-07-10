@@ -120,6 +120,27 @@ serve(async (req) => {
           continue
         }
 
+        // Check if client already exists
+        const { data: existingClient, error: checkError } = await supabaseClient
+          .from('clientes')
+          .select('id, nome')
+          .eq('nome', clienteData.nome)
+          .eq('servidor', clienteData.servidor)
+          .eq('user_id', user.id)
+          .maybeSingle()
+
+        if (checkError) {
+          console.error('Error checking existing client:', checkError)
+          errors.push(`Erro ao verificar cliente "${clienteData.nome}": ${checkError.message}`)
+          continue
+        }
+
+        if (existingClient) {
+          console.log('Client already exists, skipping:', clienteData.nome)
+          errors.push(`Cliente "${clienteData.nome}" já existe no sistema`)
+          continue
+        }
+
         // Use secure creation function
         console.log('Creating client:', clienteData.nome)
         const { data: result, error } = await supabaseClient.rpc('secure_create_cliente', {

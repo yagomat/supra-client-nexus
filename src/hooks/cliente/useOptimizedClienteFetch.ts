@@ -120,7 +120,15 @@ export const useOptimizedClienteFetch = () => {
           
           // Atualizar localmente baseado no tipo de evento
           if (payload.eventType === 'INSERT') {
-            setClientes(prev => [payload.new as Cliente, ...prev]);
+            setClientes(prev => {
+              // Verificar se o cliente já existe antes de adicionar
+              const exists = prev.some(cliente => cliente.id === payload.new.id);
+              if (exists) {
+                console.log("🔍 Cliente já existe na lista, não adicionando:", payload.new.id);
+                return prev;
+              }
+              return [payload.new as Cliente, ...prev];
+            });
           } else if (payload.eventType === 'UPDATE') {
             setClientes(prev => prev.map(cliente => 
               cliente.id === payload.new.id ? payload.new as Cliente : cliente
