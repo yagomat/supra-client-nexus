@@ -158,8 +158,8 @@ export const ClienteMatriz = ({
   
   return (
     <div className="rounded-lg shadow-sm border border-border/50 overflow-hidden">
-      <div className="overflow-x-auto">
-        <Table>
+      <div className="overflow-x-auto max-w-full">
+        <Table className="min-w-max">
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="font-medium sticky left-0 bg-muted/50 z-30 border-r-2 border-border shadow-xl">Nome</TableHead>
