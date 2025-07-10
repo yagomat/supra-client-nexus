@@ -21,7 +21,22 @@ export const useOptimizedClienteFetch = () => {
 
       if (error) throw error;
 
-      setClientes(data || []);
+      // Verificar se há IDs duplicados nos dados
+      const clientesData = data || [];
+      const ids = clientesData.map(c => c.id);
+      const uniqueIds = new Set(ids);
+      
+      if (ids.length !== uniqueIds.size) {
+        console.error("❌ IDs duplicados na base de dados:", ids.filter((id, index) => ids.indexOf(id) !== index));
+        // Remover duplicados mantendo apenas o primeiro
+        const uniqueClientes = clientesData.filter((cliente, index) => 
+          clientesData.findIndex(c => c.id === cliente.id) === index
+        );
+        setClientes(uniqueClientes);
+        console.log("🔧 Duplicados removidos:", clientesData.length - uniqueClientes.length);
+      } else {
+        setClientes(clientesData);
+      }
     } catch (error) {
       console.error("Erro ao buscar clientes", error);
       toast({

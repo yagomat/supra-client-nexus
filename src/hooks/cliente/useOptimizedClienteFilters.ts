@@ -52,6 +52,21 @@ export const useOptimizedClienteFilters = (clientes: Cliente[]) => {
 
   // Filtrar e ordenar clientes localmente
   const filteredClientes = useMemo(() => {
+    console.log("🔍 Filtros aplicados:", { 
+      totalClientes: clientes.length, 
+      searchTerm, 
+      statusFilter, 
+      orderBy,
+      uniqueIds: new Set(clientes.map(c => c.id)).size 
+    });
+
+    // Verificar se há IDs duplicados
+    const ids = clientes.map(c => c.id);
+    const uniqueIds = new Set(ids);
+    if (ids.length !== uniqueIds.size) {
+      console.error("❌ IDs duplicados encontrados:", ids.filter((id, index) => ids.indexOf(id) !== index));
+    }
+
     // Aplicar filtro de status localmente
     let filtered = clientes.filter(cliente => {
       if (statusFilter !== "todos" && cliente.status !== statusFilter) {
@@ -59,6 +74,8 @@ export const useOptimizedClienteFilters = (clientes: Cliente[]) => {
       }
       return true;
     });
+
+    console.log("📊 Após filtro de status:", filtered.length);
 
     // Aplicar filtro de busca localmente
     if (searchTerm.trim()) {
@@ -68,11 +85,13 @@ export const useOptimizedClienteFilters = (clientes: Cliente[]) => {
         cliente.telefone?.toLowerCase().includes(searchLower) ||
         cliente.servidor.toLowerCase().includes(searchLower)
       );
+      console.log("🔎 Após filtro de busca:", filtered.length);
     }
 
     // Aplicar ordenação
     filtered = sortClientesByOrder(filtered, orderBy, clientesPayments);
 
+    console.log("✅ Resultado final dos filtros:", filtered.length);
     return filtered;
   }, [clientes, searchTerm, statusFilter, orderBy, clientesPayments]);
 
