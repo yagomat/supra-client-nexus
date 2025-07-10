@@ -7,12 +7,10 @@ import { exportClientesToExcel, importClientesFromExcel } from "@/services/clien
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-
 interface ClienteExcelButtonsProps {
   clientes: Cliente[];
   onImportSuccess: () => void;
 }
-
 export const ClienteExcelButtons = ({
   clientes,
   onImportSuccess
@@ -25,7 +23,6 @@ export const ClienteExcelButtons = ({
     toast
   } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const handleExport = async () => {
     if (clientes.length === 0) {
       toast({
@@ -53,14 +50,12 @@ export const ClienteExcelButtons = ({
       setIsExporting(false);
     }
   };
-
   const handleImportClick = () => {
     // Simular clique no input de arquivo oculto
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
-
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -106,45 +101,26 @@ export const ClienteExcelButtons = ({
       setIsImporting(false);
     }
   };
-
   return <>
       <div className="flex flex-col gap-2">
         <div className="flex justify-start gap-2 sm:col-span-2">
-          <Button 
-            variant="outline" 
-            onClick={handleExport} 
-            disabled={isExporting || clientes.length === 0} 
-            size="sm"
-            className="w-auto px-3"
-          >
+          <Button variant="outline" onClick={handleExport} disabled={isExporting || clientes.length === 0} size="sm" className="w-auto px-3">
             {isExporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileUp className="h-4 w-4 mr-2" />}
             Exportar Excel
           </Button>
           
-          <Button 
-            variant="outline" 
-            onClick={handleImportClick} 
-            disabled={isImporting} 
-            size="sm"
-            className="w-auto px-3"
-          >
+          <Button variant="outline" onClick={handleImportClick} disabled={isImporting} size="sm" className="w-auto px-3">
             {isImporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Import className="h-4 w-4 mr-2" />}
             Importar Excel
           </Button>
           
           {/* Input de arquivo oculto - aceita Excel e ODS */}
-          <input 
-            type="file" 
-            accept=".xlsx,.xls,.ods" 
-            onChange={handleFileChange} 
-            ref={fileInputRef} 
-            className="hidden" 
-          />
+          <input type="file" accept=".xlsx,.xls,.ods" onChange={handleFileChange} ref={fileInputRef} className="hidden" />
         </div>
 
         {/* Informações sobre importação/exportação */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>Para mais informações sobre importação e exportação, clique no i.</span>
+          <span>Informações sobre exportação / Importação</span>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
