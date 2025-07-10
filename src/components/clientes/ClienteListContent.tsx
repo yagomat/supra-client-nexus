@@ -100,7 +100,7 @@ export const ClienteListContent = ({
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <ClienteExcelButtons 
           clientes={allClientes} 
           onImportSuccess={onImportSuccess} 
