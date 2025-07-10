@@ -19,7 +19,7 @@ export const ClienteOrderSelector = ({ orderBy, onOrderChange }: ClienteOrderSel
 
   return (
     <Select value={orderBy} onValueChange={onOrderChange}>
-      <SelectTrigger className="w-36">
+      <SelectTrigger className="w-32">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

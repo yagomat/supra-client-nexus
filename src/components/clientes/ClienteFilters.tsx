@@ -47,7 +47,7 @@ export const ClienteFilters = ({
   return (
     <div className="bg-muted/50 p-4 rounded-lg space-y-4">
       {/* Layout para tela grande: tudo em uma linha */}
-      <div className="hidden xl:flex items-center gap-4">
+      <div className="hidden xl:flex items-end gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
@@ -61,7 +61,7 @@ export const ClienteFilters = ({
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-28">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -81,7 +81,7 @@ export const ClienteFilters = ({
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-muted-foreground">Ano:</span>
             <Select value={anoAtual.toString()} onValueChange={(value) => onAnoChange(parseInt(value))}>
-              <SelectTrigger className="w-24">
+              <SelectTrigger className="w-20">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -98,7 +98,7 @@ export const ClienteFilters = ({
         <Button
           variant="outline"
           onClick={handleLimparFiltros}
-          className="flex items-center gap-2 shrink-0"
+          className="flex items-center gap-2 shrink-0 px-3"
         >
           <X className="h-4 w-4" />
           Limpar filtro
