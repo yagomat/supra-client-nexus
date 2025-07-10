@@ -16,8 +16,8 @@ interface ClienteData {
   valor_plano?: number;
   dispositivo_smart?: string;
   aplicativo: string;
-  usuario_aplicativo: string;
-  senha_aplicativo: string;
+  usuario_aplicativo?: string;
+  senha_aplicativo?: string;
   data_licenca_aplicativo?: string;
   possui_tela_adicional?: boolean;
   dispositivo_smart_2?: string;
@@ -107,7 +107,7 @@ serve(async (req) => {
     for (const clienteData of clientes) {
       try {
         // Validate required fields
-        const requiredFields = ['nome', 'servidor', 'aplicativo', 'usuario_aplicativo', 'senha_aplicativo']
+        const requiredFields = ['nome', 'servidor', 'aplicativo']
         const missingFields = requiredFields.filter(field => !clienteData[field])
         
         if (missingFields.length > 0) {

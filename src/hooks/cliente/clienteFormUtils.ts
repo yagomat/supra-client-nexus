@@ -82,8 +82,8 @@ export const convertFormToCliente = (data: ClienteFormValues): Partial<Cliente> 
     servidor: data.servidor, // obrigatório
     dia_vencimento: data.dia_vencimento, // obrigatório
     aplicativo: data.aplicativo, // obrigatório
-    usuario_aplicativo: data.usuario_aplicativo, // obrigatório
-    senha_aplicativo: data.senha_aplicativo, // obrigatório
+    usuario_aplicativo: data.usuario_aplicativo, // opcional
+    senha_aplicativo: data.senha_aplicativo, // opcional
     codigo_pais_telefone: data.codigo_pais_telefone || "+55",
     possui_tela_adicional: data.possui_tela_adicional || false,
     status: data.status || "inativo",

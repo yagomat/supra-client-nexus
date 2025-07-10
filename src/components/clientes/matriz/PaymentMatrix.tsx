@@ -3,6 +3,7 @@ import { Table, TableBody } from "@/components/ui/table";
 import { PaymentMatrixHeader } from "./PaymentMatrixHeader";
 import { PaymentMatrixRow } from "./PaymentMatrixRow";
 import { PaymentMatrixPagination } from "./PaymentMatrixPagination";
+import { PaymentStatusButton } from "@/components/pagamentos/PaymentStatusButton";
 import { Cliente } from "@/types";
 
 interface MesData {
@@ -39,22 +40,80 @@ export const PaymentMatrix = ({
 }: PaymentMatrixProps) => {
   return (
     <div className="w-full bg-background rounded-lg shadow-sm border border-border/50 overflow-hidden">
-      <div className="w-full overflow-x-auto">
-        <div className="min-w-fit">
+      <div className="flex w-full">
+        {/* Tabela fixa com coluna nome */}
+        <div className="flex-shrink-0 border-r border-border">
           <Table>
-            <PaymentMatrixHeader meses={meses} isMobile={isMobile} />
+            <thead className="bg-muted/50">
+              <tr>
+                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground border-b w-48">
+                  Nome
+                </th>
+              </tr>
+            </thead>
             <TableBody>
-              {paginatedClientes.map((cliente, index) => (
-                <PaymentMatrixRow
-                  key={cliente.id}
-                  cliente={cliente}
-                  index={index}
-                  meses={meses}
-                  anoAtual={anoAtual}
-                  getStatusForClient={getStatusForClient}
-                  onPaymentStatusChange={onPaymentStatusChange}
-                />
-              ))}
+              {paginatedClientes.map((cliente, index) => {
+                const isOdd = index % 2 === 1;
+                const bgClass = isOdd ? "bg-muted/10" : "bg-background";
+                
+                return (
+                  <tr key={`${cliente.id}-name`} className={`border-b transition-colors hover:bg-muted/50 ${bgClass}`}>
+                    <td className="h-16 px-4 align-middle w-48">
+                      <div className="font-medium text-sm truncate" title={cliente.nome}>
+                        {cliente.nome}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Tabela scrollável com dados de pagamento */}
+        <div className="flex-1 overflow-x-auto">
+          <Table>
+            <thead className="bg-muted/50">
+              <tr>
+                {meses.map((mes) => (
+                  <th 
+                    key={mes.value} 
+                    className="h-12 px-3 text-center align-middle font-medium text-muted-foreground border-b min-w-[120px]"
+                  >
+                    <div className="text-xs">
+                      {mes.label}
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <TableBody>
+              {paginatedClientes.map((cliente, index) => {
+                const isOdd = index % 2 === 1;
+                const bgClass = isOdd ? "bg-muted/10" : "bg-background";
+                
+                return (
+                  <tr key={`${cliente.id}-payments`} className={`border-b transition-colors hover:bg-muted/50 ${bgClass}`}>
+                    {meses.map((mes) => {
+                      const status = getStatusForClient(cliente.id, mes.value);
+                      
+                      return (
+                        <td key={`${cliente.id}-${mes.value}`} className="h-16 px-3 align-middle">
+                          <div className="flex justify-center">
+                            <PaymentStatusButton
+                              status={status}
+                              onStatusChange={(newStatus) => 
+                                onPaymentStatusChange(cliente, mes.value, newStatus)
+                              }
+                              minimal={true}
+                            />
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
             </TableBody>
           </Table>
         </div>

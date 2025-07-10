@@ -46,13 +46,7 @@ export const useClientValidation = () => {
       newErrors.push({ field: 'aplicativo', message: 'Aplicativo deve ter no máximo 25 caracteres' });
     }
 
-    if (!data.usuario_aplicativo?.trim()) {
-      newErrors.push({ field: 'usuario_aplicativo', message: 'Usuário do aplicativo é obrigatório' });
-    }
-
-    if (!data.senha_aplicativo?.trim()) {
-      newErrors.push({ field: 'senha_aplicativo', message: 'Senha do aplicativo é obrigatória' });
-    }
+    // Campos usuario_aplicativo e senha_aplicativo não são mais obrigatórios
 
     // Validações de formato (warnings para melhor UX)
     if (data.telefone && data.telefone.trim()) {
@@ -108,13 +102,7 @@ export const useClientValidation = () => {
         if (value.length > 25) return { field, message: 'Aplicativo deve ter no máximo 25 caracteres' };
         break;
       
-      case 'usuario_aplicativo':
-        if (!value?.trim()) return { field, message: 'Usuário do aplicativo é obrigatório' };
-        break;
-      
-      case 'senha_aplicativo':
-        if (!value?.trim()) return { field, message: 'Senha do aplicativo é obrigatória' };
-        break;
+      // Campos usuario_aplicativo e senha_aplicativo não são mais obrigatórios
       
       case 'valor_plano':
         if (value && value <= 0) return { field, message: 'Valor deve ser maior que zero' };
