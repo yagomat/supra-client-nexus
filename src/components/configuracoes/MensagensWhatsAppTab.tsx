@@ -71,14 +71,6 @@ export const MensagensWhatsAppTab = () => {
     await updateMensagem(tipo, mensagensEditadas[tipo]);
   };
 
-  const handleSalvarTodas = async () => {
-    for (const tipo of Object.keys(mensagensEditadas) as TipoMensagem[]) {
-      if (mensagensEditadas[tipo] !== mensagens[tipo]) {
-        await updateMensagem(tipo, mensagensEditadas[tipo]);
-      }
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -142,17 +134,6 @@ export const MensagensWhatsAppTab = () => {
             </CardContent>
           </Card>
         ))}
-      </div>
-
-      <div className="flex justify-end">
-        <Button 
-          onClick={handleSalvarTodas}
-          disabled={submitting}
-          size="lg"
-        >
-          <Save className="w-4 h-4 mr-2" />
-          Salvar Todas as Mensagens
-        </Button>
       </div>
     </div>
   );
