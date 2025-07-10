@@ -13,26 +13,26 @@ const Configuracoes = () => {
     <DashboardLayout title="Configurações">
       <div className="space-y-8 animate-fade-in">
         <Tabs defaultValue="profile" className="w-full">
-          {/* Mobile view: grid layout */}
+          {/* Mobile view: horizontal layout */}
           {isMobile ? (
             <div className="space-y-2">
               <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pb-1">
-                <TabsList className="grid grid-cols-2 gap-2 h-auto p-0 bg-transparent">
+                <TabsList className="grid grid-cols-3 gap-2 h-auto p-0 bg-transparent w-full">
                   <TabsTrigger 
                     value="profile" 
-                    className="text-xs px-3 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                    className="text-xs px-2 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                   >
                     Perfil
                   </TabsTrigger>
                   <TabsTrigger 
                     value="preferences" 
-                    className="text-xs px-3 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                    className="text-xs px-2 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                   >
                     Preferências
                   </TabsTrigger>
                   <TabsTrigger 
                     value="security" 
-                    className="text-xs px-3 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] col-span-2"
+                    className="text-xs px-2 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                   >
                     Logs
                   </TabsTrigger>
