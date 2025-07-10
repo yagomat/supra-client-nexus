@@ -1,9 +1,9 @@
-import { useState, useRef } from "react";
+import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
-import { Import, FileUp, Loader2, Info } from "lucide-react";
+import { FileUp, Import, Loader2, Info } from "lucide-react";
 import { Cliente } from "@/types";
 import { exportClientesToExcel, importClientesFromExcel } from "@/services/clienteExcel";
+import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -19,35 +19,28 @@ export const ClienteExcelButtons = ({
 }: ClienteExcelButtonsProps) => {
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [importErrors, setImportErrors] = useState<string[]>([]);
-  const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [importResults, setImportResults] = useState<{
+    success: Cliente[];
+    errors: { row: number; error: string }[];
+  } | null>(null);
   const {
     toast
   } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = async () => {
-    if (clientes.length === 0) {
-      toast({
-        title: "Nenhum cliente para exportar",
-        description: "Não há clientes disponíveis para exportação.",
-        variant: "destructive"
-      });
-      return;
-    }
+    setIsExporting(true);
     try {
-      setIsExporting(true);
       await exportClientesToExcel(clientes);
       toast({
-        title: "Exportação concluída",
-        description: `${clientes.length} clientes exportados com sucesso.`
+        title: "Clientes exportados",
+        description: "A planilha Excel foi gerada com sucesso.",
       });
     } catch (error) {
-      console.error("Erro na exportação:", error);
       toast({
-        title: "Erro na exportação",
-        description: "Ocorreu um erro ao exportar os clientes.",
-        variant: "destructive"
+        title: "Erro ao exportar",
+        description: "Houve um erro ao gerar a planilha Excel.",
+        variant: "destructive",
       });
     } finally {
       setIsExporting(false);
@@ -55,55 +48,54 @@ export const ClienteExcelButtons = ({
   };
 
   const handleImportClick = () => {
-    // Simular clique no input de arquivo oculto
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    setIsImporting(true);
+    setImportResults(null);
     const file = event.target.files?.[0];
-    if (!file) return;
+
+    if (!file) {
+      setIsImporting(false);
+      return;
+    }
+
     try {
-      setIsImporting(true);
-      setImportErrors([]);
-      const result = await importClientesFromExcel(file);
-      if (result.success) {
-        toast({
-          title: "Importação concluída",
-          description: `${result.imported} clientes importados com sucesso.${result.errors.length > 0 ? ` Alguns registros não foram importados.` : ""}`
-        });
+      const { success, errors } = await importClientesFromExcel(file);
+      setImportResults({
+        success,
+        errors
+      });
 
-        // Notificar o componente pai para atualizar a lista
+      if (success.length > 0) {
+        toast({
+          title: "Clientes importados",
+          description: `${success.length} clientes foram importados com sucesso.`,
+        });
         onImportSuccess();
-
-        // Se houver erros, mostrar no diálogo
-        if (result.errors.length > 0) {
-          setImportErrors(result.errors);
-          setShowErrorDialog(true);
-        }
-      } else {
-        toast({
-          title: "Falha na importação",
-          description: "Nenhum cliente importado. Verifique os erros para mais detalhes.",
-          variant: "destructive"
-        });
-        setImportErrors(result.errors);
-        setShowErrorDialog(true);
       }
-    } catch (error) {
-      console.error("Erro na importação:", error);
+
+      if (errors.length > 0) {
+        toast({
+          title: "Erro na importação",
+          description: `${errors.length} linhas contém erros. Verifique os detalhes abaixo.`,
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
       toast({
-        title: "Erro na importação",
-        description: "Ocorreu um erro ao importar os clientes.",
-        variant: "destructive"
+        title: "Erro ao importar",
+        description: error.message || "Houve um erro ao processar o arquivo Excel.",
+        variant: "destructive",
       });
     } finally {
-      // Limpar o input de arquivo para permitir selecionar o mesmo arquivo novamente
-      if (event.target) {
-        event.target.value = "";
-      }
       setIsImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
@@ -143,75 +135,71 @@ export const ClienteExcelButtons = ({
         </div>
 
         {/* Informações sobre importação/exportação */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>Para mais informações sobre importação e exportação, clique no i.</span>
+        <div className="flex items-center gap-2">
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                <Info className="h-4 w-4" />
+                <Info className="h-3 w-3" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-96" align="start">
-              <div className="space-y-3">
-                <div>
-                  <h4 className="font-semibold text-sm mb-2">Importação de Clientes</h4>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Para importar clientes, o arquivo Excel deve conter as colunas na seguinte ordem:
-                  </p>
-                </div>
-                <ScrollArea className="h-48">
-                  <div className="space-y-1 text-xs">
-                    <div className="grid grid-cols-2 gap-2 font-medium">
-                      <span>Coluna</span>
-                      <span>Campo</span>
-                    </div>
-                    <hr className="my-2" />
-                    <div className="grid grid-cols-2 gap-2"><span>A</span><span>Data de cadastro</span></div>
-                    <div className="grid grid-cols-2 gap-2"><span>B</span><span>Nome</span></div>
-                    <div className="grid grid-cols-2 gap-2"><span>C</span><span>Telefone</span></div>
-                    <div className="grid grid-cols-2 gap-2"><span>D</span><span>UF</span></div>
-                    <div className="grid grid-cols-2 gap-2"><span>E</span><span>Servidor</span></div>
-                    <div className="grid grid-cols-2 gap-2"><span>F</span><span>Dia de Vencimento</span></div>
-                    <div className="grid grid-cols-2 gap-2"><span>G</span><span>Plano</span></div>
-                    <div className="grid grid-cols-2 gap-2"><span>H</span><span>Dispositivo smart</span></div>
-                    <div className="grid grid-cols-2 gap-2"><span>I</span><span>Aplicativo</span></div>
-                    <div className="grid grid-cols-2 gap-2"><span>J</span><span>Usuário</span></div>
-                    <div className="grid grid-cols-2 gap-2"><span>K</span><span>Senha</span></div>
-                    <div className="grid grid-cols-2 gap-2"><span>L</span><span>Vencimento da licença do app</span></div>
-                    <div className="grid grid-cols-2 gap-2"><span>M</span><span>Dispositivo smart 2</span></div>
-                    <div className="grid grid-cols-2 gap-2"><span>N</span><span>Aplicativo 2</span></div>
-                    <div className="grid grid-cols-2 gap-2"><span>O</span><span>Usuário 2</span></div>
-                    <div className="grid grid-cols-2 gap-2"><span>P</span><span>Senha 2</span></div>
-                    <div className="grid grid-cols-2 gap-2"><span>Q</span><span>Vencimento da licença do app 2</span></div>
-                    <div className="grid grid-cols-2 gap-2"><span>R</span><span>Observações</span></div>
-                  </div>
-                </ScrollArea>
-                <div className="text-xs text-muted-foreground space-y-1">
-                  <p><strong>Dica:</strong> Exporte um arquivo para ver o formato correto.</p>
-                  <p><strong>Importante:</strong> A primeira linha deve conter os cabeçalhos das colunas.</p>
-                </div>
+            <PopoverContent className="w-80" align="start">
+              <div className="space-y-2 text-justify">
+                <p className="text-sm font-medium">Exportação:</p>
+                <p className="text-xs text-muted-foreground">
+                  Baixa todos os clientes em formato Excel (.xlsx) com todas as informações cadastradas.
+                </p>
+                
+                <p className="text-sm font-medium">Importação:</p>
+                <p className="text-xs text-muted-foreground">
+                  Aceita arquivos Excel (.xlsx, .xls) e OpenDocument (.ods). O arquivo deve conter as colunas: Nome, Telefone, UF, Servidor, Dia Vencimento, Valor Plano, Aplicativo, Usuário Aplicativo, Senha Aplicativo, Status.
+                </p>
+                
+                <p className="text-xs text-muted-foreground">
+                  Campos opcionais: Dispositivo Smart, Data Licença Aplicativo, Possui Tela Adicional, Observações.
+                </p>
               </div>
             </PopoverContent>
           </Popover>
+          <span className="text-xs text-muted-foreground">Informações sobre importação/exportação</span>
         </div>
       </div>
 
-      {/* Diálogo de erros de importação */}
-      <Dialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog open={importResults !== null} onOpenChange={() => setImportResults(null)}>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Erros na importação</DialogTitle>
+            <DialogTitle>Resultados da Importação</DialogTitle>
             <DialogDescription>
-              Alguns clientes não puderam ser importados pelos seguintes motivos:
+              {importResults?.success.length} clientes importados com sucesso.
+              {importResults?.errors.length > 0 && (
+                <>
+                  <br />
+                  {importResults.errors.length} erros encontrados.
+                </>
+              )}
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="max-h-[300px] mt-2">
-            <ul className="list-disc pl-6 space-y-2">
-              {importErrors.map((error, index) => <li key={index} className="text-sm text-red-600">{error}</li>)}
-            </ul>
-          </ScrollArea>
+          {importResults?.errors.length > 0 && (
+            <ScrollArea className="h-64">
+              <table className="w-full">
+                <thead>
+                  <tr>
+                    <th className="text-left font-medium px-2 py-1">Linha</th>
+                    <th className="text-left font-medium px-2 py-1">Erro</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {importResults.errors.map((error, index) => (
+                    <tr key={index} className="border-b">
+                      <td className="px-2 py-1">{error.row}</td>
+                      <td className="px-2 py-1">{error.error}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </ScrollArea>
+          )}
           <DialogFooter>
-            <Button onClick={() => setShowErrorDialog(false)}>Fechar</Button>
+            <Button onClick={() => setImportResults(null)}>Fechar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
