@@ -5,7 +5,7 @@ import { MensagensWhatsAppTab } from "@/components/configuracoes/MensagensWhatsA
 const Templates = () => {
   return (
     <DashboardLayout title="Templates">
-      <div className="section-spacing animate-fade-in">
+      <div className="space-y-8 animate-fade-in">
         <div className="animate-slide-up">
           <MensagensWhatsAppTab />
         </div>

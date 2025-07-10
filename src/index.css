@@ -60,10 +60,10 @@
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 
-    /* Standardized Spacing System */
+    /* Standardized Spacing */
     --spacing-page: 1.5rem; /* 24px - spacing between page sections */
-    --spacing-section: 1rem; /* 16px - spacing within components */
-    --spacing-element: 0.75rem; /* 12px - spacing between related elements */
+    --spacing-section: 1rem; /* 16px - spacing within sections */
+    --spacing-element: 0.75rem; /* 12px - spacing between elements */
     --spacing-tight: 0.5rem; /* 8px - tight spacing */
 
     /* Standardized Typography */
@@ -153,23 +153,6 @@
   
   .payment-unpaid {
     @apply bg-danger text-danger-foreground;
-  }
-
-  /* Standardized Spacing Classes */
-  .section-spacing {
-    @apply space-y-6;
-  }
-
-  .component-spacing {
-    @apply space-y-4;
-  }
-
-  .element-spacing {
-    @apply gap-3;
-  }
-
-  .tight-spacing {
-    @apply gap-2;
   }
 
   /* Standardized Page Layout Classes */
@@ -389,41 +372,21 @@
     transition: var(--transition-fast);
   }
 
-  /* Form Enhancements */
-  .form-enhanced {
-    position: relative;
+  /* Standardized Spacing Utilities */
+  .spacing-page {
+    padding: var(--spacing-page);
   }
 
-  .form-enhanced input:focus {
-    box-shadow: var(--shadow-glow);
-    border-color: hsl(var(--primary));
+  .spacing-section {
+    margin-bottom: var(--spacing-page);
   }
 
-  .form-enhanced .form-label {
-    font-weight: 500;
-    color: hsl(var(--foreground));
+  .spacing-element {
+    margin-bottom: var(--spacing-element);
   }
 
-  /* Button Enhancements */
-  .btn-enhanced {
-    position: relative;
-    overflow: hidden;
-    transition: var(--transition-smooth);
-  }
-
-  .btn-enhanced::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s;
-  }
-
-  .btn-enhanced:hover::before {
-    left: 100%;
+  .spacing-tight {
+    margin-bottom: var(--spacing-tight);
   }
 
   /* Animation Classes */
@@ -470,5 +433,42 @@
       opacity: 1;
       transform: scale(1);
     }
+  }
+
+  /* Form Enhancements */
+  .form-enhanced {
+    position: relative;
+  }
+
+  .form-enhanced input:focus {
+    box-shadow: var(--shadow-glow);
+    border-color: hsl(var(--primary));
+  }
+
+  .form-enhanced .form-label {
+    font-weight: 500;
+    color: hsl(var(--foreground));
+  }
+
+  /* Button Enhancements */
+  .btn-enhanced {
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition-smooth);
+  }
+
+  .btn-enhanced::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+
+  .btn-enhanced:hover::before {
+    left: 100%;
   }
 }
