@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ClienteCardsGrid } from "@/components/clientes/ClienteCardsGrid";
 import { ClienteMatriz } from "@/components/clientes/ClienteMatriz";
@@ -55,11 +54,7 @@ export const ClienteListContent = ({
   // Estado para controlar a paginação
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  
-  // Estado para controlar o modo de visualização - agora cards e matriz
   const [viewMode, setViewMode] = useState<'cards' | 'matriz'>('cards');
-  
-  // Estado para o ano atual na matriz
   const [anoAtual, setAnoAtual] = useState(new Date().getFullYear());
   
   // Meses para a matriz
@@ -104,7 +99,7 @@ export const ClienteListContent = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full overflow-hidden">
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
           <ClienteExcelButtons 
@@ -157,12 +152,16 @@ export const ClienteListContent = ({
           onItemsPerPageChange={handleItemsPerPageChange}
         />
       ) : (
-        <ClienteMatriz 
-          clientes={filteredClientes}
-          meses={meses}
-          anoAtual={anoAtual}
-          isMobile={isMobile}
-        />
+        <div className="w-full overflow-hidden">
+          <div className="max-w-full">
+            <ClienteMatriz 
+              clientes={filteredClientes}
+              meses={meses}
+              anoAtual={anoAtual}
+              isMobile={isMobile}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

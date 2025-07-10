@@ -26,12 +26,12 @@ export function DashboardLayout({ children, className, title }: DashboardLayoutP
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background overflow-hidden">
       {/* Only show sidebar in desktop mode */}
       {!isMobile && <SidebarMenu onCollapseChange={handleSidebarStateChange} />}
       
       <main className={cn(
-        "flex-1 flex flex-col min-h-0", 
+        "flex-1 flex flex-col min-h-0 overflow-hidden", 
         isMobile ? "w-full" : 
           sidebarCollapsed ? "ml-[70px]" : "ml-64", 
         className
@@ -73,7 +73,7 @@ export function DashboardLayout({ children, className, title }: DashboardLayoutP
           </div>
         )}
         
-        <div className="flex-1 px-4 py-4 min-h-0">
+        <div className="flex-1 px-4 py-4 min-h-0 overflow-y-auto overflow-x-hidden">
           {children}
         </div>
       </main>

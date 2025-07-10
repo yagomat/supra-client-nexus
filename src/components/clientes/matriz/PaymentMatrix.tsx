@@ -38,24 +38,26 @@ export const PaymentMatrix = ({
   onItemsPerPageChange
 }: PaymentMatrixProps) => {
   return (
-    <div className="rounded-lg shadow-sm overflow-hidden border border-border/50">
-      <div className="overflow-x-auto">
-        <Table>
-          <PaymentMatrixHeader meses={meses} isMobile={isMobile} />
-          <TableBody>
-            {paginatedClientes.map((cliente, index) => (
-              <PaymentMatrixRow
-                key={cliente.id}
-                cliente={cliente}
-                index={index}
-                meses={meses}
-                anoAtual={anoAtual}
-                getStatusForClient={getStatusForClient}
-                onPaymentStatusChange={onPaymentStatusChange}
-              />
-            ))}
-          </TableBody>
-        </Table>
+    <div className="w-full bg-background rounded-lg shadow-sm border border-border/50 overflow-hidden">
+      <div className="w-full overflow-x-auto">
+        <div className="min-w-fit">
+          <Table>
+            <PaymentMatrixHeader meses={meses} isMobile={isMobile} />
+            <TableBody>
+              {paginatedClientes.map((cliente, index) => (
+                <PaymentMatrixRow
+                  key={cliente.id}
+                  cliente={cliente}
+                  index={index}
+                  meses={meses}
+                  anoAtual={anoAtual}
+                  getStatusForClient={getStatusForClient}
+                  onPaymentStatusChange={onPaymentStatusChange}
+                />
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
       
       <PaymentMatrixPagination
