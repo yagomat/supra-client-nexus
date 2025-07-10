@@ -34,11 +34,11 @@ export const TabsContainer = ({ activeTab, onTabChange, valoresPredefinidos, onD
     <Tabs
       value={activeTab}
       onValueChange={onTabChange}
-      className="pt-4"
+      className="pt-2"
     >
       {/* Mobile view: grid layout without scroll */}
       {isMobile ? (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pb-2">
             <TabsList className="grid grid-cols-2 gap-1 h-auto p-1">
               <TabsTrigger value="ufs" className="text-xs px-2 py-2">UF</TabsTrigger>
@@ -49,8 +49,8 @@ export const TabsContainer = ({ activeTab, onTabChange, valoresPredefinidos, onD
               <TabsTrigger value="aplicativos" className="text-xs px-2 py-2">Aplicativos</TabsTrigger>
             </TabsList>
           </div>
-          {/* Content with proper spacing for mobile */}
-          <div className="pt-4">
+          {/* Content with reduced spacing for mobile */}
+          <div className="pt-2">
             <TabsContent value="ufs" className="mt-0">{renderValues("ufs")}</TabsContent>
             <TabsContent value="servidores" className="mt-0">{renderValues("servidores")}</TabsContent>
             <TabsContent value="dias_vencimento" className="mt-0">{renderValues("dias_vencimento")}</TabsContent>
