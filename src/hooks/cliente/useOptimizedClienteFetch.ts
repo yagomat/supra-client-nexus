@@ -24,7 +24,7 @@ export const useOptimizedClienteFetch = () => {
       }
 
       const { data, error } = await supabase.rpc('filter_clientes_by_status', {
-        p_status: 'todos',
+        p_status: null, // null retorna todos os clientes
         p_user_id: userId
       });
 
