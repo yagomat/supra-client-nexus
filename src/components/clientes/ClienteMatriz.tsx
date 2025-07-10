@@ -157,75 +157,73 @@ export const ClienteMatriz = ({
   };
   
   return (
-    <div className="w-full">
-      <div className="rounded-lg shadow-sm border border-border/50 overflow-hidden">
-        <div className="w-full overflow-x-auto overflow-y-hidden" style={{ maxWidth: '100vw' }}>
-          <table className="w-full caption-bottom text-sm border-collapse" style={{ minWidth: `${380 + (displayMeses.length * 80)}px` }}>
-            <thead className="bg-muted/40">
-              <tr className="border-b bg-muted/50">
-                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground sticky left-0 bg-muted/50 z-30 border-r-2 border-border shadow-xl w-[200px]">Nome</th>
-                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground w-[80px]">
-                  <div className="leading-tight font-medium">
-                    <div>Dia de</div>
-                    <div>Venc.</div>
-                  </div>
-                </th>
-                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground w-[100px]">Status</th>
-                {displayMeses.map((mes) => (
-                  <th key={mes.value} className="h-12 px-4 text-center align-middle font-medium text-muted-foreground w-[80px]">
-                    {isMobile ? mes.label.substring(0, 3) : mes.label.substring(0, 3)}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedClientes.map((cliente, index) => {
-                const isOdd = index % 2 === 1;
-                const rowBgClass = isOdd ? "bg-muted/10" : "bg-background";
-                const nameCellBgClass = isOdd ? "bg-muted" : "bg-background";
-                
-                return (
-                  <tr key={cliente.id} className={`border-b transition-colors hover:bg-muted/30 ${rowBgClass}`}>
-                    <td className={`px-4 py-3 align-middle font-medium sticky left-0 ${nameCellBgClass} z-30 border-r-2 border-border shadow-xl w-[200px]`}>
-                      {cliente.nome}
-                    </td>
-                    <td className="px-4 py-3 align-middle w-[80px]">{cliente.dia_vencimento}</td>
-                    <td className="px-4 py-3 align-middle w-[100px]">
-                      <ClienteStatusBadge status={cliente.status || 'inativo'} />
-                    </td>
-                    {displayMeses.map((mes) => {
-                      const status = getStatusForClient(cliente.id, mes.value);
-                      
-                      return (
-                        <td key={mes.value} className="px-4 py-3 align-middle w-[80px]">
-                          <div className="flex justify-center">
-                            <PaymentStatusButton
-                              status={status}
-                              onStatusChange={(newStatus) => 
-                                handlePaymentStatusChange(cliente, mes.value, newStatus)
-                              }
-                              minimal={true}
-                            />
-                          </div>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-        
-        <div className="border-t p-2 bg-muted/10">
-          <TablePagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            itemsPerPage={itemsPerPage}
-            onPageChange={setCurrentPage}
-            onItemsPerPageChange={handleItemsPerPageChange}
-          />
-        </div>
+    <div className="rounded-lg shadow-sm border border-border/50 overflow-hidden">
+      <div className="overflow-x-auto max-w-full">
+        <Table className="min-w-max">
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead className="font-medium sticky left-0 bg-muted/50 z-30 border-r-2 border-border shadow-xl">Nome</TableHead>
+              <TableHead>
+                <div className="leading-tight font-medium">
+                  <div>Dia de</div>
+                  <div>Venc.</div>
+                </div>
+              </TableHead>
+              <TableHead className="font-medium">Status</TableHead>
+              {displayMeses.map((mes) => (
+                <TableHead key={mes.value} className="text-center font-medium">
+                  {isMobile ? mes.label.substring(0, 3) : mes.label.substring(0, 3)}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedClientes.map((cliente, index) => {
+              const isOdd = index % 2 === 1;
+              const rowBgClass = isOdd ? "bg-muted/10" : "bg-background";
+              const nameCellBgClass = isOdd ? "bg-muted" : "bg-background";
+              
+              return (
+                <TableRow key={cliente.id} className={rowBgClass}>
+                  <TableCell className={`font-medium sticky left-0 ${nameCellBgClass} z-30 border-r-2 border-border shadow-xl`}>
+                    {cliente.nome}
+                  </TableCell>
+                  <TableCell>{cliente.dia_vencimento}</TableCell>
+                  <TableCell>
+                    <ClienteStatusBadge status={cliente.status || 'inativo'} />
+                  </TableCell>
+                  {displayMeses.map((mes) => {
+                    const status = getStatusForClient(cliente.id, mes.value);
+                    
+                    return (
+                      <TableCell key={mes.value}>
+                        <div className="flex justify-center">
+                          <PaymentStatusButton
+                            status={status}
+                            onStatusChange={(newStatus) => 
+                              handlePaymentStatusChange(cliente, mes.value, newStatus)
+                            }
+                            minimal={true}
+                          />
+                        </div>
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+      
+      <div className="border-t p-2 bg-muted/10">
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={handleItemsPerPageChange}
+        />
       </div>
     </div>
   );
