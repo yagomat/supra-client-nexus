@@ -41,23 +41,19 @@ const BancoDados = () => {
             </div>
           </div>
         ) : valoresPredefinidos ? (
-          <div className={`animate-slide-up ${isMobile ? "px-1 pb-6" : ""}`}>
-            <div className={`${isMobile ? "px-3 pt-6 pb-4" : "pb-4"} bg-gradient-subtle rounded-t-lg`}>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                <div></div>
-                <ValueManagerToolbar 
-                  onAddClick={() => setIsAddDialogOpen(true)}
-                />
-              </div>
-            </div>
-            <div className={`${isMobile ? "px-2 py-4" : "p-6"}`}>
-              <TabsContainer 
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-                valoresPredefinidos={valoresPredefinidos}
-                onDeleteValue={(type, value) => setItemToDelete({ type, value })}
+          <div className="animate-slide-up">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 mb-6">
+              <div></div>
+              <ValueManagerToolbar 
+                onAddClick={() => setIsAddDialogOpen(true)}
               />
             </div>
+            <TabsContainer 
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              valoresPredefinidos={valoresPredefinidos}
+              onDeleteValue={(type, value) => setItemToDelete({ type, value })}
+            />
           </div>
         ) : null}
       </div>
