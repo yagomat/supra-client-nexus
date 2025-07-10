@@ -39,9 +39,9 @@ export const PaymentMatrix = ({
 }: PaymentMatrixProps) => {
   return (
     <div className="w-full bg-background rounded-lg shadow-sm border border-border/50 overflow-hidden">
-      <div className="w-full overflow-x-auto">
-        <div className="min-w-fit">
-          <Table>
+      <div className="w-full overflow-x-auto overflow-y-visible" style={{ position: 'relative' }}>
+        <div className="min-w-fit relative">
+          <Table className="relative">
             <PaymentMatrixHeader meses={meses} isMobile={isMobile} />
             <TableBody>
               {paginatedClientes.map((cliente, index) => (

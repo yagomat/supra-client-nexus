@@ -15,7 +15,7 @@ export const PaymentMatrixHeader = ({ meses, isMobile = false }: PaymentMatrixHe
   return (
     <TableHeader>
       <TableRow className="bg-muted/50">
-        <TableHead className="font-medium sticky left-0 bg-muted/50 z-30 border-r-2 border-border shadow-xl">Nome</TableHead>
+        <TableHead className="font-medium sticky left-0 bg-muted/50 z-40 border-r-2 border-border shadow-xl min-w-[200px] max-w-[200px]">Nome</TableHead>
         <TableHead>
           <div className="leading-tight font-medium">
             <div>Dia de</div>
