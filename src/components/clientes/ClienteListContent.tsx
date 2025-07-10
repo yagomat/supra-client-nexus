@@ -87,6 +87,7 @@ export const ClienteListContent = ({
   const handleClearFilters = () => {
     handleLimparFiltros();
     setCurrentPage(1);
+    setAnoAtual(new Date().getFullYear()); // Reset year to current year
   };
   
   const handleItemsPerPageChange = (value: number) => {

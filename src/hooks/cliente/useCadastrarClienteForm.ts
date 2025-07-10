@@ -57,18 +57,26 @@ export const useCadastrarClienteForm = () => {
       return;
     }
 
-    // Submeter diretamente os dados processados - o useSecureClienteForm já faz a sanitização
-    try {
-      console.log("Chamando originalOnSubmit com dados:", data);
-      await originalOnSubmit(data);
-    } catch (error) {
-      console.error("Erro ao submeter formulário:", error);
-      toast({
-        title: "Erro ao cadastrar cliente",
-        description: "Ocorreu um erro interno. Tente novamente.",
-        variant: "destructive",
-      });
-    }
+  // Submeter diretamente os dados processados - o useSecureClienteForm já faz a sanitização
+  try {
+    console.log("Chamando originalOnSubmit com dados:", data);
+    await originalOnSubmit(data);
+    
+    // Sucesso - mostrar mensagem e redirecionar
+    toast({
+      title: "Cliente cadastrado com sucesso",
+      description: "O cliente foi cadastrado e está disponível na lista.",
+    });
+    
+    navigate("/clientes");
+  } catch (error) {
+    console.error("Erro ao submeter formulário:", error);
+    toast({
+      title: "Erro ao cadastrar cliente",
+      description: "Ocorreu um erro interno. Tente novamente.",
+      variant: "destructive",
+    });
+  }
   };
 
   const handleCancel = () => {

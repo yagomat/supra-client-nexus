@@ -11,7 +11,7 @@ interface ClienteOrderSelectorProps {
 
 export const ClienteOrderSelector = ({ orderBy, onOrderChange }: ClienteOrderSelectorProps) => {
   const orderOptions = [
-    { value: 'data' as ClienteOrderType, label: 'Data' },
+    { value: 'data' as ClienteOrderType, label: 'Cadastro' },
     { value: 'vencimento' as ClienteOrderType, label: 'Vencimento' },
     { value: 'nome_asc' as ClienteOrderType, label: 'Nome A-Z' },
     { value: 'nome_desc' as ClienteOrderType, label: 'Nome Z-A' },
