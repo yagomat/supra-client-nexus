@@ -34,7 +34,7 @@ const EditarCliente = () => {
     <DashboardLayout title="Editar Cliente">
       <div className="flex flex-col h-full max-h-screen overflow-hidden">
         <div className="flex-1 overflow-y-auto">
-          <div className="w-full max-w-4xl mx-auto p-4">
+          <div className="w-full max-w-4xl mx-auto p-2">
             <div className="space-y-6">
               <EditClienteHeader 
                 clienteNome={cliente.nome}
