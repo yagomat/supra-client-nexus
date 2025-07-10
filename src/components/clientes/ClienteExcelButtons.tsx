@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -8,76 +7,71 @@ import { exportClientesToExcel, importClientesFromExcel } from "@/services/clien
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-
 interface ClienteExcelButtonsProps {
   clientes: Cliente[];
   onImportSuccess: () => void;
 }
-
-export const ClienteExcelButtons = ({ clientes, onImportSuccess }: ClienteExcelButtonsProps) => {
+export const ClienteExcelButtons = ({
+  clientes,
+  onImportSuccess
+}: ClienteExcelButtonsProps) => {
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const handleExport = async () => {
     if (clientes.length === 0) {
       toast({
         title: "Nenhum cliente para exportar",
         description: "Não há clientes disponíveis para exportação.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     try {
       setIsExporting(true);
       await exportClientesToExcel(clientes);
       toast({
         title: "Exportação concluída",
-        description: `${clientes.length} clientes exportados com sucesso.`,
+        description: `${clientes.length} clientes exportados com sucesso.`
       });
     } catch (error) {
       console.error("Erro na exportação:", error);
       toast({
         title: "Erro na exportação",
         description: "Ocorreu um erro ao exportar os clientes.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsExporting(false);
     }
   };
-
   const handleImportClick = () => {
     // Simular clique no input de arquivo oculto
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
-
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
     try {
       setIsImporting(true);
       setImportErrors([]);
       const result = await importClientesFromExcel(file);
-      
       if (result.success) {
         toast({
           title: "Importação concluída",
-          description: `${result.imported} clientes importados com sucesso.${
-            result.errors.length > 0 ? ` Alguns registros não foram importados.` : ""
-          }`,
+          description: `${result.imported} clientes importados com sucesso.${result.errors.length > 0 ? ` Alguns registros não foram importados.` : ""}`
         });
-        
+
         // Notificar o componente pai para atualizar a lista
         onImportSuccess();
-        
+
         // Se houver erros, mostrar no diálogo
         if (result.errors.length > 0) {
           setImportErrors(result.errors);
@@ -87,9 +81,8 @@ export const ClienteExcelButtons = ({ clientes, onImportSuccess }: ClienteExcelB
         toast({
           title: "Falha na importação",
           description: "Nenhum cliente importado. Verifique os erros para mais detalhes.",
-          variant: "destructive",
+          variant: "destructive"
         });
-        
         setImportErrors(result.errors);
         setShowErrorDialog(true);
       }
@@ -98,7 +91,7 @@ export const ClienteExcelButtons = ({ clientes, onImportSuccess }: ClienteExcelB
       toast({
         title: "Erro na importação",
         description: "Ocorreu um erro ao importar os clientes.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       // Limpar o input de arquivo para permitir selecionar o mesmo arquivo novamente
@@ -108,52 +101,26 @@ export const ClienteExcelButtons = ({ clientes, onImportSuccess }: ClienteExcelB
       setIsImporting(false);
     }
   };
-
-  return (
-    <>
+  return <>
       <div className="flex flex-col gap-2">
         <div className="flex justify-between gap-2 sm:col-span-2">
-          <Button
-            variant="outline"
-            onClick={handleExport}
-            disabled={isExporting || clientes.length === 0}
-            className="flex-1"
-          >
-            {isExporting ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <FileUp className="h-4 w-4 mr-2" />
-            )}
+          <Button variant="outline" onClick={handleExport} disabled={isExporting || clientes.length === 0} className="flex-1">
+            {isExporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileUp className="h-4 w-4 mr-2" />}
             Exportar Excel
           </Button>
           
-          <Button
-            variant="outline"
-            onClick={handleImportClick}
-            disabled={isImporting}
-            className="flex-1"
-          >
-            {isImporting ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Import className="h-4 w-4 mr-2" />
-            )}
+          <Button variant="outline" onClick={handleImportClick} disabled={isImporting} className="flex-1">
+            {isImporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Import className="h-4 w-4 mr-2" />}
             Importar Excel
           </Button>
           
           {/* Input de arquivo oculto - aceita apenas arquivos Excel */}
-          <input
-            type="file"
-            accept=".xlsx,.xls"
-            onChange={handleFileChange}
-            ref={fileInputRef}
-            className="hidden"
-          />
+          <input type="file" accept=".xlsx,.xls" onChange={handleFileChange} ref={fileInputRef} className="hidden" />
         </div>
 
         {/* Informações sobre importação/exportação */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>Para mais informações sobre importação e exportação, clique no i</span>
+          <span>Para mais informações sobre importação e exportação, clique no i.</span>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
@@ -216,9 +183,7 @@ export const ClienteExcelButtons = ({ clientes, onImportSuccess }: ClienteExcelB
           </DialogHeader>
           <ScrollArea className="max-h-[300px] mt-2">
             <ul className="list-disc pl-6 space-y-2">
-              {importErrors.map((error, index) => (
-                <li key={index} className="text-sm text-red-600">{error}</li>
-              ))}
+              {importErrors.map((error, index) => <li key={index} className="text-sm text-red-600">{error}</li>)}
             </ul>
           </ScrollArea>
           <DialogFooter>
@@ -226,6 +191,5 @@ export const ClienteExcelButtons = ({ clientes, onImportSuccess }: ClienteExcelB
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
-  );
+    </>;
 };
