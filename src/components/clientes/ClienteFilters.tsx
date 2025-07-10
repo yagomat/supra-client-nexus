@@ -2,7 +2,7 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, SortDesc, X } from "lucide-react";
+import { Search, Filter, SortDesc, X, Calendar } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -79,7 +79,7 @@ export const ClienteFilters = ({
 
         {viewMode === 'matriz' && anoAtual && onAnoChange && (
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground">Ano:</span>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
             <Select value={anoAtual.toString()} onValueChange={(value) => onAnoChange(parseInt(value))}>
               <SelectTrigger className="w-20">
                 <SelectValue />
@@ -143,7 +143,7 @@ export const ClienteFilters = ({
 
           {viewMode === 'matriz' && anoAtual && onAnoChange && (
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">Ano:</span>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
               <Select value={anoAtual.toString()} onValueChange={(value) => onAnoChange(parseInt(value))}>
                 <SelectTrigger className="w-24">
                   <SelectValue />
@@ -214,7 +214,7 @@ export const ClienteFilters = ({
         <div className="flex items-center gap-4">
           {viewMode === 'matriz' && anoAtual && onAnoChange && (
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">Ano:</span>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
               <Select value={anoAtual.toString()} onValueChange={(value) => onAnoChange(parseInt(value))}>
                 <SelectTrigger className="w-24">
                   <SelectValue />
