@@ -203,10 +203,10 @@ export const useSecureClienteForm = ({
       // Executar operação baseada no modo
       if (mode === "create") {
         console.log("Criando cliente...");
-        await createCliente(clienteData);
+        await createCliente(clienteData as Omit<Cliente, "id" | "created_at" | "status">);
       } else if (mode === "edit" && clienteId) {
         console.log("Atualizando cliente...");
-        await updateCliente(clienteId, clienteData, initialData);
+        await updateCliente(clienteId, clienteData);
       }
     } catch (error) {
       console.error("Erro no submit do formulário:", error);
