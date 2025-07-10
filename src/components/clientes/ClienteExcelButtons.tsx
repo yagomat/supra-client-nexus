@@ -109,13 +109,13 @@ export const ClienteExcelButtons = ({
 
   return <>
       <div className="flex flex-col gap-2">
-        <div className="flex flex-col sm:flex-row justify-start gap-2 w-full lg:w-auto">
+        <div className="flex gap-2 w-full lg:justify-start">
           <Button 
             variant="outline" 
             onClick={handleExport} 
             disabled={isExporting || clientes.length === 0} 
             size="sm" 
-            className="w-full sm:w-auto px-3"
+            className="flex-1 lg:flex-initial lg:w-auto px-3"
           >
             {isExporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileUp className="h-4 w-4 mr-2" />}
             Exportar Excel
@@ -126,7 +126,7 @@ export const ClienteExcelButtons = ({
             onClick={handleImportClick} 
             disabled={isImporting} 
             size="sm" 
-            className="w-full sm:w-auto px-3"
+            className="flex-1 lg:flex-initial lg:w-auto px-3"
           >
             {isImporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Import className="h-4 w-4 mr-2" />}
             Importar Excel
