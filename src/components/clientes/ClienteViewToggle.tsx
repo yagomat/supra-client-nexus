@@ -15,18 +15,18 @@ export const ClienteViewToggle = ({ viewMode, onViewModeChange }: ClienteViewTog
         variant={viewMode === 'cards' ? 'default' : 'ghost'}
         size="sm"
         onClick={() => onViewModeChange('cards')}
-        className="rounded-r-none transition-all duration-200 ease-in-out hover:scale-105 active:scale-95"
+        className="rounded-r-none"
       >
-        <LayoutGrid className="h-4 w-4 mr-1 transition-transform duration-200" />
+        <LayoutGrid className="h-4 w-4 mr-1" />
         Clientes
       </Button>
       <Button
         variant={viewMode === 'matriz' ? 'default' : 'ghost'}
         size="sm"
         onClick={() => onViewModeChange('matriz')}
-        className="rounded-l-none transition-all duration-200 ease-in-out hover:scale-105 active:scale-95"
+        className="rounded-l-none"
       >
-        <Grid3X3 className="h-4 w-4 mr-1 transition-transform duration-200" />
+        <Grid3X3 className="h-4 w-4 mr-1" />
         Pagamentos
       </Button>
     </div>
