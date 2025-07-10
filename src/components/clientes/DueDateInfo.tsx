@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Calendar } from "lucide-react";
+import { Calendar, Minus } from "lucide-react";
 import { Cliente, Pagamento } from "@/types";
 import { useDaysCalculation } from "@/hooks/cliente/useDaysCalculation";
 
@@ -14,9 +14,14 @@ export const DueDateInfo = ({ cliente, allPayments }: DueDateInfoProps) => {
   
   console.log(`DueDateInfo for ${cliente.nome}:`, daysInfo, 'Payments count:', allPayments.length);
   
-  // Se não há informação de vencimento, não mostrar nada
+  // Se não há informação de vencimento, mostrar ícone com traço
   if (daysInfo.type === 'no_info') {
-    return null;
+    return (
+      <div className="flex items-center gap-1">
+        <Calendar className="w-3 h-3" />
+        <Minus className="w-3 h-3" />
+      </div>
+    );
   }
   
   const formatDueInfo = () => {

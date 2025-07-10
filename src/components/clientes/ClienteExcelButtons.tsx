@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -152,7 +153,7 @@ export const ClienteExcelButtons = ({ clientes, onImportSuccess }: ClienteExcelB
 
         {/* Informações sobre importação/exportação */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>Para mais informações sobre importação e exportação</span>
+          <span>Para mais informações sobre importação e exportação, clique no i</span>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
