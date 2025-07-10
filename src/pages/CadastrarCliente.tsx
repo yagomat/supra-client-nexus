@@ -61,79 +61,77 @@ const CadastrarCliente = () => {
 
   return (
     <DashboardLayout title="Cadastrar Cliente">
-      <div className="h-full flex flex-col">
-        <ScrollArea className="flex-1">
-          <div className="w-full max-w-4xl mx-auto space-y-6 p-0 pb-8">
-            <CadastrarClienteHeader onBack={handleCancel} />
-            
-            <CadastrarClienteSecurityAlert securityStatus={securityStatus} />
+      <div className="w-full max-w-4xl mx-auto h-fit">
+        <div className="space-y-6 pb-6">
+          <CadastrarClienteHeader onBack={handleCancel} />
+          
+          <CadastrarClienteSecurityAlert securityStatus={securityStatus} />
 
-            <Form {...form}>
-              <form onSubmit={onSubmit} className="space-y-6">
+          <Form {...form}>
+            <form onSubmit={onSubmit} className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Informações Básicas</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CadastrarClienteBasicInformation 
+                    control={form.control} 
+                    valoresPredefinidos={valoresPredefinidos} 
+                    disabled={isSubmitting} 
+                  />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Tela Principal</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CadastrarClienteMainScreen 
+                    control={form.control} 
+                    valoresPredefinidos={valoresPredefinidos} 
+                    disabled={isSubmitting} 
+                  />
+                </CardContent>
+              </Card>
+
+              <CadastrarClienteTelaAdicionalToggle
+                possuiTelaAdicional={possuiTelaAdicional}
+                setPossuiTelaAdicional={setPossuiTelaAdicional}
+                isSubmitting={isSubmitting}
+              />
+
+              {possuiTelaAdicional && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Informações Básicas</CardTitle>
+                    <CardTitle>Tela Adicional</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <CadastrarClienteBasicInformation 
+                    <CadastrarClienteAdditionalScreen 
                       control={form.control} 
                       valoresPredefinidos={valoresPredefinidos} 
                       disabled={isSubmitting} 
                     />
                   </CardContent>
                 </Card>
+              )}
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Tela Principal</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CadastrarClienteMainScreen 
-                      control={form.control} 
-                      valoresPredefinidos={valoresPredefinidos} 
-                      disabled={isSubmitting} 
-                    />
-                  </CardContent>
-                </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Observações</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ObservationsSection control={form.control} disabled={isSubmitting} />
+                </CardContent>
+              </Card>
 
-                <CadastrarClienteTelaAdicionalToggle
-                  possuiTelaAdicional={possuiTelaAdicional}
-                  setPossuiTelaAdicional={setPossuiTelaAdicional}
-                  isSubmitting={isSubmitting}
-                />
-
-                {possuiTelaAdicional && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Tela Adicional</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CadastrarClienteAdditionalScreen 
-                        control={form.control} 
-                        valoresPredefinidos={valoresPredefinidos} 
-                        disabled={isSubmitting} 
-                      />
-                    </CardContent>
-                  </Card>
-                )}
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Observações</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ObservationsSection control={form.control} disabled={isSubmitting} />
-                  </CardContent>
-                </Card>
-
-                <CadastrarClienteActions 
-                  isSubmitting={isSubmitting}
-                  onCancel={handleCancel}
-                />
-              </form>
-            </Form>
-          </div>
-        </ScrollArea>
+              <CadastrarClienteActions 
+                isSubmitting={isSubmitting}
+                onCancel={handleCancel}
+              />
+            </form>
+          </Form>
+        </div>
       </div>
     </DashboardLayout>
   );
