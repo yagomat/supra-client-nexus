@@ -160,8 +160,8 @@ export const ClienteFilters = ({
           )}
         </div>
 
-        {/* Terceira linha: Limpar filtro */}
-        <div className="flex justify-start">
+        {/* Terceira linha: Limpar filtro alinhado com os campos acima */}
+        <div className="flex items-center">
           <Button
             variant="outline"
             onClick={handleLimparFiltros}
@@ -210,7 +210,7 @@ export const ClienteFilters = ({
           </div>
         </div>
 
-        {/* Terceira linha: Ano e limpar filtro */}
+        {/* Terceira linha: Ano e limpar filtro alinhados */}
         <div className="flex items-center gap-4">
           {viewMode === 'matriz' && anoAtual && onAnoChange && (
             <div className="flex items-center gap-2">
