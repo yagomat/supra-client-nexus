@@ -164,15 +164,18 @@ export class ClienteSecurityService {
    */
   static async secureDeleteCliente(clienteId: string): Promise<SecureOperationResult> {
     try {
+      console.log("ClienteSecurityService: Tentando excluir cliente:", clienteId);
       const { data: result, error } = await supabase.rpc('secure_delete_cliente', {
         p_cliente_id: clienteId,
         p_ip_address: this.getClientIP()
       });
 
       if (error) {
+        console.error("ClienteSecurityService: Erro na RPC:", error);
         throw error;
       }
 
+      console.log("ClienteSecurityService: Resultado da exclusão:", result);
       return result as unknown as SecureOperationResult;
     } catch (error) {
       console.error('Erro na exclusão segura do cliente:', error);

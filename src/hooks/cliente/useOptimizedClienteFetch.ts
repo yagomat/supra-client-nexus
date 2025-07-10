@@ -14,10 +14,19 @@ export const useOptimizedClienteFetch = () => {
   const fetchClientes = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('clientes')
-        .select('*')
-        .order('created_at', { ascending: false });
+      
+      // Usar função RLS para garantir que apenas clientes do usuário sejam retornados
+      const { data: currentUser } = await supabase.auth.getUser();
+      const userId = currentUser.user?.id;
+      
+      if (!userId) {
+        throw new Error("Usuário não autenticado");
+      }
+
+      const { data, error } = await supabase.rpc('filter_clientes_by_status', {
+        p_status: 'todos',
+        p_user_id: userId
+      });
 
       if (error) throw error;
 
@@ -51,9 +60,12 @@ export const useOptimizedClienteFetch = () => {
 
   const handleExcluir = async (clienteParaExcluir: string) => {
     try {
+      console.log("Tentando excluir cliente:", clienteParaExcluir);
+      
       // Usar função segura de exclusão
       const result = await ClienteSecurityService.secureDeleteCliente(clienteParaExcluir);
       
+      console.log("Resultado da exclusão:", result);
       if (result.success) {
         // Atualizar a lista de clientes localmente (otimização)
         setClientes((prev) => prev.filter((cliente) => cliente.id !== clienteParaExcluir));
@@ -95,7 +107,17 @@ export const useOptimizedClienteFetch = () => {
           schema: 'public', 
           table: 'clientes',
         }, 
-        (payload) => {
+        async (payload) => {
+          // Verificar se a mudança é de um cliente do usuário atual
+          const { data: currentUser } = await supabase.auth.getUser();
+          const userId = currentUser.user?.id;
+          
+          if (!userId) return;
+          
+          // Verificar se o cliente pertence ao usuário atual
+          const clienteUserId = (payload.new as any)?.user_id || (payload.old as any)?.user_id;
+          if (clienteUserId !== userId) return;
+          
           // Atualizar localmente baseado no tipo de evento
           if (payload.eventType === 'INSERT') {
             setClientes(prev => [payload.new as Cliente, ...prev]);
