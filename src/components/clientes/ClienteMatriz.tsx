@@ -157,9 +157,9 @@ export const ClienteMatriz = ({
   };
   
   return (
-    <div className="rounded-lg shadow-sm border border-border/50">
-      <div className="overflow-x-auto max-w-full">
-        <Table className="min-w-full">
+    <div className="rounded-lg shadow-sm border border-border/50 overflow-hidden">
+      <div className="overflow-x-auto">
+        <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="font-medium sticky left-0 bg-muted/50 z-30 border-r-2 border-border shadow-xl">Nome</TableHead>
