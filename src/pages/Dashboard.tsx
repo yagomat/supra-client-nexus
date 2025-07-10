@@ -1,75 +1,60 @@
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { getDashboardStats } from "@/services/dashboardService";
-import { DashboardStats } from "@/types";
-import { useToast } from "@/components/ui/use-toast";
 import { DashboardContent } from "@/components/dashboard/DashboardContent";
-import { supabase } from "@/integrations/supabase/client";
+import { useDashboardCriticalData } from "@/hooks/dashboard/useDashboardCriticalData";
+import { useDashboardChartData } from "@/hooks/dashboard/useDashboardChartData";
+import { useDashboardRealtimeOptimized } from "@/hooks/dashboard/useDashboardRealtimeOptimized";
+import { useDashboardVisualizationProcessor } from "@/hooks/dashboard/useDashboardVisualizationProcessor";
+import { useToast } from "@/components/ui/use-toast";
 
 const Dashboard = () => {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  
+  // Hooks separados para dados críticos e gráficos
+  const { 
+    data: criticalData, 
+    loading: criticalLoading, 
+    error: criticalError,
+    refresh: refreshCritical 
+  } = useDashboardCriticalData();
 
-  const fetchStats = async () => {
-    try {
-      setLoading(true);
-      const data = await getDashboardStats();
-      console.log("Dashboard stats processados:", data);
-      setStats(data);
-    } catch (error) {
-      console.error("Erro ao buscar estatísticas", error);
-      toast({
-        title: "Erro ao carregar o dashboard",
-        description: "Não foi possível carregar as estatísticas. Por favor, tente novamente mais tarde.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { 
+    data: chartData, 
+    loading: chartLoading, 
+    error: chartError,
+    refresh: refreshCharts 
+  } = useDashboardChartData();
 
-  useEffect(() => {
-    fetchStats();
+  // Combinar dados brutos
+  const rawStats = useMemo(() => {
+    if (!criticalData || !chartData) return null;
     
-    // Subscribe to realtime changes on both pagamentos and clientes tables
-    const pagamentosChannel = supabase
-      .channel('pagamentos-dashboard-updates')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'pagamentos',
-        }, 
-        () => {
-          // Refresh dashboard data when payments change
-          fetchStats();
-        }
-      )
-      .subscribe();
-    
-    const clientesChannel = supabase
-      .channel('clientes-dashboard-updates')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'clientes',
-        }, 
-        () => {
-          // Refresh dashboard data when clients change
-          fetchStats();
-        }
-      )
-      .subscribe();
-
-    // Cleanup subscriptions
-    return () => {
-      supabase.removeChannel(pagamentosChannel);
-      supabase.removeChannel(clientesChannel);
+    return {
+      ...criticalData,
+      ...chartData
     };
-  }, []);
+  }, [criticalData, chartData]);
+
+  // Processar dados para visualização no frontend
+  const stats = useDashboardVisualizationProcessor(rawStats);
+
+  const loading = criticalLoading || chartLoading;
+
+  // Configurar atualizações em tempo real otimizadas
+  useDashboardRealtimeOptimized({
+    onCriticalUpdate: refreshCritical,
+    onChartUpdate: refreshCharts
+  });
+
+  // Tratamento de erros
+  if (criticalError || chartError) {
+    toast({
+      title: "Erro ao carregar o dashboard",
+      description: criticalError || chartError || "Erro desconhecido",
+      variant: "destructive",
+    });
+  }
 
   return (
     <DashboardLayout title="Dashboard">

@@ -304,6 +304,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_dashboard_rate_limit: {
+        Args: {
+          p_user_id: string
+          p_max_requests?: number
+          p_time_window_minutes?: number
+        }
+        Returns: boolean
+      }
       check_export_rate_limit: {
         Args: { p_user_id: string }
         Returns: boolean
@@ -462,6 +470,14 @@ export type Database = {
           cliente_observacoes: string
           cliente_user_id: string
         }[]
+      }
+      get_dashboard_chart_data: {
+        Args: { user_id_param: string }
+        Returns: Json
+      }
+      get_dashboard_critical_stats: {
+        Args: { user_id_param: string }
+        Returns: Json
       }
       get_dashboard_stats: {
         Args: { user_id_param: string }
