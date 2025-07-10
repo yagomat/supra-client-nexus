@@ -333,6 +333,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_search_rate_limit: {
+        Args: {
+          p_user_id: string
+          p_max_requests?: number
+          p_time_window_minutes?: number
+        }
+        Returns: boolean
+      }
       check_templates_rate_limit: {
         Args: {
           p_user_id: string
@@ -471,6 +479,21 @@ export type Database = {
           cliente_user_id: string
         }[]
       }
+      get_cliente_sensitive_data: {
+        Args: { p_user_id: string; p_cliente_id: string }
+        Returns: Json
+      }
+      get_clientes_paginated: {
+        Args: {
+          p_user_id: string
+          p_page?: number
+          p_limit?: number
+          p_include_sensitive?: boolean
+          p_search?: string
+          p_status?: string
+        }
+        Returns: Json
+      }
       get_dashboard_chart_data: {
         Args: { user_id_param: string }
         Returns: Json
@@ -573,6 +596,16 @@ export type Database = {
       }
       log_export_attempt: {
         Args: { p_user_id: string; p_count: number }
+        Returns: undefined
+      }
+      log_sensitive_data_access: {
+        Args: {
+          p_user_id: string
+          p_operation: string
+          p_cliente_id?: string
+          p_data_type?: string
+          p_ip_address?: string
+        }
         Returns: undefined
       }
       log_valores_predefinidos_export: {
