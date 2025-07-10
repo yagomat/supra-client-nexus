@@ -83,30 +83,30 @@ export const ClienteFilters = ({
           </Select>
         </div>
 
-        {/* Seletor de ano - apenas no modo matriz */}
-        {viewMode === 'matriz' && anoAtual && onAnoChange && (
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground">Ano:</span>
-            <Select value={anoAtual.toString()} onValueChange={(value) => onAnoChange(parseInt(value))}>
-              <SelectTrigger className="w-24">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {years.map((year) => (
-                  <SelectItem key={year} value={year.toString()}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
         <div className="flex items-center gap-2">
           <SortDesc className="h-4 w-4 text-muted-foreground" />
           <ClienteOrderSelector orderBy={orderBy} onOrderChange={onOrderChange} />
         </div>
       </div>
+
+      {/* Terceira linha: Seletor de ano - apenas no modo matriz */}
+      {viewMode === 'matriz' && anoAtual && onAnoChange && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-muted-foreground">Ano:</span>
+          <Select value={anoAtual.toString()} onValueChange={(value) => onAnoChange(parseInt(value))}>
+            <SelectTrigger className="w-24">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {years.map((year) => (
+                <SelectItem key={year} value={year.toString()}>
+                  {year}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
     </div>
   );
 };
