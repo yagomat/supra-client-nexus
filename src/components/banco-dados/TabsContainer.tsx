@@ -39,7 +39,7 @@ export const TabsContainer = ({ activeTab, onTabChange, valoresPredefinidos, onD
       {/* Mobile view: grid layout without scroll */}
       {isMobile ? (
         <div className="space-y-2">
-          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pb-1">
+          <div className="pb-1">
             <TabsList className="grid grid-cols-2 gap-2 h-auto p-0 bg-transparent">
               <TabsTrigger 
                 value="ufs" 
