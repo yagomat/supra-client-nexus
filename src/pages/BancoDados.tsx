@@ -1,6 +1,5 @@
 
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useBancoDados } from "@/hooks/banco-dados/useBancoDados";
 import { ValueManagerToolbar } from "@/components/banco-dados/ValueManagerToolbar";
@@ -42,24 +41,24 @@ const BancoDados = () => {
             </div>
           </div>
         ) : valoresPredefinidos ? (
-          <Card className={`card-enhanced animate-slide-up ${isMobile ? "px-1 pb-6" : ""}`}>
-            <CardHeader className={`${isMobile ? "px-3 pt-6 pb-4" : "pb-0"} bg-gradient-subtle rounded-t-lg`}>
+          <div className={`animate-slide-up ${isMobile ? "px-1 pb-6" : ""}`}>
+            <div className={`${isMobile ? "px-3 pt-6 pb-4" : "pb-4"} bg-gradient-subtle rounded-t-lg`}>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                 <div></div>
                 <ValueManagerToolbar 
                   onAddClick={() => setIsAddDialogOpen(true)}
                 />
               </div>
-            </CardHeader>
-            <CardContent className={`${isMobile ? "px-2 py-4" : "p-6"}`}>
+            </div>
+            <div className={`${isMobile ? "px-2 py-4" : "p-6"}`}>
               <TabsContainer 
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
                 valoresPredefinidos={valoresPredefinidos}
                 onDeleteValue={(type, value) => setItemToDelete({ type, value })}
               />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ) : null}
       </div>
 
