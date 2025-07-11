@@ -37,32 +37,59 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Função para converter SupabaseUser para User local
-  const convertSupabaseUser = (supabaseUser: SupabaseUser): User => {
-    return {
-      id: supabaseUser.id,
-      email: supabaseUser.email || '', // Garantir que email nunca seja undefined
-      nome: supabaseUser.user_metadata?.nome || ''
-    };
+  // Função para converter SupabaseUser para User local com validação
+  const convertSupabaseUser = (supabaseUser: SupabaseUser | null): User | null => {
+    if (!supabaseUser) return null;
+    
+    try {
+      return {
+        id: supabaseUser.id,
+        email: supabaseUser.email || '', // Garantir que email nunca seja undefined
+        nome: supabaseUser.user_metadata?.nome || ''
+      };
+    } catch (error) {
+      console.error('Error converting supabase user:', error);
+      return null;
+    }
   };
 
   useEffect(() => {
+    let mounted = true;
+
     const getSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          if (mounted) {
+            setSession(null);
+            setUser(null);
+            setLoading(false);
+          }
+          return;
+        }
 
-        setSession(session);
-        setUser(session?.user ? convertSupabaseUser(session.user) : null);
+        if (mounted) {
+          setSession(session);
+          setUser(session?.user ? convertSupabaseUser(session.user) : null);
+          setLoading(false);
+        }
       } catch (error) {
         console.error('Error getting session:', error);
-        setSession(null);
-        setUser(null);
-      } finally {
-        setLoading(false);
+        if (mounted) {
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+        }
       }
     };
 
     getSession();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -122,31 +149,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
+    let mounted = true;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         try {
-          setUser(session?.user ? convertSupabaseUser(session.user) : null);
-          setSession(session);
-          setLoading(false);
-          
-          // Configurar timezone quando o usuário faz login
-          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-            try {
-              await configureBackendTimezone();
-            } catch (error) {
-              console.warn('Error configuring backend timezone:', error);
+          if (mounted) {
+            const convertedUser = session?.user ? convertSupabaseUser(session.user) : null;
+            setUser(convertedUser);
+            setSession(session);
+            setLoading(false);
+            
+            // Configurar timezone quando o usuário faz login (não-bloqueante)
+            if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+              // Usar setTimeout para não bloquear o fluxo principal
+              setTimeout(() => {
+                configureBackendTimezone().catch(error => {
+                  console.warn('Error configuring backend timezone:', error);
+                });
+              }, 0);
             }
           }
         } catch (error) {
           console.error('Error in auth state change:', error);
-          setUser(null);
-          setSession(null);
-          setLoading(false);
+          if (mounted) {
+            setUser(null);
+            setSession(null);
+            setLoading(false);
+          }
         }
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const value: AuthContextProps = {
@@ -161,7 +199,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };
