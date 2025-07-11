@@ -52,7 +52,7 @@ export const useOptimizedClienteFilters = (clientes: Cliente[]) => {
     loadDefaults();
   }, []);
 
-  // Buscar pagamentos apenas quando necessário para ordenação por vencimento
+  // Buscar pagamentos apenas quando necessário e com cache
   useEffect(() => {
     const fetchPaymentsForSorting = async () => {
       if (orderBy !== 'vencimento' || clientes.length === 0) {
@@ -60,6 +60,16 @@ export const useOptimizedClienteFilters = (clientes: Cliente[]) => {
       }
 
       try {
+        // Cache simples para evitar requests desnecessários
+        const cacheKey = `payments_${clientes.map(c => c.id).sort().join('_')}`;
+        const cachedPayments = sessionStorage.getItem(cacheKey);
+        
+        if (cachedPayments) {
+          const parsedPayments = JSON.parse(cachedPayments);
+          setClientesPayments(new Map(parsedPayments));
+          return;
+        }
+
         const clienteIds = clientes.map(c => c.id);
         const { data, error } = await supabase
           .from('pagamentos')
@@ -69,7 +79,7 @@ export const useOptimizedClienteFilters = (clientes: Cliente[]) => {
           .order('mes', { ascending: false });
 
         if (error) {
-          console.error("Erro ao buscar pagamentos para ordenação:", error);
+          logError(error, "fetchPaymentsForSorting");
           return;
         }
 
@@ -83,8 +93,13 @@ export const useOptimizedClienteFilters = (clientes: Cliente[]) => {
         });
 
         setClientesPayments(paymentsMap);
+        
+        // Cache por 5 minutos
+        sessionStorage.setItem(cacheKey, JSON.stringify(Array.from(paymentsMap.entries())));
+        setTimeout(() => sessionStorage.removeItem(cacheKey), 5 * 60 * 1000);
+        
       } catch (error) {
-        console.error("Erro ao buscar pagamentos para ordenação:", error);
+        logError(error, "fetchPaymentsForSorting");
       }
     };
 
