@@ -1,18 +1,11 @@
 
 import { useState, useEffect } from "react";
-import { ClienteCardsGrid } from "@/components/clientes/ClienteCardsGrid";
-import { ClienteMatriz } from "@/components/clientes/ClienteMatriz";
-import { ClienteViewToggle } from "@/components/clientes/ClienteViewToggle";
-import { EmptyState } from "@/components/clientes/EmptyState";
-import { LoadingState } from "@/components/clientes/LoadingState";
-import { ClienteFilters } from "@/components/clientes/ClienteFilters";
-import { ClienteExcelButtons } from "@/components/clientes/ClienteExcelButtons";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { UserPlus } from "lucide-react";
 import { Cliente } from "@/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ClienteOrderType } from "@/components/clientes/ClienteOrderSelector";
+import { ClienteActionButtons } from "@/components/clientes/ClienteActionButtons";
+import { ClienteFiltersSection } from "@/components/clientes/ClienteFiltersSection";
+import { ClienteMainContent } from "@/components/clientes/ClienteMainContent";
 
 interface ClienteListContentProps {
   loading: boolean;
@@ -42,14 +35,11 @@ export const ClienteListContent = ({
   setStatusFilter,
   handleLimparFiltros,
   verDetalhes,
-  verTelaAdicional,
-  verObservacoes,
   confirmarExclusao,
   orderBy,
   onOrderChange,
   onImportSuccess
 }: ClienteListContentProps) => {
-  const navigate = useNavigate();
   const isMobile = useIsMobile();
   
   // Estado para controlar a paginação
@@ -98,7 +88,7 @@ export const ClienteListContent = ({
   const handleClearFilters = () => {
     handleLimparFiltros();
     setCurrentPage(1);
-    setAnoAtual(new Date().getFullYear()); // Reset year to current year
+    setAnoAtual(new Date().getFullYear());
   };
   
   const handleItemsPerPageChange = (value: number) => {
@@ -110,91 +100,44 @@ export const ClienteListContent = ({
     setAnoAtual(ano);
   };
 
-  // Calcular range dos itens exibidos para cards
-  const startItem = (currentPage - 1) * itemsPerPage + 1;
-  const endItem = Math.min(currentPage * itemsPerPage, filteredClientes.length);
-
   return (
     <div className="space-y-6 w-full overflow-hidden">
-      <div className="flex flex-col lg:flex-row gap-4">
-        <div className="flex-1">
-          <ClienteExcelButtons 
-            clientes={allClientes} 
-            onImportSuccess={onImportSuccess} 
-          />
-        </div>
-        <div className="lg:w-64">
-          <Button onClick={() => navigate("/clientes/cadastrar")} className="w-full">
-            <UserPlus className="mr-2 h-4 w-4" />
-            Novo Cliente
-          </Button>
-        </div>
-      </div>
+      <ClienteActionButtons
+        allClientes={allClientes}
+        onImportSuccess={onImportSuccess}
+      />
 
-      <div className="flex flex-col gap-4">
-        <ClienteFilters 
-          searchTerm={searchTerm}
-          setSearchTerm={handleSearchOrFilterChange}
-          statusFilter={statusFilter}
-          setStatusFilter={handleStatusFilterChange}
-          handleLimparFiltros={handleClearFilters}
-          orderBy={orderBy}
-          onOrderChange={onOrderChange}
-          viewMode={viewMode}
-          anoAtual={anoAtual}
-          onAnoChange={handleAnoChange}
-        />
-        
-        <div className="flex justify-between items-center">
-          {/* Informação discreta do total de clientes do lado esquerdo */}
-          {filteredClientes.length > 0 && (
-            <span className="text-xs text-muted-foreground bg-muted/30 px-2 py-1 rounded-full">
-              {viewMode === 'cards' ? (
-                `${startItem} até ${endItem} de ${filteredClientes.length}`
-              ) : (
-                `${filteredClientes.length} cliente${filteredClientes.length !== 1 ? 's' : ''}`
-              )}
-            </span>
-          )}
-          
-          {/* Placeholder vazio quando não há clientes */}
-          {filteredClientes.length === 0 && (
-            <div></div>
-          )}
-          
-          <ClienteViewToggle
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-          />
-        </div>
-      </div>
+      <ClienteFiltersSection
+        searchTerm={searchTerm}
+        setSearchTerm={handleSearchOrFilterChange}
+        statusFilter={statusFilter}
+        setStatusFilter={handleStatusFilterChange}
+        handleLimparFiltros={handleClearFilters}
+        orderBy={orderBy}
+        onOrderChange={onOrderChange}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        anoAtual={anoAtual}
+        onAnoChange={handleAnoChange}
+        currentPage={currentPage}
+        itemsPerPage={itemsPerPage}
+        totalItems={filteredClientes.length}
+      />
 
-      {loading ? (
-        <LoadingState />
-      ) : filteredClientes.length === 0 ? (
-        <EmptyState />
-      ) : viewMode === 'cards' ? (
-        <ClienteCardsGrid 
-          clientes={filteredClientes}
-          onVerDetalhes={verDetalhes}
-          onConfirmarExclusao={confirmarExclusao}
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={handleItemsPerPageChange}
-        />
-      ) : (
-        <div className="w-full overflow-hidden">
-          <div className="max-w-full">
-            <ClienteMatriz 
-              clientes={filteredClientes}
-              meses={meses}
-              anoAtual={anoAtual}
-              isMobile={isMobile}
-            />
-          </div>
-        </div>
-      )}
+      <ClienteMainContent
+        loading={loading}
+        filteredClientes={filteredClientes}
+        viewMode={viewMode}
+        onVerDetalhes={verDetalhes}
+        onConfirmarExclusao={confirmarExclusao}
+        currentPage={currentPage}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+        onItemsPerPageChange={handleItemsPerPageChange}
+        meses={meses}
+        anoAtual={anoAtual}
+        isMobile={isMobile}
+      />
     </div>
   );
 };

@@ -1,63 +1,35 @@
 
-import React from "react";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil, Trash2, MessageCircle } from "lucide-react";
-import { Cliente } from "@/types";
 import { useNavigate } from "react-router-dom";
+import { UserPlus } from "lucide-react";
+import { ClienteExcelButtons } from "@/components/clientes/ClienteExcelButtons";
+import { Cliente } from "@/types";
 
 interface ClienteActionButtonsProps {
-  cliente: Cliente;
-  onVerDetalhes: (cliente: Cliente) => void;
-  onConfirmarExclusao: (clienteId: string) => void;
-  onSendWhatsApp: (cliente: Cliente) => void;
+  allClientes: Cliente[];
+  onImportSuccess: () => void;
 }
 
-export const ClienteActionButtons = ({ 
-  cliente, 
-  onVerDetalhes, 
-  onConfirmarExclusao,
-  onSendWhatsApp
+export const ClienteActionButtons = ({
+  allClientes,
+  onImportSuccess
 }: ClienteActionButtonsProps) => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex gap-2 pt-2">
-      <Button
-        onClick={() => onVerDetalhes(cliente)}
-        size="sm"
-        variant="outline"
-        className="flex-1 min-w-0"
-      >
-        <Eye className="w-4 h-4" />
-      </Button>
-
-      <Button
-        onClick={() => navigate(`/clientes/editar/${cliente.id}`)}
-        size="sm"
-        variant="outline"
-        className="flex-1 min-w-0"
-      >
-        <Pencil className="w-4 h-4" />
-      </Button>
-
-      <Button
-        onClick={() => onSendWhatsApp(cliente)}
-        size="sm"
-        variant="outline"
-        className="flex-1 min-w-0"
-        title="Enviar WhatsApp"
-      >
-        <MessageCircle className="w-4 h-4" />
-      </Button>
-
-      <Button
-        onClick={() => onConfirmarExclusao(cliente.id)}
-        size="sm"
-        variant="destructive"
-        className="flex-1 min-w-0"
-      >
-        <Trash2 className="w-4 h-4" />
-      </Button>
+    <div className="flex flex-col lg:flex-row gap-4">
+      <div className="flex-1">
+        <ClienteExcelButtons 
+          clientes={allClientes} 
+          onImportSuccess={onImportSuccess} 
+        />
+      </div>
+      <div className="lg:w-64">
+        <Button onClick={() => navigate("/clientes/cadastrar")} className="w-full">
+          <UserPlus className="mr-2 h-4 w-4" />
+          Novo Cliente
+        </Button>
+      </div>
     </div>
   );
 };
