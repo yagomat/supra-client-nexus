@@ -56,7 +56,7 @@ export const useLoginForm = () => {
     try {
       setIsLoading(true);
       
-      // A sanitização agora ocorre no backend, via secureSignIn
+      // Usar signIn com os dois argumentos corretos
       await signIn(email, password);
       
       // Usar navigate em vez de window.location para evitar recarregar a página
