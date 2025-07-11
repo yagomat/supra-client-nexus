@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { useParams } from "react-router-dom";
 import { Cliente, Pagamento } from "@/types";
-import { getCliente } from "@/services/clienteService.unified";
+import { getCliente } from "@/services/clienteService";
 import { getPagamentos } from "@/services/pagamentoService";
 import { getValoresPredefinidos } from "@/services/valoresPredefinidosService";
 import { ValoresPredefinidos } from "@/types";

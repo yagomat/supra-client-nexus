@@ -37,17 +37,6 @@ export interface ClienteComPagamentos extends Cliente {
   };
 }
 
-export interface ClienteWithPaymentStatus {
-  cliente: Cliente;
-  paymentStatus: {
-    type: 'overdue' | 'today' | 'upcoming' | 'no_info';
-    days: number;
-    lastPaymentDate?: string;
-    nextDueDate?: string;
-  };
-  sortingPriority: number;
-}
-
 export interface Pagamento {
   id: string;
   cliente_id: string;
@@ -159,6 +148,3 @@ export type { ClienteFormValues };
 
 // Export AuditLogRecord from auditLogService
 export { type AuditLogRecord } from "@/services/auditLogService";
-
-// Re-export from cliente types for centralized management
-export * from './cliente';

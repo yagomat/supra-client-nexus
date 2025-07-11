@@ -23,8 +23,8 @@ export const useDashboardCriticalData = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Cache crítico com TTL de 5 minutos (aumentado para reduzir chamadas)
-  const cache = useCacheOptimized<CriticalDashboardData>({ ttl: 5 * 60 * 1000 });
+  // Cache crítico com TTL de 2 minutos (aumentado para reduzir chamadas)
+  const cache = useCacheOptimized<CriticalDashboardData>({ ttl: 2 * 60 * 1000 });
 
   const fetchCriticalData = useCallback(async (forceRefresh: boolean = false) => {
     if (!user?.id) return;
@@ -51,8 +51,11 @@ export const useDashboardCriticalData = () => {
       if (error) {
         // Handle rate limit error with user-friendly message
         if (error.message.includes('Rate limit exceeded')) {
-          setError("Dashboard temporariamente indisponível. Aguarde alguns minutos.");
-          setLoading(false);
+          setError("Dashboard sendo carregado. Aguarde um momento...");
+          // Retry after 3 seconds for rate limit errors
+          setTimeout(() => {
+            fetchCriticalData(false);
+          }, 3000);
           return;
         } else {
           throw error;

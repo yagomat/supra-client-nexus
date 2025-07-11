@@ -20,8 +20,8 @@ export const useDashboardChartData = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Cache para gráficos com TTL maior (15 minutos - aumentado)
-  const cache = useCacheOptimized<ChartDashboardData>({ ttl: 15 * 60 * 1000 });
+  // Cache para gráficos com TTL maior (10 minutos - aumentado)
+  const cache = useCacheOptimized<ChartDashboardData>({ ttl: 10 * 60 * 1000 });
 
   const fetchChartData = useCallback(async (forceRefresh: boolean = false) => {
     if (!user?.id) return;
@@ -47,8 +47,11 @@ export const useDashboardChartData = () => {
 
       if (error) {
         if (error.message.includes('Rate limit exceeded')) {
-          setError("Gráficos temporariamente indisponíveis. Aguarde alguns minutos.");
-          setLoading(false);
+          setError("Carregando gráficos. Aguarde um momento...");
+          // Retry after 5 seconds for chart data
+          setTimeout(() => {
+            fetchChartData(false);
+          }, 5000);
           return;
         } else {
           throw error;

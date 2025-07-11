@@ -1,20 +1,9 @@
 import { useState, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { UnifiedClienteService } from "@/services/clienteService.unified";
-import { Cliente, ClienteOperation } from "@/types";
+import { SecureClienteService, ClienteWithPaymentStatus } from "@/services/secureClienteService";
+import { Cliente } from "@/types";
 import { useSmartLoading } from "@/hooks/useSmartLoading";
 import { useRetryableOperation } from "@/hooks/useRetryableOperation";
-
-export interface ClienteWithPaymentStatus {
-  cliente: Cliente;
-  paymentStatus: {
-    type: 'overdue' | 'today' | 'upcoming' | 'no_info';
-    days: number;
-    lastPaymentDate?: string;
-    nextDueDate?: string;
-  };
-  sortingPriority: number;
-}
 
 export const useSecureClienteOperations = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -42,15 +31,15 @@ export const useSecureClienteOperations = () => {
       const result = await smartLoading.withLoading(
         'fetch-clientes-status',
         () => executeWithRetry(
-          () => UnifiedClienteService.getClientesWithCalculatedStatus(status),
+          () => SecureClienteService.getClientesWithCalculatedStatus(status),
           'Carregar clientes'
         ),
         'Carregando clientes...',
         'Clientes carregados com sucesso'
       );
       
-      setClientesWithStatus(result as ClienteWithPaymentStatus[]);
-      setClientes(result.map((item: any) => item.cliente));
+      setClientesWithStatus(result);
+      setClientes(result.map(item => item.cliente));
       return result;
     } catch (error) {
       console.error("Erro ao buscar clientes com status:", error);
@@ -69,14 +58,14 @@ export const useSecureClienteOperations = () => {
       const result = await smartLoading.withLoading(
         'fetch-clientes',
         () => executeWithRetry(
-          () => UnifiedClienteService.searchClientes('', status),
+          () => SecureClienteService.getClientes(status),
           'Carregar clientes'
         ),
         'Carregando clientes...',
         'Clientes carregados com sucesso'
       );
       
-      setClientes(result as Cliente[]);
+      setClientes(result);
       return result;
     } catch (error) {
       console.error("Erro ao buscar clientes:", error);
@@ -95,14 +84,14 @@ export const useSecureClienteOperations = () => {
       const result = await smartLoading.withLoading(
         'search-clientes',
         () => executeWithRetry(
-          () => UnifiedClienteService.searchClientes(searchTerm, status),
+          () => SecureClienteService.searchClientes(searchTerm, status),
           'Pesquisar clientes'
         ),
         'Pesquisando...',
         'Pesquisa concluída'
       );
       
-      setClientes(result as Cliente[]);
+      setClientes(result);
       return result;
     } catch (error) {
       console.error("Erro ao pesquisar clientes:", error);
@@ -121,7 +110,7 @@ export const useSecureClienteOperations = () => {
       const result = await smartLoading.withLoading(
         'create-cliente',
         () => executeWithRetry(
-          () => UnifiedClienteService.createCliente(cliente),
+          () => SecureClienteService.createCliente(cliente),
           'Criar cliente'
         ),
         'Criando cliente...',
@@ -129,9 +118,7 @@ export const useSecureClienteOperations = () => {
       );
       
       // Atualizar lista local
-      if (result.success && result.cliente) {
-        setClientes(prev => [...prev, result.cliente!]);
-      }
+      setClientes(prev => [...prev, result]);
       
       return result;
     } catch (error) {
@@ -151,7 +138,7 @@ export const useSecureClienteOperations = () => {
       const result = await smartLoading.withLoading(
         'update-cliente',
         () => executeWithRetry(
-          () => UnifiedClienteService.updateCliente(id, cliente),
+          () => SecureClienteService.updateCliente(id, cliente),
           'Atualizar cliente'
         ),
         'Atualizando cliente...',
@@ -159,9 +146,7 @@ export const useSecureClienteOperations = () => {
       );
       
       // Atualizar lista local
-      if (result.success && result.cliente) {
-        setClientes(prev => prev.map(c => c.id === id ? result.cliente! : c));
-      }
+      setClientes(prev => prev.map(c => c.id === id ? result : c));
       
       return result;
     } catch (error) {
@@ -181,7 +166,7 @@ export const useSecureClienteOperations = () => {
       await smartLoading.withLoading(
         'delete-cliente',
         () => executeWithRetry(
-          () => UnifiedClienteService.deleteCliente(id),
+          () => SecureClienteService.deleteCliente(id),
           'Excluir cliente'
         ),
         'Excluindo cliente...',
@@ -207,7 +192,7 @@ export const useSecureClienteOperations = () => {
   const calculatePaymentStatus = useCallback(async (clienteId: string) => {
     try {
       const result = await executeWithRetry(
-        () => UnifiedClienteService.calculatePaymentStatus(clienteId),
+        () => SecureClienteService.calculatePaymentStatus(clienteId),
         'Calcular status de pagamento'
       );
       
@@ -219,9 +204,9 @@ export const useSecureClienteOperations = () => {
   }, [executeWithRetry]);
 
   // Verificar rate limit para operação específica
-  const checkRateLimit = useCallback(async (operation: ClienteOperation) => {
+  const checkRateLimit = useCallback(async (operation: string) => {
     try {
-      return await UnifiedClienteService.checkOperationRateLimit(operation);
+      return await SecureClienteService.checkOperationRateLimit(operation);
     } catch (error) {
       console.error(`Erro ao verificar rate limit para ${operation}:`, error);
       return false;

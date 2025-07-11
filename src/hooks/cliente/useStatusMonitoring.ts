@@ -1,7 +1,7 @@
 
 import { useEffect } from "react";
 import { UseFormReturn } from "react-hook-form";
-import { updateCliente, getCliente } from "@/services/clienteService.unified";
+import { updateCliente, getCliente } from "@/services/clienteService";
 import { Pagamento, ClienteFormValues } from "@/types";
 
 export const useStatusMonitoring = (

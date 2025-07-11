@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Cliente } from "@/types";
-import { UnifiedClienteService } from "@/services/clienteService.unified";
+import { SecureClienteService } from "@/services/secureClienteService";
 import { useOptimizedCacheWithCategories } from "@/hooks/useOptimizedCacheWithCategories";
 
 interface PaymentStatusResult {
@@ -44,7 +44,7 @@ export const useBackendCalculatedDays = (cliente: Cliente) => {
       }
 
       // Calcular no backend
-      const result = await UnifiedClienteService.calculatePaymentStatus(cliente.id);
+      const result = await SecureClienteService.calculatePaymentStatus(cliente.id);
       
       if (result.error) {
         throw new Error(result.error);

@@ -1,5 +1,5 @@
 /**
- * Utilitários de segurança consolidados - única fonte de sanitização
+ * Utilitários de segurança para prevenir ataques XSS e outras vulnerabilidades
  */
 
 /**
@@ -17,13 +17,6 @@ export const sanitizeForHTML = (input: string | null | undefined): string => {
     .replace(/\//g, '&#x2F;')
     .replace(/`/g, '&#x60;')
     .replace(/=/g, '&#x3D;');
-};
-
-/**
- * Sanitização genérica de input - função principal
- */
-export const sanitizeInput = (input: string | null | undefined): string => {
-  return sanitizeForHTML(input);
 };
 
 /**

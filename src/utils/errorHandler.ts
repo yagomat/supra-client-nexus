@@ -1,22 +1,20 @@
 
-import { sanitizeInput } from "./security";
+import { sanitizeForHTML, validateInputSafety } from "./security";
 
 /**
- * Log de erro consolidado e otimizado
+ * Simple input sanitization function (alias for sanitizeForHTML)
  */
-export const logError = (error: any, context?: string): void => {
-  const timestamp = new Date().toISOString();
-  const sanitizedContext = context ? sanitizeInput(context) : 'unknown';
-  
-  if (error instanceof Error) {
-    console.error(`[${timestamp}] ${sanitizedContext}:`, {
-      message: sanitizeInput(error.message),
-      stack: error.stack,
-      name: sanitizeInput(error.name)
-    });
-  } else {
-    console.error(`[${timestamp}] ${sanitizedContext}:`, sanitizeInput(String(error)));
-  }
+export const sanitizeInput = (input: string | null | undefined): string => {
+  return sanitizeForHTML(input);
+};
+
+/**
+ * Simple error logging function
+ */
+export const logError = (error: any, context: string = "Erro desconhecido"): void => {
+  const sanitizedContext = sanitizeInput(context);
+  const errorMessage = error?.message ? sanitizeInput(error.message) : 'Unknown error';
+  console.error(`${sanitizedContext}:`, errorMessage);
 };
 
 /**

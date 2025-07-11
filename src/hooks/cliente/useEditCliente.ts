@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { useSecureClienteForm } from "@/hooks/cliente/useSecureClienteForm";
 import { getValoresPredefinidos } from "@/services/valoresPredefinidosService";
-import { getCliente } from "@/services/clienteService.unified";
+import { getCliente } from "@/services/clienteService";
 import { ValoresPredefinidos, Cliente } from "@/types";
 import { ClienteFormValues } from "@/hooks/cliente/clienteFormSchema";
 

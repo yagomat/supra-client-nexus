@@ -1,177 +1,152 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
-import { Cliente, StatusFilterType } from "@/types";
+
+import { useState, useEffect, useMemo } from "react";
+import { Cliente, Pagamento } from "@/types";
 import { ClienteOrderType } from "@/components/clientes/ClienteOrderSelector";
 import { sortClientesByOrder } from "./clienteSortUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { CryptoStorage } from "@/utils/cryptoStorage";
 import { logError } from "@/utils/errorHandler";
-import { logger } from "@/utils/logger";
+
+type StatusFilterType = "todos" | "ativo" | "inativo";
 
 export const useOptimizedClienteFilters = (clientes: Cliente[]) => {
-  // Estado para filtros com recuperação de cache
-  const getDefaultStatus = (): StatusFilterType => {
+  // Carregar configurações padrão do storage criptografado
+  const getDefaultStatus = async (): Promise<StatusFilterType> => {
     try {
-      const saved = localStorage.getItem("defaultStatusFilter") as StatusFilterType;
+      const saved = await CryptoStorage.getItem<StatusFilterType>("defaultStatusFilter");
       return saved || "todos";
-    } catch {
+    } catch (error) {
+      logError(error, 'getDefaultStatus');
       return "todos";
     }
   };
 
-  const getDefaultOrder = (): ClienteOrderType => {
+  const getDefaultOrder = async (): Promise<ClienteOrderType> => {
     try {
-      const saved = sessionStorage.getItem("clienteOrder");
-      return (saved as ClienteOrderType) || "nome_desc";
-    } catch {
-      return "nome_desc";
+      const saved = await CryptoStorage.getItem<ClienteOrderType>("defaultOrderFilter");
+      return saved || "data";
+    } catch (error) {
+      logError(error, 'getDefaultOrder');
+      return "data";
     }
   };
 
-  // Estados dos filtros
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilterType>(getDefaultStatus);
-  const [orderBy, setOrderBy] = useState<ClienteOrderType>(getDefaultOrder);
-
-  // Salvar orderBy no sessionStorage
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilterType>("todos");
+  const [orderBy, setOrderBy] = useState<ClienteOrderType>("data");
+  const [clientesPayments, setClientesPayments] = useState<Map<string, Pagamento[]>>(new Map());
+  
+  // Carregar configurações padrão na inicialização
   useEffect(() => {
-    try {
-      sessionStorage.setItem("clienteOrder", orderBy);
-    } catch (error) {
-      logError(error, "Erro ao salvar orderBy no sessionStorage");
-    }
-  }, [orderBy]);
-
-  // Otimização com cache em sessionStorage para listas grandes
-  const cacheKey = useMemo(() => {
-    return `filteredClientes_${clientes.length}_${searchTerm}_${statusFilter}_${orderBy}`;
-  }, [clientes.length, searchTerm, statusFilter, orderBy]);
-
-  // Filtrar e ordenar clientes
-  const filteredClientes = useMemo(() => {
-    // Tentar buscar do cache primeiro
-    try {
-      const cached = sessionStorage.getItem(cacheKey);
-      if (cached) {
-        const cachedData = JSON.parse(cached);
-        // Verificar se o cache ainda é válido comparando os IDs
-        const cachedIds = cachedData.map((c: Cliente) => c.id).sort();
-        const currentIds = clientes.map(c => c.id).sort();
-        
-        if (JSON.stringify(cachedIds) === JSON.stringify(currentIds)) {
-          return cachedData;
-        }
+    const loadDefaults = async () => {
+      try {
+        const defaultStatus = await getDefaultStatus();
+        const defaultOrder = await getDefaultOrder();
+        setStatusFilter(defaultStatus);
+        setOrderBy(defaultOrder);
+      } catch (error) {
+        logError(error, 'loadDefaultFilters');
       }
-    } catch (error) {
-      // Cache inválido ou erro de parsing - continuar com processamento normal
-      console.warn("Cache inválido, reprocessando filtros:", error);
-    }
+    };
+    
+    loadDefaults();
+  }, []);
 
-    if (!clientes || clientes.length === 0) {
-      return [];
-    }
+  // Buscar pagamentos apenas quando necessário para ordenação por vencimento
+  useEffect(() => {
+    const fetchPaymentsForSorting = async () => {
+      if (orderBy !== 'vencimento' || clientes.length === 0) {
+        return;
+      }
 
-    // Garantir que não há duplicatas (deduplicação por ID)
-    const uniqueClientes = clientes.filter((cliente, index, array) => 
-      array.findIndex(c => c.id === cliente.id) === index
-    );
+      try {
+        const clienteIds = clientes.map(c => c.id);
+        const { data, error } = await supabase
+          .from('pagamentos')
+          .select('*')
+          .in('cliente_id', clienteIds)
+          .order('ano', { ascending: false })
+          .order('mes', { ascending: false });
 
-    logger.filter("Filtros aplicados", { 
-      totalClientes: clientes.length,
-      searchTerm,
-      statusFilter,
+        if (error) {
+          console.error("Erro ao buscar pagamentos para ordenação:", error);
+          return;
+        }
+
+        const paymentsMap = new Map<string, Pagamento[]>();
+        data?.forEach(payment => {
+          const clienteId = payment.cliente_id;
+          if (!paymentsMap.has(clienteId)) {
+            paymentsMap.set(clienteId, []);
+          }
+          paymentsMap.get(clienteId)!.push(payment);
+        });
+
+        setClientesPayments(paymentsMap);
+      } catch (error) {
+        console.error("Erro ao buscar pagamentos para ordenação:", error);
+      }
+    };
+
+    fetchPaymentsForSorting();
+  }, [clientes, orderBy]);
+
+  // Filtrar e ordenar clientes localmente
+  const filteredClientes = useMemo(() => {
+    console.log("🔍 Filtros aplicados:", { 
+      totalClientes: clientes.length, 
+      searchTerm, 
+      statusFilter, 
       orderBy,
-      uniqueIds: new Set(clientes.map(c => c.id)).size
+      uniqueIds: new Set(clientes.map(c => c.id)).size 
     });
 
-    let filtered = [...uniqueClientes];
-
-    // Aplicar filtro de status
-    if (statusFilter !== "todos") {
-      filtered = filtered.filter(cliente => cliente.status === statusFilter);
+    // Verificar se há IDs duplicados
+    const ids = clientes.map(c => c.id);
+    const uniqueIds = new Set(ids);
+    if (ids.length !== uniqueIds.size) {
+      console.error("❌ IDs duplicados encontrados:", ids.filter((id, index) => ids.indexOf(id) !== index));
     }
 
-    logger.filter("Após filtro de status", { count: filtered.length });
+    // Aplicar filtro de status localmente
+    let filtered = clientes.filter(cliente => {
+      if (statusFilter !== "todos" && cliente.status !== statusFilter) {
+        return false;
+      }
+      return true;
+    });
 
-    // Aplicar filtro de pesquisa
+    console.log("📊 Após filtro de status:", filtered.length);
+
+    // Aplicar filtro de busca localmente
     if (searchTerm.trim()) {
-      const normalizedSearch = searchTerm.toLowerCase().trim();
-      filtered = filtered.filter(cliente => 
-        cliente.nome?.toLowerCase().includes(normalizedSearch) ||
-        cliente.telefone?.toLowerCase().includes(normalizedSearch) ||
-        cliente.servidor?.toLowerCase().includes(normalizedSearch) ||
-        cliente.uf?.toLowerCase().includes(normalizedSearch) ||
-        cliente.aplicativo?.toLowerCase().includes(normalizedSearch)
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(cliente =>
+        cliente.nome.toLowerCase().includes(searchLower) ||
+        cliente.telefone?.toLowerCase().includes(searchLower) ||
+        cliente.servidor.toLowerCase().includes(searchLower)
       );
-      logger.filter("Após filtro de busca", { count: filtered.length });
+      console.log("🔎 Após filtro de busca:", filtered.length);
     }
 
     // Aplicar ordenação
-    filtered = sortClientesByOrder(filtered, orderBy);
-    
-    logger.filter("Resultado final dos filtros", { count: filtered.length });
+    filtered = sortClientesByOrder(filtered, orderBy, clientesPayments);
 
-    // Salvar no cache se a lista não estiver vazia
-    if (filtered.length > 0) {
-      try {
-        sessionStorage.setItem(cacheKey, JSON.stringify(filtered));
-      } catch (error) {
-        // Cache cheio ou erro - limpar cache antigo
-        sessionStorage.clear();
-      }
-    }
-
+    console.log("✅ Resultado final dos filtros:", filtered.length);
     return filtered;
-  }, [clientes, searchTerm, statusFilter, orderBy, cacheKey]);
+  }, [clientes, searchTerm, statusFilter, orderBy, clientesPayments]);
 
-  const handleOrderChange = useCallback((newOrder: ClienteOrderType) => {
+  const handleOrderChange = (newOrder: ClienteOrderType) => {
     setOrderBy(newOrder);
-  }, []);
+  };
 
-  const handleLimparFiltros = useCallback(() => {
+  const handleLimparFiltros = async () => {
     setSearchTerm("");
-    setStatusFilter("todos");
-    setOrderBy("nome_desc");
-    
-    // Limpar cache relacionado a filtros
-    try {
-      const keys = Object.keys(sessionStorage);
-      keys.forEach(key => {
-        if (key.startsWith("filteredClientes_")) {
-          sessionStorage.removeItem(key);
-        }
-      });
-    } catch (error) {
-      logError(error, "Erro ao limpar cache de filtros");
-    }
-  }, []);
-
-  // Configurar listener para mudanças em tempo real nos pagamentos
-  useEffect(() => {
-    const paymentsChannel = supabase
-      .channel('payments-filter-updates')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'pagamentos'
-      }, () => {
-        // Limpar cache quando houver mudanças nos pagamentos
-        try {
-          const keys = Object.keys(sessionStorage);
-          keys.forEach(key => {
-            if (key.startsWith("filteredClientes_")) {
-              sessionStorage.removeItem(key);
-            }
-          });
-        } catch (error) {
-          logError(error, "Erro ao limpar cache após mudança de pagamentos");
-        }
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(paymentsChannel);
-    };
-  }, []);
+    const defaultStatus = await getDefaultStatus();
+    const defaultOrder = await getDefaultOrder();
+    setStatusFilter(defaultStatus);
+    setOrderBy(defaultOrder);
+  };
 
   return {
     filteredClientes,
