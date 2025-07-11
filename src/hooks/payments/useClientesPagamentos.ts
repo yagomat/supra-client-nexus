@@ -5,7 +5,7 @@ import { getPagamentosWithClients } from "@/services/pagamentoService";
 import { Cliente, Pagamento, ClienteComPagamentos } from "@/types";
 import { meses } from "./usePaymentFilters";
 import { supabase } from "@/integrations/supabase/client";
-import { enableRealtimeForTable } from "@/services/clientStatusService";
+// enableRealtimeForTable functionality moved inline
 
 export const useClientesPagamentos = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -47,9 +47,10 @@ export const useClientesPagamentos = () => {
   // Configurar realtime para as tabelas relevantes
   useEffect(() => {
     const setupRealtime = async () => {
-      try {
-        await enableRealtimeForTable('clientes');
-        await enableRealtimeForTable('pagamentos');
+    try {
+      // Enable realtime for tables directly
+      await supabase.rpc('add_table_to_publication', { table_name: 'clientes' });
+      await supabase.rpc('add_table_to_publication', { table_name: 'pagamentos' });
       } catch (error) {
         console.error("Error enabling realtime:", error);
       }
