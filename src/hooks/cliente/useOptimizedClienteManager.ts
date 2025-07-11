@@ -1,11 +1,23 @@
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Cliente, ClienteWithPaymentStatus } from "@/types";
+import { Cliente } from "@/types";
 import { ClienteService } from "@/services/clienteService";
 import { UnifiedClienteService } from "@/services/unifiedClienteService";
 import { useOptimizedClienteFetch } from "./useOptimizedClienteFetch";
 import { useOptimizedClienteFilters } from "./useOptimizedClienteFilters";
 import { useClienteModals } from "./useClienteModals";
+
+// Interface local para compatibilidade
+interface ClienteWithPaymentStatus {
+  cliente: Cliente;
+  paymentStatus: {
+    type: 'overdue' | 'today' | 'upcoming' | 'no_info';
+    days: number;
+    lastPaymentDate?: string;
+    nextDueDate?: string;
+  };
+  sortingPriority: number;
+}
 
 /**
  * Hook consolidado que gerencia todas as operações de clientes

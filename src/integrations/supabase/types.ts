@@ -321,6 +321,15 @@ export type Database = {
         }
         Returns: Json
       }
+      check_consolidated_rate_limit: {
+        Args: {
+          p_user_id: string
+          p_operation: string
+          p_max_requests?: number
+          p_time_window_minutes?: number
+        }
+        Returns: Json
+      }
       check_dashboard_rate_limit: {
         Args: {
           p_user_id: string
@@ -506,6 +515,34 @@ export type Database = {
           cliente_data_licenca_2: string
           cliente_observacoes: string
           cliente_user_id: string
+        }[]
+      }
+      get_clientes_optimized: {
+        Args: { p_user_id: string; p_status?: string; p_limit?: number }
+        Returns: {
+          aplicativo: string
+          aplicativo_2: string | null
+          codigo_pais_telefone: string | null
+          created_at: string
+          data_licenca_2: string | null
+          data_licenca_aplicativo: string | null
+          dia_vencimento: number
+          dispositivo_smart: string | null
+          dispositivo_smart_2: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          possui_tela_adicional: boolean | null
+          senha_2: string | null
+          senha_aplicativo: string | null
+          servidor: string
+          status: string | null
+          telefone: string | null
+          uf: string | null
+          user_id: string
+          usuario_2: string | null
+          usuario_aplicativo: string | null
+          valor_plano: number | null
         }[]
       }
       get_clientes_with_calculated_status: {
