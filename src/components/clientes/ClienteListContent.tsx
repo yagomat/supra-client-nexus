@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { ClienteCardsGrid } from "@/components/clientes/ClienteCardsGrid";
 import { ClienteMatriz } from "@/components/clientes/ClienteMatriz";
@@ -146,14 +147,18 @@ export const ClienteListContent = ({
         
         <div className="flex justify-between items-center">
           {/* Informação discreta do total de clientes do lado esquerdo */}
-          {filteredClientes.length > 0 && viewMode === 'cards' && (
+          {filteredClientes.length > 0 && (
             <span className="text-xs text-muted-foreground bg-muted/30 px-2 py-1 rounded-full">
-              {startItem} até {endItem} de {filteredClientes.length}
+              {viewMode === 'cards' ? (
+                `${startItem} até ${endItem} de ${filteredClientes.length}`
+              ) : (
+                `${filteredClientes.length} cliente${filteredClientes.length !== 1 ? 's' : ''}`
+              )}
             </span>
           )}
           
-          {/* Placeholder vazio quando não há clientes ou no modo matriz */}
-          {(filteredClientes.length === 0 || viewMode === 'matriz') && (
+          {/* Placeholder vazio quando não há clientes */}
+          {filteredClientes.length === 0 && (
             <div></div>
           )}
           
