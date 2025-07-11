@@ -81,7 +81,8 @@ export const PaymentMatrix = ({
                     className="h-12 px-3 text-center align-middle font-medium text-muted-foreground border-b min-w-[120px]"
                   >
                     <div className="text-xs">
-                      {mes.label}
+                      <div>{mes.label}</div>
+                      <div className="text-xs text-muted-foreground/70">{anoAtual}</div>
                     </div>
                   </th>
                 ))}

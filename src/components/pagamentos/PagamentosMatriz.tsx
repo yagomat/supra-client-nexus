@@ -66,7 +66,10 @@ export const PagamentosMatriz = ({
               <TableHead className="font-medium">Status</TableHead>
               {displayMeses.map((mes) => (
                 <TableHead key={mes.value} className="text-center font-medium">
-                  {isMobile ? mes.label.substring(0, 3) : mes.label.substring(0, 3)}
+                  <div className="text-xs">
+                    <div>{isMobile ? mes.label.substring(0, 3) : mes.label.substring(0, 3)}</div>
+                    <div className="text-xs text-muted-foreground/70">{anoAtual}</div>
+                  </div>
                 </TableHead>
               ))}
             </TableRow>
