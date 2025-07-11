@@ -1,7 +1,9 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useCacheOptimized } from "@/hooks/useCacheOptimized";
+import { handleError } from "@/utils/errorHandler";
 
 interface ChartDashboardData {
   evolucao_clientes: Array<{ mes: string; quantidade: number }>;
@@ -18,8 +20,8 @@ export const useDashboardChartData = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Cache para gráficos com TTL maior (5 minutos)
-  const cache = useCacheOptimized<ChartDashboardData>({ ttl: 5 * 60 * 1000 });
+  // Cache para gráficos com TTL maior (10 minutos - aumentado)
+  const cache = useCacheOptimized<ChartDashboardData>({ ttl: 10 * 60 * 1000 });
 
   const fetchChartData = useCallback(async (forceRefresh: boolean = false) => {
     if (!user?.id) return;
@@ -44,15 +46,25 @@ export const useDashboardChartData = () => {
       });
 
       if (error) {
-        throw error;
+        if (error.message.includes('Rate limit exceeded')) {
+          setError("Carregando gráficos. Aguarde um momento...");
+          // Retry after 5 seconds for chart data
+          setTimeout(() => {
+            fetchChartData(false);
+          }, 5000);
+          return;
+        } else {
+          throw error;
+        }
       }
 
       const chartData = result as unknown as ChartDashboardData;
       setData(chartData);
       cache.set(cacheKey, chartData);
     } catch (err) {
+      const errorMessage = handleError(err, "Erro ao carregar dados dos gráficos");
       console.error("Erro ao carregar dados dos gráficos:", err);
-      setError("Erro ao carregar dados dos gráficos");
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

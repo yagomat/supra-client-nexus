@@ -1,7 +1,9 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useCacheOptimized } from "@/hooks/useCacheOptimized";
+import { handleError } from "@/utils/errorHandler";
 
 interface CriticalDashboardData {
   clientes_ativos: number;
@@ -21,8 +23,8 @@ export const useDashboardCriticalData = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Cache crítico com TTL menor (30 segundos)
-  const cache = useCacheOptimized<CriticalDashboardData>({ ttl: 30 * 1000 });
+  // Cache crítico com TTL de 2 minutos (aumentado para reduzir chamadas)
+  const cache = useCacheOptimized<CriticalDashboardData>({ ttl: 2 * 60 * 1000 });
 
   const fetchCriticalData = useCallback(async (forceRefresh: boolean = false) => {
     if (!user?.id) return;
@@ -47,20 +49,26 @@ export const useDashboardCriticalData = () => {
       });
 
       if (error) {
+        // Handle rate limit error with user-friendly message
         if (error.message.includes('Rate limit exceeded')) {
-          setError("Muitas solicitações. Aguarde um momento.");
+          setError("Dashboard sendo carregado. Aguarde um momento...");
+          // Retry after 3 seconds for rate limit errors
+          setTimeout(() => {
+            fetchCriticalData(false);
+          }, 3000);
+          return;
         } else {
           throw error;
         }
-        return;
       }
 
       const criticalData = result as unknown as CriticalDashboardData;
       setData(criticalData);
       cache.set(cacheKey, criticalData);
     } catch (err) {
+      const errorMessage = handleError(err, "Erro ao carregar dados críticos do dashboard");
       console.error("Erro ao carregar dados críticos:", err);
-      setError("Erro ao carregar dados críticos do dashboard");
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
