@@ -48,11 +48,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
 
-      setSession(session);
-      setUser(session?.user ? convertSupabaseUser(session.user) : null);
-      setLoading(false);
+        setSession(session);
+        setUser(session?.user ? convertSupabaseUser(session.user) : null);
+      } catch (error) {
+        console.error('Error getting session:', error);
+        setSession(null);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
     };
 
     getSession();
@@ -117,13 +124,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setUser(session?.user ? convertSupabaseUser(session.user) : null);
-        setSession(session);
-        setLoading(false);
-        
-        // Configurar timezone quando o usuário faz login
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          await configureBackendTimezone();
+        try {
+          setUser(session?.user ? convertSupabaseUser(session.user) : null);
+          setSession(session);
+          setLoading(false);
+          
+          // Configurar timezone quando o usuário faz login
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            try {
+              await configureBackendTimezone();
+            } catch (error) {
+              console.warn('Error configuring backend timezone:', error);
+            }
+          }
+        } catch (error) {
+          console.error('Error in auth state change:', error);
+          setUser(null);
+          setSession(null);
+          setLoading(false);
         }
       }
     );
