@@ -5,10 +5,23 @@ import { ClienteOrderType } from "@/components/clientes/ClienteOrderSelector";
 import { sortClientesByOrder } from "./clienteSortUtils";
 import { supabase } from "@/integrations/supabase/client";
 
+type StatusFilterType = "todos" | "ativo" | "inativo";
+
 export const useOptimizedClienteFilters = (clientes: Cliente[]) => {
+  // Carregar configurações padrão do localStorage
+  const getDefaultStatus = (): StatusFilterType => {
+    const saved = localStorage.getItem("defaultStatusFilter") as StatusFilterType;
+    return saved || "ativo";
+  };
+
+  const getDefaultOrder = (): ClienteOrderType => {
+    const saved = localStorage.getItem("defaultOrderFilter") as ClienteOrderType;
+    return saved || "vencimento";
+  };
+
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"todos" | "ativo" | "inativo">("ativo");
-  const [orderBy, setOrderBy] = useState<ClienteOrderType>('vencimento');
+  const [statusFilter, setStatusFilter] = useState<StatusFilterType>(getDefaultStatus());
+  const [orderBy, setOrderBy] = useState<ClienteOrderType>(getDefaultOrder());
   const [clientesPayments, setClientesPayments] = useState<Map<string, Pagamento[]>>(new Map());
 
   // Buscar pagamentos apenas quando necessário para ordenação por vencimento
@@ -101,8 +114,8 @@ export const useOptimizedClienteFilters = (clientes: Cliente[]) => {
 
   const handleLimparFiltros = () => {
     setSearchTerm("");
-    setStatusFilter("ativo");
-    setOrderBy('vencimento');
+    setStatusFilter(getDefaultStatus());
+    setOrderBy(getDefaultOrder());
   };
 
   return {
