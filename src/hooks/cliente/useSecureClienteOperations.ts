@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { UnifiedClienteService } from "@/services/clienteService.unified";
-import { Cliente } from "@/types";
+import { Cliente, ClienteOperation } from "@/types";
 import { useSmartLoading } from "@/hooks/useSmartLoading";
 import { useRetryableOperation } from "@/hooks/useRetryableOperation";
 
@@ -219,7 +219,7 @@ export const useSecureClienteOperations = () => {
   }, [executeWithRetry]);
 
   // Verificar rate limit para operação específica
-  const checkRateLimit = useCallback(async (operation: string) => {
+  const checkRateLimit = useCallback(async (operation: ClienteOperation) => {
     try {
       return await UnifiedClienteService.checkOperationRateLimit(operation);
     } catch (error) {

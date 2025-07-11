@@ -11,7 +11,7 @@ export const useOptimizedClienteFilters = (clientes: Cliente[]) => {
   // Estado para filtros com recuperação de cache
   const getDefaultStatus = (): StatusFilterType => {
     try {
-      const saved = CryptoStorage.getItem("defaultStatusFilter") as StatusFilterType;
+      const saved = localStorage.getItem("defaultStatusFilter") as StatusFilterType;
       return saved || "todos";
     } catch {
       return "todos";

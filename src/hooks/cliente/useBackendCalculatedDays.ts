@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Cliente } from "@/types";
-import { UnifiedClienteService } from "@/services/unifiedClienteService";
+import { UnifiedClienteService } from "@/services/clienteService.unified";
 import { useOptimizedCacheWithCategories } from "@/hooks/useOptimizedCacheWithCategories";
 
 interface PaymentStatusResult {
