@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Filter, Save } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { ClienteOrderType } from "@/components/clientes/ClienteOrderSelector";
+import { CryptoStorage } from "@/utils/cryptoStorage";
+import { logError } from "@/utils/errorHandler";
 
 type StatusFilterType = "todos" | "ativo" | "inativo";
 
@@ -17,17 +19,25 @@ export function DefaultFiltersSettings({ onFiltersChange }: DefaultFiltersSettin
   const [defaultStatus, setDefaultStatus] = useState<StatusFilterType>("ativo");
   const [defaultOrder, setDefaultOrder] = useState<ClienteOrderType>("vencimento");
 
-  // Carregar configurações salvas do localStorage
+  // Carregar configurações salvas do CryptoStorage
   useEffect(() => {
-    const savedStatus = localStorage.getItem("defaultStatusFilter") as StatusFilterType;
-    const savedOrder = localStorage.getItem("defaultOrderFilter") as ClienteOrderType;
+    const loadSettings = async () => {
+      try {
+        const savedStatus = await CryptoStorage.getItem<StatusFilterType>("defaultStatusFilter");
+        const savedOrder = await CryptoStorage.getItem<ClienteOrderType>("defaultOrderFilter");
+        
+        if (savedStatus) {
+          setDefaultStatus(savedStatus);
+        }
+        if (savedOrder) {
+          setDefaultOrder(savedOrder);
+        }
+      } catch (error) {
+        logError(error, 'loadDefaultFilters');
+      }
+    };
     
-    if (savedStatus) {
-      setDefaultStatus(savedStatus);
-    }
-    if (savedOrder) {
-      setDefaultOrder(savedOrder);
-    }
+    loadSettings();
   }, []);
 
   const handleStatusChange = (value: string) => {
@@ -38,10 +48,10 @@ export function DefaultFiltersSettings({ onFiltersChange }: DefaultFiltersSettin
     setDefaultOrder(value as ClienteOrderType);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     try {
-      localStorage.setItem("defaultStatusFilter", defaultStatus);
-      localStorage.setItem("defaultOrderFilter", defaultOrder);
+      await CryptoStorage.setItem("defaultStatusFilter", defaultStatus);
+      await CryptoStorage.setItem("defaultOrderFilter", defaultOrder);
       
       // Notificar o componente pai sobre a mudança
       if (onFiltersChange) {
@@ -50,13 +60,14 @@ export function DefaultFiltersSettings({ onFiltersChange }: DefaultFiltersSettin
       
       toast({
         title: "Configurações salvas",
-        description: "Suas preferências de filtro foram atualizadas com sucesso.",
+        description: "Suas preferências de filtro foram atualizadas com sucesso."
       });
     } catch (error) {
+      logError(error, 'saveDefaultFilters');
       toast({
         title: "Erro ao salvar",
         description: "Não foi possível salvar as configurações. Tente novamente.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };

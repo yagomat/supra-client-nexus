@@ -1,14 +1,10 @@
 
-import DOMPurify from 'dompurify';
+import { sanitizeForHTML } from '@/utils/security';
 
 // Sanitizar texto para prevenir XSS
 export const sanitizeInput = (input: string | null | undefined): string | null | undefined => {
     if (!input) return input;
-    return DOMPurify.sanitize(input, {
-        USE_PROFILES: {
-            html: false
-        }
-    });
+    return sanitizeForHTML(input);
 };
 
 // Sanitizar objeto inteiro

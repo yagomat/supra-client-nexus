@@ -1,5 +1,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { CryptoStorage } from "@/utils/cryptoStorage";
+import { logError } from "@/utils/errorHandler";
 
 type Theme = "dark" | "light" | "system";
 
@@ -27,9 +29,23 @@ export function ThemeProvider({
   storageKey = "vite-ui-theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
-  );
+  const [theme, setTheme] = useState<Theme>(defaultTheme);
+
+  // Carregar tema do CryptoStorage na inicialização
+  useEffect(() => {
+    const loadTheme = async () => {
+      try {
+        const savedTheme = await CryptoStorage.getItem<Theme>(storageKey);
+        if (savedTheme) {
+          setTheme(savedTheme);
+        }
+      } catch (error) {
+        logError(error, 'loadTheme');
+      }
+    };
+    
+    loadTheme();
+  }, [storageKey]);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -51,9 +67,15 @@ export function ThemeProvider({
 
   const value = {
     theme,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme);
-      setTheme(theme);
+    setTheme: async (theme: Theme) => {
+      try {
+        await CryptoStorage.setItem(storageKey, theme);
+        setTheme(theme);
+      } catch (error) {
+        logError(error, 'saveTheme');
+        // Fallback: ainda atualiza o estado mesmo se falhar o storage
+        setTheme(theme);
+      }
     },
   };
 
