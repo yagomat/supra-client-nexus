@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { ClienteCardsGrid } from "@/components/clientes/ClienteCardsGrid";
 import { ClienteMatriz } from "@/components/clientes/ClienteMatriz";
@@ -110,7 +109,7 @@ export const ClienteListContent = ({
     setAnoAtual(ano);
   };
 
-  // Calcular range dos itens exibidos para cards
+  // Calcular range dos itens exibidos para ambos os modos
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, filteredClientes.length);
 
@@ -149,11 +148,7 @@ export const ClienteListContent = ({
           {/* Informação discreta do total de clientes do lado esquerdo */}
           {filteredClientes.length > 0 && (
             <span className="text-xs text-muted-foreground bg-muted/30 px-2 py-1 rounded-full">
-              {viewMode === 'cards' ? (
-                `${startItem} até ${endItem} de ${filteredClientes.length}`
-              ) : (
-                `${filteredClientes.length} cliente${filteredClientes.length !== 1 ? 's' : ''}`
-              )}
+              {startItem} até {endItem} de {filteredClientes.length}
             </span>
           )}
           
