@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { UnifiedClienteService } from "@/services/unifiedClienteService";
+import { ClienteService } from "@/services/clienteService";
 import { Cliente } from "@/types";
 import { useSmartLoading } from "@/hooks/useSmartLoading";
 import { useRetryableOperation } from "@/hooks/useRetryableOperation";
@@ -69,14 +70,14 @@ export const useSecureClienteOperations = () => {
       const result = await smartLoading.withLoading(
         'fetch-clientes',
         () => executeWithRetry(
-          () => SecureClienteService.getClientes(status),
+          () => UnifiedClienteService.searchClientes('', status),
           'Carregar clientes'
         ),
         'Carregando clientes...',
         'Clientes carregados com sucesso'
       );
       
-      setClientes(result);
+      setClientes(result as Cliente[]);
       return result;
     } catch (error) {
       console.error("Erro ao buscar clientes:", error);
@@ -95,14 +96,14 @@ export const useSecureClienteOperations = () => {
       const result = await smartLoading.withLoading(
         'search-clientes',
         () => executeWithRetry(
-          () => SecureClienteService.searchClientes(searchTerm, status),
+          () => UnifiedClienteService.searchClientes(searchTerm, status),
           'Pesquisar clientes'
         ),
         'Pesquisando...',
         'Pesquisa concluída'
       );
       
-      setClientes(result);
+      setClientes(result as Cliente[]);
       return result;
     } catch (error) {
       console.error("Erro ao pesquisar clientes:", error);
@@ -121,7 +122,7 @@ export const useSecureClienteOperations = () => {
       const result = await smartLoading.withLoading(
         'create-cliente',
         () => executeWithRetry(
-          () => SecureClienteService.createCliente(cliente),
+          () => ClienteService.createCliente(cliente),
           'Criar cliente'
         ),
         'Criando cliente...',
@@ -129,7 +130,7 @@ export const useSecureClienteOperations = () => {
       );
       
       // Atualizar lista local
-      setClientes(prev => [...prev, result]);
+      setClientes(prev => [...prev, result.cliente!]);
       
       return result;
     } catch (error) {
@@ -149,7 +150,7 @@ export const useSecureClienteOperations = () => {
       const result = await smartLoading.withLoading(
         'update-cliente',
         () => executeWithRetry(
-          () => SecureClienteService.updateCliente(id, cliente),
+          () => ClienteService.updateCliente(id, cliente),
           'Atualizar cliente'
         ),
         'Atualizando cliente...',
@@ -157,7 +158,7 @@ export const useSecureClienteOperations = () => {
       );
       
       // Atualizar lista local
-      setClientes(prev => prev.map(c => c.id === id ? result : c));
+      setClientes(prev => prev.map(c => c.id === id ? result.cliente! : c));
       
       return result;
     } catch (error) {
@@ -177,7 +178,7 @@ export const useSecureClienteOperations = () => {
       await smartLoading.withLoading(
         'delete-cliente',
         () => executeWithRetry(
-          () => SecureClienteService.deleteCliente(id),
+          () => ClienteService.deleteCliente(id),
           'Excluir cliente'
         ),
         'Excluindo cliente...',
@@ -203,7 +204,7 @@ export const useSecureClienteOperations = () => {
   const calculatePaymentStatus = useCallback(async (clienteId: string) => {
     try {
       const result = await executeWithRetry(
-        () => SecureClienteService.calculatePaymentStatus(clienteId),
+        () => UnifiedClienteService.calculatePaymentStatus(clienteId),
         'Calcular status de pagamento'
       );
       
@@ -217,7 +218,7 @@ export const useSecureClienteOperations = () => {
   // Verificar rate limit para operação específica
   const checkRateLimit = useCallback(async (operation: string) => {
     try {
-      return await SecureClienteService.checkOperationRateLimit(operation);
+      return await UnifiedClienteService.checkOperationRateLimit(operation);
     } catch (error) {
       console.error(`Erro ao verificar rate limit para ${operation}:`, error);
       return false;
