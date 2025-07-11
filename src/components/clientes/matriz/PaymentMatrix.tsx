@@ -46,7 +46,7 @@ export const PaymentMatrix = ({
           <Table>
             <thead className="bg-muted/50">
               <tr>
-                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground border-b w-48">
+                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground border-b w-32">
                   Nome
                 </th>
               </tr>
@@ -58,8 +58,8 @@ export const PaymentMatrix = ({
                 
                 return (
                   <tr key={`${cliente.id}-name`} className={`border-b transition-colors hover:bg-muted/50 ${bgClass}`}>
-                    <td className="h-16 px-4 align-middle w-48">
-                      <div className="font-medium text-sm truncate" title={cliente.nome}>
+                    <td className="h-16 px-4 align-middle w-32">
+                      <div className="font-medium text-sm w-24 leading-tight break-words overflow-hidden" style={{ maxHeight: '2.5rem', lineHeight: '1.25rem' }} title={cliente.nome}>
                         {cliente.nome}
                       </div>
                     </td>
