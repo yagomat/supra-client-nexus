@@ -144,25 +144,22 @@ export const ClienteListContent = ({
           onAnoChange={handleAnoChange}
         />
         
-        <div className="flex justify-between items-center">
-          {/* Informação discreta do total de clientes do lado esquerdo */}
-          {filteredClientes.length > 0 && viewMode === 'cards' && (
-            <span className="text-xs text-muted-foreground bg-muted/30 px-2 py-1 rounded-full">
-              {startItem} até {endItem} de {filteredClientes.length}
-            </span>
-          )}
-          
-          {/* Placeholder vazio quando não há clientes ou no modo matriz */}
-          {(filteredClientes.length === 0 || viewMode === 'matriz') && (
-            <div></div>
-          )}
-          
+        <div className="flex justify-end items-center">
           <ClienteViewToggle
             viewMode={viewMode}
             onViewModeChange={setViewMode}
           />
         </div>
       </div>
+
+      {/* Informação discreta do total de clientes mais próxima aos cards */}
+      {filteredClientes.length > 0 && viewMode === 'cards' && (
+        <div className="flex justify-start -mb-2">
+          <span className="text-xs text-muted-foreground bg-muted/30 px-2 py-1 rounded-full">
+            {startItem} até {endItem} de {filteredClientes.length}
+          </span>
+        </div>
+      )}
 
       {loading ? (
         <LoadingState />
