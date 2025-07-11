@@ -11,7 +11,7 @@ export const ConfigTabNavigation = ({ isMobile }: ConfigTabNavigationProps) => {
 
   if (isMobile) {
     return (
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pb-1">
+      <div className="pb-1">
         <TabsList className="grid grid-cols-3 gap-2 h-auto p-0 bg-transparent w-full">
           <TabsTrigger 
             value="profile" 
