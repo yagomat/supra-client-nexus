@@ -30,6 +30,14 @@ export function DefaultFiltersSettings({ onFiltersChange }: DefaultFiltersSettin
     }
   }, []);
 
+  const handleStatusChange = (value: string) => {
+    setDefaultStatus(value as StatusFilterType);
+  };
+
+  const handleOrderChange = (value: string) => {
+    setDefaultOrder(value as ClienteOrderType);
+  };
+
   const handleSave = () => {
     try {
       localStorage.setItem("defaultStatusFilter", defaultStatus);
@@ -68,7 +76,7 @@ export function DefaultFiltersSettings({ onFiltersChange }: DefaultFiltersSettin
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Status Padrão</label>
-            <Select value={defaultStatus} onValueChange={setDefaultStatus}>
+            <Select value={defaultStatus} onValueChange={handleStatusChange}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -85,7 +93,7 @@ export function DefaultFiltersSettings({ onFiltersChange }: DefaultFiltersSettin
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Ordenação Padrão</label>
-            <Select value={defaultOrder} onValueChange={setDefaultOrder}>
+            <Select value={defaultOrder} onValueChange={handleOrderChange}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
