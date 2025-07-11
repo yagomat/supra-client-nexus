@@ -37,6 +37,15 @@ export interface ClienteComPagamentos extends Cliente {
   };
 }
 
+export interface ClienteWithPaymentStatus {
+  cliente: Cliente;
+  payment_status: {
+    type: 'paid' | 'unpaid' | 'no_info';
+    days: number;
+  };
+  sorting_priority: number;
+}
+
 export interface Pagamento {
   id: string;
   cliente_id: string;

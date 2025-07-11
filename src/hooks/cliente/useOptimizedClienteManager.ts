@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Cliente } from "@/types";
+import { Cliente, ClienteWithPaymentStatus } from "@/types";
 import { ClienteService } from "@/services/clienteService";
 import { UnifiedClienteService } from "@/services/unifiedClienteService";
 import { useOptimizedClienteFetch } from "./useOptimizedClienteFetch";
