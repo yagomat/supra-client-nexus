@@ -375,13 +375,25 @@ export type Database = {
         }
         Returns: boolean
       }
+      cleanup_old_audit_logs: {
+        Args: { p_retention_days?: number }
+        Returns: number
+      }
       cliente_pertence_ao_usuario: {
         Args: { cliente_id_param: string }
         Returns: boolean
       }
+      decrypt_sensitive_data: {
+        Args: { p_encrypted_data: string; p_key?: string }
+        Returns: string
+      }
       delete_valor_predefinido: {
         Args: { p_user_id: string; p_tipo: string; p_valor: string }
         Returns: Json
+      }
+      encrypt_sensitive_data: {
+        Args: { p_data: string; p_key?: string }
+        Returns: string
       }
       filter_audit_logs: {
         Args: {
@@ -547,6 +559,18 @@ export type Database = {
           user_id: string | null
         }[]
       }
+      get_user_audit_logs_decrypted: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          user_id: string
+          event_type: string
+          details: Json
+          created_at: string
+          ip_address: string
+          user_agent: string
+        }[]
+      }
       get_validation_config: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -623,6 +647,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      mask_ip_address: {
+        Args: { p_ip: string }
+        Returns: string
+      }
       recalculate_all_client_status: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -683,6 +711,10 @@ export type Database = {
       secure_update_template: {
         Args: { p_user_id: string; p_tipo: string; p_mensagem: string }
         Returns: Json
+      }
+      simplify_user_agent: {
+        Args: { p_user_agent: string }
+        Returns: string
       }
       validate_cliente_data: {
         Args: {

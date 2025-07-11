@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-// Registrar evento de auditoria usando uma função customizada
+// Registrar evento de auditoria com proteções de segurança automáticas
 export const logAuditEvent = async (
   event: string,
   details: Record<string, any>,
@@ -13,7 +13,10 @@ export const logAuditEvent = async (
     
     if (!userIdToLog) return;
 
-    // Usar a função rpc do Supabase para inserir, já que o TypeScript não reconhece a tabela automaticamente
+    // A função log_audit_event agora aplica automaticamente:
+    // - Mascaramento de IP
+    // - Simplificação de User-Agent  
+    // - Criptografia de dados sensíveis
     await supabase.rpc('log_audit_event', {
       p_user_id: userIdToLog,
       p_event_type: event,
