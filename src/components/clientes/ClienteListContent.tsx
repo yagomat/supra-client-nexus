@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { ClienteCardsGrid } from "@/components/clientes/ClienteCardsGrid";
 import { ClienteMatriz } from "@/components/clientes/ClienteMatriz";
@@ -110,6 +109,10 @@ export const ClienteListContent = ({
     setAnoAtual(ano);
   };
 
+  // Calcular range dos itens exibidos para cards
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, filteredClientes.length);
+
   return (
     <div className="space-y-6 w-full overflow-hidden">
       <div className="flex flex-col lg:flex-row gap-4">
@@ -141,7 +144,19 @@ export const ClienteListContent = ({
           onAnoChange={handleAnoChange}
         />
         
-        <div className="flex justify-end items-center">
+        <div className="flex justify-between items-center">
+          {/* Informação discreta do total de clientes do lado esquerdo */}
+          {filteredClientes.length > 0 && viewMode === 'cards' && (
+            <span className="text-xs text-muted-foreground bg-muted/30 px-2 py-1 rounded-full">
+              {startItem} até {endItem} de {filteredClientes.length}
+            </span>
+          )}
+          
+          {/* Placeholder vazio quando não há clientes ou no modo matriz */}
+          {(filteredClientes.length === 0 || viewMode === 'matriz') && (
+            <div></div>
+          )}
+          
           <ClienteViewToggle
             viewMode={viewMode}
             onViewModeChange={setViewMode}
