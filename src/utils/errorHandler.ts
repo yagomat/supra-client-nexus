@@ -1,5 +1,21 @@
 
-import { sanitizeInput } from "./security";
+import { sanitizeForHTML, validateInputSafety } from "./security";
+
+/**
+ * Simple input sanitization function (alias for sanitizeForHTML)
+ */
+export const sanitizeInput = (input: string | null | undefined): string => {
+  return sanitizeForHTML(input);
+};
+
+/**
+ * Simple error logging function
+ */
+export const logError = (error: any, context: string = "Erro desconhecido"): void => {
+  const sanitizedContext = sanitizeInput(context);
+  const errorMessage = error?.message ? sanitizeInput(error.message) : 'Unknown error';
+  console.error(`${sanitizedContext}:`, errorMessage);
+};
 
 /**
  * Central error handler with security considerations
