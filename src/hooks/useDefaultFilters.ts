@@ -1,6 +1,8 @@
 
 import { useState, useEffect } from "react";
 import { ClienteOrderType } from "@/components/clientes/ClienteOrderSelector";
+import { CryptoStorage } from "@/utils/cryptoStorage";
+import { logError } from "@/utils/errorHandler";
 
 type StatusFilterType = "todos" | "ativo" | "inativo";
 
@@ -8,17 +10,25 @@ export const useDefaultFilters = () => {
   const [defaultStatus, setDefaultStatus] = useState<StatusFilterType>("ativo");
   const [defaultOrder, setDefaultOrder] = useState<ClienteOrderType>("vencimento");
 
-  // Carregar configurações do localStorage na inicialização
+  // Carregar configurações do storage criptografado na inicialização
   useEffect(() => {
-    const savedStatus = localStorage.getItem("defaultStatusFilter") as StatusFilterType;
-    const savedOrder = localStorage.getItem("defaultOrderFilter") as ClienteOrderType;
+    const loadDefaults = async () => {
+      try {
+        const savedStatus = await CryptoStorage.getItem<StatusFilterType>("defaultStatusFilter");
+        const savedOrder = await CryptoStorage.getItem<ClienteOrderType>("defaultOrderFilter");
+        
+        if (savedStatus) {
+          setDefaultStatus(savedStatus);
+        }
+        if (savedOrder) {
+          setDefaultOrder(savedOrder);
+        }
+      } catch (error) {
+        logError(error, 'loadDefaultFilters');
+      }
+    };
     
-    if (savedStatus) {
-      setDefaultStatus(savedStatus);
-    }
-    if (savedOrder) {
-      setDefaultOrder(savedOrder);
-    }
+    loadDefaults();
   }, []);
 
   const getDefaultFilters = () => ({

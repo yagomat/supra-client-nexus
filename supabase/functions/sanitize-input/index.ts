@@ -6,9 +6,12 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
 const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// CORS mais restritivo - apenas domínios específicos
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "https://tmgofvlwnbsikvyaavgr.supabase.co",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Max-Age": "86400",
 };
 
 // Função de sanitização para strings sem depender de DOMPurify
@@ -62,8 +65,10 @@ serve(async (req) => {
     // Sanitizar input
     const sanitizedData = sanitizeObject(data);
 
-    // Log para debug
-    console.log("Dados sanitizados:", sanitizedData);
+    // Log apenas em desenvolvimento
+    if (Deno.env.get("ENVIRONMENT") === "development") {
+      console.log("Dados sanitizados:", sanitizedData);
+    }
 
     // Verificar se há um endpoint para redirecionamento
     const endpoint = req.headers.get("x-target-endpoint") || "";
@@ -99,7 +104,13 @@ serve(async (req) => {
     });
     
   } catch (error) {
-    console.error("Erro ao sanitizar dados:", error);
+    // Log detalhado apenas em desenvolvimento
+    if (Deno.env.get("ENVIRONMENT") === "development") {
+      console.error("Erro ao sanitizar dados:", error);
+    } else {
+      console.error("Sanitization error:", { timestamp: new Date().toISOString() });
+    }
+    
     return new Response(JSON.stringify({ 
       success: false, 
       error: "Erro ao processar requisição" 

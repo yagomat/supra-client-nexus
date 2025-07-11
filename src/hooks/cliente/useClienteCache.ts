@@ -1,5 +1,8 @@
 
 import { useState, useEffect } from "react";
+import { getValoresPredefinidos } from "@/services/valoresPredefinidosService";
+import { CryptoStorage } from "@/utils/cryptoStorage";
+import { logError } from "@/utils/errorHandler";
 import { supabase } from "@/integrations/supabase/client";
 
 interface CacheData {
@@ -17,31 +20,28 @@ export const useClienteCache = () => {
   const [cache, setCache] = useState<CacheData | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const getCachedData = (): CacheData | null => {
+  const getCachedData = async (): Promise<CacheData | null> => {
     try {
-      const cached = localStorage.getItem(CACHE_KEY);
-      if (cached) {
-        const data = JSON.parse(cached) as CacheData;
-        if (Date.now() - data.lastUpdated < CACHE_DURATION) {
-          return data;
-        }
+      const data = await CryptoStorage.getItem<CacheData>(CACHE_KEY);
+      if (data && Date.now() - data.lastUpdated < CACHE_DURATION) {
+        return data;
       }
     } catch (error) {
-      console.error('Erro ao ler cache:', error);
+      logError(error, 'getCachedData');
     }
     return null;
   };
 
-  const setCachedData = (data: Omit<CacheData, 'lastUpdated'>) => {
+  const setCachedData = async (data: Omit<CacheData, 'lastUpdated'>) => {
     try {
       const cacheData: CacheData = {
         ...data,
         lastUpdated: Date.now()
       };
-      localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+      await CryptoStorage.setItem(CACHE_KEY, cacheData);
       setCache(cacheData);
     } catch (error) {
-      console.error('Erro ao salvar cache:', error);
+      logError(error, 'setCachedData');
     }
   };
 
@@ -66,26 +66,30 @@ export const useClienteCache = () => {
       ])];
       const ufs = [...new Set(clientes?.map(c => c.uf).filter(Boolean) || [])];
 
-      setCachedData({ servidores, aplicativos, dispositivos, ufs });
+      await setCachedData({ servidores, aplicativos, dispositivos, ufs });
     } catch (error) {
-      console.error('Erro ao buscar dados estáticos:', error);
+      logError(error, 'fetchStaticData');
     } finally {
       setLoading(false);
     }
   };
 
   const invalidateCache = () => {
-    localStorage.removeItem(CACHE_KEY);
+    CryptoStorage.removeItem(CACHE_KEY);
     setCache(null);
   };
 
   useEffect(() => {
-    const cachedData = getCachedData();
-    if (cachedData) {
-      setCache(cachedData);
-    } else {
-      fetchStaticData();
-    }
+    const loadCache = async () => {
+      const cachedData = await getCachedData();
+      if (cachedData) {
+        setCache(cachedData);
+      } else {
+        fetchStaticData();
+      }
+    };
+    
+    loadCache();
   }, []);
 
   return {

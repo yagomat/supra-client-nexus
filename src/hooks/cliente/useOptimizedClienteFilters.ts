@@ -4,25 +4,53 @@ import { Cliente, Pagamento } from "@/types";
 import { ClienteOrderType } from "@/components/clientes/ClienteOrderSelector";
 import { sortClientesByOrder } from "./clienteSortUtils";
 import { supabase } from "@/integrations/supabase/client";
+import { CryptoStorage } from "@/utils/cryptoStorage";
+import { logError } from "@/utils/errorHandler";
 
 type StatusFilterType = "todos" | "ativo" | "inativo";
 
 export const useOptimizedClienteFilters = (clientes: Cliente[]) => {
-  // Carregar configurações padrão do localStorage
-  const getDefaultStatus = (): StatusFilterType => {
-    const saved = localStorage.getItem("defaultStatusFilter") as StatusFilterType;
-    return saved || "ativo";
+  // Carregar configurações padrão do storage criptografado
+  const getDefaultStatus = async (): Promise<StatusFilterType> => {
+    try {
+      const saved = await CryptoStorage.getItem<StatusFilterType>("defaultStatusFilter");
+      return saved || "ativo";
+    } catch (error) {
+      logError(error, 'getDefaultStatus');
+      return "ativo";
+    }
   };
 
-  const getDefaultOrder = (): ClienteOrderType => {
-    const saved = localStorage.getItem("defaultOrderFilter") as ClienteOrderType;
-    return saved || "vencimento";
+  const getDefaultOrder = async (): Promise<ClienteOrderType> => {
+    try {
+      const saved = await CryptoStorage.getItem<ClienteOrderType>("defaultOrderFilter");
+      return saved || "vencimento";
+    } catch (error) {
+      logError(error, 'getDefaultOrder');
+      return "vencimento";
+    }
   };
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilterType>(getDefaultStatus());
-  const [orderBy, setOrderBy] = useState<ClienteOrderType>(getDefaultOrder());
+  const [statusFilter, setStatusFilter] = useState<StatusFilterType>("ativo");
+  const [orderBy, setOrderBy] = useState<ClienteOrderType>("vencimento");
   const [clientesPayments, setClientesPayments] = useState<Map<string, Pagamento[]>>(new Map());
+  
+  // Carregar configurações padrão na inicialização
+  useEffect(() => {
+    const loadDefaults = async () => {
+      try {
+        const defaultStatus = await getDefaultStatus();
+        const defaultOrder = await getDefaultOrder();
+        setStatusFilter(defaultStatus);
+        setOrderBy(defaultOrder);
+      } catch (error) {
+        logError(error, 'loadDefaultFilters');
+      }
+    };
+    
+    loadDefaults();
+  }, []);
 
   // Buscar pagamentos apenas quando necessário para ordenação por vencimento
   useEffect(() => {
@@ -112,10 +140,12 @@ export const useOptimizedClienteFilters = (clientes: Cliente[]) => {
     setOrderBy(newOrder);
   };
 
-  const handleLimparFiltros = () => {
+  const handleLimparFiltros = async () => {
     setSearchTerm("");
-    setStatusFilter(getDefaultStatus());
-    setOrderBy(getDefaultOrder());
+    const defaultStatus = await getDefaultStatus();
+    const defaultOrder = await getDefaultOrder();
+    setStatusFilter(defaultStatus);
+    setOrderBy(defaultOrder);
   };
 
   return {
