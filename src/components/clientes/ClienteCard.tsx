@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Cliente } from "@/types";
 import { ClienteStatusBadge } from "./ClienteStatusBadge";
 import { ClienteInfoGrid } from "./ClienteInfoGrid";
-import { ClienteActionButtons } from "./ClienteActionButtons";
+import { ClienteCardActions } from "./ClienteCardActions";
 import { WhatsAppTemplateModal } from "./WhatsAppTemplateModal";
 import { PaymentStatusButton } from "@/components/pagamentos/PaymentStatusButton";
 import { usePaymentStatus } from "@/hooks/payments/usePaymentStatus";
@@ -158,7 +157,7 @@ export const ClienteCard = ({
               />
             </div>
 
-            <ClienteActionButtons
+            <ClienteCardActions
               cliente={cliente}
               onVerDetalhes={onVerDetalhes}
               onConfirmarExclusao={onConfirmarExclusao}
