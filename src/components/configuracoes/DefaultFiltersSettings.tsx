@@ -16,8 +16,8 @@ interface DefaultFiltersSettingsProps {
 }
 
 export function DefaultFiltersSettings({ onFiltersChange }: DefaultFiltersSettingsProps) {
-  const [defaultStatus, setDefaultStatus] = useState<StatusFilterType>("ativo");
-  const [defaultOrder, setDefaultOrder] = useState<ClienteOrderType>("vencimento");
+  const [defaultStatus, setDefaultStatus] = useState<StatusFilterType>("todos");
+  const [defaultOrder, setDefaultOrder] = useState<ClienteOrderType>("data");
 
   // Carregar configurações salvas do CryptoStorage
   useEffect(() => {
@@ -98,7 +98,7 @@ export function DefaultFiltersSettings({ onFiltersChange }: DefaultFiltersSettin
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              Filtro de status que será aplicado automaticamente ao carregar a lista de clientes.
+              Filtro de status que será aplicado automaticamente ao carregar a lista de clientes. (Padrão: Todos)
             </p>
           </div>
 
@@ -116,7 +116,7 @@ export function DefaultFiltersSettings({ onFiltersChange }: DefaultFiltersSettin
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              Ordem de classificação que será aplicada automaticamente ao carregar a lista de clientes.
+              Ordem de classificação que será aplicada automaticamente ao carregar a lista de clientes. (Padrão: Cadastro)
             </p>
           </div>
         </div>

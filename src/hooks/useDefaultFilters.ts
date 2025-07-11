@@ -7,8 +7,8 @@ import { logError } from "@/utils/errorHandler";
 type StatusFilterType = "todos" | "ativo" | "inativo";
 
 export const useDefaultFilters = () => {
-  const [defaultStatus, setDefaultStatus] = useState<StatusFilterType>("ativo");
-  const [defaultOrder, setDefaultOrder] = useState<ClienteOrderType>("vencimento");
+  const [defaultStatus, setDefaultStatus] = useState<StatusFilterType>("todos");
+  const [defaultOrder, setDefaultOrder] = useState<ClienteOrderType>("data");
 
   // Carregar configurações do storage criptografado na inicialização
   useEffect(() => {

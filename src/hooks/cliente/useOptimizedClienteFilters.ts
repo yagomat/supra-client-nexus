@@ -14,26 +14,26 @@ export const useOptimizedClienteFilters = (clientes: Cliente[]) => {
   const getDefaultStatus = async (): Promise<StatusFilterType> => {
     try {
       const saved = await CryptoStorage.getItem<StatusFilterType>("defaultStatusFilter");
-      return saved || "ativo";
+      return saved || "todos";
     } catch (error) {
       logError(error, 'getDefaultStatus');
-      return "ativo";
+      return "todos";
     }
   };
 
   const getDefaultOrder = async (): Promise<ClienteOrderType> => {
     try {
       const saved = await CryptoStorage.getItem<ClienteOrderType>("defaultOrderFilter");
-      return saved || "vencimento";
+      return saved || "data";
     } catch (error) {
       logError(error, 'getDefaultOrder');
-      return "vencimento";
+      return "data";
     }
   };
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilterType>("ativo");
-  const [orderBy, setOrderBy] = useState<ClienteOrderType>("vencimento");
+  const [statusFilter, setStatusFilter] = useState<StatusFilterType>("todos");
+  const [orderBy, setOrderBy] = useState<ClienteOrderType>("data");
   const [clientesPayments, setClientesPayments] = useState<Map<string, Pagamento[]>>(new Map());
   
   // Carregar configurações padrão na inicialização
