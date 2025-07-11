@@ -7,8 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const useOptimizedClienteFilters = (clientes: Cliente[]) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"todos" | "ativo" | "inativo">("todos");
-  const [orderBy, setOrderBy] = useState<ClienteOrderType>('data');
+  const [statusFilter, setStatusFilter] = useState<"todos" | "ativo" | "inativo">("ativo");
+  const [orderBy, setOrderBy] = useState<ClienteOrderType>('vencimento');
   const [clientesPayments, setClientesPayments] = useState<Map<string, Pagamento[]>>(new Map());
 
   // Buscar pagamentos apenas quando necessário para ordenação por vencimento
@@ -101,8 +101,8 @@ export const useOptimizedClienteFilters = (clientes: Cliente[]) => {
 
   const handleLimparFiltros = () => {
     setSearchTerm("");
-    setStatusFilter("todos");
-    setOrderBy('data');
+    setStatusFilter("ativo");
+    setOrderBy('vencimento');
   };
 
   return {
