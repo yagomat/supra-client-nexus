@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { ClienteCardsGrid } from "@/components/clientes/ClienteCardsGrid";
 import { ClienteMatriz } from "@/components/clientes/ClienteMatriz";
 import { ClienteViewToggle } from "@/components/clientes/ClienteViewToggle";
@@ -72,6 +73,16 @@ export const ClienteListContent = ({
     { value: 11, label: "Novembro" },
     { value: 12, label: "Dezembro" }
   ];
+
+  // Resetar ano para o ano atual quando sair do modo matriz
+  useEffect(() => {
+    if (viewMode === 'cards') {
+      const currentYear = new Date().getFullYear();
+      if (anoAtual !== currentYear) {
+        setAnoAtual(currentYear);
+      }
+    }
+  }, [viewMode, anoAtual]);
   
   // Resetar página atual quando os filtros mudam
   const handleSearchOrFilterChange = (value: string) => {
