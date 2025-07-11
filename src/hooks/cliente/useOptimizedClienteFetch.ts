@@ -3,54 +3,38 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Cliente } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
-import { ClienteSecurityService } from "@/services/clienteSecurityService";
+import { ClienteService } from "@/services/clienteService";
 
 export const useOptimizedClienteFetch = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Buscar todos os clientes de uma vez (filtros serão aplicados no frontend)
+  // Buscar todos os clientes com otimizações
   const fetchClientes = async () => {
     try {
       setLoading(true);
       
-      // Usar função RLS para garantir que apenas clientes do usuário sejam retornados
-      const { data: currentUser } = await supabase.auth.getUser();
-      const userId = currentUser.user?.id;
+      const clientesData = await ClienteService.getClientes();
       
-      if (!userId) {
-        throw new Error("Usuário não autenticado");
-      }
-
-      const { data, error } = await supabase.rpc('filter_clientes_by_status', {
-        p_status: null, // null retorna todos os clientes
-        p_user_id: userId
-      });
-
-      if (error) throw error;
-
-      // Verificar se há IDs duplicados nos dados
-      const clientesData = data || [];
-      const ids = clientesData.map(c => c.id);
-      const uniqueIds = new Set(ids);
+      // Verificação otimizada de duplicados
+      const uniqueClientes = clientesData.reduce((acc, cliente) => {
+        if (!acc.find(c => c.id === cliente.id)) {
+          acc.push(cliente);
+        }
+        return acc;
+      }, [] as Cliente[]);
       
-      if (ids.length !== uniqueIds.size) {
-        console.error("❌ IDs duplicados na base de dados:", ids.filter((id, index) => ids.indexOf(id) !== index));
-        // Remover duplicados mantendo apenas o primeiro
-        const uniqueClientes = clientesData.filter((cliente, index) => 
-          clientesData.findIndex(c => c.id === cliente.id) === index
-        );
-        setClientes(uniqueClientes);
-        console.log("🔧 Duplicados removidos:", clientesData.length - uniqueClientes.length);
-      } else {
-        setClientes(clientesData);
+      if (clientesData.length !== uniqueClientes.length) {
+        console.warn("🔧 Duplicados removidos:", clientesData.length - uniqueClientes.length);
       }
+      
+      setClientes(uniqueClientes);
     } catch (error) {
       console.error("Erro ao buscar clientes", error);
       toast({
         title: "Erro ao carregar clientes",
-        description: "Ocorreu um erro ao buscar a lista de clientes.",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao buscar a lista de clientes.",
         variant: "destructive",
       });
     } finally {
@@ -60,14 +44,10 @@ export const useOptimizedClienteFetch = () => {
 
   const handleExcluir = async (clienteParaExcluir: string) => {
     try {
-      console.log("Tentando excluir cliente:", clienteParaExcluir);
+      const result = await ClienteService.deleteCliente(clienteParaExcluir);
       
-      // Usar função segura de exclusão
-      const result = await ClienteSecurityService.secureDeleteCliente(clienteParaExcluir);
-      
-      console.log("Resultado da exclusão:", result);
       if (result.success) {
-        // Atualizar a lista de clientes localmente (otimização)
+        // Atualizar localmente
         setClientes((prev) => prev.filter((cliente) => cliente.id !== clienteParaExcluir));
         
         toast({
@@ -88,7 +68,7 @@ export const useOptimizedClienteFetch = () => {
       console.error("Erro ao excluir cliente", error);
       toast({
         title: "Erro ao excluir cliente",
-        description: "Ocorreu um erro ao excluir o cliente. Por favor, tente novamente.",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao excluir o cliente.",
         variant: "destructive",
       });
       return false;

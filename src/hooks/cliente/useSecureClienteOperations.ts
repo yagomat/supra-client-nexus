@@ -1,9 +1,20 @@
 import { useState, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { SecureClienteService, ClienteWithPaymentStatus } from "@/services/secureClienteService";
+import { UnifiedClienteService } from "@/services/unifiedClienteService";
 import { Cliente } from "@/types";
 import { useSmartLoading } from "@/hooks/useSmartLoading";
 import { useRetryableOperation } from "@/hooks/useRetryableOperation";
+
+export interface ClienteWithPaymentStatus {
+  cliente: Cliente;
+  paymentStatus: {
+    type: 'overdue' | 'today' | 'upcoming' | 'no_info';
+    days: number;
+    lastPaymentDate?: string;
+    nextDueDate?: string;
+  };
+  sortingPriority: number;
+}
 
 export const useSecureClienteOperations = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -31,7 +42,7 @@ export const useSecureClienteOperations = () => {
       const result = await smartLoading.withLoading(
         'fetch-clientes-status',
         () => executeWithRetry(
-          () => SecureClienteService.getClientesWithCalculatedStatus(status),
+          () => UnifiedClienteService.getClientesWithCalculatedStatus(status),
           'Carregar clientes'
         ),
         'Carregando clientes...',

@@ -124,8 +124,8 @@ export class CryptoStorage {
       localStorage.setItem(`enc_${key}`, encrypted);
     } catch (error) {
       console.error('CryptoStorage.setItem failed:', error);
-      // Fallback para localStorage normal em caso de erro
-      localStorage.setItem(key, JSON.stringify(value));
+      // Log error but don't use fallback - force encryption
+      throw error;
     }
   }
   
@@ -138,15 +138,6 @@ export class CryptoStorage {
       const encrypted = localStorage.getItem(encryptedKey);
       
       if (!encrypted) {
-        // Tentar fallback para localStorage normal
-        const fallback = localStorage.getItem(key);
-        if (fallback) {
-          try {
-            return JSON.parse(fallback) as T;
-          } catch {
-            return fallback as T;
-          }
-        }
         return null;
       }
       
@@ -155,16 +146,6 @@ export class CryptoStorage {
       return JSON.parse(decrypted) as T;
     } catch (error) {
       console.error('CryptoStorage.getItem failed:', error);
-      
-      // Tentar fallback para localStorage normal
-      const fallback = localStorage.getItem(key);
-      if (fallback) {
-        try {
-          return JSON.parse(fallback) as T;
-        } catch {
-          return fallback as T;
-        }
-      }
       return null;
     }
   }
@@ -174,15 +155,13 @@ export class CryptoStorage {
    */
   static removeItem(key: string): void {
     localStorage.removeItem(`enc_${key}`);
-    localStorage.removeItem(key); // Remove fallback também
   }
   
   /**
    * Verifica se um item existe
    */
   static hasItem(key: string): boolean {
-    return localStorage.getItem(`enc_${key}`) !== null || 
-           localStorage.getItem(key) !== null;
+    return localStorage.getItem(`enc_${key}`) !== null;
   }
   
   /**
