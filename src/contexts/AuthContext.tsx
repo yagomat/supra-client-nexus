@@ -1,108 +1,128 @@
 
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import { Session, User as SupabaseUser } from '@supabase/supabase-js';
-import { supabase } from '../integrations/supabase/client';
-import { User } from '@/types';
-import { useNavigate } from 'react-router-dom';
-import { configureBackendTimezone } from "@/utils/backendTimezone";
-import { secureSignIn, secureSignUp, updatePassword, secureSignOut } from "@/services/auth";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { User } from "@/types";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Session } from "@supabase/supabase-js";
+import { 
+  secureSignIn, 
+  secureSignOut, 
+  secureSignUp, 
+  signOutAll,
+  updatePassword,
+  logAuditEvent
+} from "@/services/auth";
 
-interface AuthContextProps {
+interface AuthContextType {
   user: User | null;
-  session: Session | null;
   loading: boolean;
+  session: Session | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, nome: string) => Promise<void>;
-  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   signOut: () => Promise<void>;
+  signOutAllDevices: () => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  sessionExpiresAt: Date | null;
 }
 
-const AuthContext = createContext<AuthContextProps>({
-  user: null,
-  session: null,
-  loading: true,
-  signIn: async () => {},
-  signUp: async () => {},
-  changePassword: async () => {},
-  signOut: async () => {},
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
-  return useContext(AuthContext);
+// Calcular hora de expiração da sessão baseada no token JWT
+const calculateExpiryTime = (session: Session | null): Date | null => {
+  if (!session) return null;
+  
+  // Usar a expiração do token JWT se disponível
+  if (session.expires_at) {
+    return new Date(session.expires_at * 1000);
+  }
+  
+  // Fallback para 24 horas se não houver informação (período mais longo)
+  return new Date(new Date().getTime() + 24 * 60 * 60 * 1000);
 };
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-
-  // Função para converter SupabaseUser para User local com validação
-  const convertSupabaseUser = (supabaseUser: SupabaseUser | null): User | null => {
-    if (!supabaseUser) return null;
-    
-    try {
-      return {
-        id: supabaseUser.id,
-        email: supabaseUser.email || '', // Garantir que email nunca seja undefined
-        nome: supabaseUser.user_metadata?.nome || ''
-      };
-    } catch (error) {
-      console.error('Error converting supabase user:', error);
-      return null;
-    }
-  };
+  const [sessionExpiresAt, setSessionExpiresAt] = useState<Date | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
-    let mounted = true;
-
-    const getSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Error getting session:', error);
-          if (mounted) {
-            setSession(null);
-            setUser(null);
-            setLoading(false);
-          }
-          return;
-        }
-
-        if (mounted) {
-          setSession(session);
-          setUser(session?.user ? convertSupabaseUser(session.user) : null);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('Error getting session:', error);
-        if (mounted) {
-          setSession(null);
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        setSession(currentSession);
+        if (currentSession && currentSession.user) {
+          setUser({
+            id: currentSession.user.id,
+            email: currentSession.user.email || "",
+            nome: currentSession.user.user_metadata.nome
+          });
+          // Calcular tempo de expiração baseado no token JWT
+          setSessionExpiresAt(calculateExpiryTime(currentSession));
+        } else {
           setUser(null);
-          setLoading(false);
+          setSessionExpiresAt(null);
         }
+        setLoading(false);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      if (currentSession && currentSession.user) {
+        setUser({
+          id: currentSession.user.id,
+          email: currentSession.user.email || "",
+          nome: currentSession.user.user_metadata.nome
+        });
+        // Calcular tempo de expiração baseado no token JWT
+        setSessionExpiresAt(calculateExpiryTime(currentSession));
+      }
+      setLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Auto logout silencioso apenas quando a sessão realmente expira
+  useEffect(() => {
+    if (!sessionExpiresAt || !user) return;
+
+    const checkSessionValidity = () => {
+      const now = new Date();
+      const timeLeft = sessionExpiresAt.getTime() - now.getTime();
+      
+      // Só desconecta quando realmente expira (sem margem de tempo)
+      if (timeLeft <= 0) {
+        console.log('Sessão expirada, fazendo logout automático');
+        signOut();
       }
     };
 
-    getSession();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    // Verificar a cada 5 minutos se a sessão ainda é válida
+    const interval = setInterval(checkSessionValidity, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, [sessionExpiresAt, user]);
 
   const signIn = async (email: string, password: string) => {
     setLoading(true);
     try {
       const success = await secureSignIn(email, password);
+      
       if (!success) {
-        throw new Error('Falha na autenticação');
+        setLoading(false);
+        throw new Error("Falha na autenticação");
       }
+      
+      // O estado do usuário será atualizado pelo listener onAuthStateChange
     } catch (error: any) {
-      throw new Error(error.message || 'Erro ao fazer login');
-    } finally {
       setLoading(false);
+      throw error;
     }
   };
 
@@ -110,96 +130,89 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setLoading(true);
     try {
       const success = await secureSignUp(email, password, nome);
+      
       if (!success) {
-        throw new Error('Falha no cadastro');
+        setLoading(false);
+        throw new Error("Falha no cadastro");
       }
+      
+      // O estado do usuário será atualizado pelo listener onAuthStateChange
     } catch (error: any) {
-      throw new Error(error.message || 'Erro ao criar conta');
+      setLoading(false);
+      throw error;
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      setLoading(true);
+      await secureSignOut();
+      // O estado do usuário será atualizado pelo listener onAuthStateChange
+    } catch (error: any) {
+      toast({
+        title: "Erro ao fazer logout",
+        description: error.message || "Ocorreu um erro ao sair do sistema",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signOutAllDevices = async () => {
+    try {
+      setLoading(true);
+      await signOutAll();
+      // O estado do usuário será atualizado pelo listener onAuthStateChange
+    } catch (error: any) {
+      toast({
+        title: "Erro ao encerrar sessões",
+        description: error.message || "Ocorreu um erro ao encerrar todas as sessões",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const changePassword = async (currentPassword: string, newPassword: string) => {
-    setLoading(true);
     try {
-      const success = await updatePassword(currentPassword, newPassword);
-      if (!success) {
-        throw new Error('Falha ao alterar senha');
-      }
+      setLoading(true);
+      await updatePassword(currentPassword, newPassword);
     } catch (error: any) {
-      throw new Error(error.message || 'Erro ao alterar senha');
+      toast({
+        title: "Erro ao atualizar senha",
+        description: error.message || "Ocorreu um erro ao atualizar sua senha",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
-  };
-
-  const signOut = async () => {
-    setLoading(true);
-    try {
-      const success = await secureSignOut();
-      if (success) {
-        navigate('/login');
-      }
-    } catch (error: any) {
-      console.error('Erro ao fazer logout:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    let mounted = true;
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        try {
-          if (mounted) {
-            const convertedUser = session?.user ? convertSupabaseUser(session.user) : null;
-            setUser(convertedUser);
-            setSession(session);
-            setLoading(false);
-            
-            // Configurar timezone quando o usuário faz login (não-bloqueante)
-            if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
-              // Usar setTimeout para não bloquear o fluxo principal
-              setTimeout(() => {
-                configureBackendTimezone().catch(error => {
-                  console.warn('Error configuring backend timezone:', error);
-                });
-              }, 0);
-            }
-          }
-        } catch (error) {
-          console.error('Error in auth state change:', error);
-          if (mounted) {
-            setUser(null);
-            setSession(null);
-            setLoading(false);
-          }
-        }
-      }
-    );
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  const value: AuthContextProps = {
-    user,
-    session,
-    loading,
-    signIn,
-    signUp,
-    changePassword,
-    signOut,
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        loading,
+        signIn,
+        signUp,
+        signOut,
+        signOutAllDevices,
+        changePassword,
+        sessionExpiresAt,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
+}
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth deve ser usado dentro de um AuthProvider");
+  }
+  return context;
 };

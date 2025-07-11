@@ -1,5 +1,5 @@
+
 import { Cliente, Pagamento } from "@/types";
-import { getCurrentDayInfo, getDaysDifference, toSystemTimezone } from "@/utils/timezone";
 
 export interface PaymentCalculationResult {
   type: 'overdue' | 'today' | 'upcoming' | 'no_info';
@@ -12,8 +12,11 @@ export const calculatePaymentStatus = (
   cliente: Cliente,
   allPayments: Pagamento[]
 ): PaymentCalculationResult => {
-  // Usar informações de data do sistema padronizado
-  const { day: currentDay, month: currentMonth, year: currentYear } = getCurrentDayInfo();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const currentDay = today.getDate();
+  const currentMonth = today.getMonth() + 1;
+  const currentYear = today.getFullYear();
 
   // Filtrar apenas pagamentos válidos e ordenar por data
   const validPayments = allPayments
@@ -44,9 +47,9 @@ export const calculatePaymentStatus = (
     // O vencimento será baseado no último mês da sequência consecutiva
     const lastConsecutivePayment = consecutiveSequence[consecutiveSequence.length - 1];
     const nextDueDate = calculateNextDueDate(lastConsecutivePayment, cliente.dia_vencimento);
+    nextDueDate.setHours(0, 0, 0, 0);
     
-    // Usar função de timezone para calcular diferença
-    const daysDiff = getDaysDifference(new Date(), nextDueDate);
+    const daysDiff = Math.floor((nextDueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
     if (daysDiff > 0) {
       return {
@@ -103,9 +106,9 @@ export const calculatePaymentStatus = (
 
     const lastPayment = lastConsecutiveSequence[lastConsecutiveSequence.length - 1];
     const nextDueDate = calculateNextDueDate(lastPayment, cliente.dia_vencimento);
+    nextDueDate.setHours(0, 0, 0, 0);
     
-    // Usar função de timezone para calcular diferença
-    const daysDiff = getDaysDifference(nextDueDate, new Date());
+    const daysDiff = Math.floor((today.getTime() - nextDueDate.getTime()) / (1000 * 60 * 60 * 24));
 
     if (daysDiff > 0) {
       return {
@@ -210,9 +213,7 @@ const calculateNextDueDate = (payment: Pagamento, diaVencimento: number): Date =
   const lastDayOfMonth = new Date(nextYear, nextMonth, 0).getDate();
   const adjustedDueDay = Math.min(diaVencimento, lastDayOfMonth);
   
-  // Retornar data no timezone do sistema
-  const dueDate = new Date(nextYear, nextMonth - 1, adjustedDueDay);
-  return toSystemTimezone(dueDate);
+  return new Date(nextYear, nextMonth - 1, adjustedDueDay);
 };
 
 export const calculateSortingPriority = (

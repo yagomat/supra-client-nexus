@@ -92,7 +92,7 @@ export const useCadastroForm = () => {
     try {
       setIsLoading(true);
       
-      // Usar signUp com os três argumentos corretos
+      // A sanitização agora ocorre no backend, via secureSignUp
       await signUp(email, password, nome);
       
       navigate("/dashboard");

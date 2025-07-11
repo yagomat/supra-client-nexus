@@ -63,8 +63,8 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
-            <AuthProvider>
+          <AuthProvider>
+            <BrowserRouter>
               <AppRoutes />
               <CapacitorOverlayWindow />
               {showPermissionsSetup && Capacitor.isNativePlatform() && (
@@ -82,8 +82,8 @@ const App = () => {
                   </div>
                 </div>
               )}
-            </AuthProvider>
-          </BrowserRouter>
+            </BrowserRouter>
+          </AuthProvider>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
