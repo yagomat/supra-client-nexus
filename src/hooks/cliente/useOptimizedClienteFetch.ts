@@ -1,80 +1,64 @@
-
-import { useState, useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast";
-import { Cliente } from "@/types";
+import { useState, useCallback, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { Cliente, StatusFilterType } from "@/types";
+import { UnifiedClienteService } from "@/services/clienteService.unified";
 import { supabase } from "@/integrations/supabase/client";
-import { ClienteService } from "@/services/clienteService";
+import { logger } from "@/utils/logger";
 
 export const useOptimizedClienteFetch = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Buscar todos os clientes com otimizações
-  const fetchClientes = async () => {
+  // Buscar clientes com otimizações
+  const fetchClientes = useCallback(async (status?: StatusFilterType) => {
     try {
       setLoading(true);
-      
-      const clientesData = await ClienteService.getClientes();
-      
-      // Verificação otimizada de duplicados
-      const uniqueClientes = clientesData.reduce((acc, cliente) => {
-        if (!acc.find(c => c.id === cliente.id)) {
-          acc.push(cliente);
-        }
-        return acc;
-      }, [] as Cliente[]);
-      
-      if (clientesData.length !== uniqueClientes.length) {
-        console.warn("🔧 Duplicados removidos:", clientesData.length - uniqueClientes.length);
-      }
-      
-      setClientes(uniqueClientes);
-    } catch (error) {
-      console.error("Erro ao buscar clientes", error);
+      const data = await UnifiedClienteService.getClientes(status);
+      setClientes(data);
+      logger.cliente("Clientes carregados", { count: data.length, status });
+    } catch (error: any) {
+      logger.error("Erro ao buscar clientes", "FETCH", error);
       toast({
         title: "Erro ao carregar clientes",
-        description: error instanceof Error ? error.message : "Ocorreu um erro ao buscar a lista de clientes.",
+        description: error.message || "Erro desconhecido",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
-  const handleExcluir = async (clienteParaExcluir: string) => {
+  const handleExcluir = useCallback(async (id: string) => {
     try {
-      const result = await ClienteService.deleteCliente(clienteParaExcluir);
+      const result = await UnifiedClienteService.deleteCliente(id);
       
-      if (result.success) {
-        // Atualizar localmente
-        setClientes((prev) => prev.filter((cliente) => cliente.id !== clienteParaExcluir));
-        
-        toast({
-          title: "Cliente excluído",
-          description: result.message || "O cliente foi excluído com sucesso.",
-        });
-        
-        return true;
-      } else {
-        toast({
-          title: "Erro ao excluir cliente",
-          description: result.error || "Erro desconhecido",
-          variant: "destructive",
-        });
-        return false;
+      if (!result.success) {
+        throw new Error(result.error || "Erro ao excluir cliente");
       }
-    } catch (error) {
-      console.error("Erro ao excluir cliente", error);
+
+      // Atualizar a lista local removendo o cliente excluído
+      setClientes(prev => prev.filter(cliente => cliente.id !== id));
+
+      logger.cliente("Cliente excluído", { clienteId: id });
+      toast({
+        title: "Cliente excluído",
+        description: "Cliente foi excluído com sucesso.",
+      });
+
+      return true;
+    } catch (error: any) {
+      logger.error("Erro ao excluir cliente", "DELETE", error);
       toast({
         title: "Erro ao excluir cliente",
-        description: error instanceof Error ? error.message : "Ocorreu um erro ao excluir o cliente.",
+        description: error.message || "Erro desconhecido",
         variant: "destructive",
       });
       return false;
     }
-  };
+  }, [toast]);
 
+  // Configurar realtime apenas uma vez na inicialização
   useEffect(() => {
     fetchClientes();
     
@@ -104,7 +88,7 @@ export const useOptimizedClienteFetch = () => {
               // Verificar se o cliente já existe antes de adicionar
               const exists = prev.some(cliente => cliente.id === payload.new.id);
               if (exists) {
-                console.log("🔍 Cliente já existe na lista, não adicionando:", payload.new.id);
+                logger.cliente("Cliente já existe na lista", { clienteId: payload.new.id });
                 return prev;
               }
               return [payload.new as Cliente, ...prev];
@@ -123,7 +107,7 @@ export const useOptimizedClienteFetch = () => {
     return () => {
       supabase.removeChannel(clientesChannel);
     };
-  }, []);
+  }, []); // Dependências vazias - executar apenas uma vez
 
   return {
     clientes,

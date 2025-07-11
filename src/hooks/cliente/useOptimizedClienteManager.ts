@@ -1,23 +1,11 @@
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Cliente } from "@/types";
-import { ClienteService } from "@/services/clienteService";
-import { UnifiedClienteService } from "@/services/unifiedClienteService";
+import { Cliente, ClienteWithPaymentStatus, StatusFilterType } from "@/types";
+import { UnifiedClienteService } from "@/services/clienteService.unified";
 import { useOptimizedClienteFetch } from "./useOptimizedClienteFetch";
 import { useOptimizedClienteFilters } from "./useOptimizedClienteFilters";
 import { useClienteModals } from "./useClienteModals";
-
-// Interface local para compatibilidade
-interface ClienteWithPaymentStatus {
-  cliente: Cliente;
-  paymentStatus: {
-    type: 'overdue' | 'today' | 'upcoming' | 'no_info';
-    days: number;
-    lastPaymentDate?: string;
-    nextDueDate?: string;
-  };
-  sortingPriority: number;
-}
+import { logger } from "@/utils/logger";
 
 /**
  * Hook consolidado que gerencia todas as operações de clientes
@@ -87,7 +75,7 @@ export const useOptimizedClienteManager = () => {
   }, []);
 
   // Buscar clientes com status calculado (funcionalidade avançada)
-  const fetchClientesWithStatus = useCallback(async (status?: "todos" | "ativo" | "inativo") => {
+  const fetchClientesWithStatus = useCallback(async (status?: StatusFilterType) => {
     const operationId = `fetch-status-${Date.now()}`;
     
     try {
@@ -97,6 +85,7 @@ export const useOptimizedClienteManager = () => {
       setClientesWithStatus(result);
       setClientes(result.map(item => item.cliente));
       
+      logger.cliente("Clientes carregados com status", { count: result.length, status });
       return result;
     } catch (error) {
       console.error("Erro ao buscar clientes com status:", error);
@@ -118,7 +107,7 @@ export const useOptimizedClienteManager = () => {
     try {
       setOperationProcessing(operationId, true);
       
-      const result = await ClienteService.createCliente(cliente);
+      const result = await UnifiedClienteService.createCliente(cliente);
       
       if (result.success && result.cliente) {
         // Atualizar lista local
@@ -153,7 +142,7 @@ export const useOptimizedClienteManager = () => {
     try {
       setOperationProcessing(operationId, true);
       
-      const result = await ClienteService.updateCliente(id, cliente);
+      const result = await UnifiedClienteService.updateCliente(id, cliente);
       
       if (result.success && result.cliente) {
         // Atualizar lista local
@@ -208,7 +197,7 @@ export const useOptimizedClienteManager = () => {
   // Verificar rate limit
   const checkRateLimit = useCallback(async (operation: string) => {
     try {
-      return await UnifiedClienteService.checkOperationRateLimit(operation);
+      return await UnifiedClienteService.checkOperationRateLimit(operation as any);
     } catch (error) {
       console.error(`Erro ao verificar rate limit para ${operation}:`, error);
       return false;

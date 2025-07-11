@@ -2,7 +2,7 @@
 import * as XLSX from 'xlsx';
 import { ClienteExcel, ImportResult } from './types';
 import { convertDateBrToIso, convertToString } from './utils';
-import { ClienteSecurityService } from '@/services/clienteSecurityService';
+import { UnifiedClienteService } from '@/services/clienteService.unified';
 
 // Função para importar clientes de um arquivo Excel
 export async function importClientesFromExcel(file: File): Promise<ImportResult> {
@@ -56,7 +56,7 @@ export async function importClientesFromExcel(file: File): Promise<ImportResult>
         }
         
         // Usar importação segura via Edge Function
-        const result = await ClienteSecurityService.secureImportClientes(clientesData);
+        const result = await UnifiedClienteService.secureImportClientes(clientesData);
         
         resolve({
           success: result.success,

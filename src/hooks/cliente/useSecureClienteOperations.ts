@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { UnifiedClienteService } from "@/services/unifiedClienteService";
-import { ClienteService } from "@/services/clienteService";
+import { UnifiedClienteService } from "@/services/clienteService.unified";
 import { Cliente } from "@/types";
 import { useSmartLoading } from "@/hooks/useSmartLoading";
 import { useRetryableOperation } from "@/hooks/useRetryableOperation";
@@ -50,8 +49,8 @@ export const useSecureClienteOperations = () => {
         'Clientes carregados com sucesso'
       );
       
-      setClientesWithStatus(result);
-      setClientes(result.map(item => item.cliente));
+      setClientesWithStatus(result as ClienteWithPaymentStatus[]);
+      setClientes(result.map((item: any) => item.cliente));
       return result;
     } catch (error) {
       console.error("Erro ao buscar clientes com status:", error);
@@ -122,7 +121,7 @@ export const useSecureClienteOperations = () => {
       const result = await smartLoading.withLoading(
         'create-cliente',
         () => executeWithRetry(
-          () => ClienteService.createCliente(cliente),
+          () => UnifiedClienteService.createCliente(cliente),
           'Criar cliente'
         ),
         'Criando cliente...',
@@ -130,7 +129,9 @@ export const useSecureClienteOperations = () => {
       );
       
       // Atualizar lista local
-      setClientes(prev => [...prev, result.cliente!]);
+      if (result.success && result.cliente) {
+        setClientes(prev => [...prev, result.cliente!]);
+      }
       
       return result;
     } catch (error) {
@@ -150,7 +151,7 @@ export const useSecureClienteOperations = () => {
       const result = await smartLoading.withLoading(
         'update-cliente',
         () => executeWithRetry(
-          () => ClienteService.updateCliente(id, cliente),
+          () => UnifiedClienteService.updateCliente(id, cliente),
           'Atualizar cliente'
         ),
         'Atualizando cliente...',
@@ -158,7 +159,9 @@ export const useSecureClienteOperations = () => {
       );
       
       // Atualizar lista local
-      setClientes(prev => prev.map(c => c.id === id ? result.cliente! : c));
+      if (result.success && result.cliente) {
+        setClientes(prev => prev.map(c => c.id === id ? result.cliente! : c));
+      }
       
       return result;
     } catch (error) {
@@ -178,7 +181,7 @@ export const useSecureClienteOperations = () => {
       await smartLoading.withLoading(
         'delete-cliente',
         () => executeWithRetry(
-          () => ClienteService.deleteCliente(id),
+          () => UnifiedClienteService.deleteCliente(id),
           'Excluir cliente'
         ),
         'Excluindo cliente...',

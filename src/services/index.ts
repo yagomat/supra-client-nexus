@@ -1,6 +1,6 @@
 
 // Re-export all service functions for easier imports
-export * from './clienteService';
+export * from './clienteService.unified';
 export * from './pagamentoService';
 export * from './valoresPredefinidosService';
 export * from './clienteExcel';

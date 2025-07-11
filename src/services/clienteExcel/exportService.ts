@@ -5,25 +5,20 @@ import { Cliente } from '@/types';
 import { ClienteExcel } from './types';
 import { formatDate } from '@/utils/dateUtils';
 import { getDefaultColumnWidths } from './utils';
-import { ClienteSecurityService } from '@/services/clienteSecurityService';
+import { UnifiedClienteService } from '@/services/clienteService.unified';
 
 // Função para exportar clientes para Excel
 export async function exportClientesToExcel(clientes: Cliente[]): Promise<void> {
   try {
     // Verificar rate limiting antes da exportação
-    console.log('Verificando rate limit de exportação...');
-    const canExport = await ClienteSecurityService.checkExportRateLimit();
-    console.log('Rate limit check result:', canExport);
+    const canExport = await UnifiedClienteService.checkExportRateLimit();
     
     if (!canExport) {
-      console.error('Rate limit atingido - bloqueando exportação');
       throw new Error('Limite de exportações excedido (máximo 50 por hora). Tente novamente mais tarde.');
     }
 
-    console.log('Rate limit OK - prosseguindo com exportação');
-
     // Registrar tentativa de exportação
-    await ClienteSecurityService.logExportAttempt(clientes.length);
+    await UnifiedClienteService.logExportAttempt(clientes.length);
     // Converter os clientes para o formato Excel
     const excelData: ClienteExcel[] = clientes.map(cliente => ({
       'Data de cadastro': formatDate(cliente.created_at),
