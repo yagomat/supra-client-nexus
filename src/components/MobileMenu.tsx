@@ -21,8 +21,19 @@ import {
 } from "lucide-react";
 
 export function MobileMenu() {
-  const { user, signOut } = useAuth();
   const location = useLocation();
+  
+  // Acessar useAuth de forma segura
+  let user = null;
+  let signOut = () => {};
+  
+  try {
+    const authContext = useAuth();
+    user = authContext.user;
+    signOut = authContext.signOut;
+  } catch (error) {
+    console.warn('MobileMenu: AuthProvider não está disponível ainda');
+  }
 
   const navItems = [
     {
