@@ -39,7 +39,7 @@ const ListaClientes = () => {
   return (
     <UniversalCSRFProtection 
       level="strict"
-      showStatus={process.env.NODE_ENV === 'development'}
+      showStatus={false}
       onValidationFail={() => {
         console.error('CSRF validation failed on ListaClientes');
         navigate("/dashboard");
