@@ -1,3 +1,4 @@
+
 /**
  * Utilitários de segurança para prevenir ataques XSS e outras vulnerabilidades
  */
@@ -74,19 +75,49 @@ export const validateInputSafety = (input: string): boolean => {
 };
 
 /**
- * Content Security Policy helper
+ * Gera um nonce único para uso em CSP
+ */
+export const generateNonce = (): string => {
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return btoa(String.fromCharCode(...array));
+};
+
+/**
+ * Content Security Policy mais restritiva e segura
  */
 export const getCSPString = (): string => {
   return [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // React precisa de unsafe-inline/eval
-    "style-src 'self' 'unsafe-inline'",
+    "script-src 'self' https://cdn.gpteng.co", // Removido 'unsafe-inline' e 'unsafe-eval'
+    "style-src 'self' 'unsafe-inline'", // Mantido apenas para CSS inline do Tailwind
     "img-src 'self' data: https:",
     "font-src 'self' data:",
     "connect-src 'self' https://tmgofvlwnbsikvyaavgr.supabase.co wss://tmgofvlwnbsikvyaavgr.supabase.co",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
-    "frame-ancestors 'none'"
+    "frame-ancestors 'none'",
+    "upgrade-insecure-requests"
+  ].join('; ');
+};
+
+/**
+ * CSP mais restritivo para produção
+ */
+export const getProductionCSPString = (): string => {
+  return [
+    "default-src 'self'",
+    "script-src 'self'", // Sem CDN externo em produção
+    "style-src 'self'", // Sem 'unsafe-inline' em produção
+    "img-src 'self' data:",
+    "font-src 'self'",
+    "connect-src 'self' https://tmgofvlwnbsikvyaavgr.supabase.co wss://tmgofvlwnbsikvyaavgr.supabase.co",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+    "upgrade-insecure-requests",
+    "block-all-mixed-content"
   ].join('; ');
 };
