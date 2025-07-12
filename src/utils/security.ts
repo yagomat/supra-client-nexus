@@ -83,70 +83,143 @@ export const generateNonce = (): string => {
 };
 
 /**
- * Validação CSRF - Verificar se a requisição é originária do nosso domínio
+ * Validação CSRF melhorada - Verificar se a requisição é originária de domínios permitidos
  */
 export const validateCSRFToken = (origin: string, referer: string): boolean => {
   const allowedOrigins = [
     window.location.origin,
     'https://tmgofvlwnbsikvyaavgr.supabase.co',
-    'https://lovable.dev' // Permitir Lovable como origem válida
+    'https://lovable.dev'
   ];
   
-  // Verificar se Origin é válido
-  if (origin && !allowedOrigins.includes(origin)) {
-    return false;
+  // Log para auditoria
+  console.log('CSRF Token Validation:', {
+    origin,
+    referer,
+    allowedOrigins,
+    currentOrigin: window.location.origin
+  });
+  
+  // Verificação rigorosa de Origin
+  if (origin) {
+    const isOriginAllowed = allowedOrigins.includes(origin);
+    if (!isOriginAllowed) {
+      console.error('CSRF: Origin não permitido:', origin);
+      return false;
+    }
   }
   
-  // Verificar se Referer é válido (fallback)
+  // Verificação rigorosa de Referer como fallback
   if (referer) {
     try {
       const refererUrl = new URL(referer);
-      const currentOrigin = window.location.origin;
+      const isRefererAllowed = allowedOrigins.includes(refererUrl.origin);
       
-      // Permitir se referer for do mesmo domínio atual ou domínios permitidos
-      if (refererUrl.origin === currentOrigin || allowedOrigins.includes(refererUrl.origin)) {
-        return true;
+      if (!isRefererAllowed) {
+        console.error('CSRF: Referer não permitido:', refererUrl.origin);
+        return false;
       }
-    } catch {
-      // Se não conseguir parsear a URL do referer, considerar inválido
+    } catch (error) {
+      console.error('CSRF: Erro ao parsear Referer URL:', error);
       return false;
     }
+  }
+  
+  // Se não há Origin nem Referer, considerar suspeito
+  if (!origin && !referer) {
+    console.warn('CSRF: Requisição sem Origin ou Referer - suspeita');
+    return false;
   }
   
   return true;
 };
 
 /**
- * Gerar token CSRF baseado na sessão do usuário
+ * Gerar token CSRF com informações de segurança adicionais
  */
 export const generateCSRFToken = (userSession?: string): string => {
   const timestamp = Date.now().toString();
   const sessionId = userSession || 'anonymous';
   const random = generateSecureToken().substring(0, 16);
+  const origin = window.location.origin;
   
-  // Criar um hash simples dos componentes
-  const tokenData = `${timestamp}-${sessionId}-${random}`;
-  return btoa(tokenData).replace(/[+/=]/g, ''); // Remove caracteres especiais
+  // Criar hash com mais informações de contexto
+  const tokenData = `${timestamp}-${sessionId}-${random}-${btoa(origin)}`;
+  const token = btoa(tokenData).replace(/[+/=]/g, '');
+  
+  console.log('CSRF Token Generated:', {
+    hasSession: !!userSession,
+    timestamp: new Date(parseInt(timestamp)).toISOString(),
+    origin,
+    tokenLength: token.length
+  });
+  
+  return token;
 };
 
 /**
- * Validar token CSRF
+ * Validar token CSRF com verificações mais rigorosas
  */
 export const validateCSRFTokenData = (token: string, userSession?: string, maxAge: number = 3600000): boolean => {
+  if (!token) {
+    console.error('CSRF: Token não fornecido');
+    return false;
+  }
+  
   try {
     const decoded = atob(token);
-    const [timestamp, sessionId] = decoded.split('-');
+    const parts = decoded.split('-');
     
-    // Verificar se o token não expirou (1 hora por padrão)
+    if (parts.length < 4) {
+      console.error('CSRF: Token com formato inválido');
+      return false;
+    }
+    
+    const [timestamp, sessionId, random, encodedOrigin] = parts;
+    
+    // Verificar se o token não expirou
     const tokenTime = parseInt(timestamp);
+    if (isNaN(tokenTime)) {
+      console.error('CSRF: Timestamp inválido no token');
+      return false;
+    }
+    
     if (Date.now() - tokenTime > maxAge) {
+      console.error('CSRF: Token expirado', {
+        tokenAge: Date.now() - tokenTime,
+        maxAge
+      });
       return false;
     }
     
     // Verificar se a sessão bate
     const expectedSession = userSession || 'anonymous';
-    return sessionId === expectedSession;
-  } catch {
+    if (sessionId !== expectedSession) {
+      console.error('CSRF: Sessão do token não confere');
+      return false;
+    }
+    
+    // Verificar origem se disponível
+    if (encodedOrigin) {
+      try {
+        const tokenOrigin = atob(encodedOrigin);
+        if (tokenOrigin !== window.location.origin) {
+          console.error('CSRF: Origem do token não confere', {
+            tokenOrigin,
+            currentOrigin: window.location.origin
+          });
+          return false;
+        }
+      } catch (error) {
+        console.error('CSRF: Erro ao decodificar origem do token');
+        return false;
+      }
+    }
+    
+    console.log('CSRF: Token validado com sucesso');
+    return true;
+  } catch (error) {
+    console.error('CSRF: Erro ao validar token:', error);
     return false;
   }
 };
@@ -176,28 +249,47 @@ export const getSecureHeaders = (csrfToken?: string): HeadersInit => {
 };
 
 /**
- * Verificar se a requisição é segura (mesma origem ou origem permitida)
+ * Verificar se a requisição é segura com logs detalhados
  */
 export const isSameOriginRequest = (): boolean => {
-  if (typeof window === 'undefined') return true;
+  if (typeof window === 'undefined') {
+    return true; // Server-side sempre permitir
+  }
   
   const currentOrigin = window.location.origin;
   const documentReferrer = document.referrer;
   
+  console.log('Same Origin Check:', {
+    currentOrigin,
+    documentReferrer,
+    hasReferrer: !!documentReferrer
+  });
+  
   // Se não há referrer, considerar válido (navegação direta)
-  if (!documentReferrer) return true;
+  if (!documentReferrer) {
+    console.log('Same Origin: Navegação direta (sem referrer)');
+    return true;
+  }
   
   try {
     const referrerUrl = new URL(documentReferrer);
     const allowedOrigins = [
       currentOrigin,
-      'https://lovable.dev', // Permitir Lovable
+      'https://lovable.dev',
       'https://tmgofvlwnbsikvyaavgr.supabase.co'
     ];
     
-    // Permitir se referrer for de origem confiável
-    return allowedOrigins.includes(referrerUrl.origin);
-  } catch {
+    const isAllowed = allowedOrigins.includes(referrerUrl.origin);
+    
+    console.log('Same Origin Result:', {
+      referrerOrigin: referrerUrl.origin,
+      allowedOrigins,
+      isAllowed
+    });
+    
+    return isAllowed;
+  } catch (error) {
+    console.error('Same Origin: Erro ao parsear referrer:', error);
     return false;
   }
 };
