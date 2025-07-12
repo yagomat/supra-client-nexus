@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { SecureClienteService, ClienteWithPaymentStatus } from "@/services/secureClienteService";
@@ -101,32 +102,6 @@ export const useSecureClienteOperations = () => {
     }
   }, [smartLoading, executeWithRetry, toast, validateOperation]);
 
-  // Buscar clientes tradicionais (fallback)
-  const fetchClientes = useCallback(async (status?: "todos" | "ativo" | "inativo") => {
-    try {
-      const result = await smartLoading.withLoading(
-        'fetch-clientes',
-        () => executeWithRetry(
-          () => SecureClienteService.getClientes(status),
-          'Carregar clientes'
-        ),
-        'Carregando clientes...',
-        'Clientes carregados com sucesso'
-      );
-      
-      setClientes(result);
-      return result;
-    } catch (error) {
-      console.error("Erro ao buscar clientes:", error);
-      toast({
-        title: "Erro ao carregar clientes",
-        description: error instanceof Error ? error.message : "Erro desconhecido",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  }, [smartLoading, executeWithRetry, toast]);
-
   // Criar cliente com validação CSRF obrigatória
   const createCliente = useCallback(async (cliente: Omit<Cliente, "id" | "created_at" | "status">) => {
     if (!(await validateOperation('criar cliente', cliente))) return;
@@ -223,58 +198,7 @@ export const useSecureClienteOperations = () => {
     }
   }, [smartLoading, executeWithRetry, toast, validateOperation]);
 
-  // Pesquisar clientes com rate limiting
-  const searchClientes = useCallback(async (searchTerm: string, status?: "todos" | "ativo" | "inativo") => {
-    try {
-      const result = await smartLoading.withLoading(
-        'search-clientes',
-        () => executeWithRetry(
-          () => SecureClienteService.searchClientes(searchTerm, status),
-          'Pesquisar clientes'
-        ),
-        'Pesquisando...',
-        'Pesquisa concluída'
-      );
-      
-      setClientes(result);
-      return result;
-    } catch (error) {
-      console.error("Erro ao pesquisar clientes:", error);
-      toast({
-        title: "Erro na pesquisa",
-        description: error instanceof Error ? error.message : "Erro desconhecido",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  }, [smartLoading, executeWithRetry, toast]);
-
-  // Calcular status de pagamento individual (backend)
-  const calculatePaymentStatus = useCallback(async (clienteId: string) => {
-    try {
-      const result = await executeWithRetry(
-        () => SecureClienteService.calculatePaymentStatus(clienteId),
-        'Calcular status de pagamento'
-      );
-      
-      return result;
-    } catch (error) {
-      console.error("Erro ao calcular status de pagamento:", error);
-      return { type: 'no_info', days: 0 };
-    }
-  }, [executeWithRetry]);
-
-  // Verificar rate limit para operação específica
-  const checkRateLimit = useCallback(async (operation: string) => {
-    try {
-      return await SecureClienteService.checkOperationRateLimit(operation);
-    } catch (error) {
-      console.error(`Erro ao verificar rate limit para ${operation}:`, error);
-      return false;
-    }
-  }, []);
-
-    return {
+  return {
     // Estados
     clientes,
     clientesWithStatus,
@@ -290,19 +214,18 @@ export const useSecureClienteOperations = () => {
     validateCliente: async (_data: any) => ({ valid: true, errors: [], warnings: [] }),
     isDataValid: (_data: any) => true,
     clearValidationMessages: () => {},
-    getAuditLogs: async (_eventType?: string) => [],
     
-    // Operações principais (agora com CSRF)
+    // Operações principais (agora consolidadas com CSRF)
     fetchClientesWithStatus,
     fetchClientes: fetchClientesWithStatus, // Usar a versão segura como padrão
     searchClientes: fetchClientesWithStatus, // Simplificar para usar o método principal
     createCliente,
     updateCliente,
     deleteCliente,
-    calculatePaymentStatus: async (clienteId: string) => ({ type: 'no_info', days: 0 }), // Stub seguro
+    calculatePaymentStatus: async (clienteId: string) => SecureClienteService.calculatePaymentStatus(clienteId),
     
     // Utilitários
-    checkRateLimit: async (operation: string) => true, // Stub seguro
+    checkRateLimit: async (operation: string) => SecureClienteService.checkOperationRateLimit(operation),
     clearOperations: smartLoading.clearAllOperations,
     
     // Loading helpers para componentes individuais
