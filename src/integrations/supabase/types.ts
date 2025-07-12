@@ -261,6 +261,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       valores_predefinidos: {
         Row: {
           id: string
@@ -289,6 +313,13 @@ export type Database = {
     Functions: {
       add_table_to_publication: {
         Args: { table_name: string }
+        Returns: undefined
+      }
+      add_user_role: {
+        Args: {
+          user_id_param: string
+          role_param: Database["public"]["Enums"]["app_role"]
+        }
         Returns: undefined
       }
       add_valor_predefinido: {
@@ -517,6 +548,16 @@ export type Database = {
           cliente_user_id: string
         }[]
       }
+      get_all_users_with_roles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          user_id: string
+          email: string
+          nome: string
+          created_at: string
+          roles: Database["public"]["Enums"]["app_role"][]
+        }[]
+      }
       get_clientes_optimized: {
         Args: { p_user_id: string; p_status?: string; p_limit?: number }
         Returns: {
@@ -608,6 +649,12 @@ export type Database = {
           user_agent: string
         }[]
       }
+      get_user_roles: {
+        Args: { user_id_param?: string }
+        Returns: {
+          role: Database["public"]["Enums"]["app_role"]
+        }[]
+      }
       get_validation_config: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -628,6 +675,13 @@ export type Database = {
           p_status: string
         }
         Returns: Json
+      }
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
       }
       import_valores_predefinidos: {
         Args: { p_user_id: string; p_tipo: string; p_valores: string[] }
@@ -705,6 +759,13 @@ export type Database = {
           p_ano: number
         }
         Returns: Json
+      }
+      remove_user_role: {
+        Args: {
+          user_id_param: string
+          role_param: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: undefined
       }
       sanitize_auth_input: {
         Args: { p_email: string; p_nome?: string }
@@ -818,7 +879,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "gerente" | "operador"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -945,6 +1006,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "gerente", "operador"],
+    },
   },
 } as const
