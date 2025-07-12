@@ -16,7 +16,14 @@ import { whatsappMonitor } from "./mobile/services/whatsappMonitor";
 import { permissionsService } from "./mobile/services/permissionsService";
 import { Capacitor } from "@capacitor/core";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    },
+  },
+});
 
 const App = () => {
   const [showPermissionsSetup, setShowPermissionsSetup] = useState(false);
@@ -62,7 +69,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <SecurityHeadersProvider 
         environment={process.env.NODE_ENV === 'production' ? 'production' : 'development'}
-        showWarnings={false} // Removendo os alertas visuais
+        showWarnings={false}
       >
         <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
           <TooltipProvider>
