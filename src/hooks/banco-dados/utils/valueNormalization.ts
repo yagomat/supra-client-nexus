@@ -1,5 +1,4 @@
-
-import { secureLogger } from '@/utils/secureLogger';
+import { secureLog } from '@/utils/secureLogger';
 
 /**
  * Utilitários para normalização de valores
@@ -32,7 +31,7 @@ export const normalizeValue = (value: string, tipo: string): string => {
 export const normalizeValueForDatabase = (value: string | number, tipo: string): string => {
   const stringValue = String(value).trim();
   
-  secureLogger.logOperation('value_normalization', {
+  secureLog.info('Value normalization operation', {
     type: tipo,
     originalLength: stringValue.length,
     hasSpecialChars: /[^a-zA-Z0-9\s]/.test(stringValue)
