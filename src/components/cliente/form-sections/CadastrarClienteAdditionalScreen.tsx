@@ -1,78 +1,91 @@
 
-import React from "react";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/form/SelectField";
-import { InputField } from "@/components/form/InputField";
+import { RestrictedInputField } from "@/components/form/RestrictedInputField";
+import { Control } from "react-hook-form";
+import { ClienteFormValues } from "@/hooks/cliente";
 import { ValoresPredefinidos } from "@/types";
 
-interface AdditionalScreenProps {
-  control: any;
+interface CadastrarClienteAdditionalScreenProps {
+  control: Control<ClienteFormValues>;
   valoresPredefinidos: ValoresPredefinidos | null;
   disabled?: boolean;
 }
 
-export const CadastrarClienteAdditionalScreen: React.FC<AdditionalScreenProps> = ({
-  control,
-  valoresPredefinidos,
-  disabled = false,
-}) => {
-  const dispositivoOptions = (valoresPredefinidos?.dispositivos_smart || []).map(dispositivo => ({
-    value: dispositivo,
-    label: dispositivo,
-  }));
-
-  const aplicativoOptions = (valoresPredefinidos?.aplicativos || []).map(aplicativo => ({
-    value: aplicativo,
-    label: aplicativo,
-  }));
-
+export const CadastrarClienteAdditionalScreen = ({ 
+  control, 
+  valoresPredefinidos, 
+  disabled = false 
+}: CadastrarClienteAdditionalScreenProps) => {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {valoresPredefinidos?.dispositivos_smart && (
         <SelectField
           name="dispositivo_smart_2"
           control={control}
           label="Dispositivo Smart 2"
-          placeholder="Selecione o dispositivo"
-          options={dispositivoOptions}
+          placeholder="Selecione um dispositivo"
+          options={valoresPredefinidos.dispositivos_smart.map(dispositivo => ({
+            value: dispositivo,
+            label: dispositivo
+          }))}
           disabled={disabled}
         />
+      )}
 
+      {valoresPredefinidos?.aplicativos && (
         <SelectField
           name="aplicativo_2"
           control={control}
           label="Aplicativo 2"
-          placeholder="Selecione o aplicativo"
-          options={aplicativoOptions}
+          placeholder="Selecione um aplicativo"
+          options={valoresPredefinidos.aplicativos.map(app => ({
+            value: app,
+            label: app
+          }))}
           disabled={disabled}
         />
+      )}
 
-        <InputField
-          name="usuario_2"
-          control={control}
-          label="Usuário (MAC) 2"
-          placeholder="Endereço MAC do dispositivo 2"
-          disabled={disabled}
-          maxLength={25}
-        />
+      <RestrictedInputField
+        name="usuario_2"
+        control={control}
+        label="Usuário 2"
+        placeholder="Digite o usuário (apenas letras minúsculas e números)"
+        disabled={disabled}
+        maxLength={25}
+        allowOnlyLowercaseAndNumbers={true}
+      />
 
-        <InputField
-          name="senha_2"
-          control={control}
-          label="Senha (Id) 2"
-          placeholder="Identificação do dispositivo 2"
-          disabled={disabled}
-          maxLength={25}
-        />
+      <RestrictedInputField
+        name="senha_2"
+        control={control}
+        label="Senha 2"
+        placeholder="Digite a senha (apenas letras minúsculas e números)"
+        type="password"
+        disabled={disabled}
+        maxLength={25}
+        allowOnlyLowercaseAndNumbers={true}
+      />
 
-        <InputField
-          name="data_licenca_2"
-          control={control}
-          label="Vencimento da Licença do App 2"
-          placeholder="Data de vencimento"
-          type="date"
-          disabled={disabled}
-        />
-      </div>
+      <FormField
+        control={control}
+        name="data_licenca_2"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Data de Licença 2</FormLabel>
+            <FormControl>
+              <Input
+                type="date"
+                {...field}
+                disabled={disabled}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </div>
   );
 };
