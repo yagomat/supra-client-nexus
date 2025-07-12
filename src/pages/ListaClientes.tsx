@@ -1,20 +1,17 @@
 
-import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { ClienteModals } from "@/components/clientes/ClienteModals";
 import { ClienteListContent } from "@/components/clientes/ClienteListContent";
+import { ClienteModals } from "@/components/clientes/ClienteModals";
 import { useClienteList } from "@/hooks/cliente/useClienteList";
-import { UniversalCSRFProtection } from "@/components/security/UniversalCSRFProtection";
 
 const ListaClientes = () => {
-  const navigate = useNavigate();
-  const { 
+  const {
     clientes,
-    filteredClientes, 
-    loading, 
-    searchTerm, 
+    filteredClientes,
+    loading,
+    searchTerm,
     setSearchTerm,
-    statusFilter, 
+    statusFilter,
     setStatusFilter,
     clienteDetalhes,
     isViewModalOpen,
@@ -37,38 +34,27 @@ const ListaClientes = () => {
   } = useClienteList();
 
   return (
-    <UniversalCSRFProtection 
-      level="strict"
-      showStatus={false}
-      onValidationFail={() => {
-        console.error('CSRF validation failed on ListaClientes');
-        navigate("/dashboard");
-      }}
-    >
-      <DashboardLayout title="Clientes">
-        <div className="space-y-8 animate-fade-in">
-          <div className="animate-slide-up">
-            <ClienteListContent
-              loading={loading}
-              filteredClientes={filteredClientes}
-              allClientes={clientes}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              statusFilter={statusFilter}
-              setStatusFilter={setStatusFilter}
-              handleLimparFiltros={handleLimparFiltros}
-              verDetalhes={verDetalhes}
-              verTelaAdicional={verTelaAdicional}
-              verObservacoes={verObservacoes}
-              confirmarExclusao={confirmarExclusao}
-              orderBy={orderBy}
-              onOrderChange={handleOrderChange}
-              onImportSuccess={fetchClientes}
-            />
-          </div>
-        </div>
+    <DashboardLayout title="Lista de Clientes">
+      <div className="space-y-6 animate-fade-in">
+        <ClienteListContent
+          loading={loading}
+          filteredClientes={filteredClientes}
+          allClientes={clientes}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          handleLimparFiltros={handleLimparFiltros}
+          verDetalhes={verDetalhes}
+          verTelaAdicional={verTelaAdicional}
+          verObservacoes={verObservacoes}
+          confirmarExclusao={confirmarExclusao}
+          orderBy={orderBy}
+          onOrderChange={handleOrderChange}
+          onImportSuccess={fetchClientes}
+        />
 
-        <ClienteModals 
+        <ClienteModals
           clienteDetalhes={clienteDetalhes}
           isViewModalOpen={isViewModalOpen}
           setIsViewModalOpen={setIsViewModalOpen}
@@ -80,8 +66,8 @@ const ListaClientes = () => {
           setClienteParaExcluir={setClienteParaExcluir}
           handleExcluir={handleExcluir}
         />
-      </DashboardLayout>
-    </UniversalCSRFProtection>
+      </div>
+    </DashboardLayout>
   );
 };
 

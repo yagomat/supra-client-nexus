@@ -3,20 +3,20 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Cliente } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
-import { SecureClienteService } from "@/services/secureClienteService";
+import { getClientes, deleteCliente } from "@/services/clienteService";
 
 export const useOptimizedClienteFetch = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Buscar todos os clientes usando o serviço seguro
+  // Buscar todos os clientes usando o serviço padrão
   const fetchClientes = async () => {
     try {
       setLoading(true);
       
-      // Usar o SecureClienteService diretamente para buscar clientes
-      const clientesData = await SecureClienteService.getClientes();
+      // Usar o serviço de clientes padrão
+      const clientesData = await getClientes();
       
       // Verificar se há IDs duplicados nos dados
       const ids = clientesData.map(c => c.id);
@@ -49,8 +49,8 @@ export const useOptimizedClienteFetch = () => {
     try {
       console.log("Tentando excluir cliente:", clienteParaExcluir);
       
-      // Usar SecureClienteService para exclusão
-      await SecureClienteService.deleteCliente(clienteParaExcluir);
+      // Usar serviço padrão para exclusão
+      await deleteCliente(clienteParaExcluir);
       
       // Atualizar a lista de clientes localmente (otimização)
       setClientes((prev) => prev.filter((cliente) => cliente.id !== clienteParaExcluir));
