@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,6 +15,58 @@ interface ValorValidationResult {
   code?: string;
   normalized_value?: string;
 }
+
+// Configuração de validação local (movida do backend)
+const VALIDATION_CONFIG = {
+  tipos: {
+    ufs: {
+      tipo: 'string',
+      maxLength: 2,
+      maxItemsPerOperation: 10,
+      description: 'Estados brasileiros (sigla)',
+      example: 'SP;RJ;MG'
+    },
+    servidores: {
+      tipo: 'string',
+      maxLength: 25,
+      maxItemsPerOperation: 10,
+      description: 'Nomes de servidores',
+      example: 'Servidor1;Servidor2'
+    },
+    dias_vencimento: {
+      tipo: 'integer',
+      minValue: 1,
+      maxValue: 31,
+      maxItemsPerOperation: 10,
+      description: 'Dias de vencimento (1-31)',
+      example: '10;15;20'
+    },
+    valores_plano: {
+      tipo: 'decimal',
+      minValue: 0.01,
+      maxValue: 1000,
+      decimalPlaces: 2,
+      maxItemsPerOperation: 10,
+      description: 'Valores de plano (até R$ 1.000)',
+      example: '49.90;99.90;199.90'
+    },
+    dispositivos_smart: {
+      tipo: 'string',
+      maxLength: 25,
+      maxItemsPerOperation: 10,
+      description: 'Nomes de dispositivos',
+      example: 'TV Box;Smart TV'
+    },
+    aplicativos: {
+      tipo: 'string',
+      maxLength: 25,
+      maxItemsPerOperation: 10,
+      description: 'Nomes de aplicativos',
+      example: 'Netflix;YouTube'
+    }
+  },
+  ufsValidas: ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO']
+};
 
 export const useValidationCentralized = () => {
   const [validating, setValidating] = useState(false);
@@ -119,21 +172,10 @@ export const useValidationCentralized = () => {
     }
   }, []);
 
-  // Obter configuração de validação do backend
+  // Obter configuração de validação (agora local)
   const getValidationConfig = useCallback(async () => {
-    try {
-      const { data, error } = await supabase.rpc('get_validation_config');
-
-      if (error) {
-        console.error("Erro ao obter configuração:", error);
-        return null;
-      }
-
-      return data;
-    } catch (error) {
-      console.error("Erro ao obter configuração:", error);
-      return null;
-    }
+    // Retornar configuração local em vez de fazer chamada ao backend
+    return VALIDATION_CONFIG;
   }, []);
 
   return {
