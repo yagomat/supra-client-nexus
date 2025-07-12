@@ -50,9 +50,20 @@ export const useCSRFProtection = () => {
     return checkOrigin();
   }, [checkOrigin]);
 
+  // Adicionar função getSecureHeaders que estava faltando
+  const getSecureHeaders = useCallback(() => {
+    return {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': csrfToken,
+      'X-Requested-With': 'XMLHttpRequest',
+      'Origin': window.location.origin
+    };
+  }, [csrfToken]);
+
   return {
     csrfToken,
     isValidOrigin,
-    validateRequest
+    validateRequest,
+    getSecureHeaders
   };
 };
