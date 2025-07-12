@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Cliente } from "@/types";
 
@@ -59,7 +60,7 @@ export class ClienteSecurityService {
    */
   static async secureCreateCliente(data: Partial<Cliente>): Promise<SecureOperationResult> {
     try {
-      // Verificar rate limiting
+      // Verificar rate limiting usando a função consolidada
       const { data: currentUser } = await supabase.auth.getUser();
       if (!currentUser.user) {
         return {
@@ -71,7 +72,7 @@ export class ClienteSecurityService {
       const { data: rateLimitOk, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
         p_user_id: currentUser.user.id,
         p_operation: 'create_cliente',
-        p_max_requests: 50, // Máximo 50 criações por hora
+        p_max_requests: 50,
         p_time_window_minutes: 60
       });
 
@@ -111,7 +112,7 @@ export class ClienteSecurityService {
    */
   static async secureUpdateCliente(clienteId: string, data: Partial<Cliente>): Promise<SecureOperationResult> {
     try {
-      // Verificar rate limiting
+      // Verificar rate limiting usando a função consolidada
       const { data: currentUser } = await supabase.auth.getUser();
       if (!currentUser.user) {
         return {
@@ -123,7 +124,7 @@ export class ClienteSecurityService {
       const { data: rateLimitOk, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
         p_user_id: currentUser.user.id,
         p_operation: 'update_cliente',
-        p_max_requests: 100, // Máximo 100 atualizações por hora
+        p_max_requests: 100,
         p_time_window_minutes: 60
       });
 
@@ -187,7 +188,7 @@ export class ClienteSecurityService {
   }
 
   /**
-   * Verifica rate limit para exportação
+   * Verifica rate limit para exportação usando a função consolidada
    */
   static async checkExportRateLimit(): Promise<boolean> {
     try {
@@ -199,9 +200,8 @@ export class ClienteSecurityService {
       }
 
       console.log('checkExportRateLimit: Usuário autenticado:', currentUser.user.id);
-      console.log('checkExportRateLimit: Chamando check_export_rate_limit com limites padrão...');
+      console.log('checkExportRateLimit: Chamando check_export_rate_limit...');
 
-      // Usar o novo limite padrão de 50 exportações por hora
       const { data: rateLimitOk, error } = await supabase.rpc('check_export_rate_limit', {
         p_user_id: currentUser.user.id,
         p_max_requests: 50,
@@ -224,16 +224,20 @@ export class ClienteSecurityService {
   }
 
   /**
-   * Registra tentativa de exportação
+   * Registra tentativa de exportação usando a função consolidada
    */
   static async logExportAttempt(count: number): Promise<void> {
     try {
       const { data: currentUser } = await supabase.auth.getUser();
       if (!currentUser.user) return;
 
-      await supabase.rpc('log_export_attempt', {
+      await supabase.rpc('log_audit_event', {
         p_user_id: currentUser.user.id,
-        p_count: count
+        p_event_type: 'export_excel',
+        p_details: {
+          clientes_count: count,
+          timestamp: new Date().toISOString()
+        }
       });
     } catch (error) {
       console.error('Erro ao registrar tentativa de exportação:', error);
@@ -261,7 +265,7 @@ export class ClienteSecurityService {
   }
 
   /**
-   * Registra operação de auditoria
+   * Registra operação de auditoria usando a função consolidada
    */
   static async logOperation(
     operation: string,
@@ -273,12 +277,16 @@ export class ClienteSecurityService {
       const { data: currentUser } = await supabase.auth.getUser();
       if (!currentUser.user) return;
 
-      await supabase.rpc('log_cliente_operation', {
+      await supabase.rpc('log_audit_event', {
         p_user_id: currentUser.user.id,
-        p_operation: operation,
-        p_cliente_id: clienteId,
-        p_old_data: oldData,
-        p_new_data: newData,
+        p_event_type: `cliente_${operation}`,
+        p_details: {
+          cliente_id: clienteId,
+          operation: operation,
+          old_data: oldData,
+          new_data: newData,
+          timestamp: new Date().toISOString()
+        },
         p_ip_address: this.getClientIP()
       });
     } catch (error) {

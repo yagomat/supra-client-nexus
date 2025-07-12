@@ -343,32 +343,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      check_comprehensive_rate_limit: {
-        Args: {
-          p_user_id: string
-          p_operation: string
-          p_max_requests?: number
-          p_time_window_minutes?: number
-        }
-        Returns: Json
-      }
-      check_consolidated_rate_limit: {
-        Args: {
-          p_user_id: string
-          p_operation: string
-          p_max_requests?: number
-          p_time_window_minutes?: number
-        }
-        Returns: Json
-      }
-      check_dashboard_rate_limit: {
-        Args: {
-          p_user_id: string
-          p_max_requests?: number
-          p_time_window_minutes?: number
-        }
-        Returns: boolean
-      }
       check_export_rate_limit: {
         Args: {
           p_user_id: string
@@ -377,36 +351,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      check_operation_rate_limit: {
-        Args: { p_user_id: string; p_operation: string }
-        Returns: boolean
-      }
-      check_profile_rate_limit: {
-        Args: {
-          p_user_id: string
-          p_max_requests?: number
-          p_time_window_minutes?: number
-        }
-        Returns: boolean
-      }
       check_rate_limit: {
-        Args: {
-          p_user_id: string
-          p_operation: string
-          p_max_requests?: number
-          p_time_window_minutes?: number
-        }
-        Returns: boolean
-      }
-      check_templates_rate_limit: {
-        Args: {
-          p_user_id: string
-          p_max_requests?: number
-          p_time_window_minutes?: number
-        }
-        Returns: boolean
-      }
-      check_valores_predefinidos_rate_limit: {
         Args: {
           p_user_id: string
           p_operation: string
@@ -655,10 +600,6 @@ export type Database = {
           role: Database["public"]["Enums"]["app_role"]
         }[]
       }
-      get_validation_config: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
       get_valores_predefinidos: {
         Args: { p_user_id: string }
         Returns: Json
@@ -691,7 +632,7 @@ export type Database = {
         Args: {
           p_user_id: string
           p_event_type: string
-          p_details: Json
+          p_details?: Json
           p_ip_address?: string
           p_user_agent?: string
         }
