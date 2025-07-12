@@ -52,21 +52,19 @@ export const CadastrarClienteMainScreen = ({
         name="usuario_aplicativo"
         control={control}
         label="Usuário do Aplicativo"
-        placeholder="Digite o usuário (apenas letras minúsculas e números)"
+        placeholder="Digite o usuário"
         disabled={disabled}
         maxLength={25}
-        allowOnlyLowercaseAndNumbers={true}
       />
 
       <RestrictedInputField
         name="senha_aplicativo"
         control={control}
         label="Senha do Aplicativo"
-        placeholder="Digite a senha (apenas letras minúsculas e números)"
+        placeholder="Digite a senha"
         type="password"
         disabled={disabled}
         maxLength={25}
-        allowOnlyLowercaseAndNumbers={true}
       />
 
       <FormField

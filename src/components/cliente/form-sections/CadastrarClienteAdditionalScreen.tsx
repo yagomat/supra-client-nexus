@@ -52,21 +52,19 @@ export const CadastrarClienteAdditionalScreen = ({
         name="usuario_2"
         control={control}
         label="Usuário 2"
-        placeholder="Digite o usuário (apenas letras minúsculas e números)"
+        placeholder="Digite o usuário"
         disabled={disabled}
         maxLength={25}
-        allowOnlyLowercaseAndNumbers={true}
       />
 
       <RestrictedInputField
         name="senha_2"
         control={control}
         label="Senha 2"
-        placeholder="Digite a senha (apenas letras minúsculas e números)"
+        placeholder="Digite a senha"
         type="password"
         disabled={disabled}
         maxLength={25}
-        allowOnlyLowercaseAndNumbers={true}
       />
 
       <FormField
