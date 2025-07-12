@@ -152,7 +152,7 @@ export const validateCSRFTokenData = (token: string, userSession?: string, maxAg
 };
 
 /**
- * Headers seguros para requisições
+ * Headers seguros para requisições - Agora integrado com os novos headers de segurança
  */
 export const getSecureHeaders = (csrfToken?: string): HeadersInit => {
   const headers: HeadersInit = {
@@ -203,13 +203,36 @@ export const isSameOriginRequest = (): boolean => {
 };
 
 /**
- * Content Security Policy mais restritiva e segura
+ * Aplicar todas as medidas de segurança de uma vez
  */
-export const getCSPString = (): string => {
-  return [
+export const applySecurityMeasures = () => {
+  // Aplicar headers via JavaScript (fallback se o servidor não aplicar)
+  if (typeof document !== 'undefined') {
+    // Aplicar CSP via meta tag se não estiver presente
+    if (!document.querySelector('meta[http-equiv="Content-Security-Policy"]')) {
+      const csp = document.createElement('meta');
+      csp.setAttribute('http-equiv', 'Content-Security-Policy');
+      csp.setAttribute('content', getProductionCSPString());
+      document.head.appendChild(csp);
+    }
+    
+    // Monitorar violações de CSP
+    document.addEventListener('securitypolicyviolation', (event) => {
+      console.warn('🚨 Violação de CSP:', {
+        blockedURI: event.blockedURI,
+        violatedDirective: event.violatedDirective,
+        disposition: event.disposition
+      });
+    });
+  }
+};
+
+/**
+ * CSP otimizado baseado no ambiente
+ */
+export const getDynamicCSPString = (environment: 'development' | 'production' = 'development'): string => {
+  const baseDirectives = [
     "default-src 'self'",
-    "script-src 'self' https://cdn.gpteng.co", // Removido 'unsafe-inline' e 'unsafe-eval'
-    "style-src 'self' 'unsafe-inline'", // Mantido apenas para CSS inline do Tailwind
     "img-src 'self' data: https:",
     "font-src 'self' data:",
     "connect-src 'self' https://tmgofvlwnbsikvyaavgr.supabase.co wss://tmgofvlwnbsikvyaavgr.supabase.co",
@@ -218,25 +241,34 @@ export const getCSPString = (): string => {
     "form-action 'self'",
     "frame-ancestors 'none'",
     "upgrade-insecure-requests"
-  ].join('; ');
+  ];
+
+  if (environment === 'production') {
+    return [
+      ...baseDirectives,
+      "script-src 'self'",
+      "style-src 'self'",
+      "block-all-mixed-content"
+    ].join('; ');
+  } else {
+    return [
+      ...baseDirectives,
+      "script-src 'self' https://cdn.gpteng.co 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline'"
+    ].join('; ');
+  }
+};
+
+/**
+ * Content Security Policy mais restritiva e segura
+ */
+export const getCSPString = (): string => {
+  return getDynamicCSPString('development');
 };
 
 /**
  * CSP mais restritivo para produção
  */
 export const getProductionCSPString = (): string => {
-  return [
-    "default-src 'self'",
-    "script-src 'self'", // Sem CDN externo em produção
-    "style-src 'self'", // Sem 'unsafe-inline' em produção
-    "img-src 'self' data:",
-    "font-src 'self'",
-    "connect-src 'self' https://tmgofvlwnbsikvyaavgr.supabase.co wss://tmgofvlwnbsikvyaavgr.supabase.co",
-    "object-src 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-    "frame-ancestors 'none'",
-    "upgrade-insecure-requests",
-    "block-all-mixed-content"
-  ].join('; ');
+  return getDynamicCSPString('production');
 };
