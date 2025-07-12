@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Cliente } from "@/types";
+import { ClientePasswordService } from "./clientePasswordService";
 
 export async function getClientes(status?: "todos" | "ativo" | "inativo"): Promise<Cliente[]> {
   // Usar nossa nova função RPC filter_clientes_by_status
@@ -39,18 +40,26 @@ export async function getClientes(status?: "todos" | "ativo" | "inativo"): Promi
 }
 
 export async function getCliente(id: string): Promise<Cliente> {
-  const { data, error } = await supabase
-    .from('clientes')
-    .select('*')
-    .eq('id', id)
-    .single();
+  // Usar o serviço de senhas para buscar com descriptografia automática
+  const clienteWithPasswords = await ClientePasswordService.getClienteWithDecryptedPasswords(id);
+  
+  if (!clienteWithPasswords) {
+    // Fallback para busca normal se a função RPC falhar
+    const { data, error } = await supabase
+      .from('clientes')
+      .select('*')
+      .eq('id', id)
+      .single();
+      
+    if (error) {
+      console.error("Erro ao buscar cliente:", error);
+      throw error;
+    }
     
-  if (error) {
-    console.error("Erro ao buscar cliente:", error);
-    throw error;
+    return data as Cliente;
   }
   
-  return data as Cliente;
+  return clienteWithPasswords;
 }
 
 export async function createCliente(cliente: Omit<Cliente, "id" | "created_at" | "status">): Promise<Cliente> {
@@ -60,14 +69,15 @@ export async function createCliente(cliente: Omit<Cliente, "id" | "created_at" |
     throw new Error("Usuário não autenticado");
   }
   
-  const newCliente = {
+  // Preparar dados usando o serviço de senhas
+  const preparedCliente = ClientePasswordService.prepareClienteForSubmission({
     ...cliente,
     user_id: currentUser.user.id,
-  };
+  });
   
   const { data, error } = await supabase
     .from('clientes')
-    .insert([newCliente])
+    .insert([preparedCliente])
     .select()
     .single();
     
@@ -80,9 +90,12 @@ export async function createCliente(cliente: Omit<Cliente, "id" | "created_at" |
 }
 
 export async function updateCliente(id: string, cliente: Partial<Cliente>): Promise<Cliente> {
+  // Preparar dados usando o serviço de senhas
+  const preparedCliente = ClientePasswordService.prepareClienteForSubmission(cliente);
+  
   const { data, error } = await supabase
     .from('clientes')
-    .update(cliente)
+    .update(preparedCliente)
     .eq('id', id)
     .select()
     .single();

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { updateCliente } from "@/services/clienteService";
 import { ClienteFormValues } from "./clienteFormSchema";
+import { ClientePasswordService } from "@/services/clientePasswordService";
 
 export const useClienteSubmit = (clienteId: string | undefined) => {
   const navigate = useNavigate();
@@ -16,8 +17,8 @@ export const useClienteSubmit = (clienteId: string | undefined) => {
     try {
       setSubmitting(true);
       
-      // Atualizar cliente - assegurar que apenas dígitos são enviados para o telefone
-      await updateCliente(clienteId, {
+      // Preparar dados usando o serviço de senhas (que vai garantir tratamento correto das senhas)
+      const preparedData = ClientePasswordService.prepareClienteForSubmission({
         ...data,
         // Remover qualquer formatação, armazenar apenas os dígitos do telefone
         telefone: data.telefone ? data.telefone.replace(/\D/g, '') : null,
@@ -33,6 +34,9 @@ export const useClienteSubmit = (clienteId: string | undefined) => {
         data_licenca_2: data.possui_tela_adicional ? data.data_licenca_2 || null : null,
         observacoes: data.observacoes || null,
       });
+      
+      // Atualizar cliente (as senhas serão criptografadas automaticamente pelo trigger)
+      await updateCliente(clienteId, preparedData);
       
       toast({
         title: "Cliente atualizado",

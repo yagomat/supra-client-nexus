@@ -31,11 +31,17 @@ export const useEditCliente = () => {
       try {
         setLoading(true);
         const [clienteData, valoresData] = await Promise.all([
-          getCliente(id),
+          getCliente(id), // Agora usa automaticamente descriptografia de senhas
           getValoresPredefinidos()
         ]);
         
-        console.log("Dados do cliente carregados:", clienteData);
+        console.log("Dados do cliente carregados (com senhas descriptografadas):", {
+          ...clienteData,
+          // Log das senhas apenas se existirem (para debug)
+          senha_aplicativo: clienteData.senha_aplicativo ? 'XXXXX (descriptografada)' : null,
+          senha_2: clienteData.senha_2 ? 'XXXXX (descriptografada)' : null
+        });
+        
         setCliente(clienteData);
         setValoresPredefinidos(valoresData);
         setPossuiTelaAdicional(clienteData.possui_tela_adicional || false);
@@ -70,7 +76,11 @@ export const useEditCliente = () => {
   // Preencher o formulário quando os dados do cliente forem carregados
   useEffect(() => {
     if (cliente && form) {
-      console.log("Preenchendo formulário com dados do cliente:", cliente);
+      console.log("Preenchendo formulário com dados do cliente (senhas descriptografadas):", {
+        ...cliente,
+        senha_aplicativo: cliente.senha_aplicativo ? 'XXXXX (preenchida)' : null,
+        senha_2: cliente.senha_2 ? 'XXXXX (preenchida)' : null
+      });
       
       form.reset({
         nome: cliente.nome || "",
@@ -83,13 +93,13 @@ export const useEditCliente = () => {
         dispositivo_smart: cliente.dispositivo_smart || "",
         aplicativo: cliente.aplicativo || "",
         usuario_aplicativo: cliente.usuario_aplicativo || "",
-        senha_aplicativo: cliente.senha_aplicativo || "",
+        senha_aplicativo: cliente.senha_aplicativo || "", // Agora a senha vem descriptografada
         data_licenca_aplicativo: cliente.data_licenca_aplicativo || "",
         possui_tela_adicional: cliente.possui_tela_adicional || false,
         dispositivo_smart_2: cliente.dispositivo_smart_2 || "",
         aplicativo_2: cliente.aplicativo_2 || "",
         usuario_2: cliente.usuario_2 || "",
-        senha_2: cliente.senha_2 || "",
+        senha_2: cliente.senha_2 || "", // Agora a senha vem descriptografada
         data_licenca_2: cliente.data_licenca_2 || "",
         observacoes: cliente.observacoes || "",
         status: (cliente.status as "ativo" | "inativo") || "inativo"
@@ -106,7 +116,11 @@ export const useEditCliente = () => {
 
   // Função para lidar com o submit do formulário
   const handleFormSubmit = async (data: ClienteFormValues) => {
-    console.log("Dados do formulário antes da validação:", data);
+    console.log("Dados do formulário antes da validação:", {
+      ...data,
+      senha_aplicativo: data.senha_aplicativo ? 'XXXXX (será criptografada)' : null,
+      senha_2: data.senha_2 ? 'XXXXX (será criptografada)' : null
+    });
     
     const requiredFields = [
       { field: 'nome', name: 'Nome' },
@@ -150,7 +164,11 @@ export const useEditCliente = () => {
       observacoes: data.observacoes?.trim() === "" ? null : data.observacoes
     };
 
-    console.log("Dados sanitizados:", sanitizedData);
+    console.log("Dados sanitizados (senhas serão criptografadas automaticamente):", {
+      ...sanitizedData,
+      senha_aplicativo: sanitizedData.senha_aplicativo ? 'XXXXX (será criptografada)' : null,
+      senha_2: sanitizedData.senha_2 ? 'XXXXX (será criptografada)' : null
+    });
 
   try {
     await originalOnSubmit(sanitizedData);

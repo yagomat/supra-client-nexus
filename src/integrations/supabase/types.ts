@@ -385,6 +385,10 @@ export type Database = {
         Args: { cliente_id_param: string }
         Returns: boolean
       }
+      decrypt_cliente_password: {
+        Args: { p_encrypted_password: string; p_cliente_id: string }
+        Returns: string
+      }
       decrypt_sensitive_data: {
         Args: { p_encrypted_data: string; p_key?: string }
         Returns: string
@@ -392,6 +396,10 @@ export type Database = {
       delete_valor_predefinido: {
         Args: { p_user_id: string; p_tipo: string; p_valor: string }
         Returns: Json
+      }
+      encrypt_cliente_password: {
+        Args: { p_password: string; p_cliente_id: string }
+        Returns: string
       }
       encrypt_sensitive_data: {
         Args: { p_data: string; p_key?: string }
@@ -520,6 +528,10 @@ export type Database = {
           roles: Database["public"]["Enums"]["app_role"][]
         }[]
       }
+      get_cliente_with_decrypted_passwords: {
+        Args: { p_cliente_id: string }
+        Returns: Json
+      }
       get_clientes_optimized: {
         Args: { p_user_id: string; p_status?: string; p_limit?: number }
         Returns: {
@@ -646,13 +658,15 @@ export type Database = {
         Returns: Json
       }
       log_audit_event: {
-        Args: {
-          p_user_id: string
-          p_event_type: string
-          p_details?: Json
-          p_ip_address?: string
-          p_user_agent?: string
-        }
+        Args:
+          | { p_user_id: string; p_event_type: string; p_details: Json }
+          | {
+              p_user_id: string
+              p_event_type: string
+              p_details?: Json
+              p_ip_address?: string
+              p_user_agent?: string
+            }
         Returns: undefined
       }
       log_auth_attempt: {
@@ -710,6 +724,10 @@ export type Database = {
       mask_ip_address: {
         Args: { p_ip: string }
         Returns: string
+      }
+      migrate_existing_passwords: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       recalculate_all_client_status: {
         Args: Record<PropertyKey, never>
