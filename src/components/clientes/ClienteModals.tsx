@@ -5,6 +5,7 @@ import { Cliente } from "@/types";
 import { formatDate } from "@/utils/dateUtils";
 import { Badge } from "@/components/ui/badge";
 import { formatPhoneNumber } from "./table/PhoneFormatter";
+import { SafeText } from "@/components/security/SafeText";
 
 interface ClienteModalsProps {
   clienteDetalhes: Cliente | null;
@@ -52,7 +53,9 @@ export const ClienteModals = ({
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Nome</p>
-                    <p className="font-medium">{clienteDetalhes.nome}</p>
+                    <p className="font-medium">
+                      <SafeText>{clienteDetalhes.nome}</SafeText>
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Telefone</p>
@@ -60,11 +63,11 @@ export const ClienteModals = ({
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">UF</p>
-                    <p>{clienteDetalhes.uf || "-"}</p>
+                    <p><SafeText>{clienteDetalhes.uf || "-"}</SafeText></p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Servidor</p>
-                    <p>{clienteDetalhes.servidor}</p>
+                    <p><SafeText>{clienteDetalhes.servidor}</SafeText></p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Dia Vencimento</p>
@@ -87,19 +90,19 @@ export const ClienteModals = ({
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Dispositivo Smart</p>
-                    <p>{clienteDetalhes.dispositivo_smart || "-"}</p>
+                    <p><SafeText>{clienteDetalhes.dispositivo_smart || "-"}</SafeText></p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Aplicativo</p>
-                    <p>{clienteDetalhes.aplicativo}</p>
+                    <p><SafeText>{clienteDetalhes.aplicativo}</SafeText></p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Usuário</p>
-                    <p>{clienteDetalhes.usuario_aplicativo}</p>
+                    <p><SafeText>{clienteDetalhes.usuario_aplicativo}</SafeText></p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Senha</p>
-                    <p>{clienteDetalhes.senha_aplicativo}</p>
+                    <p><SafeText>{clienteDetalhes.senha_aplicativo}</SafeText></p>
                   </div>
                   <div className="col-span-2">
                     <p className="text-sm font-medium text-muted-foreground">Data da Licença</p>
@@ -115,19 +118,19 @@ export const ClienteModals = ({
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Dispositivo Smart 2</p>
-                      <p>{clienteDetalhes.dispositivo_smart_2 || "-"}</p>
+                      <p><SafeText>{clienteDetalhes.dispositivo_smart_2 || "-"}</SafeText></p>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Aplicativo 2</p>
-                      <p>{clienteDetalhes.aplicativo_2 || "-"}</p>
+                      <p><SafeText>{clienteDetalhes.aplicativo_2 || "-"}</SafeText></p>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Usuário 2</p>
-                      <p>{clienteDetalhes.usuario_2 || "-"}</p>
+                      <p><SafeText>{clienteDetalhes.usuario_2 || "-"}</SafeText></p>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Senha 2</p>
-                      <p>{clienteDetalhes.senha_2 || "-"}</p>
+                      <p><SafeText>{clienteDetalhes.senha_2 || "-"}</SafeText></p>
                     </div>
                     <div className="col-span-2">
                       <p className="text-sm font-medium text-muted-foreground">Data da Licença 2</p>
@@ -142,7 +145,12 @@ export const ClienteModals = ({
                 <div>
                   <h3 className="text-lg font-semibold mb-3">Observações</h3>
                   <div className="bg-muted p-3 rounded-md">
-                    <p className="whitespace-pre-wrap">{clienteDetalhes.observacoes}</p>
+                    <SafeText 
+                      preserveLineBreaks={true}
+                      className="whitespace-pre-wrap"
+                    >
+                      {clienteDetalhes.observacoes}
+                    </SafeText>
                   </div>
                 </div>
               )}
@@ -162,19 +170,19 @@ export const ClienteModals = ({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Dispositivo Smart 2</p>
-                  <p>{clienteDetalhes.dispositivo_smart_2 || "-"}</p>
+                  <p><SafeText>{clienteDetalhes.dispositivo_smart_2 || "-"}</SafeText></p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Aplicativo 2</p>
-                  <p>{clienteDetalhes.aplicativo_2 || "-"}</p>
+                  <p><SafeText>{clienteDetalhes.aplicativo_2 || "-"}</SafeText></p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Usuário 2</p>
-                  <p>{clienteDetalhes.usuario_2 || "-"}</p>
+                  <p><SafeText>{clienteDetalhes.usuario_2 || "-"}</SafeText></p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Senha 2</p>
-                  <p>{clienteDetalhes.senha_2 || "-"}</p>
+                  <p><SafeText>{clienteDetalhes.senha_2 || "-"}</SafeText></p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Data da Licença 2</p>
@@ -193,7 +201,9 @@ export const ClienteModals = ({
             <DialogTitle>Observações</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p>{clienteDetalhes?.observacoes}</p>
+            <SafeText preserveLineBreaks={true}>
+              {clienteDetalhes?.observacoes}
+            </SafeText>
           </div>
         </DialogContent>
       </Dialog>

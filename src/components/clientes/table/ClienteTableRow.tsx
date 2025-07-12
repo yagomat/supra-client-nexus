@@ -7,6 +7,7 @@ import { Cliente } from "@/types";
 import { formatDate } from "@/utils/dateUtils";
 import { ClienteStatusBadge } from "../ClienteStatusBadge";
 import { formatPhoneNumber } from "./PhoneFormatter";
+import { SafeText } from "@/components/security/SafeText";
 
 interface ClienteTableRowProps {
   cliente: Cliente;
@@ -38,11 +39,11 @@ export const ClienteTableRow = ({
     >
       <TableCell>{formatDate(cliente.created_at)}</TableCell>
       <TableCell className={`font-medium sticky left-0 ${nameCellBgClass} z-30 border-r-2 border-border shadow-xl`}>
-        {cliente.nome}
+        <SafeText>{cliente.nome}</SafeText>
       </TableCell>
       <TableCell>{formatPhoneNumber(cliente.telefone)}</TableCell>
-      <TableCell>{cliente.uf || "-"}</TableCell>
-      <TableCell>{cliente.servidor}</TableCell>
+      <TableCell><SafeText>{cliente.uf || "-"}</SafeText></TableCell>
+      <TableCell><SafeText>{cliente.servidor}</SafeText></TableCell>
       <TableCell>{cliente.dia_vencimento}</TableCell>
       <TableCell>
         {cliente.valor_plano ? `R$ ${cliente.valor_plano.toFixed(2)}` : "-"}

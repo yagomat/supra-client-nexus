@@ -9,6 +9,7 @@ import { PaymentStatusButton } from "@/components/pagamentos/PaymentStatusButton
 import { usePaymentStatus } from "@/hooks/payments/usePaymentStatus";
 import { usePaymentHistory } from "@/hooks/cliente/usePaymentHistory";
 import { supabase } from "@/integrations/supabase/client";
+import { SafeText } from "@/components/security/SafeText";
 
 interface ClienteCardProps {
   cliente: Cliente;
@@ -30,7 +31,6 @@ export const ClienteCard = ({
   const [statusPagamento, setStatusPagamento] = useState("nao_pago");
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
 
-  // Buscar status de pagamento do mês atual
   useEffect(() => {
     const fetchCurrentMonthPaymentStatus = async () => {
       try {
@@ -55,7 +55,6 @@ export const ClienteCard = ({
 
     fetchCurrentMonthPaymentStatus();
 
-    // Configurar listener em tempo real para mudanças de pagamento
     const channel = supabase
       .channel(`pagamento-card-${cliente.id}`)
       .on('postgres_changes', 
@@ -69,7 +68,6 @@ export const ClienteCard = ({
           console.log('Payment change detected for card:', payload);
           const newRecord = payload.new as any;
           
-          // Atualizar status se for do mês atual
           if (newRecord && 
               typeof newRecord.mes === 'number' &&
               typeof newRecord.ano === 'number' &&
@@ -79,9 +77,9 @@ export const ClienteCard = ({
             setStatusPagamento(newRecord.status);
           }
           
-          // Sempre recarregar os pagamentos para atualizar as informações de vencimento
-          // Isso é importante porque o cálculo de vencimento depende do histórico completo
-          refetchPayments();
+          setTimeout(() => {
+            refetchPayments();
+          }, 100);
         }
       )
       .subscribe();
@@ -105,11 +103,8 @@ export const ClienteCard = ({
         status
       );
       
-      // Atualizar o status local imediatamente para feedback visual
       setStatusPagamento(status);
       
-      // Aguardar um pouco para garantir que o banco de dados foi atualizado
-      // e então recarregar os pagamentos para recalcular as informações de vencimento
       setTimeout(() => {
         refetchPayments();
       }, 100);
@@ -140,7 +135,9 @@ export const ClienteCard = ({
       <Card className="w-full mb-4">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">{cliente.nome}</CardTitle>
+            <CardTitle className="text-lg">
+              <SafeText>{cliente.nome}</SafeText>
+            </CardTitle>
             <ClienteStatusBadge status={cliente.status || 'inativo'} />
           </div>
         </CardHeader>

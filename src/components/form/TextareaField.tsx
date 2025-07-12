@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Control } from "react-hook-form";
+import { sanitizeFormInput } from "@/utils/xssSanitizer";
 
 interface TextareaFieldProps {
   name: string;
@@ -45,6 +46,11 @@ export const TextareaField: React.FC<TextareaFieldProps> = ({
                 value={field.value || ""}
                 disabled={disabled}
                 maxLength={maxLength}
+                onChange={(e) => {
+                  // Sanitizar entrada em tempo real
+                  const sanitizedValue = sanitizeFormInput(e.target.value);
+                  field.onChange(sanitizedValue);
+                }}
               />
               {maxLength && (
                 <div className="text-xs text-gray-500 text-right mt-0.5">
