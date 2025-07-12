@@ -18,7 +18,10 @@ export const logAuditEvent = async (
       return;
     }
 
-    // Usar a função consolidada log_audit_event
+    // A função log_audit_event agora aplica automaticamente:
+    // - Mascaramento de IP
+    // - Simplificação de User-Agent  
+    // - Criptografia de dados sensíveis
     await supabase.rpc('log_audit_event', {
       p_user_id: userIdToLog,
       p_event_type: event,

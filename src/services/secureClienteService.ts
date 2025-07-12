@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Cliente } from "@/types";
 
@@ -23,18 +22,16 @@ export interface RateLimitResult {
 }
 
 class SecureClienteService {
-  private static async checkRateLimit(operation: string, maxRequests: number = 100, timeWindowMinutes: number = 60): Promise<boolean> {
+  private static async checkRateLimit(operation: string): Promise<RateLimitResult> {
     const { data: currentUser } = await supabase.auth.getUser();
     
     if (!currentUser.user) {
       throw new Error("Usuário não autenticado");
     }
 
-    const { data, error } = await supabase.rpc('check_rate_limit', {
+    const { data, error } = await supabase.rpc('check_comprehensive_rate_limit', {
       p_user_id: currentUser.user.id,
-      p_operation: operation,
-      p_max_requests: maxRequests,
-      p_time_window_minutes: timeWindowMinutes
+      p_operation: operation
     });
 
     if (error) {
@@ -42,11 +39,21 @@ class SecureClienteService {
       throw error;
     }
 
-    if (!data) {
-      throw new Error(`Limite de ${operation} excedido. Tente novamente em alguns minutos.`);
+    if (!data || typeof data !== 'object') {
+      throw new Error(`Resposta inválida do rate limit para ${operation}`);
     }
 
-    return true;
+    const result = data as unknown as RateLimitResult;
+    
+    if (!result.allowed) {
+      const resetTime = new Date(result.reset_time).toLocaleTimeString();
+      throw new Error(
+        `Limite de ${operation} excedido. Você pode tentar novamente às ${resetTime}. ` +
+        `(${result.current_requests}/${result.max_requests} requisições em ${result.time_window_minutes}min)`
+      );
+    }
+
+    return result;
   }
 
   // Obter clientes com status calculado no backend
@@ -54,7 +61,7 @@ class SecureClienteService {
     status?: "todos" | "ativo" | "inativo"
   ): Promise<ClienteWithPaymentStatus[]> {
     // Verificar rate limit
-    await this.checkRateLimit('list_clientes', 200, 60);
+    await this.checkRateLimit('list_clientes');
 
     const { data: currentUser } = await supabase.auth.getUser();
     
@@ -81,7 +88,7 @@ class SecureClienteService {
 
   // Buscar clientes com rate limiting
   static async getClientes(status?: "todos" | "ativo" | "inativo"): Promise<Cliente[]> {
-    await this.checkRateLimit('list_clientes', 200, 60);
+    await this.checkRateLimit('list_clientes');
 
     const { data: currentUser } = await supabase.auth.getUser();
     const userId = currentUser.user?.id;
@@ -118,7 +125,7 @@ class SecureClienteService {
 
   // Buscar clientes com filtro (para pesquisa)
   static async searchClientes(searchTerm: string, status?: "todos" | "ativo" | "inativo"): Promise<Cliente[]> {
-    await this.checkRateLimit('search_clientes', 100, 60);
+    await this.checkRateLimit('search_clientes');
 
     const clientes = await this.getClientes(status);
     
@@ -152,7 +159,7 @@ class SecureClienteService {
 
   // Criar cliente com rate limiting
   static async createCliente(cliente: Omit<Cliente, "id" | "created_at" | "status">): Promise<Cliente> {
-    await this.checkRateLimit('create_cliente', 50, 60);
+    await this.checkRateLimit('create_cliente');
 
     const { data: currentUser } = await supabase.auth.getUser();
     
@@ -181,7 +188,7 @@ class SecureClienteService {
 
   // Atualizar cliente com rate limiting
   static async updateCliente(id: string, cliente: Partial<Cliente>): Promise<Cliente> {
-    await this.checkRateLimit('update_cliente', 100, 60);
+    await this.checkRateLimit('update_cliente');
 
     const { data, error } = await supabase
       .from('clientes')
@@ -200,7 +207,7 @@ class SecureClienteService {
 
   // Excluir cliente com rate limiting
   static async deleteCliente(id: string): Promise<void> {
-    await this.checkRateLimit('delete_cliente', 20, 60);
+    await this.checkRateLimit('delete_cliente');
 
     // Primeiro, excluir todos os pagamentos associados a este cliente
     const { error: pagamentosError } = await supabase
@@ -247,9 +254,10 @@ class SecureClienteService {
   }
 
   // Verificar rate limit específico (para uso em componentes)
-  static async checkOperationRateLimit(operation: string, maxRequests: number = 100, timeWindowMinutes: number = 60): Promise<boolean> {
+  static async checkOperationRateLimit(operation: string): Promise<boolean> {
     try {
-      return await this.checkRateLimit(operation, maxRequests, timeWindowMinutes);
+      const result = await this.checkRateLimit(operation);
+      return result.allowed;
     } catch (error) {
       console.error(`Rate limit check failed for ${operation}:`, error);
       return false;
