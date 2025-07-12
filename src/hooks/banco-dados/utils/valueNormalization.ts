@@ -1,4 +1,6 @@
 
+import { secureLogger } from '@/utils/secureLogger';
+
 /**
  * Utilitários para normalização de valores
  */
@@ -21,6 +23,37 @@ export const normalizeValue = (value: string, tipo: string): string => {
       return normalizeDeviceValue(trimmedValue);
     default:
       return trimmedValue;
+  }
+};
+
+/**
+ * Normaliza valores para formato do banco de dados
+ */
+export const normalizeValueForDatabase = (value: string | number, tipo: string): string => {
+  const stringValue = String(value).trim();
+  
+  secureLogger.logOperation('value_normalization', {
+    type: tipo,
+    originalLength: stringValue.length,
+    hasSpecialChars: /[^a-zA-Z0-9\s]/.test(stringValue)
+  });
+  
+  switch (tipo.toLowerCase()) {
+    case 'uf':
+      return normalizeUFValue(stringValue);
+    case 'servidor':
+      return normalizeServerValue(stringValue);
+    case 'aplicativo':
+      return normalizeAppValue(stringValue);
+    case 'dispositivo_smart':
+      return normalizeDeviceValue(stringValue);
+    case 'dia_vencimento':
+      return String(parseInt(stringValue));
+    case 'valor_plano':
+      const numValue = parseFloat(stringValue.replace(',', '.'));
+      return isNaN(numValue) ? '0' : numValue.toFixed(2);
+    default:
+      return stringValue;
   }
 };
 
