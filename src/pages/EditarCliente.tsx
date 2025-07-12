@@ -34,7 +34,7 @@ const EditarCliente = () => {
   return (
     <UniversalCSRFProtection 
       level="strict" 
-      showStatus={process.env.NODE_ENV === 'development'}
+      showStatus={false}
       onValidationFail={() => navigate("/clientes")}
     >
       <DashboardLayout title="Editar Cliente">
