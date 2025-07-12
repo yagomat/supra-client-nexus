@@ -11,21 +11,23 @@ import {
 export const useCSRFProtection = () => {
   const [csrfToken, setCSRFToken] = useState<string>('');
   const [isAuthContextAvailable, setIsAuthContextAvailable] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   
-  // Acessar o contexto de autenticação de forma controlada
-  let user = null;
-  let authError: Error | null = null;
+  // Safely access auth context
+  const { user } = useAuth();
   
-  try {
-    const authContext = useAuth();
-    user = authContext.user;
-    setIsAuthContextAvailable(true);
-  } catch (error) {
-    // Não mascarar o erro - apenas registrar que AuthProvider não está disponível
-    authError = error as Error;
-    setIsAuthContextAvailable(false);
-    console.warn('useCSRFProtection: AuthProvider não disponível:', authError.message);
-  }
+  // Check auth context availability on mount
+  useEffect(() => {
+    try {
+      // If we get here without error, auth context is available
+      setIsAuthContextAvailable(true);
+      setAuthError(null);
+    } catch (error) {
+      setIsAuthContextAvailable(false);
+      setAuthError((error as Error).message);
+      console.warn('useCSRFProtection: AuthProvider não disponível:', (error as Error).message);
+    }
+  }, []);
   
   // Gerar novo token quando a sessão muda
   useEffect(() => {
@@ -161,6 +163,6 @@ export const useCSRFProtection = () => {
     validateCSRFState,
     isValidOrigin: isSameOriginRequest(),
     isAuthContextAvailable,
-    authError: authError?.message || null
+    authError
   };
 };
