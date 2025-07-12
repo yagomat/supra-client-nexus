@@ -1,11 +1,41 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { logAuditEvent } from "./auditLog";
+import { checkRateLimit, logAuthAttempt, checkIPRateLimit } from "./rateLimit";
 
-// Cadastro seguro com validações
+// Cadastro seguro com rate limiting robusto no backend
 export const secureSignUp = async (email: string, password: string, nome: string): Promise<boolean> => {
   try {
-    // Usar função de validação segura do backend
+    // 1. Verificar rate limiting por email
+    const emailRateLimit = await checkRateLimit(email, 'signup', 3, 60); // Mais restritivo para cadastro
+    
+    if (!emailRateLimit.allowed) {
+      const resetTime = emailRateLimit.next_allowed_at 
+        ? new Date(emailRateLimit.next_allowed_at).toLocaleTimeString()
+        : 'em uma hora';
+        
+      toast.error("Muitas tentativas de cadastro", {
+        description: `Tente novamente ${resetTime}. (${emailRateLimit.current_attempts}/${emailRateLimit.max_attempts})`,
+      });
+      
+      await logAuthAttempt(email, 'signup', false, 'Rate limit exceeded');
+      return false;
+    }
+
+    // 2. Verificar rate limiting por IP
+    const ipAllowed = await checkIPRateLimit(undefined, 10, 60); // Mais restritivo para cadastro
+    
+    if (!ipAllowed) {
+      toast.error("Muitas tentativas detectadas", {
+        description: "Aguarde uma hora antes de tentar novamente.",
+      });
+      
+      await logAuthAttempt(email, 'signup', false, 'IP rate limit exceeded');
+      return false;
+    }
+
+    // 3. Usar função de validação segura do backend
     const { data: validationResult, error: validationError } = await supabase.rpc('secure_auth_attempt', {
       p_email: email,
       p_password: password,
@@ -20,6 +50,8 @@ export const secureSignUp = async (email: string, password: string, nome: string
       toast.error("Erro de validação", {
         description: "Erro interno de validação.",
       });
+      
+      await logAuthAttempt(email, 'signup', false, validationError.message);
       return false;
     }
 
@@ -35,7 +67,7 @@ export const secureSignUp = async (email: string, password: string, nome: string
     if (!result.success) {
       if (result.rate_limited) {
         toast.error("Muitas tentativas de cadastro", {
-          description: result.error || "Tente novamente em 15 minutos.",
+          description: result.error || "Tente novamente em uma hora.",
         });
       } else if (result.password_validation) {
         toast.error("Senha fraca", {
@@ -46,10 +78,12 @@ export const secureSignUp = async (email: string, password: string, nome: string
           description: result.error || "Dados inválidos.",
         });
       }
+      
+      await logAuthAttempt(email, 'signup', false, result.error);
       return false;
     }
 
-    // Registrar com Supabase usando dados sanitizados
+    // 4. Registrar com Supabase usando dados sanitizados
     const { error, data } = await supabase.auth.signUp({
       email: result.sanitized_email || email,
       password: password,
@@ -59,15 +93,12 @@ export const secureSignUp = async (email: string, password: string, nome: string
     });
 
     if (error) {
-      // Registrar falha de cadastro no backend
-      await supabase.rpc('log_auth_attempt', {
-        p_email: result.sanitized_email || email,
-        p_operation: 'signup',
-        p_success: false,
-        p_error_message: error.message,
-        p_ip_address: 'client-side',
-        p_user_agent: navigator.userAgent
-      });
+      await logAuthAttempt(
+        result.sanitized_email || email, 
+        'signup', 
+        false, 
+        error.message
+      );
 
       toast.error("Falha no cadastro", {
         description: error.message,
@@ -75,15 +106,13 @@ export const secureSignUp = async (email: string, password: string, nome: string
       return false;
     }
 
-    // Registrar cadastro bem-sucedido
-    await supabase.rpc('log_auth_attempt', {
-      p_email: result.sanitized_email || email,
-      p_operation: 'signup',
-      p_success: true,
-      p_error_message: null,
-      p_ip_address: 'client-side',
-      p_user_agent: navigator.userAgent
-    });
+    // 5. Registrar cadastro bem-sucedido
+    await logAuthAttempt(
+      result.sanitized_email || email, 
+      'signup', 
+      true, 
+      'Signup successful'
+    );
 
     await logAuditEvent("signup_success", { 
       email: result.sanitized_email || email, 
@@ -93,6 +122,14 @@ export const secureSignUp = async (email: string, password: string, nome: string
     return true;
   } catch (error) {
     console.error("Erro ao criar conta:", error);
+    
+    await logAuthAttempt(
+      email, 
+      'signup', 
+      false, 
+      error instanceof Error ? error.message : 'Unknown error'
+    );
+    
     toast.error("Erro inesperado", {
       description: "Ocorreu um erro ao tentar criar sua conta.",
     });

@@ -343,9 +343,26 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_auth_rate_limit_enhanced: {
+        Args: {
+          p_identifier: string
+          p_operation: string
+          p_max_requests?: number
+          p_time_window_minutes?: number
+        }
+        Returns: Json
+      }
       check_export_rate_limit: {
         Args: {
           p_user_id: string
+          p_max_requests?: number
+          p_time_window_minutes?: number
+        }
+        Returns: boolean
+      }
+      check_ip_rate_limit: {
+        Args: {
+          p_ip_address: string
           p_max_requests?: number
           p_time_window_minutes?: number
         }
@@ -629,18 +646,27 @@ export type Database = {
         Returns: Json
       }
       log_audit_event: {
-        Args:
-          | { p_user_id: string; p_event_type: string; p_details?: Json }
-          | {
-              p_user_id: string
-              p_event_type: string
-              p_details?: Json
-              p_ip_address?: string
-              p_user_agent?: string
-            }
+        Args: {
+          p_user_id: string
+          p_event_type: string
+          p_details?: Json
+          p_ip_address?: string
+          p_user_agent?: string
+        }
         Returns: undefined
       }
       log_auth_attempt: {
+        Args: {
+          p_email: string
+          p_operation: string
+          p_success: boolean
+          p_error_message?: string
+          p_ip_address?: string
+          p_user_agent?: string
+        }
+        Returns: undefined
+      }
+      log_auth_attempt_enhanced: {
         Args: {
           p_email: string
           p_operation: string
