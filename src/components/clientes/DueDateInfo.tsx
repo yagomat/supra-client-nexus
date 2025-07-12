@@ -3,7 +3,7 @@ import React from "react";
 import { Calendar, Minus } from "lucide-react";
 import { Cliente, Pagamento } from "@/types";
 import { useDaysCalculation } from "@/hooks/cliente/useDaysCalculation";
-import { clienteLogger } from "@/utils/contextualLogger";
+import { secureLog } from "@/utils/secureLogger";
 
 interface DueDateInfoProps {
   cliente: Cliente;
@@ -13,8 +13,8 @@ interface DueDateInfoProps {
 export const DueDateInfo = ({ cliente, allPayments }: DueDateInfoProps) => {
   const daysInfo = useDaysCalculation(cliente, allPayments);
   
-  // Log seguro apenas com informações agregadas (só em desenvolvimento)
-  clienteLogger.info('DueDateInfo rendering', {
+  // Log seguro apenas com informações agregadas
+  secureLog.devOnly('DueDateInfo rendering', {
     hasInfo: daysInfo.type !== 'no_info',
     infoType: daysInfo.type,
     paymentCount: allPayments.length

@@ -29,12 +29,9 @@ class SecureClienteService {
       throw new Error("Usuário não autenticado");
     }
 
-    // Usar a função check_rate_limit que existe no banco
-    const { data: allowed, error } = await supabase.rpc('check_rate_limit', {
+    const { data, error } = await supabase.rpc('check_comprehensive_rate_limit', {
       p_user_id: currentUser.user.id,
-      p_operation: operation,
-      p_max_requests: 50, // Limites mais permissivos
-      p_time_window_minutes: 60
+      p_operation: operation
     });
 
     if (error) {
@@ -42,24 +39,21 @@ class SecureClienteService {
       throw error;
     }
 
-    // Se não permitido, retornar resultado de rate limit excedido
-    if (!allowed) {
-      const resetTime = new Date(Date.now() + 60 * 60 * 1000).toLocaleTimeString();
+    if (!data || typeof data !== 'object') {
+      throw new Error(`Resposta inválida do rate limit para ${operation}`);
+    }
+
+    const result = data as unknown as RateLimitResult;
+    
+    if (!result.allowed) {
+      const resetTime = new Date(result.reset_time).toLocaleTimeString();
       throw new Error(
         `Limite de ${operation} excedido. Você pode tentar novamente às ${resetTime}. ` +
-        `Tente novamente em alguns minutos.`
+        `(${result.current_requests}/${result.max_requests} requisições em ${result.time_window_minutes}min)`
       );
     }
 
-    // Retornar resultado positivo
-    return {
-      allowed: true,
-      current_requests: 0,
-      max_requests: 50,
-      time_window_minutes: 60,
-      reset_time: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-      operation
-    };
+    return result;
   }
 
   // Obter clientes com status calculado no backend

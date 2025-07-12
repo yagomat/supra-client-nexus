@@ -14,7 +14,6 @@ import { capacitorOverlayService } from "./mobile/services/capacitorOverlayServi
 import { whatsappMonitor } from "./mobile/services/whatsappMonitor";
 import { permissionsService } from "./mobile/services/permissionsService";
 import { Capacitor } from "@capacitor/core";
-import { detectUnsafeLogs, setupProductionLogAlerts } from "./utils/logMigration";
 
 const queryClient = new QueryClient();
 
@@ -22,10 +21,6 @@ const App = () => {
   const [showPermissionsSetup, setShowPermissionsSetup] = useState(false);
 
   useEffect(() => {
-    // Inicializar sistema de logging seguro
-    detectUnsafeLogs();
-    setupProductionLogAlerts();
-
     // Initialize mobile services on app start
     const initializeMobile = async () => {
       try {
@@ -36,21 +31,29 @@ const App = () => {
           
           if (needsPermissions) {
             setShowPermissionsSetup(true);
+            console.log('Permissões necessárias não foram concedidas, mostrando setup');
           }
         }
 
         await capacitorOverlayService.initialize();
         await whatsappMonitor.startMonitoring();
         
+        console.log('Capacitor mobile services initialized successfully', {
+          platform: Capacitor.getPlatform(),
+          isNative: Capacitor.isNativePlatform(),
+          version: '7.4.0'
+        });
       } catch (error) {
-        // Log de erro usando sistema seguro
         console.error('Error initializing Capacitor mobile services:', error);
       }
     };
 
     // Check if running on mobile or native platform
     if (Capacitor.isNativePlatform() || window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      console.log('Mobile environment detected, initializing Capacitor services...');
       initializeMobile();
+    } else {
+      console.log('Web environment detected, Capacitor services will run in simulation mode');
     }
   }, []);
 

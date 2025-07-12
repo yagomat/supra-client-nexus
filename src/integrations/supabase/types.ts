@@ -261,30 +261,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_roles: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
       valores_predefinidos: {
         Row: {
           id: string
@@ -315,13 +291,6 @@ export type Database = {
         Args: { table_name: string }
         Returns: undefined
       }
-      add_user_role: {
-        Args: {
-          user_id_param: string
-          role_param: Database["public"]["Enums"]["app_role"]
-        }
-        Returns: undefined
-      }
       add_valor_predefinido: {
         Args: { p_user_id: string; p_tipo: string; p_valor: string }
         Returns: Json
@@ -343,6 +312,32 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_comprehensive_rate_limit: {
+        Args: {
+          p_user_id: string
+          p_operation: string
+          p_max_requests?: number
+          p_time_window_minutes?: number
+        }
+        Returns: Json
+      }
+      check_consolidated_rate_limit: {
+        Args: {
+          p_user_id: string
+          p_operation: string
+          p_max_requests?: number
+          p_time_window_minutes?: number
+        }
+        Returns: Json
+      }
+      check_dashboard_rate_limit: {
+        Args: {
+          p_user_id: string
+          p_max_requests?: number
+          p_time_window_minutes?: number
+        }
+        Returns: boolean
+      }
       check_export_rate_limit: {
         Args: {
           p_user_id: string
@@ -351,7 +346,36 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_operation_rate_limit: {
+        Args: { p_user_id: string; p_operation: string }
+        Returns: boolean
+      }
+      check_profile_rate_limit: {
+        Args: {
+          p_user_id: string
+          p_max_requests?: number
+          p_time_window_minutes?: number
+        }
+        Returns: boolean
+      }
       check_rate_limit: {
+        Args: {
+          p_user_id: string
+          p_operation: string
+          p_max_requests?: number
+          p_time_window_minutes?: number
+        }
+        Returns: boolean
+      }
+      check_templates_rate_limit: {
+        Args: {
+          p_user_id: string
+          p_max_requests?: number
+          p_time_window_minutes?: number
+        }
+        Returns: boolean
+      }
+      check_valores_predefinidos_rate_limit: {
         Args: {
           p_user_id: string
           p_operation: string
@@ -493,16 +517,6 @@ export type Database = {
           cliente_user_id: string
         }[]
       }
-      get_all_users_with_roles: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          user_id: string
-          email: string
-          nome: string
-          created_at: string
-          roles: Database["public"]["Enums"]["app_role"][]
-        }[]
-      }
       get_clientes_optimized: {
         Args: { p_user_id: string; p_status?: string; p_limit?: number }
         Returns: {
@@ -594,11 +608,9 @@ export type Database = {
           user_agent: string
         }[]
       }
-      get_user_roles: {
-        Args: { user_id_param?: string }
-        Returns: {
-          role: Database["public"]["Enums"]["app_role"]
-        }[]
+      get_validation_config: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       get_valores_predefinidos: {
         Args: { p_user_id: string }
@@ -617,27 +629,18 @@ export type Database = {
         }
         Returns: Json
       }
-      has_role: {
-        Args: {
-          _user_id: string
-          _role: Database["public"]["Enums"]["app_role"]
-        }
-        Returns: boolean
-      }
       import_valores_predefinidos: {
         Args: { p_user_id: string; p_tipo: string; p_valores: string[] }
         Returns: Json
       }
       log_audit_event: {
-        Args:
-          | { p_user_id: string; p_event_type: string; p_details: Json }
-          | {
-              p_user_id: string
-              p_event_type: string
-              p_details?: Json
-              p_ip_address?: string
-              p_user_agent?: string
-            }
+        Args: {
+          p_user_id: string
+          p_event_type: string
+          p_details: Json
+          p_ip_address?: string
+          p_user_agent?: string
+        }
         Returns: undefined
       }
       log_auth_attempt: {
@@ -702,13 +705,6 @@ export type Database = {
           p_ano: number
         }
         Returns: Json
-      }
-      remove_user_role: {
-        Args: {
-          user_id_param: string
-          role_param: Database["public"]["Enums"]["app_role"]
-        }
-        Returns: undefined
       }
       sanitize_auth_input: {
         Args: { p_email: string; p_nome?: string }
@@ -822,7 +818,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "gerente" | "operador"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -949,8 +945,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      app_role: ["admin", "gerente", "operador"],
-    },
+    Enums: {},
   },
 } as const

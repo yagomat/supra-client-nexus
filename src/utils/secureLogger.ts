@@ -11,7 +11,6 @@ interface LogConfig {
   level: LogLevel;
   enabledInProduction: boolean;
   maskSensitiveData: boolean;
-  enableContextualLogging: boolean;
 }
 
 // Configuração baseada no ambiente
@@ -20,9 +19,8 @@ const getLogConfig = (): LogConfig => {
   
   return {
     level: isDevelopment ? 'debug' : 'error',
-    enabledInProduction: false, // Produção só permite logs de erro crítico
-    maskSensitiveData: true,
-    enableContextualLogging: isDevelopment
+    enabledInProduction: false,
+    maskSensitiveData: true
   };
 };
 
@@ -30,8 +28,7 @@ const getLogConfig = (): LogConfig => {
 const SENSITIVE_FIELDS = [
   'nome', 'name', 'email', 'telefone', 'phone', 'cpf', 'cnpj',
   'senha', 'password', 'token', 'key', 'id', 'cliente_id', 'user_id',
-  'valor', 'amount', 'preco', 'price', 'pagamento', 'payment',
-  'servidor', 'aplicativo', 'usuario_aplicativo', 'senha_aplicativo'
+  'valor', 'amount', 'preco', 'price', 'pagamento', 'payment'
 ];
 
 // Função para mascarar strings sensíveis
@@ -126,12 +123,6 @@ export const secureLog = {
     if (process.env.NODE_ENV === 'development') {
       console.log(`[DEV] ${message}`, data);
     }
-  },
-
-  // Logs críticos que sempre aparecem (mesmo em produção)
-  critical: (message: string, data?: any) => {
-    const processedData = maskSensitiveData(data);
-    console.error(`[CRITICAL] ${message}`, processedData);
   }
 };
 
@@ -165,9 +156,9 @@ const log = (level: LogLevel, message: string, data?: any) => {
 const shouldLog = (level: LogLevel, config: LogConfig): boolean => {
   const isProduction = process.env.NODE_ENV === 'production';
   
-  // Em produção, só permitir logs críticos
+  // Em produção, só permitir logs se explicitamente habilitado
   if (isProduction && !config.enabledInProduction) {
-    return level === 'error';
+    return level === 'error'; // Sempre permitir logs de erro
   }
   
   // Verificar nível mínimo
@@ -197,16 +188,4 @@ export const logError = (error: Error, context: string, additionalInfo?: Record<
   };
   
   secureLog.error('Application Error', errorInfo);
-};
-
-// Função para substituir console.log inseguros (para migração gradual)
-export const replaceUnsafeLogs = () => {
-  if (process.env.NODE_ENV === 'production') {
-    console.log = () => {}; // Desabilitar console.log em produção
-    console.info = () => {}; // Desabilitar console.info em produção
-    console.warn = (message: string, ...args: any[]) => {
-      secureLog.warn(message, args);
-    };
-    // Manter console.error para erros críticos
-  }
 };

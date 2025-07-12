@@ -39,61 +39,18 @@ export async function validateValueOnBackend(tipo: string, valor: string): Promi
 }
 
 /**
- * Obtém a configuração de validação - usando valores hardcoded já que a função não existe
+ * Obtém a configuração de validação do backend
  */
 export async function getValidationConfigFromBackend() {
   try {
-    // Retornar configuração padrão já que get_validation_config não existe
-    return {
-      tipos: {
-        ufs: {
-          tipo: 'string',
-          maxLength: 2,
-          maxItemsPerOperation: 10,
-          description: 'Estados brasileiros (sigla)',
-          example: 'SP;RJ;MG'
-        },
-        servidores: {
-          tipo: 'string',
-          maxLength: 25,
-          maxItemsPerOperation: 10,
-          description: 'Nomes de servidores',
-          example: 'Servidor1;Servidor2'
-        },
-        dias_vencimento: {
-          tipo: 'integer',
-          minValue: 1,
-          maxValue: 31,
-          maxItemsPerOperation: 10,
-          description: 'Dias de vencimento (1-31)',
-          example: '10;15;20'
-        },
-        valores_plano: {
-          tipo: 'decimal',
-          minValue: 0.01,
-          maxValue: 1000,
-          decimalPlaces: 2,
-          maxItemsPerOperation: 10,
-          description: 'Valores de plano (até R$ 1.000)',
-          example: '49.90;99.90;199.90'
-        },
-        dispositivos_smart: {
-          tipo: 'string',
-          maxLength: 25,
-          maxItemsPerOperation: 10,
-          description: 'Nomes de dispositivos',
-          example: 'TV Box;Smart TV'
-        },
-        aplicativos: {
-          tipo: 'string',
-          maxLength: 25,
-          maxItemsPerOperation: 10,
-          description: 'Nomes de aplicativos',
-          example: 'Netflix;YouTube'
-        }
-      },
-      ufsValidas: ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO']
-    };
+    const { data, error } = await supabase.rpc('get_validation_config');
+    
+    if (error) {
+      console.error("Erro ao obter configuração de validação:", error);
+      return null;
+    }
+
+    return data;
   } catch (error) {
     console.error("Erro ao obter configuração de validação:", error);
     return null;
