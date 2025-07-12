@@ -1,6 +1,7 @@
 
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Eye, Trash2, MessageCircle } from "lucide-react";
+import { Eye, Trash2, MessageCircle, Pencil } from "lucide-react";
 import { Cliente } from "@/types";
 
 interface ClienteCardActionsProps {
@@ -16,6 +17,8 @@ export const ClienteCardActions = ({
   onConfirmarExclusao,
   onSendWhatsApp
 }: ClienteCardActionsProps) => {
+  const navigate = useNavigate();
+
   return (
     <div className="flex gap-1">
       <Button
@@ -24,6 +27,14 @@ export const ClienteCardActions = ({
         onClick={() => onVerDetalhes(cliente)}
       >
         <Eye className="h-4 w-4" />
+      </Button>
+      
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => navigate(`/clientes/editar/${cliente.id}`)}
+      >
+        <Pencil className="h-4 w-4" />
       </Button>
       
       <Button
