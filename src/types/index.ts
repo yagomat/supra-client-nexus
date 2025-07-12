@@ -114,13 +114,6 @@ export interface User {
   nome?: string;
 }
 
-// Definição dos papéis de usuário
-export type UserRole = 'admin' | 'gerente' | 'operador';
-
-export interface UserWithRole extends User {
-  roles: UserRole[];
-}
-
 // Interface para registros de auditoria
 export interface AuditoriaRecord {
   id: string;
@@ -132,15 +125,6 @@ export interface AuditoriaRecord {
   usuario_id: string | null;
   data_hora: string;
 }
-
-// Interface para a tabela de papéis de usuário
-export interface UserRoleRecord {
-  id: string;
-  user_id: string;
-  role: UserRole;
-  created_at: string;
-}
-
 
 // Import ClienteFormValues type from the schema file
 import { ClienteFormValues } from "@/hooks/cliente/clienteFormSchema";
