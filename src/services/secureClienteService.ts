@@ -29,9 +29,12 @@ class SecureClienteService {
       throw new Error("Usuário não autenticado");
     }
 
-    const { data, error } = await supabase.rpc('check_comprehensive_rate_limit', {
+    // Usar a função check_rate_limit que existe no banco
+    const { data, error } = await supabase.rpc('check_rate_limit', {
       p_user_id: currentUser.user.id,
-      p_operation: operation
+      p_operation: operation,
+      p_max_requests: 50,
+      p_time_window_minutes: 60
     });
 
     if (error) {
@@ -39,11 +42,17 @@ class SecureClienteService {
       throw error;
     }
 
-    if (!data || typeof data !== 'object') {
-      throw new Error(`Resposta inválida do rate limit para ${operation}`);
-    }
-
-    const result = data as unknown as RateLimitResult;
+    // Como check_rate_limit retorna boolean, vamos criar uma resposta compatível
+    const allowed = data as boolean;
+    
+    const result: RateLimitResult = {
+      allowed,
+      current_requests: allowed ? 0 : 50, // Simulação básica
+      max_requests: 50,
+      time_window_minutes: 60,
+      reset_time: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      operation
+    };
     
     if (!result.allowed) {
       const resetTime = new Date(result.reset_time).toLocaleTimeString();

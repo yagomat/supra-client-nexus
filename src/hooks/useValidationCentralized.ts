@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -119,17 +120,26 @@ export const useValidationCentralized = () => {
     }
   }, []);
 
-  // Obter configuração de validação do backend
+  // Obter configuração de validação (fallback local sem backend)
   const getValidationConfig = useCallback(async () => {
     try {
-      const { data, error } = await supabase.rpc('get_validation_config');
-
-      if (error) {
-        console.error("Erro ao obter configuração:", error);
-        return null;
-      }
-
-      return data;
+      // Como a função get_validation_config não existe mais, retornar configuração padrão
+      return {
+        max_length: {
+          nome: 100,
+          servidor: 50,
+          aplicativo: 50,
+          usuario: 50,
+          senha: 50,
+          telefone: 20,
+          uf: 2
+        },
+        required_fields: ['nome', 'servidor', 'dia_vencimento', 'aplicativo'],
+        validation_rules: {
+          dia_vencimento: { min: 1, max: 31 },
+          valor_plano: { min: 0 }
+        }
+      };
     } catch (error) {
       console.error("Erro ao obter configuração:", error);
       return null;
