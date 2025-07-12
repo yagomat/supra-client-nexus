@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Shield, Clock, User, FileText, RefreshCw } from "lucide-react";
-import { useSecureClienteOperations } from "@/hooks/cliente/useSecureClienteOperations";
+import { ClienteSecurityService } from "@/services/clienteSecurityService";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -23,12 +24,11 @@ export const AuditLogViewer = () => {
   const [filteredLogs, setFilteredLogs] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
-  const { getAuditLogs } = useSecureClienteOperations();
 
   const loadLogs = async () => {
     try {
       setLoading(true);
-      const auditLogs = await getAuditLogs();
+      const auditLogs = await ClienteSecurityService.getAuditLogs();
       setLogs(auditLogs);
       applyFilter(auditLogs, filter);
     } catch (error) {
