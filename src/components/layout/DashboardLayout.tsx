@@ -18,7 +18,15 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children, className, title }: DashboardLayoutProps) {
   const isMobile = useIsMobile();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const { signOut } = useAuth();
+  
+  // Acessar useAuth de forma segura
+  let signOut = () => {};
+  try {
+    const authContext = useAuth();
+    signOut = authContext.signOut;
+  } catch (error) {
+    console.warn('DashboardLayout: AuthProvider não está disponível ainda');
+  }
 
   // Listen for sidebar collapse state changes
   const handleSidebarStateChange = (collapsed: boolean) => {
