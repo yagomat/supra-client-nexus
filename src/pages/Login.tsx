@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { LoginHeader } from "@/components/login/LoginHeader";
 import { LoginForm } from "@/components/login/LoginForm";
 import { LoginFooter } from "@/components/login/LoginFooter";
+import { CSRFProtection } from "@/components/security/CSRFProtection";
 import { useLoginForm } from "@/hooks/useLoginForm";
 
 const Login = () => {
@@ -24,18 +25,20 @@ const Login = () => {
         <Card className="card-enhanced shadow-large">
           <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-lg"></div>
           <div className="relative">
-            <LoginHeader />
-            <form onSubmit={handleSubmit}>
-              <LoginForm
-                email={email}
-                setEmail={setEmail}
-                password={password}
-                setPassword={setPassword}
-                emailError={emailError}
-                generalError={generalError}
-              />
-              <LoginFooter isLoading={isLoading} />
-            </form>
+            <CSRFProtection>
+              <LoginHeader />
+              <form onSubmit={handleSubmit}>
+                <LoginForm
+                  email={email}
+                  setEmail={setEmail}
+                  password={password}
+                  setPassword={setPassword}
+                  emailError={emailError}
+                  generalError={generalError}
+                />
+                <LoginFooter isLoading={isLoading} />
+              </form>
+            </CSRFProtection>
           </div>
         </Card>
       </div>

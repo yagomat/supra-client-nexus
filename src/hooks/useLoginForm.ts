@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { emailSchema } from "@/services/auth/schemas";
 import { useToast } from "@/components/ui/use-toast";
+import { useCSRFProtection } from "./useCSRFProtection";
 
 export const useLoginForm = () => {
   const [email, setEmail] = useState("");
@@ -16,6 +16,7 @@ export const useLoginForm = () => {
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { validateRequest, getSecureHeaders } = useCSRFProtection();
 
   // Limpar erros quando o usuário digita
   useEffect(() => {
@@ -50,6 +51,12 @@ export const useLoginForm = () => {
     
     setGeneralError("");
     setEmailError("");
+
+    // Validar proteção CSRF antes de prosseguir
+    if (!validateRequest()) {
+      setGeneralError("Erro de segurança: Requisição não autorizada.");
+      return;
+    }
 
     if (!validateForm()) return;
 

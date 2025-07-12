@@ -4,11 +4,13 @@ import { SecureClienteService, ClienteWithPaymentStatus } from "@/services/secur
 import { Cliente } from "@/types";
 import { useSmartLoading } from "@/hooks/useSmartLoading";
 import { useRetryableOperation } from "@/hooks/useRetryableOperation";
+import { useCSRFProtection } from "@/hooks/useCSRFProtection";
 
 export const useSecureClienteOperations = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [clientesWithStatus, setClientesWithStatus] = useState<ClienteWithPaymentStatus[]>([]);
   const { toast } = useToast();
+  const { validateRequest, getSecureHeaders } = useCSRFProtection();
   const smartLoading = useSmartLoading({
     showMinimumTime: 300,
     autoHideSuccessAfter: 2000,
@@ -24,6 +26,19 @@ export const useSecureClienteOperations = () => {
       });
     }
   });
+
+  // Validar operação antes de executar
+  const validateOperation = useCallback((operationName: string): boolean => {
+    if (!validateRequest()) {
+      toast({
+        title: "Erro de segurança",
+        description: `Operação ${operationName} bloqueada: origem não autorizada.`,
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
+  }, [validateRequest, toast]);
 
   // Buscar clientes com status calculado no backend (principal)
   const fetchClientesWithStatus = useCallback(async (status?: "todos" | "ativo" | "inativo") => {
@@ -78,34 +93,10 @@ export const useSecureClienteOperations = () => {
     }
   }, [smartLoading, executeWithRetry, toast]);
 
-  // Pesquisar clientes com rate limiting
-  const searchClientes = useCallback(async (searchTerm: string, status?: "todos" | "ativo" | "inativo") => {
-    try {
-      const result = await smartLoading.withLoading(
-        'search-clientes',
-        () => executeWithRetry(
-          () => SecureClienteService.searchClientes(searchTerm, status),
-          'Pesquisar clientes'
-        ),
-        'Pesquisando...',
-        'Pesquisa concluída'
-      );
-      
-      setClientes(result);
-      return result;
-    } catch (error) {
-      console.error("Erro ao pesquisar clientes:", error);
-      toast({
-        title: "Erro na pesquisa",
-        description: error instanceof Error ? error.message : "Erro desconhecido",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  }, [smartLoading, executeWithRetry, toast]);
-
-  // Criar cliente com validação e rate limiting
+  // Criar cliente com validação CSRF
   const createCliente = useCallback(async (cliente: Omit<Cliente, "id" | "created_at" | "status">) => {
+    if (!validateOperation('criar cliente')) return;
+
     try {
       const result = await smartLoading.withLoading(
         'create-cliente',
@@ -130,10 +121,12 @@ export const useSecureClienteOperations = () => {
       });
       throw error;
     }
-  }, [smartLoading, executeWithRetry, toast]);
+  }, [smartLoading, executeWithRetry, toast, validateOperation]);
 
-  // Atualizar cliente com rate limiting
+  // Atualizar cliente com validação CSRF
   const updateCliente = useCallback(async (id: string, cliente: Partial<Cliente>) => {
+    if (!validateOperation('atualizar cliente')) return;
+
     try {
       const result = await smartLoading.withLoading(
         'update-cliente',
@@ -158,10 +151,12 @@ export const useSecureClienteOperations = () => {
       });
       throw error;
     }
-  }, [smartLoading, executeWithRetry, toast]);
+  }, [smartLoading, executeWithRetry, toast, validateOperation]);
 
-  // Excluir cliente com rate limiting
+  // Excluir cliente com validação CSRF
   const deleteCliente = useCallback(async (id: string) => {
+    if (!validateOperation('excluir cliente')) return;
+
     try {
       await smartLoading.withLoading(
         'delete-cliente',
@@ -181,6 +176,32 @@ export const useSecureClienteOperations = () => {
       console.error("Erro ao excluir cliente:", error);
       toast({
         title: "Erro ao excluir cliente",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  }, [smartLoading, executeWithRetry, toast, validateOperation]);
+
+  // Pesquisar clientes com rate limiting
+  const searchClientes = useCallback(async (searchTerm: string, status?: "todos" | "ativo" | "inativo") => {
+    try {
+      const result = await smartLoading.withLoading(
+        'search-clientes',
+        () => executeWithRetry(
+          () => SecureClienteService.searchClientes(searchTerm, status),
+          'Pesquisar clientes'
+        ),
+        'Pesquisando...',
+        'Pesquisa concluída'
+      );
+      
+      setClientes(result);
+      return result;
+    } catch (error) {
+      console.error("Erro ao pesquisar clientes:", error);
+      toast({
+        title: "Erro na pesquisa",
         description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });

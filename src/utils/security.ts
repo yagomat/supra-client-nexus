@@ -1,4 +1,3 @@
-
 /**
  * Utilitários de segurança para prevenir ataques XSS e outras vulnerabilidades
  */
@@ -81,6 +80,110 @@ export const generateNonce = (): string => {
   const array = new Uint8Array(16);
   crypto.getRandomValues(array);
   return btoa(String.fromCharCode(...array));
+};
+
+/**
+ * Validação CSRF - Verificar se a requisição é originária do nosso domínio
+ */
+export const validateCSRFToken = (origin: string, referer: string): boolean => {
+  const allowedOrigins = [
+    window.location.origin,
+    'https://tmgofvlwnbsikvyaavgr.supabase.co'
+  ];
+  
+  // Verificar se Origin é válido
+  if (origin && !allowedOrigins.includes(origin)) {
+    return false;
+  }
+  
+  // Verificar se Referer é válido (fallback)
+  if (referer) {
+    const refererUrl = new URL(referer);
+    const currentOrigin = window.location.origin;
+    if (!refererUrl.origin.includes(currentOrigin) && !allowedOrigins.includes(refererUrl.origin)) {
+      return false;
+    }
+  }
+  
+  return true;
+};
+
+/**
+ * Gerar token CSRF baseado na sessão do usuário
+ */
+export const generateCSRFToken = (userSession?: string): string => {
+  const timestamp = Date.now().toString();
+  const sessionId = userSession || 'anonymous';
+  const random = generateSecureToken().substring(0, 16);
+  
+  // Criar um hash simples dos componentes
+  const tokenData = `${timestamp}-${sessionId}-${random}`;
+  return btoa(tokenData).replace(/[+/=]/g, ''); // Remove caracteres especiais
+};
+
+/**
+ * Validar token CSRF
+ */
+export const validateCSRFTokenData = (token: string, userSession?: string, maxAge: number = 3600000): boolean => {
+  try {
+    const decoded = atob(token);
+    const [timestamp, sessionId] = decoded.split('-');
+    
+    // Verificar se o token não expirou (1 hora por padrão)
+    const tokenTime = parseInt(timestamp);
+    if (Date.now() - tokenTime > maxAge) {
+      return false;
+    }
+    
+    // Verificar se a sessão bate
+    const expectedSession = userSession || 'anonymous';
+    return sessionId === expectedSession;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Headers seguros para requisições
+ */
+export const getSecureHeaders = (csrfToken?: string): HeadersInit => {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'X-XSS-Protection': '1; mode=block',
+    'Referrer-Policy': 'strict-origin-when-cross-origin'
+  };
+  
+  if (csrfToken) {
+    headers['X-CSRF-Token'] = csrfToken;
+  }
+  
+  // Adicionar Origin se disponível
+  if (typeof window !== 'undefined') {
+    headers['Origin'] = window.location.origin;
+  }
+  
+  return headers;
+};
+
+/**
+ * Verificar se a requisição é segura (mesma origem)
+ */
+export const isSameOriginRequest = (): boolean => {
+  if (typeof window === 'undefined') return true;
+  
+  const currentOrigin = window.location.origin;
+  const documentReferrer = document.referrer;
+  
+  if (!documentReferrer) return true; // Requisições diretas são OK
+  
+  try {
+    const referrerUrl = new URL(documentReferrer);
+    return referrerUrl.origin === currentOrigin;
+  } catch {
+    return false;
+  }
 };
 
 /**

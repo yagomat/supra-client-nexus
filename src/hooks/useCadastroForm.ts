@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { emailSchema, passwordSchema } from "@/services/auth/schemas";
 import { checkPasswordStrength } from "@/services/auth/passwordUtils";
+import { useCSRFProtection } from "./useCSRFProtection";
 
 export const useCadastroForm = () => {
   const [nome, setNome] = useState("");
@@ -20,6 +20,7 @@ export const useCadastroForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
+  const { validateRequest, getSecureHeaders } = useCSRFProtection();
 
   // Limpar erros quando o usuário digita
   useEffect(() => {
@@ -86,6 +87,12 @@ export const useCadastroForm = () => {
     setEmailError("");
     setNomeError("");
     setPasswordError("");
+
+    // Validar proteção CSRF antes de prosseguir
+    if (!validateRequest()) {
+      setGeneralError("Erro de segurança: Requisição não autorizada.");
+      return;
+    }
 
     if (!validateForm()) return;
 
