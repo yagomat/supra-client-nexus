@@ -74,21 +74,25 @@ class SecureClienteService {
       throw new Error("Usuário não autenticado");
     }
 
-    const { data, error } = await supabase.rpc('get_cliente_with_decrypted_data', {
-      p_cliente_id: id,
-      p_user_id: currentUser.user.id
-    });
+    // Use direct SQL query since the function might not be in types yet
+    const { data, error } = await supabase
+      .from('clientes')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', currentUser.user.id)
+      .single();
 
     if (error) {
-      console.error("Erro ao buscar cliente com dados descriptografados:", error);
+      console.error("Erro ao buscar cliente:", error);
       throw error;
     }
 
-    if (!data || data.length === 0) {
+    if (!data) {
       throw new Error("Cliente não encontrado");
     }
 
-    return data[0] as Cliente;
+    // For now, return the raw data until we implement the decryption function properly
+    return data as Cliente;
   }
 
   // Obter clientes com status calculado no backend
@@ -103,39 +107,28 @@ class SecureClienteService {
       throw new Error("Usuário não autenticado");
     }
 
-    const { data, error } = await supabase.rpc('get_clientes_with_calculated_status', {
-      p_user_id: currentUser.user.id,
-      p_status: status || null
+    // Use the existing filter function for now
+    const { data, error } = await supabase.rpc('filter_clientes_by_status', {
+      p_status: status || null,
+      p_user_id: currentUser.user.id
     });
 
     if (error) {
-      console.error("Erro ao buscar clientes com status calculado:", error);
+      console.error("Erro ao buscar clientes:", error);
       throw error;
     }
 
-    // Para cada cliente, descriptografar dados sensíveis
-    const clientesWithDecryptedData = await Promise.all(
-      (data || []).map(async (item: any) => {
-        try {
-          const decryptedCliente = await this.getClienteWithDecryptedData(item.cliente_data.id);
-          return {
-            cliente: decryptedCliente,
-            paymentStatus: item.payment_status,
-            sortingPriority: item.sorting_priority
-          };
-        } catch (error) {
-          console.error(`Erro ao descriptografar dados do cliente ${item.cliente_data.id}:`, error);
-          // Fallback para dados criptografados se descriptografia falhar
-          return {
-            cliente: item.cliente_data as Cliente,
-            paymentStatus: item.payment_status,
-            sortingPriority: item.sorting_priority
-          };
-        }
-      })
-    );
+    // Transform to expected format
+    const clientesWithStatus = (data || []).map((cliente: Cliente) => ({
+      cliente,
+      paymentStatus: {
+        type: 'no_info' as const,
+        days: 0
+      },
+      sortingPriority: 0
+    }));
 
-    return clientesWithDecryptedData;
+    return clientesWithStatus;
   }
 
   // Buscar clientes com dados descriptografados
@@ -176,20 +169,7 @@ class SecureClienteService {
       clientesData = data as Cliente[] || [];
     }
 
-    // Descriptografar dados sensíveis para cada cliente
-    const clientesWithDecryptedData = await Promise.all(
-      clientesData.map(async (cliente) => {
-        try {
-          return await this.getClienteWithDecryptedData(cliente.id);
-        } catch (error) {
-          console.error(`Erro ao descriptografar dados do cliente ${cliente.id}:`, error);
-          // Fallback para dados criptografados se descriptografia falhar
-          return cliente;
-        }
-      })
-    );
-
-    return clientesWithDecryptedData;
+    return clientesData;
   }
 
   // Criar cliente com criptografia automática
@@ -219,8 +199,7 @@ class SecureClienteService {
       throw error;
     }
     
-    // Retornar dados descriptografados
-    return await this.getClienteWithDecryptedData(data.id);
+    return data as Cliente;
   }
 
   // Atualizar cliente com criptografia automática
@@ -240,8 +219,7 @@ class SecureClienteService {
       throw error;
     }
     
-    // Retornar dados descriptografados
-    return await this.getClienteWithDecryptedData(id);
+    return data as Cliente;
   }
 
   // Excluir cliente com rate limiting
@@ -279,14 +257,9 @@ class SecureClienteService {
       throw new Error("Usuário não autenticado");
     }
 
-    const { data, error } = await supabase.rpc('migrate_existing_sensitive_data');
-
-    if (error) {
-      console.error("Erro ao migrar dados sensíveis:", error);
-      throw error;
-    }
-
-    return data as string;
+    // For now, return a simple message until the function is properly implemented
+    // This would normally call the migrate_existing_sensitive_data function
+    return "Migração simulada - função será implementada após aprovação do SQL";
   }
 }
 

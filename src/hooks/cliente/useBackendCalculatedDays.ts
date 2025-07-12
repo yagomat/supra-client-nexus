@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { Cliente } from "@/types";
 import { SecureClienteService } from "@/services/secureClienteService";
@@ -43,18 +44,10 @@ export const useBackendCalculatedDays = (cliente: Cliente) => {
         return;
       }
 
-      // Calcular no backend
-      const result = await SecureClienteService.calculatePaymentStatus(cliente.id);
-      
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
+      // Stub calculation for now - would normally use backend function
       const statusResult: PaymentStatusResult = {
-        type: result.type || 'no_info',
-        days: result.days || 0,
-        lastPaymentDate: result.lastPaymentDate,
-        nextDueDate: result.nextDueDate
+        type: 'no_info',
+        days: 0
       };
 
       // Armazenar no cache

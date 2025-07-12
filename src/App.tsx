@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./components/theme/ThemeProvider";
-import { AppRoutes } from "./Routes";
+import AppRoutes from "./Routes";
 import { CapacitorOverlayWindow } from "./mobile/components/CapacitorOverlayWindow";
 import { PermissionsSetup } from "./mobile/components/PermissionsSetup";
 import { useEffect, useState } from "react";

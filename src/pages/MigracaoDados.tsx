@@ -10,7 +10,7 @@ import { Shield, Database, Lock } from "lucide-react";
 const MigracaoDados = () => {
   const [migrationResult, setMigrationResult] = useState<string | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
-  const { migrateSensitiveData, isLoading } = useSecureClienteOperations();
+  const { migrateSensitiveData, loading } = useSecureClienteOperations();
 
   const handleMigration = async () => {
     try {
@@ -90,10 +90,10 @@ const MigracaoDados = () => {
             <div className="flex gap-2">
               <Button 
                 onClick={handleMigration}
-                disabled={isLoading || isCompleted}
+                disabled={loading || isCompleted}
                 className="flex items-center gap-2"
               >
-                {isLoading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
+                {loading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
                 {isCompleted ? "Migração Concluída" : "Executar Migração"}
               </Button>
 

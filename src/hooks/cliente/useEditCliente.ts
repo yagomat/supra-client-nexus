@@ -133,13 +133,14 @@ export const useEditCliente = () => {
     }
 
     // Tratar campos de data - converter strings vazias para null
-    const sanitizedData = {
+    // Converter valor_plano de string para number
+    const sanitizedData: Partial<Cliente> = {
       ...data,
       data_licenca_aplicativo: data.data_licenca_aplicativo?.trim() === "" ? null : data.data_licenca_aplicativo,
       data_licenca_2: data.data_licenca_2?.trim() === "" ? null : data.data_licenca_2,
       telefone: data.telefone?.trim() === "" ? null : data.telefone,
       uf: data.uf?.trim() === "" ? null : data.uf,
-      valor_plano: data.valor_plano?.trim() === "" ? null : data.valor_plano,
+      valor_plano: data.valor_plano?.trim() === "" ? null : Number(data.valor_plano),
       dispositivo_smart: data.dispositivo_smart?.trim() === "" ? null : data.dispositivo_smart,
       usuario_aplicativo: data.usuario_aplicativo?.trim() === "" ? null : data.usuario_aplicativo,
       senha_aplicativo: data.senha_aplicativo?.trim() === "" ? null : data.senha_aplicativo,
