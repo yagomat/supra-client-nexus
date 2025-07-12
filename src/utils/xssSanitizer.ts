@@ -15,6 +15,12 @@ const ALLOWED_ATTRIBUTES: string[] = [];
 export const sanitizeHtml = (input: string | null | undefined): string => {
   if (!input) return '';
   
+  // Verificação inicial de segurança
+  if (containsDangerousContent(input)) {
+    console.warn('Conteúdo perigoso detectado e bloqueado:', input.substring(0, 50) + '...');
+    return sanitizeText(input); // Fallback para texto simples
+  }
+  
   // Remove scripts e tags perigosas
   let sanitized = input
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
@@ -26,14 +32,16 @@ export const sanitizeHtml = (input: string | null | undefined): string => {
     .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
     .replace(/javascript:/gi, '')
     .replace(/on\w+\s*=/gi, '')
-    .replace(/expression\s*\(/gi, '');
+    .replace(/expression\s*\(/gi, '')
+    .replace(/data:(?!image\/[a-z]+;base64,)[^;,]*/gi, ''); // Permitir apenas imagens base64
 
   // Remove todas as tags exceto as permitidas
   const tagRegex = /<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/g;
   sanitized = sanitized.replace(tagRegex, (match, tagName) => {
     if (ALLOWED_TAGS.includes(tagName.toLowerCase())) {
-      // Remove atributos das tags permitidas por segurança
-      return `<${tagName.toLowerCase()}>`;
+      // Para tags permitidas, remove todos os atributos por segurança
+      const closingTag = match.startsWith('</');
+      return closingTag ? `</${tagName.toLowerCase()}>` : `<${tagName.toLowerCase()}>`;
     }
     return '';
   });
@@ -47,6 +55,12 @@ export const sanitizeHtml = (input: string | null | undefined): string => {
     .replace(/&#x2F;/gi, '/')
     .replace(/&#x60;/gi, '`')
     .replace(/&#x3D;/gi, '=');
+
+  // Validação final
+  if (containsDangerousContent(sanitized)) {
+    console.warn('Conteúdo ainda perigoso após sanitização, usando texto puro');
+    return sanitizeText(input);
+  }
 
   return sanitized.trim();
 };
@@ -86,7 +100,13 @@ export const containsDangerousContent = (input: string): boolean => {
     /<style/i,
     /expression\s*\(/i,
     /vbscript:/i,
-    /data:.*base64/i
+    /data:(?!image\/[a-z]+;base64,)/i, // Bloquear data: exceto imagens base64
+    /url\s*\(/i,
+    /import\s*[("']/i,
+    /@import/i,
+    /behavior\s*:/i,
+    /binding\s*:/i,
+    /moz-binding/i
   ];
   
   return dangerousPatterns.some(pattern => pattern.test(input));
@@ -100,4 +120,34 @@ export const sanitizeFormInput = (input: string | null | undefined): string => {
   
   // Para formulários, remove completamente qualquer HTML
   return sanitizeText(input);
+};
+
+/**
+ * Sanitiza CSS de forma segura
+ */
+export const sanitizeCSS = (cssContent: string): string => {
+  if (!cssContent) return '';
+  
+  // Remove caracteres e funções perigosas para CSS
+  return cssContent
+    .replace(/[<>"'&\\]/g, '') // Remove caracteres HTML perigosos
+    .replace(/javascript:/gi, '') // Remove javascript:
+    .replace(/expression\s*\(/gi, '') // Remove expression()
+    .replace(/@import/gi, '') // Remove @import
+    .replace(/url\s*\(/gi, 'url-blocked(') // Bloqueia url()
+    .replace(/behavior\s*:/gi, 'behavior-blocked:') // Bloqueia behavior
+    .replace(/binding\s*:/gi, 'binding-blocked:') // Bloqueia binding
+    .replace(/moz-binding/gi, 'moz-binding-blocked') // Bloqueia moz-binding
+    .replace(/eval\s*\(/gi, 'eval-blocked(') // Bloqueia eval
+    .replace(/Function\s*\(/gi, 'Function-blocked('); // Bloqueia Function
+};
+
+/**
+ * Valida se o conteúdo HTML sanitizado é seguro para renderização
+ */
+export const validateSanitizedContent = (content: string): boolean => {
+  if (!content) return true;
+  
+  // Verifica se ainda há conteúdo perigoso após sanitização
+  return !containsDangerousContent(content);
 };

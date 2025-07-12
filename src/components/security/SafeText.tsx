@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { sanitizeHtml, sanitizeText } from '@/utils/xssSanitizer';
+import { sanitizeHtml, sanitizeText, validateSanitizedContent } from '@/utils/xssSanitizer';
 
 interface SafeTextProps {
   children: string | null | undefined;
@@ -29,12 +29,32 @@ export const SafeText: React.FC<SafeTextProps> = ({
 
   if (!sanitizedContent) return null;
 
-  // Se permitir HTML básico, renderizar com dangerouslySetInnerHTML (já sanitizado)
+  // Se permitir HTML básico, validar segurança antes de renderizar
   if (allowBasicHtml && sanitizedContent !== sanitizeText(children)) {
+    // Validação dupla de segurança
+    if (!validateSanitizedContent(sanitizedContent)) {
+      console.warn('Conteúdo HTML rejeitado por questões de segurança, usando texto puro');
+      const safeTextContent = sanitizeText(children);
+      
+      const finalContent = preserveLineBreaks 
+        ? safeTextContent.split('\n').map((line, index) => (
+            <React.Fragment key={index}>
+              {line}
+              {index < safeTextContent.split('\n').length - 1 && <br />}
+            </React.Fragment>
+          ))
+        : safeTextContent;
+
+      return <span className={className}>{finalContent}</span>;
+    }
+
+    // Renderizar HTML sanitizado apenas se passou em todas as validações
     return (
       <span 
         className={className}
-        dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+        dangerouslySetInnerHTML={{ 
+          __html: sanitizedContent 
+        }}
       />
     );
   }

@@ -1,5 +1,6 @@
 import * as React from "react"
 import * as RechartsPrimitive from "recharts"
+import { sanitizeCSS, validateSanitizedContent } from "@/utils/xssSanitizer"
 
 import { cn } from "@/lib/utils"
 
@@ -74,17 +75,6 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null
   }
 
-  // Sanitizar CSS antes de usar dangerouslySetInnerHTML
-  const sanitizeCSS = (cssContent: string): string => {
-    // Remove caracteres potencialmente perigosos para CSS
-    return cssContent
-      .replace(/[<>"'&\\]/g, '')
-      .replace(/javascript:/gi, '')
-      .replace(/expression\(/gi, '')
-      .replace(/@import/gi, '')
-      .replace(/url\(/gi, 'url-blocked(');
-  };
-
   const cssContent = Object.entries(THEMES)
     .map(
       ([theme, prefix]) => `
@@ -102,10 +92,27 @@ ${colorConfig
     )
     .join('\n');
 
+  // Sanitizar CSS de forma mais rigorosa
+  const sanitizedCSS = sanitizeCSS(cssContent);
+  
+  // Validação adicional para garantir que o CSS é seguro
+  if (!validateSanitizedContent(sanitizedCSS)) {
+    console.warn('CSS do chart rejeitado por questões de segurança');
+    return null;
+  }
+
+  // Validação específica para CSS de chart
+  if (sanitizedCSS.includes('url-blocked(') || 
+      sanitizedCSS.includes('expression') || 
+      sanitizedCSS.includes('javascript:')) {
+    console.warn('CSS do chart contém conteúdo bloqueado');
+    return null;
+  }
+
   return (
     <style
       dangerouslySetInnerHTML={{
-        __html: sanitizeCSS(cssContent),
+        __html: sanitizedCSS,
       }}
     />
   );
