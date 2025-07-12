@@ -10,7 +10,16 @@ import {
 
 export const useCSRFProtection = () => {
   const [csrfToken, setCSRFToken] = useState<string>('');
-  const { user } = useAuth();
+  
+  // Tentar acessar o contexto de forma segura
+  let user = null;
+  try {
+    const authContext = useAuth();
+    user = authContext.user;
+  } catch (error) {
+    // Se o AuthProvider não estiver disponível, user permanece null
+    console.warn('useCSRFProtection: AuthProvider não está disponível ainda');
+  }
   
   // Gerar novo token quando a sessão muda
   useEffect(() => {
