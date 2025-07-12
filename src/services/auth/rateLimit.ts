@@ -41,7 +41,7 @@ export const checkRateLimit = async (
       };
     }
 
-    return data as RateLimitResult;
+    return data as unknown as RateLimitResult;
   } catch (error) {
     secureLog.error('Rate limit check exception', { error, identifier, operation });
     // Em caso de exceção, permitir por segurança
