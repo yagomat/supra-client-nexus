@@ -88,7 +88,8 @@ export const generateNonce = (): string => {
 export const validateCSRFToken = (origin: string, referer: string): boolean => {
   const allowedOrigins = [
     window.location.origin,
-    'https://tmgofvlwnbsikvyaavgr.supabase.co'
+    'https://tmgofvlwnbsikvyaavgr.supabase.co',
+    'https://lovable.dev' // Permitir Lovable como origem válida
   ];
   
   // Verificar se Origin é válido
@@ -98,9 +99,16 @@ export const validateCSRFToken = (origin: string, referer: string): boolean => {
   
   // Verificar se Referer é válido (fallback)
   if (referer) {
-    const refererUrl = new URL(referer);
-    const currentOrigin = window.location.origin;
-    if (!refererUrl.origin.includes(currentOrigin) && !allowedOrigins.includes(refererUrl.origin)) {
+    try {
+      const refererUrl = new URL(referer);
+      const currentOrigin = window.location.origin;
+      
+      // Permitir se referer for do mesmo domínio atual ou domínios permitidos
+      if (refererUrl.origin === currentOrigin || allowedOrigins.includes(refererUrl.origin)) {
+        return true;
+      }
+    } catch {
+      // Se não conseguir parsear a URL do referer, considerar inválido
       return false;
     }
   }
@@ -168,7 +176,7 @@ export const getSecureHeaders = (csrfToken?: string): HeadersInit => {
 };
 
 /**
- * Verificar se a requisição é segura (mesma origem)
+ * Verificar se a requisição é segura (mesma origem ou origem permitida)
  */
 export const isSameOriginRequest = (): boolean => {
   if (typeof window === 'undefined') return true;
@@ -176,11 +184,19 @@ export const isSameOriginRequest = (): boolean => {
   const currentOrigin = window.location.origin;
   const documentReferrer = document.referrer;
   
-  if (!documentReferrer) return true; // Requisições diretas são OK
+  // Se não há referrer, considerar válido (navegação direta)
+  if (!documentReferrer) return true;
   
   try {
     const referrerUrl = new URL(documentReferrer);
-    return referrerUrl.origin === currentOrigin;
+    const allowedOrigins = [
+      currentOrigin,
+      'https://lovable.dev', // Permitir Lovable
+      'https://tmgofvlwnbsikvyaavgr.supabase.co'
+    ];
+    
+    // Permitir se referrer for de origem confiável
+    return allowedOrigins.includes(referrerUrl.origin);
   } catch {
     return false;
   }

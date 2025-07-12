@@ -28,14 +28,22 @@ export const useCSRFProtection = () => {
     const origin = options.origin || window.location.origin;
     const referer = options.referer || document.referrer;
     
+    // Usar a validação corrigida
     if (!validateCSRFToken(origin, referer)) {
-      console.warn('CSRF: Origem da requisição inválida');
+      console.warn('CSRF: Origem da requisição inválida', {
+        origin,
+        referer,
+        currentOrigin: window.location.origin
+      });
       return false;
     }
     
-    // Verificar se é uma requisição da mesma origem
+    // Verificar se é uma requisição da mesma origem (com validação corrigida)
     if (!isSameOriginRequest()) {
-      console.warn('CSRF: Requisição de origem cruzada detectada');
+      console.warn('CSRF: Requisição de origem cruzada detectada', {
+        currentOrigin: window.location.origin,
+        referrer: document.referrer
+      });
       return false;
     }
     
