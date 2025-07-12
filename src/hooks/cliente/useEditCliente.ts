@@ -152,24 +152,24 @@ export const useEditCliente = () => {
 
     console.log("Dados sanitizados:", sanitizedData);
 
-  try {
-    await originalOnSubmit(sanitizedData);
-    
-    // Sucesso - mostrar mensagem e redirecionar
-    toast({
-      title: "Cliente atualizado com sucesso",
-      description: "As informações do cliente foram atualizadas.",
-    });
-    
-    navigate("/clientes");
-  } catch (error) {
-    console.error("Erro ao submeter formulário:", error);
-    toast({
-      title: "Erro ao atualizar cliente",
-      description: "Ocorreu um erro interno. Tente novamente.",
-      variant: "destructive",
-    });
-  }
+    try {
+      await originalOnSubmit(sanitizedData);
+      
+      // Sucesso - mostrar mensagem e redirecionar
+      toast({
+        title: "Cliente atualizado com sucesso",
+        description: "As informações do cliente foram atualizadas.",
+      });
+      
+      navigate("/clientes");
+    } catch (error) {
+      console.error("Erro ao submeter formulário:", error);
+      toast({
+        title: "Erro ao atualizar cliente",
+        description: "Ocorreu um erro interno. Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   return {
