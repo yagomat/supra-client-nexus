@@ -7,6 +7,7 @@ import { EditClienteForm } from "@/components/cliente/edit/EditClienteForm";
 import { EditClienteActions } from "@/components/cliente/edit/EditClienteActions";
 import { EditClienteLoadingState } from "@/components/cliente/edit/EditClienteLoadingState";
 import { EditClienteErrorState } from "@/components/cliente/edit/EditClienteErrorState";
+import { UniversalCSRFProtection } from "@/components/security/UniversalCSRFProtection";
 
 const EditarCliente = () => {
   const {
@@ -31,31 +32,37 @@ const EditarCliente = () => {
   }
 
   return (
-    <DashboardLayout title="Editar Cliente">
-      <div className="w-full max-w-4xl mx-auto h-fit">
-        <div className="space-y-6 pb-6">
-          <EditClienteHeader 
-            clienteNome={cliente.nome}
-            onBack={() => navigate("/clientes")}
-          />
-
-          <EditClienteForm
-            form={form}
-            valoresPredefinidos={valoresPredefinidos}
-            possuiTelaAdicional={possuiTelaAdicional}
-            setPossuiTelaAdicional={setPossuiTelaAdicional}
-            onSubmit={handleFormSubmit}
-            isSubmitting={isSubmitting}
-          >
-            <EditClienteActions
-              isSubmitting={isSubmitting}
-              isFormValid={isFormValid}
-              onCancel={() => navigate("/clientes")}
+    <UniversalCSRFProtection 
+      level="strict" 
+      showStatus={process.env.NODE_ENV === 'development'}
+      onValidationFail={() => navigate("/clientes")}
+    >
+      <DashboardLayout title="Editar Cliente">
+        <div className="w-full max-w-4xl mx-auto h-fit">
+          <div className="space-y-6 pb-6">
+            <EditClienteHeader 
+              clienteNome={cliente.nome}
+              onBack={() => navigate("/clientes")}
             />
-          </EditClienteForm>
+
+            <EditClienteForm
+              form={form}
+              valoresPredefinidos={valoresPredefinidos}
+              possuiTelaAdicional={possuiTelaAdicional}
+              setPossuiTelaAdicional={setPossuiTelaAdicional}
+              onSubmit={handleFormSubmit}
+              isSubmitting={isSubmitting}
+            >
+              <EditClienteActions
+                isSubmitting={isSubmitting}
+                isFormValid={isFormValid}
+                onCancel={() => navigate("/clientes")}
+              />
+            </EditClienteForm>
+          </div>
         </div>
-      </div>
-    </DashboardLayout>
+      </DashboardLayout>
+    </UniversalCSRFProtection>
   );
 };
 

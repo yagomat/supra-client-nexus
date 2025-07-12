@@ -6,6 +6,7 @@ import { formSchema, ClienteFormValues } from "./clienteFormSchema";
 import { useSecureClienteOperations } from "./useSecureClienteOperations";
 import { getDefaultValues, convertFormToCliente } from "./clienteFormUtils";
 import { useRealTimeValidation } from "./clienteFormValidation";
+import { useSecureForm } from "@/hooks/useSecureForm";
 import { Cliente } from "@/types";
 
 interface UseSecureClienteFormProps {
@@ -33,6 +34,22 @@ export const useSecureClienteForm = ({
     clearValidationMessages
   } = useSecureClienteOperations();
 
+  // Proteção CSRF integrada
+  const {
+    validateFormSecurity,
+    getSecureFormHeaders,
+    prepareSecureFormData,
+    isSecure
+  } = useSecureForm({
+    validateOnChange: realTimeValidation,
+    enforceRateLimit: true,
+    logAttempts: true,
+    onSecurityFail: () => {
+      console.error('useSecureClienteForm: Falha na validação de segurança');
+      clearValidationMessages();
+    }
+  });
+
   // Configurar formulário com validação local + backend
   const form = useForm<ClienteFormValues>({
     resolver: zodResolver(formSchema),
@@ -57,20 +74,30 @@ export const useSecureClienteForm = ({
     setLastValidationTime
   });
 
-  // Submissão do formulário com validação de segurança
+  // Submissão do formulário com validação de segurança CSRF
   const onSubmit = async (data: ClienteFormValues | Partial<Cliente>) => {
     try {
       console.log("OnSubmit chamado com dados:", data);
       
+      // VALIDAÇÃO CSRF OBRIGATÓRIA
+      const securityValid = await validateFormSecurity(data);
+      if (!securityValid) {
+        console.error('Validação CSRF falhou - operação cancelada');
+        return;
+      }
+
       // Limpar mensagens anteriores
       clearValidationMessages();
       
       // Converter e validar dados antes de submeter
       const clienteData = 'nome' in data ? convertFormToCliente(data as ClienteFormValues) : data as Partial<Cliente>;
       
-      console.log("Dados convertidos para envio:", clienteData);
+      // Preparar dados com informações de segurança
+      const secureData = prepareSecureFormData(clienteData);
       
-      const validation = await validateCliente(clienteData);
+      console.log("Dados convertidos para envio (com CSRF):", secureData);
+      
+      const validation = await validateCliente(secureData);
       
       if (!validation.valid) {
         console.log("Validação falhou:", validation);
@@ -82,10 +109,10 @@ export const useSecureClienteForm = ({
       // Executar operação baseada no modo
       if (mode === "create") {
         console.log("Criando cliente...");
-        await createCliente(clienteData as Omit<Cliente, "id" | "created_at" | "status">);
+        await createCliente(secureData as Omit<Cliente, "id" | "created_at" | "status">);
       } else if (mode === "edit" && clienteId) {
         console.log("Atualizando cliente...");
-        await updateCliente(clienteId, clienteData);
+        await updateCliente(clienteId, secureData);
       }
     } catch (error) {
       console.error("Erro no submit do formulário:", error);
@@ -94,7 +121,7 @@ export const useSecureClienteForm = ({
 
   // Verificar se o formulário está válido para submissão
   function isFormValid() {
-    return form.formState.isValid;
+    return form.formState.isValid && isSecure;
   }
 
   // Obter status de segurança do formulário
@@ -103,7 +130,8 @@ export const useSecureClienteForm = ({
     const hasWarnings = validationWarnings.length > 0;
     
     return {
-      isSecure: !hasErrors,
+      isSecure: !hasErrors && isSecure,
+      csrfProtected: isSecure,
       hasErrors,
       hasWarnings,
       errors: validationErrors,
