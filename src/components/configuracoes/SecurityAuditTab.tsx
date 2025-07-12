@@ -24,6 +24,11 @@ interface AuditStats {
   recent_events: number;
 }
 
+// Função auxiliar para verificar se details tem a propriedade success
+const hasSuccessProperty = (details: any): details is { success: boolean } => {
+  return details && typeof details === 'object' && 'success' in details;
+};
+
 export function SecurityAuditTab() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [stats, setStats] = useState<AuditStats | null>(null);
@@ -48,10 +53,10 @@ export function SecurityAuditTab() {
       const authAttempts = auditLogs.filter(log => log.event_type === 'auth_login_attempt').length;
       const successfulLogins = auditLogs.filter(log => 
         log.event_type === 'login_success' || 
-        (log.event_type === 'auth_login_attempt' && log.details?.success === true)
+        (log.event_type === 'auth_login_attempt' && hasSuccessProperty(log.details) && log.details.success === true)
       ).length;
       const failedAttempts = auditLogs.filter(log => 
-        log.event_type === 'auth_login_attempt' && log.details?.success === false
+        log.event_type === 'auth_login_attempt' && hasSuccessProperty(log.details) && log.details.success === false
       ).length;
       
       const last24Hours = new Date();
@@ -118,17 +123,19 @@ export function SecurityAuditTab() {
     const details = log.details || {};
     switch (log.event_type) {
       case 'auth_login_attempt':
-        return `Tentativa de login${details.success ? ' bem-sucedida' : ' falhada'} para ${details.email}`;
+        const success = hasSuccessProperty(details) ? details.success : false;
+        return `Tentativa de login${success ? ' bem-sucedida' : ' falhada'} para ${details.email || 'email não informado'}`;
       case 'auth_signup_attempt':
-        return `Tentativa de cadastro${details.success ? ' bem-sucedida' : ' falhada'} para ${details.email}`;
+        const signupSuccess = hasSuccessProperty(details) ? details.success : false;
+        return `Tentativa de cadastro${signupSuccess ? ' bem-sucedida' : ' falhada'} para ${details.email || 'email não informado'}`;
       case 'login_success':
-        return `Login realizado com sucesso para ${details.email}`;
+        return `Login realizado com sucesso para ${details.email || 'usuário'}`;
       case 'signup_success':
-        return `Cadastro realizado com sucesso para ${details.email}`;
+        return `Cadastro realizado com sucesso para ${details.email || 'usuário'}`;
       case 'password_updated':
         return `Senha atualizada (força: ${details.password_strength || 'não informada'})`;
       case 'password_update_failed':
-        return `Falha ao atualizar senha: ${details.error}`;
+        return `Falha ao atualizar senha: ${details.error || 'erro não especificado'}`;
       case 'profile_update':
         return `Perfil atualizado - Nome: ${details.new_nome || 'não alterado'}`;
       case 'logout_success':
