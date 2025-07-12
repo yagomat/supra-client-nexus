@@ -1,119 +1,88 @@
 
-import React, { useEffect, useState } from 'react';
-import { CSRFProtection } from './CSRFProtection';
-import { SecurityMonitor } from './SecurityMonitor';
-import { SecurityValidationService } from '@/services/securityValidationService';
+import React, { useEffect } from 'react';
+import { useCSRFProtection } from '@/hooks/useCSRFProtection';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Shield, AlertTriangle, Lock } from 'lucide-react';
 
 interface UniversalCSRFProtectionProps {
   children: React.ReactNode;
-  level?: 'basic' | 'standard' | 'strict';
   showStatus?: boolean;
-  showSecurityMonitor?: boolean;
+  enforceSecureOrigin?: boolean;
   onValidationFail?: () => void;
+  level?: 'basic' | 'strict';
 }
 
 export const UniversalCSRFProtection: React.FC<UniversalCSRFProtectionProps> = ({
   children,
-  level = 'standard',
   showStatus = false,
-  showSecurityMonitor = false,
-  onValidationFail
+  enforceSecureOrigin = true,
+  onValidationFail,
+  level = 'strict'
 }) => {
-  const [securityValidated, setSecurityValidated] = useState(false);
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const { validateRequest, isValidOrigin, csrfToken } = useCSRFProtection();
 
   useEffect(() => {
-    const validateSecurityContext = async () => {
-      try {
-        // Verificar se estamos em um contexto seguro
-        const isSecureContext = window.isSecureContext;
-        const hasValidOrigin = window.location.protocol === 'https:' || 
-                               window.location.hostname === 'localhost';
-
-        if (level === 'strict' && !isSecureContext) {
-          throw new Error('Contexto inseguro detectado - HTTPS obrigatório');
-        }
-
-        if (!hasValidOrigin && level !== 'basic') {
-          throw new Error('Origem não confiável detectada');
-        }
-
-        // Registrar validação bem-sucedida
-        await SecurityValidationService.logSecurityEvent('context_validation', {
-          risk_level: 'low',
-          description: 'Contexto de segurança validado com sucesso',
-          additional_data: {
-            level,
-            secure_context: isSecureContext,
-            origin: window.location.origin
-          }
-        });
-
-        setSecurityValidated(true);
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Erro de validação de segurança';
-        setValidationError(errorMessage);
-        
-        // Registrar falha de validação
-        await SecurityValidationService.logSecurityEvent('context_validation_failed', {
-          risk_level: 'high',
-          description: errorMessage,
-          additional_data: {
-            level,
-            origin: window.location.origin
-          }
-        });
-
-        if (onValidationFail) {
-          onValidationFail();
-        }
+    // Validação contínua de origem
+    if (enforceSecureOrigin && !isValidOrigin) {
+      console.error('CSRF: Origem inválida detectada', {
+        currentOrigin: window.location.origin,
+        referrer: document.referrer,
+        timestamp: new Date().toISOString()
+      });
+      
+      if (onValidationFail) {
+        onValidationFail();
       }
-    };
-
-    validateSecurityContext();
-  }, [level, onValidationFail]);
-
-  // Se não passou na validação de segurança em modo estrito, bloquear
-  if (level === 'strict' && !securityValidated) {
-    if (validationError) {
-      return (
-        <div className="min-h-screen flex items-center justify-center p-4">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md text-center">
-            <h2 className="text-lg font-semibold text-red-800 mb-2">
-              Falha na Validação de Segurança
-            </h2>
-            <p className="text-red-700 text-sm mb-4">{validationError}</p>
-            <p className="text-red-600 text-xs">
-              Recarregue a página ou acesse via HTTPS para continuar.
-            </p>
-          </div>
-        </div>
-      );
     }
+  }, [isValidOrigin, enforceSecureOrigin, onValidationFail]);
 
+  // Aplicar validação estrita se necessário
+  useEffect(() => {
+    if (level === 'strict') {
+      const checkSecurityPeriodically = () => {
+        if (!validateRequest()) {
+          console.warn('CSRF: Validação de segurança falhou durante operação');
+        }
+      };
+
+      const interval = setInterval(checkSecurityPeriodically, 30000); // Verificar a cada 30s
+      return () => clearInterval(interval);
+    }
+  }, [level, validateRequest]);
+
+  if (enforceSecureOrigin && !isValidOrigin) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Validando contexto de segurança...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Alert variant="destructive" className="max-w-md">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Erro de Segurança:</strong> Esta página não pode ser carregada de uma origem externa.
+            Por favor, acesse diretamente através do domínio oficial.
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
 
   return (
-    <CSRFProtection 
-      showStatus={showStatus}
-      onValidationFail={onValidationFail}
-      strictMode={level === 'strict'}
-    >
-      {showSecurityMonitor && (
-        <SecurityMonitor 
-          showDetails={level === 'strict'} 
-          alertLevel={level === 'basic' ? 'critical' : level === 'standard' ? 'high' : 'all'}
-        />
+    <>
+      {showStatus && (
+        <Alert className="mb-4 border-green-200 bg-green-50">
+          <Shield className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-800">
+            <div className="flex items-center gap-2">
+              <Lock className="h-3 w-3" />
+              <span>Proteção CSRF ativa - Conexão segura estabelecida</span>
+            </div>
+          </AlertDescription>
+        </Alert>
       )}
+      
+      {/* Token CSRF oculto para formulários */}
+      <input type="hidden" name="_csrf_token" value={csrfToken} />
+      <input type="hidden" name="_origin_check" value={window.location.origin} />
+      
       {children}
-    </CSRFProtection>
+    </>
   );
 };

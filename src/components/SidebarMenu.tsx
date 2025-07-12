@@ -38,10 +38,6 @@ export function SidebarMenu({ onCollapseChange }: { onCollapseChange?: (collapse
   ];
 
   const isActive = (path: string) => {
-    if (path === "/clientes") {
-      return location.pathname === "/clientes" || 
-             location.pathname.startsWith("/clientes/");
-    }
     return location.pathname === path;
   };
 
