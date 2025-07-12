@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Cliente } from "@/types";
 
@@ -89,7 +88,10 @@ class SecureClienteService {
     }
 
     console.log("Cliente carregado com dados descriptografados:", data);
-    return data as Cliente;
+    
+    // Properly cast the JSON data to Cliente type
+    const cliente = data as unknown as Cliente;
+    return cliente;
   }
 
   // Obter clientes com status calculado no backend
