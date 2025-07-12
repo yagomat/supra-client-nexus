@@ -3,35 +3,22 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Cliente } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
-import { ClienteSecurityService } from "@/services/clienteSecurityService";
+import { SecureClienteService } from "@/services/secureClienteService";
 
 export const useOptimizedClienteFetch = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Buscar todos os clientes de uma vez (filtros serão aplicados no frontend)
+  // Buscar todos os clientes usando o serviço seguro
   const fetchClientes = async () => {
     try {
       setLoading(true);
       
-      // Usar função RLS para garantir que apenas clientes do usuário sejam retornados
-      const { data: currentUser } = await supabase.auth.getUser();
-      const userId = currentUser.user?.id;
+      // Usar o SecureClienteService diretamente para buscar clientes
+      const clientesData = await SecureClienteService.getClientes();
       
-      if (!userId) {
-        throw new Error("Usuário não autenticado");
-      }
-
-      const { data, error } = await supabase.rpc('filter_clientes_by_status', {
-        p_status: null, // null retorna todos os clientes
-        p_user_id: userId
-      });
-
-      if (error) throw error;
-
       // Verificar se há IDs duplicados nos dados
-      const clientesData = data || [];
       const ids = clientesData.map(c => c.id);
       const uniqueIds = new Set(ids);
       
@@ -62,28 +49,18 @@ export const useOptimizedClienteFetch = () => {
     try {
       console.log("Tentando excluir cliente:", clienteParaExcluir);
       
-      // Usar função segura de exclusão
-      const result = await ClienteSecurityService.secureDeleteCliente(clienteParaExcluir);
+      // Usar SecureClienteService para exclusão
+      await SecureClienteService.deleteCliente(clienteParaExcluir);
       
-      console.log("Resultado da exclusão:", result);
-      if (result.success) {
-        // Atualizar a lista de clientes localmente (otimização)
-        setClientes((prev) => prev.filter((cliente) => cliente.id !== clienteParaExcluir));
-        
-        toast({
-          title: "Cliente excluído",
-          description: result.message || "O cliente foi excluído com sucesso.",
-        });
-        
-        return true;
-      } else {
-        toast({
-          title: "Erro ao excluir cliente",
-          description: result.error || "Erro desconhecido",
-          variant: "destructive",
-        });
-        return false;
-      }
+      // Atualizar a lista de clientes localmente (otimização)
+      setClientes((prev) => prev.filter((cliente) => cliente.id !== clienteParaExcluir));
+      
+      toast({
+        title: "Cliente excluído",
+        description: "O cliente foi excluído com sucesso.",
+      });
+      
+      return true;
     } catch (error) {
       console.error("Erro ao excluir cliente", error);
       toast({

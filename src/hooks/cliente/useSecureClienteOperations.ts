@@ -75,9 +75,6 @@ export const useSecureClienteOperations = () => {
   // Buscar clientes com status calculado no backend (principal)
   const fetchClientesWithStatus = useCallback(async (status?: "todos" | "ativo" | "inativo") => {
     try {
-      // Validação CSRF para operações de leitura críticas
-      if (!(await validateOperation('buscar clientes'))) return;
-
       const result = await smartLoading.withLoading(
         'fetch-clientes-status',
         () => executeWithRetry(
@@ -100,7 +97,33 @@ export const useSecureClienteOperations = () => {
       });
       throw error;
     }
-  }, [smartLoading, executeWithRetry, toast, validateOperation]);
+  }, [smartLoading, executeWithRetry, toast]);
+
+  // Buscar clientes básico (fallback)
+  const fetchClientes = useCallback(async (status?: "todos" | "ativo" | "inativo") => {
+    try {
+      const result = await smartLoading.withLoading(
+        'fetch-clientes',
+        () => executeWithRetry(
+          () => SecureClienteService.getClientes(status),
+          'Carregar clientes'
+        ),
+        'Carregando clientes...',
+        'Clientes carregados com sucesso'
+      );
+      
+      setClientes(result);
+      return result;
+    } catch (error) {
+      console.error("Erro ao buscar clientes:", error);
+      toast({
+        title: "Erro ao carregar clientes",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  }, [smartLoading, executeWithRetry, toast]);
 
   // Criar cliente com validação CSRF obrigatória
   const createCliente = useCallback(async (cliente: Omit<Cliente, "id" | "created_at" | "status">) => {
@@ -217,8 +240,8 @@ export const useSecureClienteOperations = () => {
     
     // Operações principais (agora consolidadas com CSRF)
     fetchClientesWithStatus,
-    fetchClientes: fetchClientesWithStatus, // Usar a versão segura como padrão
-    searchClientes: fetchClientesWithStatus, // Simplificar para usar o método principal
+    fetchClientes,
+    searchClientes: fetchClientes, // Simplificar para usar o método principal
     createCliente,
     updateCliente,
     deleteCliente,
