@@ -48,17 +48,13 @@ BEGIN
     RAISE EXCEPTION 'Rate limit exceeded for dashboard requests. Please wait a moment.';
   END IF;
 
-  -- Log the request for audit (less frequent logging)
-  IF random() < 0.1 THEN -- Only log 10% of requests to reduce audit table growth
-    PERFORM public.log_audit_event(
-      user_id_param,
-      'dashboard_stats_request',
-      json_build_object('timestamp', NOW(), 'type', 'critical')::jsonb
-    );
-  END IF;
+  -- Log the request for audit using the consolidated function
+  PERFORM public.log_audit_event(
+    user_id_param,
+    'dashboard_stats_request',
+    json_build_object('timestamp', NOW(), 'type', 'critical')::jsonb
+  );
 
-  -- ... keep existing code (all the dashboard stats calculations)
-  
   -- Count active clients
   SELECT COUNT(*) INTO clientes_ativos 
   FROM public.clientes 

@@ -1,3 +1,4 @@
+
 -- Create rate limiting function for dashboard operations
 CREATE OR REPLACE FUNCTION public.check_dashboard_rate_limit(p_user_id uuid, p_max_requests integer DEFAULT 10, p_time_window_minutes integer DEFAULT 1)
  RETURNS boolean
@@ -43,13 +44,15 @@ BEGIN
     RAISE EXCEPTION 'Rate limit exceeded for dashboard requests';
   END IF;
 
-  -- Log the request for audit
+  -- Log the request for audit using the consolidated function
   PERFORM public.log_audit_event(
     user_id_param,
     'dashboard_stats_request',
     json_build_object('timestamp', NOW(), 'type', 'critical')::jsonb
   );
 
+  -- ... keep existing code (all the dashboard stats calculations)
+  
   -- Count active clients
   SELECT COUNT(*) INTO clientes_ativos 
   FROM public.clientes 
