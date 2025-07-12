@@ -62,7 +62,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <SecurityHeadersProvider 
         environment={process.env.NODE_ENV === 'production' ? 'production' : 'development'}
-        showWarnings={process.env.NODE_ENV === 'development'}
+        showWarnings={false} // Removendo os alertas visuais
       >
         <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
           <TooltipProvider>

@@ -13,7 +13,7 @@ interface SecurityHeadersProviderProps {
 export const SecurityHeadersProvider: React.FC<SecurityHeadersProviderProps> = ({
   children,
   environment = 'development',
-  showWarnings = false
+  showWarnings = false // Mudando o padrão para false para não mostrar alertas visuais
 }) => {
   const [securityStatus, setSecurityStatus] = useState<{
     present: string[];
@@ -48,7 +48,7 @@ export const SecurityHeadersProvider: React.FC<SecurityHeadersProviderProps> = (
 
   return (
     <>
-      {/* Avisos de segurança apenas em desenvolvimento ou quando solicitado */}
+      {/* Avisos de segurança apenas quando explicitamente solicitado */}
       {showWarnings && securityStatus.checked && hasSecurityIssues && (
         <Alert variant="warning" className="mb-4">
           <AlertTriangle className="h-4 w-4" />
@@ -79,8 +79,8 @@ export const SecurityHeadersProvider: React.FC<SecurityHeadersProviderProps> = (
         </Alert>
       )}
 
-      {/* Status de segurança em desenvolvimento */}
-      {environment === 'development' && securityStatus.checked && securityStatus.present.length > 0 && (
+      {/* Status de segurança em desenvolvimento - removido para limpar a interface */}
+      {false && environment === 'development' && securityStatus.checked && securityStatus.present.length > 0 && (
         <div className="fixed bottom-4 right-4 bg-green-50 border border-green-200 rounded-lg p-2 text-xs text-green-800 max-w-xs z-50">
           <div className="flex items-center gap-1">
             <Shield className="w-3 h-3" />
