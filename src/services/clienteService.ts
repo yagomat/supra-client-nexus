@@ -74,15 +74,33 @@ export async function createCliente(cliente: Omit<Cliente, "id" | "created_at" |
     ...cliente,
   });
   
-  // Criar objeto com user_id para inserção no banco
-  const clienteWithUserId = {
-    ...preparedCliente,
+  // Criar objeto compatível com o schema do banco, garantindo campos obrigatórios
+  const clienteForDatabase = {
     user_id: currentUser.user.id,
+    nome: preparedCliente.nome!,
+    servidor: preparedCliente.servidor!,
+    aplicativo: preparedCliente.aplicativo!,
+    dia_vencimento: preparedCliente.dia_vencimento!,
+    telefone: preparedCliente.telefone || null,
+    codigo_pais_telefone: preparedCliente.codigo_pais_telefone || '+55',
+    uf: preparedCliente.uf || null,
+    valor_plano: preparedCliente.valor_plano || null,
+    dispositivo_smart: preparedCliente.dispositivo_smart || null,
+    usuario_aplicativo: preparedCliente.usuario_aplicativo || null,
+    senha_aplicativo: preparedCliente.senha_aplicativo || null,
+    data_licenca_aplicativo: preparedCliente.data_licenca_aplicativo || null,
+    possui_tela_adicional: preparedCliente.possui_tela_adicional || false,
+    dispositivo_smart_2: preparedCliente.dispositivo_smart_2 || null,
+    aplicativo_2: preparedCliente.aplicativo_2 || null,
+    usuario_2: preparedCliente.usuario_2 || null,
+    senha_2: preparedCliente.senha_2 || null,
+    data_licenca_2: preparedCliente.data_licenca_2 || null,
+    observacoes: preparedCliente.observacoes || null,
   };
   
   const { data, error } = await supabase
     .from('clientes')
-    .insert(clienteWithUserId)
+    .insert(clienteForDatabase)
     .select()
     .single();
     

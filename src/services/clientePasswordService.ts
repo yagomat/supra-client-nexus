@@ -26,7 +26,7 @@ export class ClientePasswordService {
         return null;
       }
 
-      return data as Cliente;
+      return data as unknown as Cliente;
     } catch (error) {
       console.error('Erro no ClientePasswordService.getClienteWithDecryptedPasswords:', error);
       throw error;
