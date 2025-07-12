@@ -36,7 +36,7 @@ export const useValoresPredefinidosData = () => {
 
   useEffect(() => {
     fetchValoresPredefinidos();
-  }, []);
+  }, []);  // Removido toast da dependência pois não muda
 
   return {
     loading,

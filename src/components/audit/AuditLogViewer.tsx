@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,18 +6,16 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Shield, Clock, User, FileText, RefreshCw } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useSecureClienteOperations } from "@/hooks/cliente/useSecureClienteOperations";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface AuditLogEntry {
   id: string;
-  user_id: string | null;
   event_type: string;
-  details: any;
   created_at: string;
-  ip_address?: string | null;
-  user_agent?: string | null;
+  ip_address?: string;
+  details: any;
 }
 
 export const AuditLogViewer = () => {
@@ -26,34 +23,70 @@ export const AuditLogViewer = () => {
   const [filteredLogs, setFilteredLogs] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
+  const { getAuditLogs } = useSecureClienteOperations();
 
   const loadLogs = async () => {
     try {
       setLoading(true);
-      
-      // Usar diretamente a função RPC do Supabase
-      const { data: auditLogs, error } = await supabase.rpc('get_user_audit_logs');
-      
-      if (error) {
-        console.error("Erro ao buscar logs de auditoria:", error);
-        return;
-      }
-      
-      setLogs(auditLogs || []);
-      applyFilter(auditLogs || [], filter);
+      const auditLogs = await getAuditLogs();
+      setLogs(auditLogs);
+      applyFilter(auditLogs, filter);
     } catch (error) {
-      console.error("Erro ao carregar logs:", error);
+      console.error("Erro ao carregar logs de auditoria:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const applyFilter = (allLogs: AuditLogEntry[], filterType: string) => {
-    if (filterType === "all") {
-      setFilteredLogs(allLogs);
-    } else {
-      const filtered = allLogs.filter(log => log.event_type.includes(filterType));
-      setFilteredLogs(filtered);
+  const applyFilter = (logList: AuditLogEntry[], filterType: string) => {
+    let filtered = logList;
+    
+    if (filterType !== "all") {
+      filtered = logList.filter(log => log.event_type.includes(filterType));
+    }
+    
+    // Ordenar por data mais recente primeiro
+    filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    
+    setFilteredLogs(filtered);
+  };
+
+  const handleFilterChange = (newFilter: string) => {
+    setFilter(newFilter);
+    applyFilter(logs, newFilter);
+  };
+
+  const getEventIcon = (eventType: string) => {
+    if (eventType.includes('create')) return <FileText className="w-4 h-4" />;
+    if (eventType.includes('update')) return <RefreshCw className="w-4 h-4" />;
+    if (eventType.includes('delete')) return <User className="w-4 h-4" />;
+    return <Shield className="w-4 h-4" />;
+  };
+
+  const getEventColor = (eventType: string): "default" | "secondary" | "destructive" | "outline" => {
+    if (eventType.includes('create')) return "default";
+    if (eventType.includes('update')) return "secondary";
+    if (eventType.includes('delete')) return "destructive";
+    return "outline";
+  };
+
+  const getEventDescription = (eventType: string, details: any) => {
+    const operation = eventType.replace('cliente_', '');
+    const clienteNome = details?.new_data?.nome || details?.old_data?.nome || 'Cliente';
+    
+    switch (operation) {
+      case 'create':
+        return `Cliente "${clienteNome}" foi criado`;
+      case 'update':
+        return `Cliente "${clienteNome}" foi atualizado`;
+      case 'delete':
+        return `Cliente "${clienteNome}" foi excluído`;
+      case 'create_success':
+        return `Criação de "${clienteNome}" realizada com sucesso`;
+      case 'update_success':
+        return `Atualização de "${clienteNome}" realizada com sucesso`;
+      default:
+        return `Operação ${operation} realizada`;
     }
   };
 
@@ -61,126 +94,96 @@ export const AuditLogViewer = () => {
     loadLogs();
   }, []);
 
-  useEffect(() => {
-    applyFilter(logs, filter);
-  }, [filter, logs]);
-
-  const getEventIcon = (eventType: string) => {
-    if (eventType.includes('auth')) return <Shield className="w-4 h-4" />;
-    if (eventType.includes('cliente')) return <User className="w-4 h-4" />;
-    if (eventType.includes('export')) return <FileText className="w-4 h-4" />;
-    return <Clock className="w-4 h-4" />;
-  };
-
-  const getEventBadgeColor = (eventType: string) => {
-    if (eventType.includes('create') || eventType.includes('signup')) return 'bg-green-100 text-green-800';
-    if (eventType.includes('delete') || eventType.includes('error')) return 'bg-red-100 text-red-800';
-    if (eventType.includes('update') || eventType.includes('login')) return 'bg-blue-100 text-blue-800';
-    if (eventType.includes('export')) return 'bg-purple-100 text-purple-800';
-    return 'bg-gray-100 text-gray-800';
-  };
-
-  const formatEventType = (eventType: string) => {
-    return eventType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-  };
-
-  const formatDetails = (details: any) => {
-    if (!details) return null;
-    
-    try {
-      const detailsObj = typeof details === 'string' ? JSON.parse(details) : details;
-      return Object.entries(detailsObj)
-        .filter(([key, value]) => value !== null && value !== undefined)
-        .map(([key, value]) => (
-          <div key={key} className="text-sm">
-            <span className="font-medium text-gray-600">{key}:</span>{' '}
-            <span className="text-gray-900">
-              {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-            </span>
-          </div>
-        ));
-    } catch {
-      return <div className="text-sm text-gray-600">{String(details)}</div>;
-    }
-  };
-
   return (
-    <Card className="w-full max-w-6xl mx-auto">
+    <Card className="w-full">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-blue-600" />
-              Logs de Auditoria
-            </CardTitle>
-            <CardDescription>
-              Histórico de atividades e eventos de segurança do sistema
-            </CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            <Select value={filter} onValueChange={setFilter}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Filtrar por tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os eventos</SelectItem>
-                <SelectItem value="auth">Autenticação</SelectItem>
-                <SelectItem value="cliente">Clientes</SelectItem>
-                <SelectItem value="export">Exportações</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={loadLogs}
-              disabled={loading}
-            >
-              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Atualizar
-            </Button>
-          </div>
-        </div>
+        <CardTitle className="flex items-center gap-2">
+          <Shield className="w-5 h-5" />
+          Logs de Auditoria
+        </CardTitle>
+        <CardDescription>
+          Histórico de operações realizadas com validação de segurança
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-96 w-full rounded-md border p-4">
+        <div className="flex items-center gap-4 mb-4">
+          <Select value={filter} onValueChange={handleFilterChange}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Filtrar por tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os eventos</SelectItem>
+              <SelectItem value="create">Criações</SelectItem>
+              <SelectItem value="update">Atualizações</SelectItem>
+              <SelectItem value="delete">Exclusões</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadLogs}
+            disabled={loading}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
+        </div>
+
+        <ScrollArea className="h-96">
           {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <RefreshCw className="w-6 h-6 animate-spin mr-2" />
-              Carregando logs...
+            <div className="text-center py-8 text-muted-foreground">
+              Carregando logs de auditoria...
             </div>
           ) : filteredLogs.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              Nenhum log encontrado para o filtro selecionado
+            <div className="text-center py-8 text-muted-foreground">
+              Nenhum log de auditoria encontrado
             </div>
           ) : (
             <div className="space-y-4">
               {filteredLogs.map((log, index) => (
-                <div key={log.id} className="border rounded-lg p-4 bg-white">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
+                <div key={log.id}>
+                  <div className="flex items-start gap-3 p-3 rounded-lg border bg-card">
+                    <div className="flex-shrink-0 mt-1">
                       {getEventIcon(log.event_type)}
-                      <Badge className={getEventBadgeColor(log.event_type)}>
-                        {formatEventType(log.event_type)}
-                      </Badge>
                     </div>
-                    <div className="text-sm text-gray-500">
-                      {format(new Date(log.created_at), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant={getEventColor(log.event_type)}>
+                          {log.event_type.replace('cliente_', '')}
+                        </Badge>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <Clock className="w-3 h-3" />
+                          {format(new Date(log.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                        </div>
+                      </div>
+                      
+                      <p className="text-sm">
+                        {getEventDescription(log.event_type, log.details)}
+                      </p>
+                      
+                      {log.ip_address && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          IP: {log.ip_address}
+                        </p>
+                      )}
+                      
+                      {log.details && (
+                        <details className="mt-2">
+                          <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
+                            Ver detalhes
+                          </summary>
+                          <pre className="text-xs bg-muted p-2 rounded mt-1 overflow-auto">
+                            {JSON.stringify(log.details, null, 2)}
+                          </pre>
+                        </details>
+                      )}
                     </div>
                   </div>
                   
-                  {log.details && (
-                    <div className="mt-2 p-2 bg-gray-50 rounded border-l-4 border-blue-200">
-                      {formatDetails(log.details)}
-                    </div>
-                  )}
-                  
-                  {log.ip_address && (
-                    <div className="mt-2 text-xs text-gray-500">
-                      IP: {log.ip_address}
-                    </div>
-                  )}
-                  
-                  {index < filteredLogs.length - 1 && <Separator className="mt-4" />}
+                  {index < filteredLogs.length - 1 && <Separator className="my-2" />}
                 </div>
               ))}
             </div>

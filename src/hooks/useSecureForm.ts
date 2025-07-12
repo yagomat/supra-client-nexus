@@ -61,8 +61,12 @@ export const useSecureForm = (options: SecureFormOptions = {}) => {
       return false;
     }
 
-    // Validação CSRF - corrigido para não passar argumentos
-    const csrfValid = validateRequest();
+    // Validação CSRF
+    const csrfValid = validateRequest({
+      token: csrfToken,
+      origin: window.location.origin,
+      referer: document.referrer
+    });
 
     if (!csrfValid) {
       if (options.logAttempts) {
