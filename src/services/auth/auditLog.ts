@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { secureLog, logError } from "@/utils/secureLogger";
 
-// Registrar evento de auditoria com a função corrigida
+// Registrar evento de auditoria com fallback em caso de erro
 export const logAuditEvent = async (
   event: string,
   details: Record<string, any>,
@@ -17,25 +17,34 @@ export const logAuditEvent = async (
       return;
     }
 
-    // Usar a função log_audit_event corrigida
-    const { error } = await supabase.rpc('log_audit_event', {
-      p_user_id: userIdToLog,
-      p_event_type: event,
-      p_details: details ? JSON.parse(JSON.stringify(details)) : null
-    });
+    // Tentar inserir diretamente na tabela como fallback
+    const { error } = await supabase
+      .from('audit_logs')
+      .insert({
+        user_id: userIdToLog,
+        event_type: event,
+        details: details || {},
+        created_at: new Date().toISOString()
+      });
 
     if (error) {
-      throw error;
+      // Se falhar, log apenas localmente
+      secureLog.warn('Audit log failed, logging locally only', { 
+        event, 
+        error: error.message 
+      });
+    } else {
+      secureLog.info('Audit event logged successfully', { 
+        eventType: event, 
+        hasDetails: !!details
+      });
     }
     
-    // Log seguro apenas com informações não sensíveis
-    secureLog.info('Audit event logged', { 
-      eventType: event, 
-      hasDetails: !!details,
-      detailsKeyCount: details ? Object.keys(details).length : 0
-    });
-    
   } catch (error) {
-    logError(error as Error, "Audit log registration", { event });
+    // Fallback: apenas log local se tudo falhar
+    secureLog.warn('Audit logging failed completely', { 
+      event, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
   }
 };

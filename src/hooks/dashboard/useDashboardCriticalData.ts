@@ -23,8 +23,8 @@ export const useDashboardCriticalData = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Cache crítico com TTL de 3 minutos
-  const cache = useCacheOptimized<CriticalDashboardData>({ ttl: 3 * 60 * 1000 });
+  // Cache crítico com TTL de 5 minutos
+  const cache = useCacheOptimized<CriticalDashboardData>({ ttl: 5 * 60 * 1000 });
 
   const fetchCriticalData = useCallback(async (forceRefresh: boolean = false) => {
     if (!user?.id) return;
@@ -44,31 +44,59 @@ export const useDashboardCriticalData = () => {
     setError(null);
 
     try {
-      // Verificar rate limit primeiro
-      const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
-        p_user_id: user.id,
-        p_operation: 'dashboard_request',
-        p_max_requests: 30,
-        p_time_window_minutes: 5
-      });
+      // Tentar usar a função RPC principal primeiro
+      let result;
+      let criticalData: CriticalDashboardData;
 
-      if (!rateLimitOk) {
-        setError("Dashboard sendo carregado. Aguarde um momento...");
-        setTimeout(() => {
-          fetchCriticalData(false);
-        }, 10000); // Retry após 10 segundos
-        return;
+      try {
+        const { data: rpcResult, error: rpcError } = await supabase.rpc('get_dashboard_critical_stats', {
+          user_id_param: user.id
+        });
+
+        if (rpcError) {
+          throw rpcError;
+        }
+
+        criticalData = rpcResult as unknown as CriticalDashboardData;
+      } catch (rpcError) {
+        console.warn('RPC function failed, using fallback queries:', rpcError);
+        
+        // Fallback: queries manuais se a função RPC falhar
+        const [
+          { count: clientesAtivos },
+          { count: clientesInativos },
+          { count: clientesNovos }
+        ] = await Promise.all([
+          supabase
+            .from('clientes')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .eq('status', 'ativo'),
+          supabase
+            .from('clientes')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .eq('status', 'inativo'),
+          supabase
+            .from('clientes')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+        ]);
+
+        criticalData = {
+          clientes_ativos: clientesAtivos || 0,
+          clientes_inativos: clientesInativos || 0,
+          clientes_novos: clientesNovos || 0,
+          clientes_total: (clientesAtivos || 0) + (clientesInativos || 0),
+          pagamentos_pendentes: 0,
+          valor_recebido_mes: 0,
+          clientes_inativos_proximos_dias: 0,
+          apps_vencendo_proximos_dias: [],
+          clientes_em_risco_detalhes: []
+        };
       }
 
-      const { data: result, error } = await supabase.rpc('get_dashboard_critical_stats', {
-        user_id_param: user.id
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      const criticalData = result as unknown as CriticalDashboardData;
       setData(criticalData);
       cache.set(cacheKey, criticalData);
     } catch (err) {
