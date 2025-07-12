@@ -1,155 +1,130 @@
 
-// Configuração local de validação (migrada do arquivo removido)
-const VALIDATION_CONFIG = {
-  tipos: {
-    ufs: {
-      tipo: 'string',
-      maxLength: 2,
-      decimalPlaces: 2
-    },
-    servidores: {
-      tipo: 'string',
-      maxLength: 25,
-      decimalPlaces: 2
-    },
-    dias_vencimento: {
-      tipo: 'integer',
-      minValue: 1,
-      maxValue: 31,
-      decimalPlaces: 2
-    },
-    valores_plano: {
-      tipo: 'decimal',
-      minValue: 0.01,
-      maxValue: 1000,
-      decimalPlaces: 2
-    },
-    dispositivos_smart: {
-      tipo: 'string',
-      maxLength: 25,
-      decimalPlaces: 2
-    },
-    aplicativos: {
-      tipo: 'string',
-      maxLength: 25,
-      decimalPlaces: 2
+/**
+ * Utilitários para normalização de valores
+ */
+
+export const normalizeValue = (value: string, tipo: string): string => {
+  if (!value || typeof value !== 'string') {
+    return '';
+  }
+
+  const trimmedValue = value.trim();
+  
+  switch (tipo.toLowerCase()) {
+    case 'servidor':
+      return normalizeServerValue(trimmedValue);
+    case 'aplicativo':
+      return normalizeAppValue(trimmedValue);
+    case 'uf':
+      return normalizeUFValue(trimmedValue);
+    case 'dispositivo_smart':
+      return normalizeDeviceValue(trimmedValue);
+    default:
+      return trimmedValue;
+  }
+};
+
+const normalizeServerValue = (value: string): string => {
+  // Remover caracteres especiais e espaços extras
+  let normalized = value
+    .replace(/[^\w\s.-]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  // Converter para lowercase para consistência
+  normalized = normalized.toLowerCase();
+  
+  return normalized;
+};
+
+const normalizeAppValue = (value: string): string => {
+  // Normalizar nomes de aplicativos comuns
+  const appMap: Record<string, string> = {
+    'pdv': 'PDV',
+    'tef': 'TEF',
+    'sat': 'SAT',
+    'nfce': 'NFCe',
+    'nfe': 'NFe',
+    'mdfe': 'MDFe',
+    'cte': 'CTe'
+  };
+  
+  let normalized = value.trim();
+  const lowerValue = normalized.toLowerCase();
+  
+  // Verificar se há uma normalização específica
+  for (const [key, standardValue] of Object.entries(appMap)) {
+    if (lowerValue.includes(key)) {
+      normalized = normalized.replace(new RegExp(key, 'gi'), standardValue);
     }
   }
+  
+  return normalized;
 };
 
-/**
- * Utilitários para normalização de valores antes de operações no banco de dados
- * Atualizado para usar a configuração centralizada
- */
-
-// Mapeamento dos tipos singulares para plurais para acessar a configuração
-const SINGULAR_TO_PLURAL_TYPE_MAP: Record<string, string> = {
-  'uf': 'ufs',
-  'servidor': 'servidores', 
-  'dia_vencimento': 'dias_vencimento',
-  'valor_plano': 'valores_plano',
-  'dispositivo_smart': 'dispositivos_smart',
-  'aplicativo': 'aplicativos'
+const normalizeUFValue = (value: string): string => {
+  // Normalizar UF para maiúsculas e validar
+  const uf = value.toUpperCase().trim();
+  
+  const validUFs = [
+    'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO',
+    'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI',
+    'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+  ];
+  
+  return validUFs.includes(uf) ? uf : value.trim();
 };
 
-export const normalizeValueForDatabase = (value: string | number, type: string): string => {
-  console.log(`Normalizando valor "${value}" do tipo "${type}" para o banco de dados`);
+const normalizeDeviceValue = (value: string): string => {
+  // Normalizar nomes de dispositivos
+  let normalized = value.trim();
   
-  // Mapear tipo singular para plural para acessar configuração
-  const configType = SINGULAR_TO_PLURAL_TYPE_MAP[type] || type;
-  const config = VALIDATION_CONFIG.tipos[configType];
+  // Padrões comuns de dispositivos
+  const devicePatterns: Record<string, string> = {
+    'gertec': 'Gertec',
+    'ingenico': 'Ingenico',
+    'verifone': 'Verifone',
+    'pax': 'PAX',
+    'sunmi': 'Sunmi',
+    'pos': 'POS'
+  };
   
-  if (!config) {
-    throw new Error(`Tipo "${type}" não reconhecido`);
+  const lowerValue = normalized.toLowerCase();
+  
+  for (const [pattern, standardName] of Object.entries(devicePatterns)) {
+    if (lowerValue.includes(pattern)) {
+      normalized = normalized.replace(new RegExp(pattern, 'gi'), standardName);
+      break;
+    }
   }
+  
+  return normalized;
+};
 
-  switch (config.tipo) {
-    case 'decimal':
-      // Para valores decimais (valores de plano)
-      const numericValue = typeof value === 'number' ? value : parseFloat(String(value).replace(',', '.'));
-      if (isNaN(numericValue)) {
-        throw new Error('Valor inválido para tipo decimal');
-      }
-      const normalized = numericValue.toFixed(config.decimalPlaces || 2);
-      console.log(`Valor decimal normalizado: "${normalized}"`);
-      return normalized;
-    
-    case 'integer':
-      // Para valores inteiros (dias de vencimento)
-      const intValue = typeof value === 'number' ? value : parseInt(String(value));
-      if (isNaN(intValue)) {
-        throw new Error('Valor inválido para tipo inteiro');
-      }
-      const normalizedInt = String(intValue);
-      console.log(`Valor inteiro normalizado: "${normalizedInt}"`);
-      return normalizedInt;
-    
-    case 'string':
-      // Para valores de string
-      let stringValue = String(value).trim();
-      
-      // Casos especiais
-      if (type === 'uf') {
-        stringValue = stringValue.toUpperCase();
-        console.log(`UF normalizada: "${stringValue}"`);
-      } else {
-        console.log(`String normalizada: "${stringValue}"`);
-      }
-      
-      return stringValue;
-    
+export const validateNormalizedValue = (value: string, tipo: string): boolean => {
+  if (!value || value.trim().length === 0) {
+    return false;
+  }
+  
+  switch (tipo.toLowerCase()) {
+    case 'uf':
+      return /^[A-Z]{2}$/.test(value);
+    case 'servidor':
+      return value.length >= 2 && value.length <= 100;
+    case 'aplicativo':
+      return value.length >= 2 && value.length <= 50;
+    case 'dispositivo_smart':
+      return value.length >= 2 && value.length <= 50;
     default:
-      const defaultNormalized = String(value).trim();
-      console.log(`Valor normalizado (padrão): "${defaultNormalized}"`);
-      return defaultNormalized;
+      return true;
   }
 };
 
-export const normalizeValueForDisplay = (value: string | number, type: string): string | number => {
-  // Mapear tipo singular para plural para acessar configuração
-  const configType = SINGULAR_TO_PLURAL_TYPE_MAP[type] || type;
-  const config = VALIDATION_CONFIG.tipos[configType];
-  
-  if (!config) {
-    return String(value);
-  }
-
-  switch (config.tipo) {
-    case 'decimal':
-    case 'integer':
-      // Para tipos numéricos, retornar como número
-      return typeof value === 'number' ? value : parseFloat(String(value));
-    
-    default:
-      // Para outros tipos, retornar como string
-      return String(value);
-  }
-};
-
-/**
- * Formata um valor para exibição amigável ao usuário
- */
-export const formatValueForDisplay = (value: string | number, type: string): string => {
-  // Mapear tipo singular para plural para acessar configuração
-  const configType = SINGULAR_TO_PLURAL_TYPE_MAP[type] || type;
-  const config = VALIDATION_CONFIG.tipos[configType];
-  
-  if (!config) {
-    return String(value);
-  }
-
-  switch (configType) {
-    case 'valores_plano':
-      const numValue = typeof value === 'number' ? value : parseFloat(String(value));
-      return `R$ ${numValue.toFixed(2).replace('.', ',')}`;
-    
-    case 'dias_vencimento':
-      return `Dia ${value}`;
-    
-    case 'ufs':
-      return String(value).toUpperCase();
-    
-    default:
-      return String(value);
-  }
+export const getNormalizationStats = (originalValue: string, normalizedValue: string) => {
+  return {
+    wasModified: originalValue !== normalizedValue,
+    originalLength: originalValue.length,
+    normalizedLength: normalizedValue.length,
+    compressionRatio: originalValue.length > 0 ? normalizedValue.length / originalValue.length : 0
+  };
 };

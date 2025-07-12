@@ -1,5 +1,6 @@
 
 import { sanitizeForHTML, validateInputSafety } from "./security";
+import { secureLog, logError as secureLogError } from "./secureLogger";
 
 /**
  * Simple input sanitization function (alias for sanitizeForHTML)
@@ -9,12 +10,11 @@ export const sanitizeInput = (input: string | null | undefined): string => {
 };
 
 /**
- * Simple error logging function
+ * Simple error logging function - now uses secure logging
  */
 export const logError = (error: any, context: string = "Erro desconhecido"): void => {
   const sanitizedContext = sanitizeInput(context);
-  const errorMessage = error?.message ? sanitizeInput(error.message) : 'Unknown error';
-  console.error(`${sanitizedContext}:`, errorMessage);
+  secureLogError(error, sanitizedContext);
 };
 
 /**
@@ -26,7 +26,7 @@ export const handleError = (error: any, context: string = "Erro desconhecido"): 
   
   if (error?.message) {
     const sanitizedMessage = sanitizeInput(error.message);
-    console.error(`${sanitizedContext}:`, sanitizedMessage);
+    secureLog.error(`${sanitizedContext}`, { message: sanitizedMessage });
     
     // Return user-friendly error messages
     if (error.message.includes('Rate limit exceeded')) {
@@ -49,23 +49,14 @@ export const handleError = (error: any, context: string = "Erro desconhecido"): 
     return sanitizedContext;
   }
   
-  console.error(`${sanitizedContext}:`, error);
+  secureLog.error(`${sanitizedContext}`, { error: 'Unknown error type' });
   return sanitizedContext;
 };
 
 /**
  * Log error securely without exposing sensitive information
+ * @deprecated Use secureLog.error or logError from secureLogger instead
  */
 export const logSecureError = (error: any, context: string, additionalInfo?: Record<string, any>) => {
-  const logData = {
-    context: sanitizeInput(context),
-    message: error?.message ? sanitizeInput(error.message) : 'Unknown error',
-    timestamp: new Date().toISOString(),
-    additionalInfo: additionalInfo ? Object.keys(additionalInfo).reduce((acc, key) => {
-      acc[key] = sanitizeInput(String(additionalInfo[key]));
-      return acc;
-    }, {} as Record<string, string>) : undefined
-  };
-  
-  console.error('Secure Error Log:', logData);
+  secureLogError(error, context, additionalInfo);
 };

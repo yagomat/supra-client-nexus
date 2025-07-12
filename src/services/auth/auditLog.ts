@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { secureLog, logError } from "@/utils/secureLogger";
 
 // Registrar evento de auditoria com proteções de segurança automáticas
 export const logAuditEvent = async (
@@ -11,7 +12,10 @@ export const logAuditEvent = async (
     const { data: currentUser } = await supabase.auth.getUser();
     const userIdToLog = userId || currentUser.user?.id;
     
-    if (!userIdToLog) return;
+    if (!userIdToLog) {
+      secureLog.warn('Audit log attempted without user ID', { event });
+      return;
+    }
 
     // A função log_audit_event agora aplica automaticamente:
     // - Mascaramento de IP
@@ -25,7 +29,14 @@ export const logAuditEvent = async (
       p_user_agent: navigator.userAgent
     }).throwOnError();
     
+    // Log seguro apenas com informações não sensíveis
+    secureLog.info('Audit event logged', { 
+      eventType: event, 
+      hasDetails: !!details,
+      detailsKeyCount: Object.keys(details).length
+    });
+    
   } catch (error) {
-    console.error("Erro ao registrar evento de auditoria:", error);
+    logError(error as Error, "Audit log registration", { event });
   }
 };

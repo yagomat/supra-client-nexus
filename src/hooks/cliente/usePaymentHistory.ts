@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Pagamento } from "@/types";
+import { secureLog, logError } from "@/utils/secureLogger";
 
 export const usePaymentHistory = (clienteId: string) => {
   const [payments, setPayments] = useState<Pagamento[]>([]);
@@ -18,14 +19,19 @@ export const usePaymentHistory = (clienteId: string) => {
         .order('mes', { ascending: false });
 
       if (error) {
-        console.error("Erro ao buscar histórico de pagamentos:", error);
+        logError(new Error(error.message), 'Payment history fetch', { operation: 'fetchPayments' });
         return;
       }
 
-      console.log(`Payments fetched for ${clienteId}:`, data);
+      // Log seguro apenas com informações agregadas
+      secureLog.clientOperation('Payment history fetched', {
+        count: data?.length || 0,
+        hasData: !!data
+      });
+      
       setPayments([...(data || [])]);
     } catch (error) {
-      console.error("Erro ao buscar histórico de pagamentos:", error);
+      logError(error as Error, 'Payment history fetch exception');
     } finally {
       setLoading(false);
     }
@@ -47,7 +53,11 @@ export const usePaymentHistory = (clienteId: string) => {
           filter: `cliente_id=eq.${clienteId}`
         }, 
         (payload) => {
-          console.log('Payment history change detected:', payload);
+          secureLog.info('Payment history change detected', {
+            eventType: payload.eventType,
+            hasOldRecord: !!payload.old,
+            hasNewRecord: !!payload.new
+          });
           
           // Para garantir sincronização completa e evitar problemas de estado,
           // vamos sempre recarregar todos os pagamentos quando houver mudança

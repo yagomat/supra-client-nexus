@@ -2,10 +2,17 @@
 import { useMemo } from "react";
 import { Cliente, Pagamento } from "@/types";
 import { calculatePaymentStatus } from "./paymentCalculationUtils";
+import { secureLog } from "@/utils/secureLogger";
 
 export const useDaysCalculation = (cliente: Cliente, allPayments: Pagamento[]) => {
   return useMemo(() => {
-    console.log(`useDaysCalculation for ${cliente.nome}:`, allPayments.length, 'payments');
+    // Log seguro apenas com informações não sensíveis
+    secureLog.clientOperation('Days calculation', {
+      paymentCount: allPayments.length,
+      hasCliente: !!cliente,
+      timestamp: new Date().toISOString()
+    });
+    
     return calculatePaymentStatus(cliente, allPayments);
   }, [
     cliente.id, 
