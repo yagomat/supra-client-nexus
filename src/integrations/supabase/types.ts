@@ -630,7 +630,7 @@ export type Database = {
       }
       log_audit_event: {
         Args:
-          | { p_user_id: string; p_event_type: string; p_details: Json }
+          | { p_user_id: string; p_event_type: string; p_details?: Json }
           | {
               p_user_id: string
               p_event_type: string

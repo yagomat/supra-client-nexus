@@ -23,8 +23,8 @@ export const useDashboardCriticalData = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Cache crítico com TTL de 2 minutos (aumentado para reduzir chamadas)
-  const cache = useCacheOptimized<CriticalDashboardData>({ ttl: 2 * 60 * 1000 });
+  // Cache crítico com TTL de 3 minutos
+  const cache = useCacheOptimized<CriticalDashboardData>({ ttl: 3 * 60 * 1000 });
 
   const fetchCriticalData = useCallback(async (forceRefresh: boolean = false) => {
     if (!user?.id) return;
@@ -44,22 +44,28 @@ export const useDashboardCriticalData = () => {
     setError(null);
 
     try {
+      // Verificar rate limit primeiro
+      const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
+        p_user_id: user.id,
+        p_operation: 'dashboard_request',
+        p_max_requests: 30,
+        p_time_window_minutes: 5
+      });
+
+      if (!rateLimitOk) {
+        setError("Dashboard sendo carregado. Aguarde um momento...");
+        setTimeout(() => {
+          fetchCriticalData(false);
+        }, 10000); // Retry após 10 segundos
+        return;
+      }
+
       const { data: result, error } = await supabase.rpc('get_dashboard_critical_stats', {
         user_id_param: user.id
       });
 
       if (error) {
-        // Handle rate limit error with user-friendly message
-        if (error.message.includes('Rate limit exceeded')) {
-          setError("Dashboard sendo carregado. Aguarde um momento...");
-          // Retry after 3 seconds for rate limit errors
-          setTimeout(() => {
-            fetchCriticalData(false);
-          }, 3000);
-          return;
-        } else {
-          throw error;
-        }
+        throw error;
       }
 
       const criticalData = result as unknown as CriticalDashboardData;

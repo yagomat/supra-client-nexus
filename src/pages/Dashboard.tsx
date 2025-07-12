@@ -51,7 +51,7 @@ const Dashboard = () => {
 
   const loading = criticalLoading || chartLoading;
 
-  // Configurar atualizações em tempo real simplificadas
+  // Configurar atualizações em tempo real otimizadas (menos frequentes)
   useEffect(() => {
     let criticalTimeout: NodeJS.Timeout;
     let chartTimeout: NodeJS.Timeout;
@@ -60,19 +60,19 @@ const Dashboard = () => {
       if (criticalTimeout) clearTimeout(criticalTimeout);
       criticalTimeout = setTimeout(() => {
         refreshCriticalRef.current();
-      }, 5000);
+      }, 10000); // Aumentado para 10 segundos
     };
 
     const debouncedChartUpdate = () => {
       if (chartTimeout) clearTimeout(chartTimeout);
       chartTimeout = setTimeout(() => {
         refreshChartsRef.current();
-      }, 5000);
+      }, 15000); // Aumentado para 15 segundos
     };
 
-    // Subscription para mudanças críticas (pagamentos)
+    // Subscription para mudanças críticas (pagamentos) - menos frequente
     const criticalChannel = supabase
-      .channel('dashboard-critical-updates')
+      .channel('dashboard-critical-updates-v2')
       .on('postgres_changes', 
         { 
           event: '*', 
@@ -83,9 +83,9 @@ const Dashboard = () => {
       )
       .subscribe();
 
-    // Subscription para mudanças nos gráficos (clientes)
+    // Subscription para mudanças nos gráficos (clientes) - menos frequente
     const chartChannel = supabase
-      .channel('dashboard-chart-updates')
+      .channel('dashboard-chart-updates-v2')
       .on('postgres_changes', 
         { 
           event: '*', 
@@ -118,9 +118,9 @@ const Dashboard = () => {
   return (
     <DashboardLayout title="Dashboard">
       <div className="space-y-8 animate-fade-in">
-      <div className="animate-slide-up">
-        <DashboardContent stats={stats} loading={loading} />
-      </div>
+        <div className="animate-slide-up">
+          <DashboardContent stats={stats} loading={loading} />
+        </div>
       </div>
     </DashboardLayout>
   );

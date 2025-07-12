@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { secureLog, logError } from "@/utils/secureLogger";
 
-// Registrar evento de auditoria com proteções de segurança automáticas
+// Registrar evento de auditoria com a função corrigida
 export const logAuditEvent = async (
   event: string,
   details: Record<string, any>,
@@ -17,23 +17,22 @@ export const logAuditEvent = async (
       return;
     }
 
-    // A função log_audit_event agora aplica automaticamente:
-    // - Mascaramento de IP
-    // - Simplificação de User-Agent  
-    // - Criptografia de dados sensíveis
-    await supabase.rpc('log_audit_event', {
+    // Usar a função log_audit_event corrigida
+    const { error } = await supabase.rpc('log_audit_event', {
       p_user_id: userIdToLog,
       p_event_type: event,
-      p_details: details,
-      p_ip_address: "client-side", // Em produção, isso seria capturado pelo Edge Function
-      p_user_agent: navigator.userAgent
-    }).throwOnError();
+      p_details: details ? JSON.parse(JSON.stringify(details)) : null
+    });
+
+    if (error) {
+      throw error;
+    }
     
     // Log seguro apenas com informações não sensíveis
     secureLog.info('Audit event logged', { 
       eventType: event, 
       hasDetails: !!details,
-      detailsKeyCount: Object.keys(details).length
+      detailsKeyCount: details ? Object.keys(details).length : 0
     });
     
   } catch (error) {
