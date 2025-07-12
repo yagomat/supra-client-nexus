@@ -5,21 +5,36 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSecureClienteOperations } from "@/hooks/cliente/useSecureClienteOperations";
-import { Shield, Database, Lock } from "lucide-react";
+import { SecureClienteService } from "@/services/secureClienteService";
+import { Shield, Database, Lock, CheckCircle } from "lucide-react";
 
 const MigracaoDados = () => {
   const [migrationResult, setMigrationResult] = useState<string | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
-  const { migrateSensitiveData, loading } = useSecureClienteOperations();
+  const [encryptionStatus, setEncryptionStatus] = useState<{ encrypted: number; total: number } | null>(null);
+  const { loading, migrateSensitiveData } = useSecureClienteOperations();
 
   const handleMigration = async () => {
     try {
       const result = await migrateSensitiveData();
       setMigrationResult(result);
       setIsCompleted(true);
+      
+      // Verificar status de criptografia após migração
+      const status = await SecureClienteService.checkEncryptionStatus();
+      setEncryptionStatus(status);
     } catch (error) {
       console.error("Erro na migração:", error);
       setMigrationResult("Erro durante a migração: " + (error instanceof Error ? error.message : "Erro desconhecido"));
+    }
+  };
+
+  const checkEncryptionStatus = async () => {
+    try {
+      const status = await SecureClienteService.checkEncryptionStatus();
+      setEncryptionStatus(status);
+    } catch (error) {
+      console.error("Erro ao verificar status:", error);
     }
   };
 
@@ -79,6 +94,15 @@ const MigracaoDados = () => {
               </Card>
             </div>
 
+            {encryptionStatus && (
+              <Alert className="border-blue-500">
+                <CheckCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Status atual: {encryptionStatus.encrypted} de {encryptionStatus.total} clientes com dados criptografados
+                </AlertDescription>
+              </Alert>
+            )}
+
             {migrationResult && (
               <Alert className={isCompleted ? "border-green-500" : "border-red-500"}>
                 <AlertDescription>
@@ -95,6 +119,14 @@ const MigracaoDados = () => {
               >
                 {loading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
                 {isCompleted ? "Migração Concluída" : "Executar Migração"}
+              </Button>
+
+              <Button 
+                variant="outline" 
+                onClick={checkEncryptionStatus}
+                disabled={loading}
+              >
+                Verificar Status
               </Button>
 
               {isCompleted && (
@@ -116,6 +148,7 @@ const MigracaoDados = () => {
               <p>• Dados já criptografados não serão reprocessados</p>
               <p>• A migração é segura e não afeta dados não sensíveis</p>
               <p>• Em caso de erro, os dados originais são preservados</p>
+              <p>• Triggers automáticos criptografam novos dados</p>
             </div>
           </CardContent>
         </Card>

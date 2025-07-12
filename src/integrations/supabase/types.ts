@@ -528,6 +528,10 @@ export type Database = {
           roles: Database["public"]["Enums"]["app_role"][]
         }[]
       }
+      get_cliente_with_decrypted_data: {
+        Args: { p_cliente_id: string }
+        Returns: Json
+      }
       get_cliente_with_decrypted_passwords: {
         Args: { p_cliente_id: string }
         Returns: Json
@@ -724,6 +728,10 @@ export type Database = {
         Returns: string
       }
       migrate_existing_passwords: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      migrate_existing_sensitive_data: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }

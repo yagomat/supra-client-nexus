@@ -64,7 +64,7 @@ class SecureClienteService {
     return result;
   }
 
-  // Obter cliente específico com dados descriptografados
+  // Obter cliente específico com dados descriptografados usando a função SQL
   static async getClienteWithDecryptedData(id: string): Promise<Cliente> {
     await this.checkRateLimit('get_cliente');
 
@@ -74,13 +74,10 @@ class SecureClienteService {
       throw new Error("Usuário não autenticado");
     }
 
-    // Use direct SQL query since the function might not be in types yet
-    const { data, error } = await supabase
-      .from('clientes')
-      .select('*')
-      .eq('id', id)
-      .eq('user_id', currentUser.user.id)
-      .single();
+    // Usar a função SQL que descriptografa automaticamente os dados sensíveis
+    const { data, error } = await supabase.rpc('get_cliente_with_decrypted_data', {
+      p_cliente_id: id
+    });
 
     if (error) {
       console.error("Erro ao buscar cliente:", error);
@@ -91,7 +88,7 @@ class SecureClienteService {
       throw new Error("Cliente não encontrado");
     }
 
-    // For now, return the raw data until we implement the decryption function properly
+    console.log("Cliente carregado com dados descriptografados:", data);
     return data as Cliente;
   }
 
@@ -199,6 +196,7 @@ class SecureClienteService {
       throw error;
     }
     
+    console.log("Cliente criado - dados sensíveis foram criptografados automaticamente");
     return data as Cliente;
   }
 
@@ -219,6 +217,7 @@ class SecureClienteService {
       throw error;
     }
     
+    console.log("Cliente atualizado - dados sensíveis foram criptografados automaticamente");
     return data as Cliente;
   }
 
@@ -257,9 +256,58 @@ class SecureClienteService {
       throw new Error("Usuário não autenticado");
     }
 
-    // For now, return a simple message until the function is properly implemented
-    // This would normally call the migrate_existing_sensitive_data function
-    return "Migração simulada - função será implementada após aprovação do SQL";
+    // Chamar a função SQL para migrar dados existentes
+    const { data, error } = await supabase.rpc('migrate_existing_sensitive_data');
+
+    if (error) {
+      console.error("Erro na migração:", error);
+      throw error;
+    }
+
+    const result = data as any;
+    console.log("Resultado da migração:", result);
+    
+    if (result?.success) {
+      return `${result.message}. Processados: ${result.clientes_processados} clientes de ${result.total_clientes} total.`;
+    } else {
+      throw new Error("Falha na migração de dados sensíveis");
+    }
+  }
+
+  // Função para verificar se dados estão criptografados (para debugging)
+  static async checkEncryptionStatus(): Promise<{ encrypted: number; total: number }> {
+    const { data: currentUser } = await supabase.auth.getUser();
+    
+    if (!currentUser.user) {
+      throw new Error("Usuário não autenticado");
+    }
+
+    const { data, error } = await supabase
+      .from('clientes')
+      .select('telefone, usuario_aplicativo, senha_aplicativo, usuario_2, senha_2')
+      .eq('user_id', currentUser.user.id);
+      
+    if (error) {
+      console.error("Erro ao verificar status de criptografia:", error);
+      throw error;
+    }
+
+    let encrypted = 0;
+    const total = data?.length || 0;
+    
+    data?.forEach(cliente => {
+      // Verificar se campos sensíveis estão em formato hex (criptografados)
+      const fields = [cliente.telefone, cliente.usuario_aplicativo, cliente.senha_aplicativo, cliente.usuario_2, cliente.senha_2];
+      const hasEncryptedData = fields.some(field => 
+        field && field.length > 0 && /^[a-f0-9]{32,}$/.test(field)
+      );
+      
+      if (hasEncryptedData) {
+        encrypted++;
+      }
+    });
+
+    return { encrypted, total };
   }
 }
 
