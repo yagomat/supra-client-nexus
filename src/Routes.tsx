@@ -1,61 +1,37 @@
 
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "./contexts/AuthContext";
-import Login from "./pages/Login";
-import Cadastro from "./pages/Cadastro";
-import AlterarSenha from "./pages/AlterarSenha";
-import Dashboard from "./pages/Dashboard";
-import CadastrarCliente from "./pages/CadastrarCliente";
-import EditarCliente from "./pages/EditarCliente";
-import ListaClientes from "./pages/ListaClientes";
-import BancoDados from "./pages/BancoDados";
-import Templates from "./pages/Templates";
-import Configuracoes from "./pages/Configuracoes";
-import NotFound from "./pages/NotFound";
+import { Routes, Route } from "react-router-dom";
+import Index from "@/pages/Index";
+import Login from "@/pages/Login";
+import Dashboard from "@/pages/Dashboard";
+import ListaClientes from "@/pages/ListaClientes";
+import CadastrarCliente from "@/pages/CadastrarCliente";
+import EditarCliente from "@/pages/EditarCliente";
+import BancoDados from "@/pages/BancoDados";
+import Configuracoes from "@/pages/Configuracoes";
+import AlterarSenha from "@/pages/AlterarSenha";
+import Cadastro from "@/pages/Cadastro";
+import NotFound from "@/pages/NotFound";
+import Templates from "@/pages/Templates";
+import MigracaoDados from "@/pages/MigracaoDados";
 
-interface PrivateRouteProps {
-  children: React.ReactNode;
-}
-
-const PrivateRoute = ({ children }: PrivateRouteProps) => {
-  const { user, loading } = useAuth();
-  const location = useLocation();
-  
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-  
-  if (!user) {
-    // Save the attempted url for redirecting after login
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-  
-  return <>{children}</>;
-};
-
-export const AppRoutes = () => {
-  const { user, loading } = useAuth();
-
+const AppRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
-      <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
-      <Route path="/cadastro" element={user ? <Navigate to="/dashboard" replace /> : <Cadastro />} />
-      
-      <Route path="/alterar-senha" element={<PrivateRoute><AlterarSenha /></PrivateRoute>} />
-      <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-      <Route path="/clientes" element={<PrivateRoute><ListaClientes /></PrivateRoute>} />
-      <Route path="/clientes/cadastrar" element={<PrivateRoute><CadastrarCliente /></PrivateRoute>} />
-      <Route path="/clientes/editar/:id" element={<PrivateRoute><EditarCliente /></PrivateRoute>} />
-      <Route path="/banco-dados" element={<PrivateRoute><BancoDados /></PrivateRoute>} />
-      <Route path="/templates" element={<PrivateRoute><Templates /></PrivateRoute>} />
-      <Route path="/configuracoes" element={<PrivateRoute><Configuracoes /></PrivateRoute>} />
-      
+      <Route path="/" element={<Index />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/cadastro" element={<Cadastro />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/clientes" element={<ListaClientes />} />
+      <Route path="/clientes/cadastrar" element={<CadastrarCliente />} />
+      <Route path="/clientes/editar/:id" element={<EditarCliente />} />
+      <Route path="/banco-dados" element={<BancoDados />} />
+      <Route path="/configuracoes" element={<Configuracoes />} />
+      <Route path="/alterar-senha" element={<AlterarSenha />} />
+      <Route path="/templates" element={<Templates />} />
+      <Route path="/migracao-dados" element={<MigracaoDados />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };
+
+export default AppRoutes;

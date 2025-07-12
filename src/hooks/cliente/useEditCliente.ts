@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { useSecureClienteForm } from "@/hooks/cliente/useSecureClienteForm";
 import { getValoresPredefinidos } from "@/services/valoresPredefinidosService";
-import { getCliente } from "@/services/clienteService";
+import { SecureClienteService } from "@/services/secureClienteService";
 import { ValoresPredefinidos, Cliente } from "@/types";
 import { ClienteFormValues } from "@/hooks/cliente/clienteFormSchema";
 
@@ -31,16 +31,16 @@ export const useEditCliente = () => {
       try {
         setLoading(true);
         const [clienteData, valoresData] = await Promise.all([
-          getCliente(id),
+          SecureClienteService.getClienteWithDecryptedData(id),
           getValoresPredefinidos()
         ]);
         
-        console.log("Dados do cliente carregados:", clienteData);
+        console.log("Dados do cliente carregados (descriptografados):", clienteData);
         setCliente(clienteData);
         setValoresPredefinidos(valoresData);
         setPossuiTelaAdicional(clienteData.possui_tela_adicional || false);
       } catch (error) {
-        console.error("Erro ao buscar dados:", error);
+        console.error("Erro ao buscar dados do cliente:", error);
         toast({
           title: "Erro",
           description: "Não foi possível carregar os dados do cliente",
@@ -70,7 +70,7 @@ export const useEditCliente = () => {
   // Preencher o formulário quando os dados do cliente forem carregados
   useEffect(() => {
     if (cliente && form) {
-      console.log("Preenchendo formulário com dados do cliente:", cliente);
+      console.log("Preenchendo formulário com dados do cliente (descriptografados):", cliente);
       
       form.reset({
         nome: cliente.nome || "",
@@ -150,15 +150,16 @@ export const useEditCliente = () => {
       observacoes: data.observacoes?.trim() === "" ? null : data.observacoes
     };
 
-    console.log("Dados sanitizados:", sanitizedData);
+    console.log("Dados sanitizados (serão criptografados automaticamente):", sanitizedData);
 
     try {
-      await originalOnSubmit(sanitizedData);
+      // Usar o serviço seguro que criptografa automaticamente
+      await SecureClienteService.updateCliente(id!, sanitizedData);
       
       // Sucesso - mostrar mensagem e redirecionar
       toast({
         title: "Cliente atualizado com sucesso",
-        description: "As informações do cliente foram atualizadas.",
+        description: "As informações do cliente foram atualizadas e criptografadas.",
       });
       
       navigate("/clientes");

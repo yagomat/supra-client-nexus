@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { useParams } from "react-router-dom";
 import { Cliente, Pagamento } from "@/types";
-import { getCliente } from "@/services/clienteService";
+import { SecureClienteService } from "@/services/secureClienteService";
 import { getPagamentos } from "@/services/pagamentoService";
 import { getValoresPredefinidos } from "@/services/valoresPredefinidosService";
 import { ValoresPredefinidos } from "@/types";
@@ -24,7 +24,6 @@ export const useClienteData = () => {
     
     const fetchClienteData = async () => {
       if (!id) {
-        // No id provided, don't try to fetch
         if (isMounted) setLoading(false);
         return;
       }
@@ -35,13 +34,15 @@ export const useClienteData = () => {
         // Promise.all for parallel fetching
         const [predefinidos, clienteData] = await Promise.all([
           getValoresPredefinidos(),
-          getCliente(id)
+          SecureClienteService.getClienteWithDecryptedData(id)
         ]);
         
         // Only update state if component is still mounted
         if (isMounted) {
           setValoresPredefinidos(predefinidos);
           setCliente(clienteData);
+          
+          console.log("Cliente carregado com dados descriptografados:", clienteData);
           
           // Buscar pagamentos relacionados a este cliente
           const pagamentosData = await getPagamentos(id);

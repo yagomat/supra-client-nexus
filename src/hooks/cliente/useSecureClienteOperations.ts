@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { SecureClienteService, ClienteWithPaymentStatus } from "@/services/secureClienteService";
@@ -81,12 +82,13 @@ export const useSecureClienteOperations = () => {
         'fetch-clientes-status',
         () => executeWithRetry(
           () => SecureClienteService.getClientesWithCalculatedStatus(status),
-          'Carregar clientes'
+          'Carregar clientes com dados descriptografados'
         ),
         'Carregando clientes...',
         'Clientes carregados com sucesso'
       );
       
+      console.log("Clientes carregados com dados descriptografados:", result);
       setClientesWithStatus(result);
       setClientes(result.map(item => item.cliente));
       return result;
@@ -114,6 +116,7 @@ export const useSecureClienteOperations = () => {
         'Clientes carregados com sucesso'
       );
       
+      console.log("Clientes carregados com dados descriptografados:", result);
       setClientes(result);
       return result;
     } catch (error) {
@@ -145,6 +148,7 @@ export const useSecureClienteOperations = () => {
         'Cliente criado com sucesso'
       );
       
+      console.log("Cliente criado com dados descriptografados:", result);
       // Atualizar lista local
       setClientes(prev => [...prev, result]);
       
@@ -178,6 +182,7 @@ export const useSecureClienteOperations = () => {
         'Cliente atualizado com sucesso'
       );
       
+      console.log("Cliente atualizado com dados descriptografados:", result);
       // Atualizar lista local
       setClientes(prev => prev.map(c => c.id === id ? result : c));
       
@@ -223,25 +228,29 @@ export const useSecureClienteOperations = () => {
     }
   }, [smartLoading, executeWithRetry, toast, validateOperation]);
 
-  // Pesquisar clientes com rate limiting
-  const searchClientes = useCallback(async (searchTerm: string, status?: "todos" | "ativo" | "inativo") => {
+  // Migrar dados sensíveis existentes
+  const migrateSensitiveData = useCallback(async () => {
     try {
       const result = await smartLoading.withLoading(
-        'search-clientes',
+        'migrate-sensitive-data',
         () => executeWithRetry(
-          () => SecureClienteService.searchClientes(searchTerm, status),
-          'Pesquisar clientes'
+          () => SecureClienteService.migrateSensitiveData(),
+          'Migrar dados sensíveis'
         ),
-        'Pesquisando...',
-        'Pesquisa concluída'
+        'Migrando dados sensíveis...',
+        'Migração concluída com sucesso'
       );
       
-      setClientes(result);
+      toast({
+        title: "Migração concluída",
+        description: result,
+      });
+      
       return result;
     } catch (error) {
-      console.error("Erro ao pesquisar clientes:", error);
+      console.error("Erro ao migrar dados sensíveis:", error);
       toast({
-        title: "Erro na pesquisa",
+        title: "Erro na migração",
         description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
@@ -249,32 +258,7 @@ export const useSecureClienteOperations = () => {
     }
   }, [smartLoading, executeWithRetry, toast]);
 
-  // Calcular status de pagamento individual (backend)
-  const calculatePaymentStatus = useCallback(async (clienteId: string) => {
-    try {
-      const result = await executeWithRetry(
-        () => SecureClienteService.calculatePaymentStatus(clienteId),
-        'Calcular status de pagamento'
-      );
-      
-      return result;
-    } catch (error) {
-      console.error("Erro ao calcular status de pagamento:", error);
-      return { type: 'no_info', days: 0 };
-    }
-  }, [executeWithRetry]);
-
-  // Verificar rate limit para operação específica
-  const checkRateLimit = useCallback(async (operation: string) => {
-    try {
-      return await SecureClienteService.checkOperationRateLimit(operation);
-    } catch (error) {
-      console.error(`Erro ao verificar rate limit para ${operation}:`, error);
-      return false;
-    }
-  }, []);
-
-    return {
+  return {
     // Estados
     clientes,
     clientesWithStatus,
@@ -292,7 +276,7 @@ export const useSecureClienteOperations = () => {
     clearValidationMessages: () => {},
     getAuditLogs: async (_eventType?: string) => [],
     
-    // Operações principais (agora com CSRF)
+    // Operações principais (agora com CSRF e descriptografia)
     fetchClientesWithStatus,
     fetchClientes: fetchClientesWithStatus, // Usar a versão segura como padrão
     searchClientes: fetchClientesWithStatus, // Simplificar para usar o método principal
@@ -300,6 +284,9 @@ export const useSecureClienteOperations = () => {
     updateCliente,
     deleteCliente,
     calculatePaymentStatus: async (clienteId: string) => ({ type: 'no_info', days: 0 }), // Stub seguro
+    
+    // Nova funcionalidade de migração
+    migrateSensitiveData,
     
     // Utilitários
     checkRateLimit: async (operation: string) => true, // Stub seguro

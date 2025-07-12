@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Cliente } from "@/types";
 
@@ -29,7 +30,6 @@ class SecureClienteService {
       throw new Error("Usuário não autenticado");
     }
 
-    // Usar a função check_rate_limit que existe no banco
     const { data, error } = await supabase.rpc('check_rate_limit', {
       p_user_id: currentUser.user.id,
       p_operation: operation,
@@ -42,12 +42,11 @@ class SecureClienteService {
       throw error;
     }
 
-    // Como check_rate_limit retorna boolean, vamos criar uma resposta compatível
     const allowed = data as boolean;
     
     const result: RateLimitResult = {
       allowed,
-      current_requests: allowed ? 0 : 50, // Simulação básica
+      current_requests: allowed ? 0 : 50,
       max_requests: 50,
       time_window_minutes: 60,
       reset_time: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
@@ -65,11 +64,37 @@ class SecureClienteService {
     return result;
   }
 
+  // Obter cliente específico com dados descriptografados
+  static async getClienteWithDecryptedData(id: string): Promise<Cliente> {
+    await this.checkRateLimit('get_cliente');
+
+    const { data: currentUser } = await supabase.auth.getUser();
+    
+    if (!currentUser.user) {
+      throw new Error("Usuário não autenticado");
+    }
+
+    const { data, error } = await supabase.rpc('get_cliente_with_decrypted_data', {
+      p_cliente_id: id,
+      p_user_id: currentUser.user.id
+    });
+
+    if (error) {
+      console.error("Erro ao buscar cliente com dados descriptografados:", error);
+      throw error;
+    }
+
+    if (!data || data.length === 0) {
+      throw new Error("Cliente não encontrado");
+    }
+
+    return data[0] as Cliente;
+  }
+
   // Obter clientes com status calculado no backend
   static async getClientesWithCalculatedStatus(
     status?: "todos" | "ativo" | "inativo"
   ): Promise<ClienteWithPaymentStatus[]> {
-    // Verificar rate limit
     await this.checkRateLimit('list_clientes');
 
     const { data: currentUser } = await supabase.auth.getUser();
@@ -88,19 +113,39 @@ class SecureClienteService {
       throw error;
     }
 
-    return (data || []).map((item: any) => ({
-      cliente: item.cliente_data as Cliente,
-      paymentStatus: item.payment_status,
-      sortingPriority: item.sorting_priority
-    }));
+    // Para cada cliente, descriptografar dados sensíveis
+    const clientesWithDecryptedData = await Promise.all(
+      (data || []).map(async (item: any) => {
+        try {
+          const decryptedCliente = await this.getClienteWithDecryptedData(item.cliente_data.id);
+          return {
+            cliente: decryptedCliente,
+            paymentStatus: item.payment_status,
+            sortingPriority: item.sorting_priority
+          };
+        } catch (error) {
+          console.error(`Erro ao descriptografar dados do cliente ${item.cliente_data.id}:`, error);
+          // Fallback para dados criptografados se descriptografia falhar
+          return {
+            cliente: item.cliente_data as Cliente,
+            paymentStatus: item.payment_status,
+            sortingPriority: item.sorting_priority
+          };
+        }
+      })
+    );
+
+    return clientesWithDecryptedData;
   }
 
-  // Buscar clientes com rate limiting
+  // Buscar clientes com dados descriptografados
   static async getClientes(status?: "todos" | "ativo" | "inativo"): Promise<Cliente[]> {
     await this.checkRateLimit('list_clientes');
 
     const { data: currentUser } = await supabase.auth.getUser();
     const userId = currentUser.user?.id;
+    
+    let clientesData;
     
     if (status) {
       const { data, error } = await supabase.rpc(
@@ -116,7 +161,7 @@ class SecureClienteService {
         throw error;
       }
       
-      return data as Cliente[] || [];
+      clientesData = data as Cliente[] || [];
     } else {
       const { data, error } = await supabase
         .from('clientes')
@@ -128,45 +173,26 @@ class SecureClienteService {
         throw error;
       }
       
-      return data as Cliente[] || [];
-    }
-  }
-
-  // Buscar clientes com filtro (para pesquisa)
-  static async searchClientes(searchTerm: string, status?: "todos" | "ativo" | "inativo"): Promise<Cliente[]> {
-    await this.checkRateLimit('search_clientes');
-
-    const clientes = await this.getClientes(status);
-    
-    if (!searchTerm.trim()) {
-      return clientes;
+      clientesData = data as Cliente[] || [];
     }
 
-    const term = searchTerm.toLowerCase().trim();
-    return clientes.filter(cliente => 
-      cliente.nome.toLowerCase().includes(term) ||
-      cliente.servidor.toLowerCase().includes(term) ||
-      (cliente.telefone && cliente.telefone.includes(term))
+    // Descriptografar dados sensíveis para cada cliente
+    const clientesWithDecryptedData = await Promise.all(
+      clientesData.map(async (cliente) => {
+        try {
+          return await this.getClienteWithDecryptedData(cliente.id);
+        } catch (error) {
+          console.error(`Erro ao descriptografar dados do cliente ${cliente.id}:`, error);
+          // Fallback para dados criptografados se descriptografia falhar
+          return cliente;
+        }
+      })
     );
+
+    return clientesWithDecryptedData;
   }
 
-  // Obter cliente específico
-  static async getCliente(id: string): Promise<Cliente> {
-    const { data, error } = await supabase
-      .from('clientes')
-      .select('*')
-      .eq('id', id)
-      .single();
-      
-    if (error) {
-      console.error("Erro ao buscar cliente:", error);
-      throw error;
-    }
-    
-    return data as Cliente;
-  }
-
-  // Criar cliente com rate limiting
+  // Criar cliente com criptografia automática
   static async createCliente(cliente: Omit<Cliente, "id" | "created_at" | "status">): Promise<Cliente> {
     await this.checkRateLimit('create_cliente');
 
@@ -181,6 +207,7 @@ class SecureClienteService {
       user_id: currentUser.user.id,
     };
     
+    // Inserir cliente (trigger criptografará automaticamente os dados sensíveis)
     const { data, error } = await supabase
       .from('clientes')
       .insert([newCliente])
@@ -192,13 +219,15 @@ class SecureClienteService {
       throw error;
     }
     
-    return data as Cliente;
+    // Retornar dados descriptografados
+    return await this.getClienteWithDecryptedData(data.id);
   }
 
-  // Atualizar cliente com rate limiting
+  // Atualizar cliente com criptografia automática
   static async updateCliente(id: string, cliente: Partial<Cliente>): Promise<Cliente> {
     await this.checkRateLimit('update_cliente');
 
+    // Atualizar cliente (trigger criptografará automaticamente os dados sensíveis)
     const { data, error } = await supabase
       .from('clientes')
       .update(cliente)
@@ -211,7 +240,8 @@ class SecureClienteService {
       throw error;
     }
     
-    return data as Cliente;
+    // Retornar dados descriptografados
+    return await this.getClienteWithDecryptedData(id);
   }
 
   // Excluir cliente com rate limiting
@@ -241,36 +271,22 @@ class SecureClienteService {
     }
   }
 
-  // Calcular status de pagamento no backend
-  static async calculatePaymentStatus(clienteId: string): Promise<any> {
+  // Executar migração de dados existentes
+  static async migrateSensitiveData(): Promise<string> {
     const { data: currentUser } = await supabase.auth.getUser();
     
     if (!currentUser.user) {
       throw new Error("Usuário não autenticado");
     }
 
-    const { data, error } = await supabase.rpc('calculate_cliente_payment_status', {
-      p_cliente_id: clienteId,
-      p_user_id: currentUser.user.id
-    });
+    const { data, error } = await supabase.rpc('migrate_existing_sensitive_data');
 
     if (error) {
-      console.error("Erro ao calcular status de pagamento:", error);
+      console.error("Erro ao migrar dados sensíveis:", error);
       throw error;
     }
 
-    return data;
-  }
-
-  // Verificar rate limit específico (para uso em componentes)
-  static async checkOperationRateLimit(operation: string): Promise<boolean> {
-    try {
-      const result = await this.checkRateLimit(operation);
-      return result.allowed;
-    } catch (error) {
-      console.error(`Rate limit check failed for ${operation}:`, error);
-      return false;
-    }
+    return data as string;
   }
 }
 
