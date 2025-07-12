@@ -658,15 +658,13 @@ export type Database = {
         Returns: Json
       }
       log_audit_event: {
-        Args:
-          | { p_user_id: string; p_event_type: string; p_details: Json }
-          | {
-              p_user_id: string
-              p_event_type: string
-              p_details?: Json
-              p_ip_address?: string
-              p_user_agent?: string
-            }
+        Args: {
+          p_user_id: string
+          p_event_type: string
+          p_details?: Json
+          p_ip_address?: string
+          p_user_agent?: string
+        }
         Returns: undefined
       }
       log_auth_attempt: {
