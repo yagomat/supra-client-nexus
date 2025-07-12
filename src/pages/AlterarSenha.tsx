@@ -207,26 +207,6 @@ const AlterarSenha = () => {
                     Mínimo de 8 caracteres (obrigatório)
                   </span>
                 </div>
-                <div className="flex items-center space-x-2 text-sm">
-                  {/[A-Z]/.test(newPassword) ? (
-                    <Check size={16} className="text-green-500" />
-                  ) : (
-                    <X size={16} className="text-gray-400" />
-                  )}
-                  <span className={/[A-Z]/.test(newPassword) ? "text-green-700" : "text-gray-500"}>
-                    Pelo menos uma letra maiúscula (recomendado)
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm">
-                  {/[^A-Za-z0-9]/.test(newPassword) ? (
-                    <Check size={16} className="text-green-500" />
-                  ) : (
-                    <X size={16} className="text-gray-400" />
-                  )}
-                  <span className={/[^A-Za-z0-9]/.test(newPassword) ? "text-green-700" : "text-gray-500"}>
-                    Pelo menos um caractere especial (recomendado)
-                  </span>
-                </div>
               </div>
             </div>
             
