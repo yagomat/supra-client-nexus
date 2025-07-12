@@ -20,8 +20,9 @@ export class ClientePasswordService {
         throw error;
       }
 
-      if (data && data.error) {
-        console.error('Erro retornado da função:', data.error);
+      // Verificar se a resposta contém erro
+      if (data && typeof data === 'object' && 'error' in data) {
+        console.error('Erro retornado da função:', (data as any).error);
         return null;
       }
 
@@ -51,7 +52,13 @@ export class ClientePasswordService {
         throw error;
       }
 
-      return data;
+      return data as {
+        success: boolean;
+        senhas_aplicativo_migradas: number;
+        senhas_2_migradas: number;
+        total_migradas: number;
+        errors: string[];
+      };
     } catch (error) {
       console.error('Erro no ClientePasswordService.migrateExistingPasswords:', error);
       throw error;

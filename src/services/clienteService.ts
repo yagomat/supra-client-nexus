@@ -72,12 +72,17 @@ export async function createCliente(cliente: Omit<Cliente, "id" | "created_at" |
   // Preparar dados usando o serviço de senhas
   const preparedCliente = ClientePasswordService.prepareClienteForSubmission({
     ...cliente,
-    user_id: currentUser.user.id,
   });
+  
+  // Criar objeto com user_id para inserção no banco
+  const clienteWithUserId = {
+    ...preparedCliente,
+    user_id: currentUser.user.id,
+  };
   
   const { data, error } = await supabase
     .from('clientes')
-    .insert([preparedCliente])
+    .insert(clienteWithUserId)
     .select()
     .single();
     
