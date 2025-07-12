@@ -28,11 +28,7 @@ export const useCadastrarClienteForm = () => {
 
   // Função personalizada para validar e processar dados antes da submissão
   const handleFormSubmission = async (data: ClienteFormValues) => {
-    console.log("Dados do formulário antes da validação:", {
-      ...data,
-      senha_aplicativo: data.senha_aplicativo ? 'XXXXX (será criptografada automaticamente)' : null,
-      senha_2: data.senha_2 ? 'XXXXX (será criptografada automaticamente)' : null
-    });
+    console.log("Dados do formulário antes da validação:", data);
     
     const requiredFields = [
       { field: 'nome', name: 'Nome' },
@@ -59,13 +55,9 @@ export const useCadastrarClienteForm = () => {
       return;
     }
 
-  // Submeter diretamente os dados processados - o trigger do banco vai criptografar automaticamente
+  // Submeter diretamente os dados processados - o useSecureClienteForm já faz a sanitização
   try {
-    console.log("Chamando originalOnSubmit com dados (senhas serão criptografadas pelo trigger):", {
-      ...data,
-      senha_aplicativo: data.senha_aplicativo ? 'XXXXX (será criptografada)' : null,
-      senha_2: data.senha_2 ? 'XXXXX (será criptografada)' : null
-    });
+    console.log("Chamando originalOnSubmit com dados:", data);
     await originalOnSubmit(data);
     
     // Sucesso - mostrar mensagem e redirecionar

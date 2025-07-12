@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { secureLog, logError } from "@/utils/secureLogger";
 
-// Registrar evento de auditoria usando a função corrigida do banco
+// Registrar evento de auditoria com fallback em caso de erro
 export const logAuditEvent = async (
   event: string,
   details: Record<string, any>,
@@ -17,44 +17,24 @@ export const logAuditEvent = async (
       return;
     }
 
-    // Usar a função RPC corrigida do banco de dados
-    const { error } = await supabase.rpc('log_audit_event', {
-      p_user_id: userIdToLog,
-      p_event_type: event,
-      p_details: details || {},
-      p_ip_address: null,
-      p_user_agent: null
-    });
+    // Tentar inserir diretamente na tabela como fallback
+    const { error } = await supabase
+      .from('audit_logs')
+      .insert({
+        user_id: userIdToLog,
+        event_type: event,
+        details: details || {},
+        created_at: new Date().toISOString()
+      });
 
     if (error) {
-      // Se falhar com a função RPC, tentar inserção direta como fallback
-      secureLog.warn('RPC audit log failed, trying direct insert', { 
+      // Se falhar, log apenas localmente
+      secureLog.warn('Audit log failed, logging locally only', { 
         event, 
         error: error.message 
       });
-      
-      const { error: insertError } = await supabase
-        .from('audit_logs')
-        .insert({
-          user_id: userIdToLog,
-          event_type: event,
-          details: details || {},
-          created_at: new Date().toISOString()
-        });
-
-      if (insertError) {
-        secureLog.warn('Direct audit log also failed', { 
-          event, 
-          error: insertError.message 
-        });
-      } else {
-        secureLog.info('Audit event logged via direct insert', { 
-          eventType: event, 
-          hasDetails: !!details
-        });
-      }
     } else {
-      secureLog.info('Audit event logged successfully via RPC', { 
+      secureLog.info('Audit event logged successfully', { 
         eventType: event, 
         hasDetails: !!details
       });
