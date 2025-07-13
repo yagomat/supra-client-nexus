@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
@@ -16,7 +17,7 @@ export const useLoginForm = () => {
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { validateRequest, getSecureHeaders } = useCSRFProtection();
+  const { validateRequest } = useCSRFProtection();
 
   // Limpar erros quando o usuário digita
   useEffect(() => {
@@ -63,7 +64,7 @@ export const useLoginForm = () => {
     try {
       setIsLoading(true);
       
-      // A sanitização agora ocorre no backend, via secureSignIn
+      // Login direto sem verificações de rate limiting
       await signIn(email, password);
       
       // Usar navigate em vez de window.location para evitar recarregar a página
