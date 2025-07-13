@@ -38,11 +38,23 @@ export const ClienteModals = ({
   const [showSenha1, setShowSenha1] = useState(false);
   const [showSenha2, setShowSenha2] = useState(false);
 
+  // Função para verificar se um valor parece estar criptografado
+  const isEncrypted = (value: string | null): boolean => {
+    if (!value) return false;
+    // Verificar se é um hash longo e hexadecimal (indicativo de criptografia)
+    return value.length > 50 && /^[a-f0-9]+$/i.test(value);
+  };
+
   // Função para exibir senha com toggle de visibilidade
   const renderSenhaField = (senha: string | null, show: boolean, toggle: () => void) => {
-    // Se não há senha ou está vazia, mostrar hífen
-    if (!senha || senha.trim() === '') {
-      return "-";
+    if (!senha) return "-";
+    
+    if (isEncrypted(senha)) {
+      return (
+        <div className="text-orange-500 text-sm">
+          Erro na descriptografia
+        </div>
+      );
     }
 
     return (
@@ -62,11 +74,16 @@ export const ClienteModals = ({
     );
   };
 
-  // Função para renderizar usuário
+  // Função para renderizar usuário (com verificação de criptografia)
   const renderUsuarioField = (usuario: string | null) => {
-    if (!usuario || usuario.trim() === '') {
-      return "-";
+    if (!usuario) return "-";
+    
+    if (isEncrypted(usuario)) {
+      return (
+        <span className="text-orange-500 text-sm">Erro na descriptografia</span>
+      );
     }
+
     return <SafeText>{usuario}</SafeText>;
   };
 

@@ -55,7 +55,7 @@ export const useClienteList = () => {
       logError(error, 'fetchClientes');
       toast({
         title: "Erro ao carregar clientes",
-        description: "Não foi possível carregar a lista de clientes.",
+        description: "Não foi possível carregar a lista de clientes. Dados sensíveis estão protegidos por criptografia.",
         variant: "destructive",
       });
     } finally {
@@ -88,7 +88,7 @@ export const useClienteList = () => {
     }
   }, [clienteParaExcluir, toast]);
 
-  // Versões das funções de visualização que garantem dados descriptografados
+  // Versões melhoradas das funções de visualização que garantem dados descriptografados
   const verDetalhes = useCallback(async (cliente: Cliente) => {
     try {
       console.log("Buscando detalhes descriptografados para cliente:", cliente.id);
@@ -102,7 +102,7 @@ export const useClienteList = () => {
       baseVerDetalhes(cliente);
       toast({
         title: "Aviso",
-        description: "Alguns dados podem não estar disponíveis devido a problemas de descriptografia.",
+        description: "Alguns dados podem aparecer criptografados devido a um erro de descriptografia.",
         variant: "destructive",
       });
     }
@@ -118,7 +118,7 @@ export const useClienteList = () => {
       baseVerTelaAdicional(cliente);
       toast({
         title: "Aviso",
-        description: "Alguns dados podem não estar disponíveis devido a problemas de descriptografia.",
+        description: "Alguns dados podem aparecer criptografados devido a um erro de descriptografia.",
         variant: "destructive",
       });
     }
