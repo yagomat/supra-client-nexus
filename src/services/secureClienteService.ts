@@ -1,7 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Cliente } from "@/types";
 import { secureLog } from "@/utils/secureLogger";
-import { validateEncryptionFormat, detectClienteEncryptionStatus } from "@/utils/secureEncryption";
 
 export interface ClienteWithPaymentStatus {
   cliente: Cliente;
@@ -25,7 +24,7 @@ export class SecureClienteService {
         p_cliente_id: clienteId
       });
 
-      if (!decryptError && decryptedData) {
+      if (!decryptError && decryptedData && typeof decryptedData === 'object' && decryptedData !== null) {
         // Converter para Cliente e processar os dados
         const clienteData = decryptedData as unknown as Cliente;
         
@@ -93,18 +92,36 @@ export class SecureClienteService {
       const fieldValue = processedData[field];
       
       if (fieldValue && typeof fieldValue === 'string') {
-        // Se parece criptografado (muito longo e hexadecimal), limpar o campo
-        if (fieldValue.length > 50 && /^[a-f0-9]+$/i.test(fieldValue)) {
-          (processedData as any)[field] = null; // Limpar ao invés de marcar com erro
+        // Se parece criptografado (muito longo e apenas caracteres hexadecimais), limpar o campo
+        if (this.isEncryptedValue(fieldValue)) {
+          (processedData as any)[field] = null;
         }
         // Se contém erro de descriptografia, também limpar
-        else if (fieldValue.includes('[ERRO_DESCRIPTOGRAFIA]')) {
+        else if (fieldValue.includes('[ERRO_DESCRIPTOGRAFIA]') || fieldValue.includes('ERROR') || fieldValue.includes('FAILED')) {
           (processedData as any)[field] = null;
         }
       }
     });
 
     return processedData;
+  }
+
+  private static isEncryptedValue(value: string): boolean {
+    // Verificar se é um valor criptografado (hexadecimal longo)
+    const isHex = /^[a-f0-9]+$/i.test(value);
+    const isLong = value.length > 50;
+    
+    // Se é hexadecimal e muito longo, provavelmente é criptografado
+    if (isHex && isLong) {
+      return true;
+    }
+    
+    // Verificar outros padrões de dados criptografados
+    if (value.length > 100 && /^[A-Za-z0-9+/=]+$/.test(value)) {
+      return true; // Base64 longo
+    }
+    
+    return false;
   }
 
   static async getAllClientesWithDecryptedData(): Promise<Cliente[]> {
@@ -138,7 +155,7 @@ export class SecureClienteService {
             p_cliente_id: cliente.id
           });
 
-          if (!decryptError && decryptedData) {
+          if (!decryptError && decryptedData && typeof decryptedData === 'object' && decryptedData !== null) {
             const clienteData = decryptedData as unknown as Cliente;
             clientesProcessados.push(this.processClienteData(clienteData));
           } else {
@@ -362,8 +379,14 @@ export class SecureClienteService {
       
       let encryptedCount = 0;
       clientes.forEach(cliente => {
-        const status = detectClienteEncryptionStatus(cliente);
-        if (status.hasEncryptedFields) {
+        // Contar campos que ainda estão criptografados
+        const sensitiveFields: SensitiveFields[] = ['usuario_aplicativo', 'senha_aplicativo', 'usuario_2', 'senha_2', 'telefone'];
+        const hasEncrypted = sensitiveFields.some(field => {
+          const value = cliente[field];
+          return value && typeof value === 'string' && this.isEncryptedValue(value);
+        });
+        
+        if (hasEncrypted) {
           encryptedCount++;
         }
       });
@@ -382,7 +405,6 @@ export class SecureClienteService {
 
   private static isEncrypted(value: string | null): boolean {
     if (!value) return false;
-    const validation = validateEncryptionFormat(value);
-    return validation.isEncrypted;
+    return this.isEncryptedValue(value);
   }
 }

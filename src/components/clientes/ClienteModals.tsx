@@ -40,7 +40,10 @@ export const ClienteModals = ({
 
   // Função para exibir senha com toggle de visibilidade
   const renderSenhaField = (senha: string | null, show: boolean, toggle: () => void) => {
-    if (!senha) return "-";
+    // Se não há senha ou está vazia, mostrar hífen
+    if (!senha || senha.trim() === '') {
+      return "-";
+    }
 
     return (
       <div className="flex items-center gap-2">
@@ -61,7 +64,9 @@ export const ClienteModals = ({
 
   // Função para renderizar usuário
   const renderUsuarioField = (usuario: string | null) => {
-    if (!usuario) return "-";
+    if (!usuario || usuario.trim() === '') {
+      return "-";
+    }
     return <SafeText>{usuario}</SafeText>;
   };
 
