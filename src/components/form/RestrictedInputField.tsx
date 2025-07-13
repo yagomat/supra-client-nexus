@@ -40,9 +40,9 @@ export const RestrictedInputField: React.FC<RestrictedInputFieldProps> = ({
             <div>
               <Input 
                 type={type} 
-                placeholder={placeholder}
+                placeholder={placeholder} 
                 {...field} 
-                value={field.value || ""}
+                value={field.value || ""} 
                 onChange={(e) => {
                   field.onChange(e.target.value);
                 }}

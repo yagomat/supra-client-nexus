@@ -584,10 +584,6 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: Json
       }
-      get_encryption_key: {
-        Args: { p_key_name?: string }
-        Returns: string
-      }
       get_fila_cobranca: {
         Args: { p_user_id: string; p_mes: number; p_ano: number }
         Returns: {
@@ -764,10 +760,6 @@ export type Database = {
         }
         Returns: undefined
       }
-      rotate_encryption_keys: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
       sanitize_auth_input: {
         Args: { p_email: string; p_nome?: string }
         Returns: Json
@@ -857,10 +849,6 @@ export type Database = {
           p_user_id?: string
         }
         Returns: Json
-      }
-      validate_encryption_integrity: {
-        Args: { p_data: string }
-        Returns: boolean
       }
       validate_password_strength: {
         Args: { p_password: string }

@@ -17,7 +17,7 @@ const MigracaoDados = () => {
   const handleMigration = async () => {
     try {
       const result = await migrateSensitiveData();
-      setMigrationResult(typeof result === 'string' ? result : 'Migração concluída com sucesso');
+      setMigrationResult(result);
       setIsCompleted(true);
       
       // Verificar status de criptografia após migração

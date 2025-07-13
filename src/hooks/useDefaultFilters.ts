@@ -17,15 +17,14 @@ export const useDefaultFilters = () => {
         const savedStatus = await CryptoStorage.getItem<StatusFilterType>("defaultStatusFilter");
         const savedOrder = await CryptoStorage.getItem<ClienteOrderType>("defaultOrderFilter");
         
-        // Usar "todos" como padrão se não houver valor salvo
-        setDefaultStatus(savedStatus || "todos");
-        // Usar "data" como padrão se não houver valor salvo (que corresponde a "cadastro")
-        setDefaultOrder(savedOrder || "data");
+        if (savedStatus) {
+          setDefaultStatus(savedStatus);
+        }
+        if (savedOrder) {
+          setDefaultOrder(savedOrder);
+        }
       } catch (error) {
         logError(error, 'loadDefaultFilters');
-        // Em caso de erro, usar os padrões
-        setDefaultStatus("todos");
-        setDefaultOrder("data");
       }
     };
     
