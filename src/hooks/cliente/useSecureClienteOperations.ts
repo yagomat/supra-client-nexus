@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { SecureClienteService, ClienteWithPaymentStatus } from "@/services/secureClienteService";
@@ -86,13 +87,13 @@ export const useSecureClienteOperations = () => {
         'fetch-clientes-status',
         () => executeWithRetry(
           () => SecureClienteService.getClientesWithCalculatedStatus(status),
-          'Carregar clientes com dados descriptografados'
+          'Carregar clientes'
         ),
         'Carregando clientes...',
         'Clientes carregados com sucesso'
       );
       
-      console.log("Clientes carregados com dados descriptografados:", result);
+      console.log("Clientes carregados:", result);
       setClientesWithStatus(result);
       setClientes(result.map(item => item.cliente));
       return result;
@@ -120,7 +121,7 @@ export const useSecureClienteOperations = () => {
         'Clientes carregados com sucesso'
       );
       
-      console.log("Clientes carregados com dados descriptografados:", result);
+      console.log("Clientes carregados:", result);
       setClientes(result);
       return result;
     } catch (error) {
@@ -152,7 +153,7 @@ export const useSecureClienteOperations = () => {
         'Cliente criado com sucesso'
       );
       
-      console.log("Cliente criado com dados descriptografados:", result);
+      console.log("Cliente criado:", result);
       // Atualizar lista local
       setClientes(prev => [...prev, result]);
       
@@ -186,7 +187,7 @@ export const useSecureClienteOperations = () => {
         'Cliente atualizado com sucesso'
       );
       
-      console.log("Cliente atualizado com dados descriptografados:", result);
+      console.log("Cliente atualizado:", result);
       // Atualizar lista local
       setClientes(prev => prev.map(c => c.id === id ? result : c));
       
@@ -232,36 +233,6 @@ export const useSecureClienteOperations = () => {
     }
   }, [smartLoading, executeWithRetry, toast, validateOperation]);
 
-  // Migrar dados sensíveis existentes
-  const migrateSensitiveData = useCallback(async () => {
-    try {
-      const result = await smartLoading.withLoading(
-        'migrate-sensitive-data',
-        () => executeWithRetry(
-          () => SecureClienteService.migrateSensitiveData(),
-          'Migrar dados sensíveis'
-        ),
-        'Migrando dados sensíveis...',
-        'Migração concluída com sucesso'
-      );
-      
-      toast({
-        title: "Migração concluída",
-        description: result,
-      });
-      
-      return result;
-    } catch (error) {
-      console.error("Erro ao migrar dados sensíveis:", error);
-      toast({
-        title: "Erro na migração",
-        description: error instanceof Error ? error.message : "Erro desconhecido",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  }, [smartLoading, executeWithRetry, toast]);
-
   return {
     // Estados
     clientes,
@@ -280,7 +251,7 @@ export const useSecureClienteOperations = () => {
     clearValidationMessages: () => {},
     getAuditLogs: async (_eventType?: string) => [],
     
-    // Operações principais (agora com CSRF e descriptografia)
+    // Operações principais (agora sem criptografia)
     fetchClientesWithStatus,
     fetchClientes: fetchClientesWithStatus, // Usar a versão segura como padrão
     searchClientes: fetchClientesWithStatus, // Simplificar para usar o método principal
@@ -288,9 +259,6 @@ export const useSecureClienteOperations = () => {
     updateCliente,
     deleteCliente,
     calculatePaymentStatus: async (clienteId: string) => ({ type: 'no_info', days: 0 }), // Stub seguro
-    
-    // Nova funcionalidade de migração
-    migrateSensitiveData,
     
     // Utilitários
     checkRateLimit: async (operation: string) => true, // Stub seguro
