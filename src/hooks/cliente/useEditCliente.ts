@@ -70,7 +70,7 @@ export const useEditCliente = () => {
     if (cliente && form) {
       console.log("Preenchendo formulário com dados do cliente:", cliente);
       
-      form.reset({
+      const formData = {
         nome: cliente.nome || "",
         telefone: cliente.telefone || "",
         codigo_pais_telefone: cliente.codigo_pais_telefone || "+55",
@@ -91,7 +91,9 @@ export const useEditCliente = () => {
         data_licenca_2: cliente.data_licenca_2 || "",
         observacoes: cliente.observacoes || "",
         status: (cliente.status as "ativo" | "inativo") || "inativo"
-      });
+      };
+      
+      form.reset(formData);
     }
   }, [cliente, form]);
 
@@ -104,10 +106,14 @@ export const useEditCliente = () => {
 
   // Função para lidar com o submit do formulário
   const handleFormSubmit = async (data: ClienteFormValues) => {
-    if (!id) return;
+    if (!id) {
+      console.error("ID do cliente não encontrado");
+      return;
+    }
     
-    console.log("Dados do formulário antes da validação:", data);
+    console.log("Iniciando submit com dados:", data);
     
+    // Validar campos obrigatórios
     const requiredFields = [
       { field: 'nome', name: 'Nome' },
       { field: 'servidor', name: 'Servidor' }, 
@@ -161,7 +167,8 @@ export const useEditCliente = () => {
     try {
       setIsSubmitting(true);
       
-      await SecureClienteService.updateCliente(id, updateData);
+      const result = await SecureClienteService.updateCliente(id, updateData);
+      console.log("Resultado da atualização:", result);
       
       toast({
         title: "Cliente atualizado com sucesso",
@@ -170,10 +177,10 @@ export const useEditCliente = () => {
       
       navigate("/clientes");
     } catch (error) {
-      console.error("Erro ao submeter formulário:", error);
+      console.error("Erro detalhado ao atualizar cliente:", error);
       toast({
         title: "Erro ao atualizar cliente",
-        description: "Ocorreu um erro interno. Tente novamente.",
+        description: error instanceof Error ? error.message : "Ocorreu um erro interno. Tente novamente.",
         variant: "destructive",
       });
     } finally {
