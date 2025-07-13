@@ -12,6 +12,9 @@ export interface ClienteWithPaymentStatus {
   sorting_priority: number;
 }
 
+// Definir campos sensíveis com tipagem específica
+type SensitiveFields = 'usuario_aplicativo' | 'senha_aplicativo' | 'usuario_2' | 'senha_2' | 'telefone';
+
 export class SecureClienteService {
   static async getClienteWithDecryptedData(clienteId: string): Promise<Cliente> {
     try {
@@ -61,19 +64,23 @@ export class SecureClienteService {
       }
 
       // Aplicar lógica de fallback para campos com erro de descriptografia
-      const processedData = { ...rawData };
+      const processedData = { ...rawData } as Cliente;
       
       // Para campos que mostravam erro, tentar diferentes abordagens
-      ['usuario_aplicativo', 'senha_aplicativo', 'usuario_2', 'senha_2', 'telefone'].forEach(field => {
-        const fieldValue = processedData[field as keyof Cliente];
+      const sensitiveFields: SensitiveFields[] = ['usuario_aplicativo', 'senha_aplicativo', 'usuario_2', 'senha_2', 'telefone'];
+      
+      sensitiveFields.forEach(field => {
+        const fieldValue = processedData[field];
         
         if (fieldValue && typeof fieldValue === 'string') {
           if (fieldValue.includes('[ERRO_DESCRIPTOGRAFIA]')) {
             // Se está mostrando erro, tentar descriptografar usando método alternativo
-            processedData[field as keyof Cliente] = this.tryAlternativeDecryption(fieldValue) || '';
+            const cleanedValue = this.tryAlternativeDecryption(fieldValue);
+            (processedData as any)[field] = cleanedValue || '';
           } else if (this.isLikelyEncrypted(fieldValue)) {
             // Se parece criptografado mas não foi processado, tentar descriptografar
-            processedData[field as keyof Cliente] = this.tryAlternativeDecryption(fieldValue) || fieldValue;
+            const decryptedValue = this.tryAlternativeDecryption(fieldValue);
+            (processedData as any)[field] = decryptedValue || fieldValue;
           }
         }
       });
@@ -83,7 +90,7 @@ export class SecureClienteService {
         had_errors: true
       });
 
-      return processedData as Cliente;
+      return processedData;
 
     } catch (error) {
       secureLog.error("Erro no SecureClienteService.getClienteWithDecryptedData", { 
