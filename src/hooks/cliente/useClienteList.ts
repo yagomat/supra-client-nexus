@@ -43,9 +43,8 @@ export const useClienteList = () => {
   const fetchClientes = useCallback(async () => {
     try {
       setLoading(true);
-      console.log("Buscando clientes com dados descriptografados...");
+      console.log("Buscando clientes...");
       
-      // Usar SecureClienteService para buscar dados descriptografados
       const clientesData = await SecureClienteService.getAllClientesWithDecryptedData();
       
       console.log("Clientes carregados:", clientesData.length);
@@ -55,7 +54,7 @@ export const useClienteList = () => {
       logError(error, 'fetchClientes');
       toast({
         title: "Erro ao carregar clientes",
-        description: "Não foi possível carregar a lista de clientes. Dados sensíveis estão protegidos por criptografia.",
+        description: "Não foi possível carregar a lista de clientes.",
         variant: "destructive",
       });
     } finally {
@@ -69,7 +68,6 @@ export const useClienteList = () => {
     try {
       await SecureClienteService.deleteCliente(clienteParaExcluir);
       
-      // Atualizar a lista localmente
       setClientes(prev => prev.filter(cliente => cliente.id !== clienteParaExcluir));
       setClienteParaExcluir(null);
       
@@ -88,21 +86,17 @@ export const useClienteList = () => {
     }
   }, [clienteParaExcluir, toast]);
 
-  // Versões melhoradas das funções de visualização que garantem dados descriptografados
   const verDetalhes = useCallback(async (cliente: Cliente) => {
     try {
-      console.log("Buscando detalhes descriptografados para cliente:", cliente.id);
-      // Buscar dados descriptografados antes de abrir o modal
-      const clienteDescriptografado = await SecureClienteService.getClienteWithDecryptedData(cliente.id);
-      console.log("Cliente descriptografado:", clienteDescriptografado);
-      baseVerDetalhes(clienteDescriptografado);
+      console.log("Buscando detalhes para cliente:", cliente.id);
+      const clienteAtualizado = await SecureClienteService.getClienteWithDecryptedData(cliente.id);
+      baseVerDetalhes(clienteAtualizado);
     } catch (error) {
       console.error("Erro ao buscar detalhes do cliente:", error);
-      // Em caso de erro, usar os dados originais
       baseVerDetalhes(cliente);
       toast({
         title: "Aviso",
-        description: "Alguns dados podem aparecer criptografados devido a um erro de descriptografia.",
+        description: "Erro ao carregar detalhes do cliente.",
         variant: "destructive",
       });
     }
@@ -111,14 +105,14 @@ export const useClienteList = () => {
   const verTelaAdicional = useCallback(async (cliente: Cliente) => {
     try {
       console.log("Buscando dados da tela adicional para cliente:", cliente.id);
-      const clienteDescriptografado = await SecureClienteService.getClienteWithDecryptedData(cliente.id);
-      baseVerTelaAdicional(clienteDescriptografado);
+      const clienteAtualizado = await SecureClienteService.getClienteWithDecryptedData(cliente.id);
+      baseVerTelaAdicional(clienteAtualizado);
     } catch (error) {
       console.error("Erro ao buscar dados da tela adicional:", error);
       baseVerTelaAdicional(cliente);
       toast({
         title: "Aviso",
-        description: "Alguns dados podem aparecer criptografados devido a um erro de descriptografia.",
+        description: "Erro ao carregar dados da tela adicional.",
         variant: "destructive",
       });
     }
@@ -126,8 +120,8 @@ export const useClienteList = () => {
 
   const verObservacoes = useCallback(async (cliente: Cliente) => {
     try {
-      const clienteDescriptografado = await SecureClienteService.getClienteWithDecryptedData(cliente.id);
-      baseVerObservacoes(clienteDescriptografado);
+      const clienteAtualizado = await SecureClienteService.getClienteWithDecryptedData(cliente.id);
+      baseVerObservacoes(clienteAtualizado);
     } catch (error) {
       console.error("Erro ao buscar observações do cliente:", error);
       baseVerObservacoes(cliente);
@@ -138,7 +132,6 @@ export const useClienteList = () => {
     setOrderBy(newOrder);
   }, []);
 
-  // Aplicar ordenação aos clientes filtrados
   const sortedFilteredClientes = useMemo(() => {
     return sortClientesByOrder(filteredClientes, orderBy);
   }, [filteredClientes, orderBy]);

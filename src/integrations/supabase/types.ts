@@ -389,20 +389,12 @@ export type Database = {
         Args: { p_encrypted_password: string; p_cliente_id: string }
         Returns: string
       }
-      decrypt_sensitive_data: {
-        Args: { p_encrypted_data: string; p_key?: string }
-        Returns: string
-      }
       delete_valor_predefinido: {
         Args: { p_user_id: string; p_tipo: string; p_valor: string }
         Returns: Json
       }
       encrypt_cliente_password: {
         Args: { p_password: string; p_cliente_id: string }
-        Returns: string
-      }
-      encrypt_sensitive_data: {
-        Args: { p_data: string; p_key?: string }
         Returns: string
       }
       filter_audit_logs: {
@@ -527,10 +519,6 @@ export type Database = {
           created_at: string
           roles: Database["public"]["Enums"]["app_role"][]
         }[]
-      }
-      get_cliente_with_decrypted_data: {
-        Args: { p_cliente_id: string }
-        Returns: Json
       }
       get_cliente_with_decrypted_passwords: {
         Args: { p_cliente_id: string }
@@ -732,10 +720,6 @@ export type Database = {
         Returns: string
       }
       migrate_existing_passwords: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      migrate_existing_sensitive_data: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }

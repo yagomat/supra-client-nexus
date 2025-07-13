@@ -16,7 +16,6 @@ export const useClienteData = () => {
   const [valoresPredefinidos, setValoresPredefinidos] = useState<ValoresPredefinidos | null>(null);
   const { toast } = useToast();
 
-  // Armazenar o dia de vencimento original para comparações
   const originalVencimento = cliente?.dia_vencimento || 0;
 
   useEffect(() => {
@@ -31,20 +30,17 @@ export const useClienteData = () => {
       try {
         if (isMounted) setLoading(true);
         
-        // Promise.all for parallel fetching
         const [predefinidos, clienteData] = await Promise.all([
           getValoresPredefinidos(),
           SecureClienteService.getClienteWithDecryptedData(id)
         ]);
         
-        // Only update state if component is still mounted
         if (isMounted) {
           setValoresPredefinidos(predefinidos);
           setCliente(clienteData);
           
-          console.log("Cliente carregado com dados descriptografados:", clienteData);
+          console.log("Cliente carregado:", clienteData);
           
-          // Buscar pagamentos relacionados a este cliente
           const pagamentosData = await getPagamentos(id);
           if (isMounted) {
             setPagamentos(pagamentosData);
@@ -55,7 +51,7 @@ export const useClienteData = () => {
         if (isMounted) {
           toast({
             title: "Erro ao carregar cliente",
-            description: "Não foi possível carregar os dados do cliente. Tentando novamente...",
+            description: "Não foi possível carregar os dados do cliente.",
             variant: "destructive",
           });
         }
@@ -66,7 +62,6 @@ export const useClienteData = () => {
 
     fetchClienteData();
     
-    // Cleanup function to prevent updating state after unmounting
     return () => {
       isMounted = false;
     };
@@ -80,7 +75,7 @@ export const useClienteData = () => {
     loading,
     clienteId: id,
     valoresPredefinidos,
-    clientePagamentos: pagamentos, // Alias para compatibilidade
+    clientePagamentos: pagamentos,
     originalVencimento
   };
 };

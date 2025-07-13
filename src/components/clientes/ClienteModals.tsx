@@ -38,7 +38,6 @@ export const ClienteModals = ({
   const [showSenha1, setShowSenha1] = useState(false);
   const [showSenha2, setShowSenha2] = useState(false);
 
-  // Função para exibir senha com toggle de visibilidade
   const renderSenhaField = (senha: string | null, show: boolean, toggle: () => void) => {
     if (!senha) return "-";
 
@@ -59,7 +58,6 @@ export const ClienteModals = ({
     );
   };
 
-  // Função para renderizar usuário
   const renderUsuarioField = (usuario: string | null) => {
     if (!usuario) return "-";
     return <SafeText>{usuario}</SafeText>;

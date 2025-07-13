@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Cliente } from "@/types";
 
@@ -13,13 +14,14 @@ export interface ClienteWithPaymentStatus {
 export class SecureClienteService {
   static async getClienteWithDecryptedData(clienteId: string): Promise<Cliente> {
     try {
-      // Usar a função RPC que descriptografa os dados automaticamente
-      const { data, error } = await supabase.rpc('get_cliente_with_decrypted_data', {
-        p_cliente_id: clienteId
-      });
+      const { data, error } = await supabase
+        .from('clientes')
+        .select('*')
+        .eq('id', clienteId)
+        .single();
 
       if (error) {
-        console.error("Erro ao buscar cliente com dados descriptografados:", error);
+        console.error("Erro ao buscar cliente:", error);
         throw error;
       }
 
@@ -27,32 +29,10 @@ export class SecureClienteService {
         throw new Error("Cliente não encontrado");
       }
 
-      // Safe type conversion - convert unknown to Cliente properly
-      const clienteData = data as unknown as Cliente;
-      
-      // Validate that we have the required fields
-      if (!clienteData.id || !clienteData.nome || !clienteData.servidor) {
-        throw new Error("Dados do cliente incompletos após descriptografia");
-      }
-
-      // Limpar campos que parecem estar criptografados (falha na descriptografia)
-      const cleanedData = this.cleanEncryptedFields(clienteData);
-
-      return cleanedData;
+      return data as Cliente;
     } catch (error) {
       console.error("Erro no SecureClienteService:", error);
-      // Em caso de erro, tentar buscar o cliente normal e limpar dados criptografados
-      const { data: clienteData, error: clienteError } = await supabase
-        .from('clientes')
-        .select('*')
-        .eq('id', clienteId)
-        .single();
-
-      if (clienteError) {
-        throw clienteError;
-      }
-
-      return this.cleanEncryptedFields(clienteData as Cliente);
+      throw error;
     }
   }
 
@@ -63,7 +43,6 @@ export class SecureClienteService {
         throw new Error("Usuário não autenticado");
       }
 
-      // Buscar todos os clientes do usuário
       const { data: clientes, error } = await supabase
         .from('clientes')
         .select('*') 
@@ -75,33 +54,9 @@ export class SecureClienteService {
         throw error;
       }
 
-      // Para cada cliente, tentar descriptografar os dados sensíveis ou limpá-los se estiverem criptografados
-      const clientesDescriptografados = await Promise.all(
-        (clientes || []).map(async (cliente) => {
-          try {
-            // Se os campos parecem estar criptografados, tentar descriptografar
-            if (this.isEncrypted(cliente.usuario_aplicativo) || 
-                this.isEncrypted(cliente.senha_aplicativo) ||
-                this.isEncrypted(cliente.telefone) ||
-                this.isEncrypted(cliente.usuario_2) ||
-                this.isEncrypted(cliente.senha_2)) {
-              
-              // Tentar usar a função de descriptografia
-              return await this.getClienteWithDecryptedData(cliente.id);
-            }
-            
-            return cliente;
-          } catch (error) {
-            console.warn(`Erro ao descriptografar cliente ${cliente.id}:`, error);
-            // Se der erro na descriptografia, limpar os campos criptografados
-            return this.cleanEncryptedFields(cliente);
-          }
-        })
-      );
-
-      return clientesDescriptografados;
+      return clientes || [];
     } catch (error) {
-      console.error("Erro ao buscar clientes com dados descriptografados:", error);
+      console.error("Erro ao buscar clientes:", error);
       throw error;
     }
   }
@@ -139,7 +94,6 @@ export class SecureClienteService {
     try {
       const clientes = await this.getAllClientesWithDecryptedData();
       
-      // Simular o status calculado para cada cliente
       const clientesWithStatus: ClienteWithPaymentStatus[] = clientes
         .filter(cliente => {
           if (!status || status === 'todos') return true;
@@ -235,77 +189,5 @@ export class SecureClienteService {
       console.error("Erro ao excluir cliente:", error);
       throw error;
     }
-  }
-
-  static async migrateSensitiveData(): Promise<string> {
-    try {
-      const { data, error } = await supabase.rpc('migrate_existing_sensitive_data');
-
-      if (error) {
-        throw error;
-      }
-
-      return data as string || 'Migração concluída com sucesso';
-    } catch (error) {
-      console.error("Erro na migração:", error);
-      throw error;
-    }
-  }
-
-  static async checkEncryptionStatus(): Promise<{ encrypted: number; total: number }> {
-    try {
-      const clientes = await this.getAllClientesWithDecryptedData();
-      const encrypted = clientes.filter(c => 
-        this.isEncrypted(c.usuario_aplicativo) || 
-        this.isEncrypted(c.senha_aplicativo) ||
-        this.isEncrypted(c.telefone)
-      ).length;
-
-      return {
-        encrypted,
-        total: clientes.length
-      };
-    } catch (error) {
-      console.error("Erro ao verificar status de criptografia:", error);
-      return { encrypted: 0, total: 0 };
-    }
-  }
-
-  /**
-   * Verifica se um valor parece estar criptografado
-   */
-  private static isEncrypted(value: string | null): boolean {
-    if (!value) return false;
-    // Verifica se o valor parece ser um hash criptografado (muito longo e hexadecimal/base64)
-    return (
-      value.length > 50 && 
-      (/^[a-f0-9]+$/i.test(value) || /^[A-Za-z0-9+/=]+$/.test(value))
-    );
-  }
-
-  /**
-   * Limpa campos que estão visivelmente criptografados, substituindo por null
-   */
-  private static cleanEncryptedFields(cliente: Cliente): Cliente {
-    const cleaned = { ...cliente };
-    
-    // Campos sensíveis que devem ser verificados
-    const sensitiveFields: (keyof Cliente)[] = [
-      'usuario_aplicativo',
-      'senha_aplicativo',
-      'usuario_2', 
-      'senha_2',
-      'telefone'
-    ];
-
-    sensitiveFields.forEach(field => {
-      const value = cleaned[field] as string | null;
-      if (this.isEncrypted(value)) {
-        console.warn(`Campo ${field} parece estar criptografado, limpando para null`);
-        (cleaned[field] as any) = null;
-      }
-    });
-
-    return cleaned;
   }
 }
