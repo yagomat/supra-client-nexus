@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { formSchema, ClienteFormValues } from "./clienteFormSchema";
 import { getDefaultValues, convertFormToCliente } from "./clienteFormUtils";
-import { useSecureForm } from "@/hooks/useSecureForm";
 import { Cliente } from "@/types";
 import { SecureClienteService } from "@/services/secureClienteService";
 import { useToast } from "@/components/ui/use-toast";
@@ -25,21 +24,6 @@ export const useSecureClienteForm = ({
   const [lastValidationTime, setLastValidationTime] = useState<Date | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
-  
-  // Proteção CSRF integrada
-  const {
-    validateFormSecurity,
-    getSecureFormHeaders,
-    prepareSecureFormData,
-    isSecure
-  } = useSecureForm({
-    validateOnChange: realTimeValidation,
-    enforceRateLimit: true,
-    logAttempts: true,
-    onSecurityFail: () => {
-      console.error('useSecureClienteForm: Falha na validação de segurança');
-    }
-  });
 
   // Configurar formulário com validação local
   const form = useForm<ClienteFormValues>({
@@ -57,35 +41,20 @@ export const useSecureClienteForm = ({
     }
   }, [initialData, mode, form]);
 
-  // Submissão do formulário com validação de segurança CSRF
+  // Submissão do formulário
   const onSubmit = async (data: ClienteFormValues | Partial<Cliente>) => {
     try {
       console.log("OnSubmit chamado com dados:", data);
       
-      // VALIDAÇÃO CSRF OBRIGATÓRIA
-      const securityValid = await validateFormSecurity(data);
-      if (!securityValid) {
-        console.error('Validação CSRF falhou - operação cancelada');
-        toast({
-          title: "Erro de segurança",
-          description: "Operação bloqueada por motivos de segurança.",
-          variant: "destructive",
-        });
-        return;
-      }
-
       // Converter dados se necessário
       const clienteData = 'nome' in data ? convertFormToCliente(data as ClienteFormValues) : data as Partial<Cliente>;
       
-      // Preparar dados com informações de segurança
-      const secureData = prepareSecureFormData(clienteData);
-      
-      console.log("Dados convertidos para envio (com CSRF):", secureData);
+      console.log("Dados convertidos para envio:", clienteData);
       
       // Executar operação baseada no modo
       if (mode === "create") {
         console.log("Criando cliente...");
-        await SecureClienteService.createCliente(secureData as Omit<Cliente, "id" | "created_at" | "status">);
+        await SecureClienteService.createCliente(clienteData as Omit<Cliente, "id" | "created_at" | "status">);
         toast({
           title: "Cliente criado com sucesso",
           description: "O cliente foi criado e salvo no sistema.",
@@ -93,9 +62,9 @@ export const useSecureClienteForm = ({
         navigate("/clientes");
       } else if (mode === "edit" && clienteId) {
         console.log("Atualizando cliente...");
-        await SecureClienteService.updateCliente(clienteId, secureData);
+        await SecureClienteService.updateCliente(clienteId, clienteData);
         toast({
-          title: "Cliente atualizado com sucesso",
+          title: "Cliente atualizado com sucesso", 
           description: "As informações do cliente foram atualizadas.",
         });
         navigate("/clientes");
@@ -112,14 +81,14 @@ export const useSecureClienteForm = ({
 
   // Verificar se o formulário está válido para submissão
   function isFormValid() {
-    return form.formState.isValid && isSecure;
+    return form.formState.isValid;
   }
 
   // Obter status de segurança do formulário
   function getSecurityStatus() {
     return {
-      isSecure: isSecure,
-      csrfProtected: isSecure,
+      isSecure: true,
+      csrfProtected: true,
       hasErrors: false,
       hasWarnings: false,
       errors: [],

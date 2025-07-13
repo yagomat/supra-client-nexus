@@ -2,11 +2,13 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { useSecureClienteForm } from "@/hooks/cliente/useSecureClienteForm";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { formSchema, ClienteFormValues } from "./clienteFormSchema";
+import { getDefaultValues } from "./clienteFormUtils";
 import { getValoresPredefinidos } from "@/services/valoresPredefinidosService";
 import { SecureClienteService } from "@/services/secureClienteService";
 import { ValoresPredefinidos, Cliente } from "@/types";
-import { ClienteFormValues } from "@/hooks/cliente/clienteFormSchema";
 
 export const useEditCliente = () => {
   const { id } = useParams<{ id: string }>();
@@ -16,7 +18,15 @@ export const useEditCliente = () => {
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [valoresPredefinidos, setValoresPredefinidos] = useState<ValoresPredefinidos | null>(null);
   const [possuiTelaAdicional, setPossuiTelaAdicional] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // Configurar formulário
+  const form = useForm<ClienteFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: getDefaultValues(undefined, "edit"),
+    mode: 'onChange'
+  });
+
   useEffect(() => {
     if (!id) {
       navigate("/clientes");
@@ -54,18 +64,6 @@ export const useEditCliente = () => {
 
     fetchData();
   }, [id, toast, navigate]);
-
-  // Usar o hook seguro para edição de cliente
-  const {
-    form,
-    onSubmit: originalOnSubmit,
-    isSubmitting,
-    isFormValid
-  } = useSecureClienteForm({ 
-    clienteId: id,
-    initialData: cliente || undefined,
-    mode: "edit"
-  });
 
   // Preencher o formulário quando os dados do cliente forem carregados
   useEffect(() => {
@@ -106,11 +104,13 @@ export const useEditCliente = () => {
 
   // Função para lidar com o submit do formulário
   const handleFormSubmit = async (data: ClienteFormValues) => {
+    if (!id) return;
+    
     console.log("Dados do formulário antes da validação:", data);
     
     const requiredFields = [
       { field: 'nome', name: 'Nome' },
-      { field: 'servidor', name: 'Servidor' },
+      { field: 'servidor', name: 'Servidor' }, 
       { field: 'aplicativo', name: 'Aplicativo' }
     ];
 
@@ -132,7 +132,7 @@ export const useEditCliente = () => {
       return;
     }
 
-    // Preparar dados para atualização - garantir que os campos não sejam undefined
+    // Preparar dados para atualização
     const updateData: Partial<Cliente> = {
       nome: data.nome,
       telefone: data.telefone?.trim() || null,
@@ -159,7 +159,9 @@ export const useEditCliente = () => {
     console.log("Dados preparados para atualização:", updateData);
 
     try {
-      await SecureClienteService.updateCliente(id!, updateData);
+      setIsSubmitting(true);
+      
+      await SecureClienteService.updateCliente(id, updateData);
       
       toast({
         title: "Cliente atualizado com sucesso",
@@ -174,8 +176,12 @@ export const useEditCliente = () => {
         description: "Ocorreu um erro interno. Tente novamente.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  const isFormValid = form.formState.isValid;
 
   return {
     loading,
