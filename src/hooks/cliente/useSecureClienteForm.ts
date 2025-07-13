@@ -3,11 +3,12 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { formSchema, ClienteFormValues } from "./clienteFormSchema";
-import { useSecureClienteOperations } from "./useSecureClienteOperations";
 import { getDefaultValues, convertFormToCliente } from "./clienteFormUtils";
-import { useRealTimeValidation } from "./clienteFormValidation";
 import { useSecureForm } from "@/hooks/useSecureForm";
 import { Cliente } from "@/types";
+import { SecureClienteService } from "@/services/secureClienteService";
+import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface UseSecureClienteFormProps {
   clienteId?: string;
@@ -22,18 +23,9 @@ export const useSecureClienteForm = ({
 }: UseSecureClienteFormProps) => {
   const [realTimeValidation, setRealTimeValidation] = useState(false);
   const [lastValidationTime, setLastValidationTime] = useState<Date | null>(null);
+  const { toast } = useToast();
+  const navigate = useNavigate();
   
-  const {
-    loading: securityLoading,
-    validationErrors,
-    validationWarnings,
-    validateCliente,
-    createCliente,
-    updateCliente,
-    isDataValid,
-    clearValidationMessages
-  } = useSecureClienteOperations();
-
   // Proteção CSRF integrada
   const {
     validateFormSecurity,
@@ -46,11 +38,10 @@ export const useSecureClienteForm = ({
     logAttempts: true,
     onSecurityFail: () => {
       console.error('useSecureClienteForm: Falha na validação de segurança');
-      clearValidationMessages();
     }
   });
 
-  // Configurar formulário com validação local + backend
+  // Configurar formulário com validação local
   const form = useForm<ClienteFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: getDefaultValues(initialData, mode),
@@ -66,14 +57,6 @@ export const useSecureClienteForm = ({
     }
   }, [initialData, mode, form]);
 
-  // Hook para validação em tempo real
-  const { forceValidation } = useRealTimeValidation({
-    form,
-    validateCliente,
-    enabled: realTimeValidation,
-    setLastValidationTime
-  });
-
   // Submissão do formulário com validação de segurança CSRF
   const onSubmit = async (data: ClienteFormValues | Partial<Cliente>) => {
     try {
@@ -83,13 +66,15 @@ export const useSecureClienteForm = ({
       const securityValid = await validateFormSecurity(data);
       if (!securityValid) {
         console.error('Validação CSRF falhou - operação cancelada');
+        toast({
+          title: "Erro de segurança",
+          description: "Operação bloqueada por motivos de segurança.",
+          variant: "destructive",
+        });
         return;
       }
 
-      // Limpar mensagens anteriores
-      clearValidationMessages();
-      
-      // Converter e validar dados antes de submeter
+      // Converter dados se necessário
       const clienteData = 'nome' in data ? convertFormToCliente(data as ClienteFormValues) : data as Partial<Cliente>;
       
       // Preparar dados com informações de segurança
@@ -97,25 +82,31 @@ export const useSecureClienteForm = ({
       
       console.log("Dados convertidos para envio (com CSRF):", secureData);
       
-      const validation = await validateCliente(secureData);
-      
-      if (!validation.valid) {
-        console.log("Validação falhou:", validation);
-        return;
-      }
-
-      console.log("Validação passou, executando operação...");
-      
       // Executar operação baseada no modo
       if (mode === "create") {
         console.log("Criando cliente...");
-        await createCliente(secureData as Omit<Cliente, "id" | "created_at" | "status">);
+        await SecureClienteService.createCliente(secureData as Omit<Cliente, "id" | "created_at" | "status">);
+        toast({
+          title: "Cliente criado com sucesso",
+          description: "O cliente foi criado e salvo no sistema.",
+        });
+        navigate("/clientes");
       } else if (mode === "edit" && clienteId) {
         console.log("Atualizando cliente...");
-        await updateCliente(clienteId, secureData);
+        await SecureClienteService.updateCliente(clienteId, secureData);
+        toast({
+          title: "Cliente atualizado com sucesso",
+          description: "As informações do cliente foram atualizadas.",
+        });
+        navigate("/clientes");
       }
     } catch (error) {
       console.error("Erro no submit do formulário:", error);
+      toast({
+        title: "Erro na operação",
+        description: "Ocorreu um erro interno. Tente novamente.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -126,16 +117,13 @@ export const useSecureClienteForm = ({
 
   // Obter status de segurança do formulário
   function getSecurityStatus() {
-    const hasErrors = validationErrors.length > 0;
-    const hasWarnings = validationWarnings.length > 0;
-    
     return {
-      isSecure: !hasErrors && isSecure,
+      isSecure: isSecure,
       csrfProtected: isSecure,
-      hasErrors,
-      hasWarnings,
-      errors: validationErrors,
-      warnings: validationWarnings,
+      hasErrors: false,
+      hasWarnings: false,
+      errors: [],
+      warnings: [],
       lastValidated: lastValidationTime
     };
   }
@@ -143,16 +131,18 @@ export const useSecureClienteForm = ({
   // Habilitar/desabilitar validação em tempo real
   function toggleRealTimeValidation(enabled: boolean) {
     setRealTimeValidation(enabled);
-    if (!enabled) {
-      clearValidationMessages();
-    }
   }
 
   // Resetar formulário e validações
   function resetForm() {
     form.reset(getDefaultValues(initialData, mode));
-    clearValidationMessages();
     setLastValidationTime(null);
+  }
+
+  // Forçar validação manual
+  function forceValidation() {
+    form.trigger();
+    setLastValidationTime(new Date());
   }
 
   return {
@@ -163,7 +153,7 @@ export const useSecureClienteForm = ({
     onSubmit,
     
     // Estados de loading
-    isSubmitting: form.formState.isSubmitting || securityLoading,
+    isSubmitting: form.formState.isSubmitting,
     
     // Validação e segurança
     securityStatus: getSecurityStatus(),

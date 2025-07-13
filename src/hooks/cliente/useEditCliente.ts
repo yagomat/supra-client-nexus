@@ -35,7 +35,7 @@ export const useEditCliente = () => {
           getValoresPredefinidos()
         ]);
         
-        console.log("Dados do cliente carregados (descriptografados):", clienteData);
+        console.log("Dados do cliente carregados:", clienteData);
         setCliente(clienteData);
         setValoresPredefinidos(valoresData);
         setPossuiTelaAdicional(clienteData.possui_tela_adicional || false);
@@ -70,7 +70,7 @@ export const useEditCliente = () => {
   // Preencher o formulário quando os dados do cliente forem carregados
   useEffect(() => {
     if (cliente && form) {
-      console.log("Preenchendo formulário com dados do cliente (descriptografados):", cliente);
+      console.log("Preenchendo formulário com dados do cliente:", cliente);
       
       form.reset({
         nome: cliente.nome || "",
@@ -132,35 +132,38 @@ export const useEditCliente = () => {
       return;
     }
 
-    // Tratar campos de data - converter strings vazias para null
-    // Converter valor_plano de string para number
-    const sanitizedData: Partial<Cliente> = {
-      ...data,
-      data_licenca_aplicativo: data.data_licenca_aplicativo?.trim() === "" ? null : data.data_licenca_aplicativo,
-      data_licenca_2: data.data_licenca_2?.trim() === "" ? null : data.data_licenca_2,
-      telefone: data.telefone?.trim() === "" ? null : data.telefone,
-      uf: data.uf?.trim() === "" ? null : data.uf,
-      valor_plano: data.valor_plano?.trim() === "" ? null : Number(data.valor_plano),
-      dispositivo_smart: data.dispositivo_smart?.trim() === "" ? null : data.dispositivo_smart,
-      usuario_aplicativo: data.usuario_aplicativo?.trim() === "" ? null : data.usuario_aplicativo,
-      senha_aplicativo: data.senha_aplicativo?.trim() === "" ? null : data.senha_aplicativo,
-      dispositivo_smart_2: data.dispositivo_smart_2?.trim() === "" ? null : data.dispositivo_smart_2,
-      aplicativo_2: data.aplicativo_2?.trim() === "" ? null : data.aplicativo_2,
-      usuario_2: data.usuario_2?.trim() === "" ? null : data.usuario_2,
-      senha_2: data.senha_2?.trim() === "" ? null : data.senha_2,
-      observacoes: data.observacoes?.trim() === "" ? null : data.observacoes
+    // Preparar dados para atualização - garantir que os campos não sejam undefined
+    const updateData: Partial<Cliente> = {
+      nome: data.nome,
+      telefone: data.telefone?.trim() || null,
+      codigo_pais_telefone: data.codigo_pais_telefone || "+55",
+      uf: data.uf?.trim() || null,
+      servidor: data.servidor,
+      dia_vencimento: data.dia_vencimento,
+      valor_plano: data.valor_plano?.trim() ? Number(data.valor_plano) : null,
+      dispositivo_smart: data.dispositivo_smart?.trim() || null,
+      aplicativo: data.aplicativo,
+      usuario_aplicativo: data.usuario_aplicativo?.trim() || null,
+      senha_aplicativo: data.senha_aplicativo?.trim() || null,
+      data_licenca_aplicativo: data.data_licenca_aplicativo?.trim() || null,
+      possui_tela_adicional: data.possui_tela_adicional || false,
+      dispositivo_smart_2: data.possui_tela_adicional ? (data.dispositivo_smart_2?.trim() || null) : null,
+      aplicativo_2: data.possui_tela_adicional ? (data.aplicativo_2?.trim() || null) : null,
+      usuario_2: data.possui_tela_adicional ? (data.usuario_2?.trim() || null) : null,
+      senha_2: data.possui_tela_adicional ? (data.senha_2?.trim() || null) : null,
+      data_licenca_2: data.possui_tela_adicional ? (data.data_licenca_2?.trim() || null) : null,
+      observacoes: data.observacoes?.trim() || null,
+      status: data.status || "inativo"
     };
 
-    console.log("Dados sanitizados (serão criptografados automaticamente):", sanitizedData);
+    console.log("Dados preparados para atualização:", updateData);
 
     try {
-      // Usar o serviço seguro que criptografa automaticamente
-      await SecureClienteService.updateCliente(id!, sanitizedData);
+      await SecureClienteService.updateCliente(id!, updateData);
       
-      // Sucesso - mostrar mensagem e redirecionar
       toast({
         title: "Cliente atualizado com sucesso",
-        description: "As informações do cliente foram atualizadas e criptografadas.",
+        description: "As informações do cliente foram atualizadas.",
       });
       
       navigate("/clientes");
