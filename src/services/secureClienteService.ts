@@ -28,25 +28,24 @@ export class SecureClienteService {
       if (!decryptError && decryptedData) {
         const clienteData = decryptedData as unknown as Cliente;
         
-        // Verificar se a descriptografia foi bem-sucedida
-        const hasDecryptionErrors = [
-          clienteData.usuario_aplicativo,
-          clienteData.senha_aplicativo,
-          clienteData.usuario_2,
-          clienteData.senha_2,
-          clienteData.telefone
-        ].some(field => field && field.includes('[ERRO_DESCRIPTOGRAFIA]'));
+        // Verificar se todos os campos sensíveis foram descriptografados corretamente
+        const hasValidDecryption = this.validateDecryptedData(clienteData);
 
-        if (!hasDecryptionErrors) {
+        if (hasValidDecryption) {
           secureLog.clientOperation('cliente_decrypted_success', { 
             cliente_id: clienteId,
             method: 'rpc_success'
           });
           return clienteData;
+        } else {
+          secureLog.clientOperation('rpc_partial_decryption', { 
+            cliente_id: clienteId,
+            message: 'Some fields still encrypted, trying alternative method'
+          });
         }
       }
 
-      // Se a RPC falhou ou retornou erros de descriptografia, buscar dados brutos
+      // Se a RPC falhou ou retornou dados ainda criptografados, buscar dados brutos
       secureLog.clientOperation('fallback_to_raw_data', { cliente_id: clienteId });
       
       const { data: rawData, error: rawError } = await supabase
@@ -63,27 +62,8 @@ export class SecureClienteService {
         throw new Error("Cliente não encontrado");
       }
 
-      // Aplicar lógica de fallback para campos com erro de descriptografia
-      const processedData = { ...rawData } as Cliente;
-      
-      // Para campos que mostravam erro, tentar diferentes abordagens
-      const sensitiveFields: SensitiveFields[] = ['usuario_aplicativo', 'senha_aplicativo', 'usuario_2', 'senha_2', 'telefone'];
-      
-      sensitiveFields.forEach(field => {
-        const fieldValue = processedData[field];
-        
-        if (fieldValue && typeof fieldValue === 'string') {
-          if (fieldValue.includes('[ERRO_DESCRIPTOGRAFIA]')) {
-            // Se está mostrando erro, tentar descriptografar usando método alternativo
-            const cleanedValue = this.tryAlternativeDecryption(fieldValue);
-            (processedData as any)[field] = cleanedValue || '';
-          } else if (this.isLikelyEncrypted(fieldValue)) {
-            // Se parece criptografado mas não foi processado, tentar descriptografar
-            const decryptedValue = this.tryAlternativeDecryption(fieldValue);
-            (processedData as any)[field] = decryptedValue || fieldValue;
-          }
-        }
-      });
+      // Retornar dados processados
+      const processedData = this.processClienteData(rawData);
 
       secureLog.clientOperation('cliente_processed_with_fallback', { 
         cliente_id: clienteId,
@@ -109,33 +89,48 @@ export class SecureClienteService {
         throw clienteError;
       }
 
-      return clienteData as Cliente;
+      return this.processClienteData(clienteData);
     }
   }
 
-  private static isLikelyEncrypted(value: string): boolean {
-    return value.length > 50 && /^[a-f0-9]+$/i.test(value);
+  private static validateDecryptedData(cliente: Cliente): boolean {
+    const sensitiveFields: SensitiveFields[] = ['usuario_aplicativo', 'senha_aplicativo', 'usuario_2', 'senha_2', 'telefone'];
+    
+    // Verificar se algum campo ainda contém dados que parecem criptografados
+    for (const field of sensitiveFields) {
+      const fieldValue = cliente[field];
+      if (fieldValue && typeof fieldValue === 'string') {
+        // Se o campo tem mais de 50 caracteres e é hexadecimal, provavelmente ainda está criptografado
+        if (fieldValue.length > 50 && /^[a-f0-9]+$/i.test(fieldValue)) {
+          return false;
+        }
+        // Se contém marcador de erro
+        if (fieldValue.includes('[ERRO_DESCRIPTOGRAFIA]')) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
-  private static tryAlternativeDecryption(encryptedValue: string): string | null {
-    try {
-      // Se o valor contém o marcador de erro, remover e tentar processar
-      const cleanValue = encryptedValue.replace('[ERRO_DESCRIPTOGRAFIA]', '').trim();
+  private static processClienteData(rawData: any): Cliente {
+    const processedData = { ...rawData } as Cliente;
+    
+    // Para dados que parecem criptografados, marcar para re-inserção
+    const sensitiveFields: SensitiveFields[] = ['usuario_aplicativo', 'senha_aplicativo', 'usuario_2', 'senha_2', 'telefone'];
+    
+    sensitiveFields.forEach(field => {
+      const fieldValue = processedData[field];
       
-      // Se não sobrou nada ou é muito curto, retornar vazio
-      if (!cleanValue || cleanValue.length < 10) {
-        return '';
+      if (fieldValue && typeof fieldValue === 'string') {
+        // Se parece criptografado (muito longo e hexadecimal), marcar como erro para nova inserção
+        if (fieldValue.length > 50 && /^[a-f0-9]+$/i.test(fieldValue)) {
+          (processedData as any)[field] = '[ERRO_DESCRIPTOGRAFIA]';
+        }
       }
-      
-      // Se parece ser dados criptografados válidos, manter como está por enquanto
-      if (this.isLikelyEncrypted(cleanValue)) {
-        return cleanValue;
-      }
-      
-      return cleanValue;
-    } catch {
-      return null;
-    }
+    });
+
+    return processedData;
   }
 
   static async getAllClientesWithDecryptedData(): Promise<Cliente[]> {
@@ -159,37 +154,17 @@ export class SecureClienteService {
         throw error;
       }
 
-      // Para cada cliente, descriptografar os dados sensíveis se necessário
-      const clientesDescriptografados = await Promise.all(
-        (clientes || []).map(async (cliente) => {
-          try {
-            const encryptionStatus = detectClienteEncryptionStatus(cliente);
-            
-            if (encryptionStatus.hasEncryptedFields) {
-              secureLog.devOnly('Cliente tem campos criptografados', { 
-                cliente_id: cliente.id,
-                encrypted_fields: encryptionStatus.encryptedFields 
-              });
-              
-              return await this.getClienteWithDecryptedData(cliente.id);
-            }
-            
-            return cliente;
-          } catch (error) {
-            secureLog.warn(`Erro ao descriptografar cliente ${cliente.id}`, { 
-              error: error instanceof Error ? error.message : 'Unknown error'
-            });
-            return cliente; // Retorna o cliente sem descriptografar se der erro
-          }
-        })
-      );
+      // Para cada cliente, processar os dados sensíveis
+      const clientesProcessados = (clientes || []).map(cliente => {
+        return this.processClienteData(cliente);
+      });
 
       secureLog.clientOperation('all_clientes_processed', { 
-        total: clientesDescriptografados.length,
+        total: clientesProcessados.length,
         user_id: currentUser.user.id
       });
 
-      return clientesDescriptografados;
+      return clientesProcessados;
     } catch (error) {
       secureLog.error("Erro ao buscar clientes com dados descriptografados", {
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -220,7 +195,7 @@ export class SecureClienteService {
         throw error;
       }
 
-      return data || [];
+      return (data || []).map(cliente => this.processClienteData(cliente));
     } catch (error) {
       secureLog.error("Erro ao buscar clientes", {
         error: error instanceof Error ? error.message : 'Unknown error'
