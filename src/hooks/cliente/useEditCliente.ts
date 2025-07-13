@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -104,22 +103,22 @@ export const useEditCliente = () => {
     }
   }, [possuiTelaAdicional, form]);
 
-  // Função simplificada para lidar com o submit do formulário
+  // Função simplificada para submit - atualização direta
   const handleFormSubmit = async (data: ClienteFormValues) => {
     if (!id) {
       console.error("ID do cliente não encontrado");
       return;
     }
     
-    console.log("=== INICIANDO SUBMIT ===");
-    console.log("ID do cliente:", id);
+    console.log("=== INICIANDO SUBMIT SIMPLIFICADO ===");
+    console.log("ID:", id);
     console.log("Dados do formulário:", data);
     
     try {
       setIsSubmitting(true);
       
-      // Preparar dados básicos - sem validação extra
-      const updateData = {
+      // Preparar dados para atualização direta - sem validações extras
+      const updateData: Partial<Cliente> = {
         nome: data.nome,
         telefone: data.telefone || null,
         codigo_pais_telefone: data.codigo_pais_telefone || "+55",
@@ -144,9 +143,9 @@ export const useEditCliente = () => {
 
       console.log("Dados preparados para envio:", updateData);
 
-      // Chamar diretamente o Supabase sem usar funções seguras
+      // Chamar o serviço simplificado
       const result = await SecureClienteService.updateCliente(id, updateData);
-      console.log("Resultado da atualização (após service):", result);
+      console.log("Resultado da atualização:", result);
       
       toast({
         title: "Cliente atualizado com sucesso",
@@ -156,8 +155,7 @@ export const useEditCliente = () => {
       navigate("/clientes");
     } catch (error) {
       console.error("=== ERRO NO SUBMIT ===");
-      console.error("Erro completo:", error);
-      console.error("Stack trace:", error instanceof Error ? error.stack : 'No stack trace');
+      console.error("Erro:", error);
       
       toast({
         title: "Erro ao atualizar cliente",

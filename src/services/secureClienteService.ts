@@ -154,12 +154,12 @@ export class SecureClienteService {
         throw new Error("Usuário não autenticado");
       }
 
-      console.log("=== ATUALIZANDO CLIENTE VIA SUPABASE ===");
+      console.log("=== ATUALIZAÇÃO SIMPLIFICADA ===");
       console.log("ID:", id);
       console.log("User ID:", currentUser.user.id);
-      console.log("Dados a serem atualizados:", clienteData);
+      console.log("Dados para atualizar:", clienteData);
 
-      // Fazer update direto no Supabase sem usar RPC
+      // Atualização direta sem nenhuma função de criptografia ou RPC
       const { data, error } = await supabase
         .from('clientes')
         .update(clienteData)
@@ -169,11 +169,8 @@ export class SecureClienteService {
         .single();
 
       if (error) {
-        console.error("=== ERRO NA ATUALIZAÇÃO SUPABASE ===");
-        console.error("Código do erro:", error.code);
-        console.error("Mensagem do erro:", error.message);
-        console.error("Detalhes do erro:", error.details);
-        console.error("Hint do erro:", error.hint);
+        console.error("=== ERRO NA ATUALIZAÇÃO ===");
+        console.error("Error:", error);
         throw new Error(`Erro na atualização: ${error.message}`);
       }
 
@@ -181,12 +178,12 @@ export class SecureClienteService {
         throw new Error("Nenhum dado retornado após a atualização");
       }
 
-      console.log("=== CLIENTE ATUALIZADO COM SUCESSO ===");
+      console.log("=== SUCESSO NA ATUALIZAÇÃO ===");
       console.log("Dados atualizados:", data);
       return data;
     } catch (error) {
-      console.error("=== ERRO GERAL NA ATUALIZAÇÃO ===");
-      console.error("Erro:", error);
+      console.error("=== ERRO GERAL ===");
+      console.error("Erro completo:", error);
       throw error;
     }
   }
