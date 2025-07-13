@@ -20,33 +20,27 @@ export class SecureClienteService {
     try {
       secureLog.clientOperation('get_cliente_decrypted', { cliente_id: clienteId });
 
-      // Primeiro, tentar buscar dados já descriptografados via RPC
+      // Usar a função RPC para buscar dados descriptografados
       const { data: decryptedData, error: decryptError } = await supabase.rpc('get_cliente_with_decrypted_data', {
         p_cliente_id: clienteId
       });
 
-      if (!decryptError && decryptedData) {
+      if (!decryptError && decryptedData && !decryptedData.error) {
         const clienteData = decryptedData as unknown as Cliente;
         
-        // Verificar se todos os campos sensíveis foram descriptografados corretamente
-        const hasValidDecryption = this.validateDecryptedData(clienteData);
-
-        if (hasValidDecryption) {
-          secureLog.clientOperation('cliente_decrypted_success', { 
-            cliente_id: clienteId,
-            method: 'rpc_success'
-          });
-          return clienteData;
-        } else {
-          secureLog.clientOperation('rpc_partial_decryption', { 
-            cliente_id: clienteId,
-            message: 'Some fields still encrypted, trying alternative method'
-          });
-        }
+        secureLog.clientOperation('cliente_decrypted_success', { 
+          cliente_id: clienteId,
+          method: 'rpc_success'
+        });
+        
+        return clienteData;
       }
 
-      // Se a RPC falhou ou retornou dados ainda criptografados, buscar dados brutos
-      secureLog.clientOperation('fallback_to_raw_data', { cliente_id: clienteId });
+      // Se a RPC falhou, buscar dados brutos e processar
+      secureLog.clientOperation('fallback_to_raw_data', { 
+        cliente_id: clienteId,
+        rpc_error: decryptError?.message 
+      });
       
       const { data: rawData, error: rawError } = await supabase
         .from('clientes')
@@ -62,15 +56,7 @@ export class SecureClienteService {
         throw new Error("Cliente não encontrado");
       }
 
-      // Retornar dados processados
-      const processedData = this.processClienteData(rawData);
-
-      secureLog.clientOperation('cliente_processed_with_fallback', { 
-        cliente_id: clienteId,
-        had_errors: true
-      });
-
-      return processedData;
+      return this.processClienteData(rawData);
 
     } catch (error) {
       secureLog.error("Erro no SecureClienteService.getClienteWithDecryptedData", { 
@@ -91,26 +77,6 @@ export class SecureClienteService {
 
       return this.processClienteData(clienteData);
     }
-  }
-
-  private static validateDecryptedData(cliente: Cliente): boolean {
-    const sensitiveFields: SensitiveFields[] = ['usuario_aplicativo', 'senha_aplicativo', 'usuario_2', 'senha_2', 'telefone'];
-    
-    // Verificar se algum campo ainda contém dados que parecem criptografados
-    for (const field of sensitiveFields) {
-      const fieldValue = cliente[field];
-      if (fieldValue && typeof fieldValue === 'string') {
-        // Se o campo tem mais de 50 caracteres e é hexadecimal, provavelmente ainda está criptografado
-        if (fieldValue.length > 50 && /^[a-f0-9]+$/i.test(fieldValue)) {
-          return false;
-        }
-        // Se contém marcador de erro
-        if (fieldValue.includes('[ERRO_DESCRIPTOGRAFIA]')) {
-          return false;
-        }
-      }
-    }
-    return true;
   }
 
   private static processClienteData(rawData: any): Cliente {
@@ -154,10 +120,27 @@ export class SecureClienteService {
         throw error;
       }
 
-      // Para cada cliente, processar os dados sensíveis
-      const clientesProcessados = (clientes || []).map(cliente => {
-        return this.processClienteData(cliente);
-      });
+      // Para cada cliente, tentar descriptografar usando a função RPC
+      const clientesProcessados: Cliente[] = [];
+      
+      for (const cliente of clientes || []) {
+        try {
+          // Tentar usar a função RPC para descriptografar
+          const { data: decryptedData, error: decryptError } = await supabase.rpc('get_cliente_with_decrypted_data', {
+            p_cliente_id: cliente.id
+          });
+
+          if (!decryptError && decryptedData && !decryptedData.error) {
+            clientesProcessados.push(decryptedData as unknown as Cliente);
+          } else {
+            // Se a RPC falhou, processar os dados brutos
+            clientesProcessados.push(this.processClienteData(cliente));
+          }
+        } catch (error) {
+          // Em caso de erro, processar os dados brutos
+          clientesProcessados.push(this.processClienteData(cliente));
+        }
+      }
 
       secureLog.clientOperation('all_clientes_processed', { 
         total: clientesProcessados.length,

@@ -36,15 +36,17 @@ export const RestrictedInputField: React.FC<RestrictedInputFieldProps> = ({
       name={name}
       render={({ field }) => {
         const hasDecryptionError = field.value && field.value.includes('[ERRO_DESCRIPTOGRAFIA]');
+        const isStillEncrypted = field.value && field.value.length > 50 && /^[a-f0-9]+$/i.test(field.value);
+        const hasError = hasDecryptionError || isStillEncrypted;
         
         return (
           <FormItem>
-            <FormLabel className={hasDecryptionError ? "text-orange-500" : ""}>
+            <FormLabel className={hasError ? "text-orange-500" : ""}>
               {label}
-              {hasDecryptionError && (
+              {hasError && (
                 <span className="ml-2 inline-flex items-center text-xs">
                   <AlertTriangle className="h-3 w-3 mr-1" />
-                  Erro na descriptografia
+                  {hasDecryptionError ? "Erro na descriptografia" : "Dados criptografados"}
                 </span>
               )}
             </FormLabel>
@@ -52,24 +54,27 @@ export const RestrictedInputField: React.FC<RestrictedInputFieldProps> = ({
               <div>
                 <Input 
                   type={type} 
-                  placeholder={hasDecryptionError ? "Digite novamente o valor" : placeholder}
+                  placeholder={hasError ? "Digite novamente o valor" : placeholder}
                   {...field} 
-                  value={hasDecryptionError ? "" : (field.value || "")}
+                  value={hasError ? "" : (field.value || "")}
                   onChange={(e) => {
                     field.onChange(e.target.value);
                   }}
                   disabled={disabled}
                   maxLength={maxLength}
-                  className={hasDecryptionError ? "border-orange-500 focus:border-orange-600" : ""}
+                  className={hasError ? "border-orange-500 focus:border-orange-600" : ""}
                 />
-                {maxLength && !hasDecryptionError && (
+                {maxLength && !hasError && (
                   <div className="text-xs text-gray-500 text-right mt-0.5">
                     {field.value?.length || 0}/{maxLength}
                   </div>
                 )}
-                {hasDecryptionError && (
+                {hasError && (
                   <div className="text-xs text-orange-600 mt-1">
-                    Os dados não puderam ser descriptografados. Digite novamente o valor para atualizá-lo.
+                    {hasDecryptionError 
+                      ? "Os dados não puderam ser descriptografados. Digite novamente o valor para atualizá-lo."
+                      : "Os dados estão criptografados. Digite novamente o valor para descriptografá-los."
+                    }
                   </div>
                 )}
               </div>
