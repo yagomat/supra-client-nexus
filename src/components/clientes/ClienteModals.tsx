@@ -41,6 +41,7 @@ export const ClienteModals = ({
   // Função para verificar se um valor parece estar criptografado
   const isEncrypted = (value: string | null): boolean => {
     if (!value) return false;
+    // Verificar se é um hash longo e hexadecimal (indicativo de criptografia)
     return value.length > 50 && /^[a-f0-9]+$/i.test(value);
   };
 
@@ -71,6 +72,19 @@ export const ClienteModals = ({
         </Button>
       </div>
     );
+  };
+
+  // Função para renderizar usuário (com verificação de criptografia)
+  const renderUsuarioField = (usuario: string | null) => {
+    if (!usuario) return "-";
+    
+    if (isEncrypted(usuario)) {
+      return (
+        <span className="text-orange-500 text-sm">Erro na descriptografia</span>
+      );
+    }
+
+    return <SafeText>{usuario}</SafeText>;
   };
 
   return (
@@ -139,13 +153,7 @@ export const ClienteModals = ({
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Usuário</p>
-                    <p>
-                      {isEncrypted(clienteDetalhes.usuario_aplicativo) ? (
-                        <span className="text-orange-500 text-sm">Erro na descriptografia</span>
-                      ) : (
-                        <SafeText>{clienteDetalhes.usuario_aplicativo}</SafeText>
-                      )}
-                    </p>
+                    <p>{renderUsuarioField(clienteDetalhes.usuario_aplicativo)}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Senha</p>
@@ -173,13 +181,7 @@ export const ClienteModals = ({
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Usuário 2</p>
-                      <p>
-                        {isEncrypted(clienteDetalhes.usuario_2) ? (
-                          <span className="text-orange-500 text-sm">Erro na descriptografia</span>
-                        ) : (
-                          <SafeText>{clienteDetalhes.usuario_2 || "-"}</SafeText>
-                        )}
-                      </p>
+                      <p>{renderUsuarioField(clienteDetalhes.usuario_2)}</p>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Senha 2</p>
@@ -231,13 +233,7 @@ export const ClienteModals = ({
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Usuário 2</p>
-                  <p>
-                    {isEncrypted(clienteDetalhes.usuario_2) ? (
-                      <span className="text-orange-500 text-sm">Erro na descriptografia</span>
-                    ) : (
-                      <SafeText>{clienteDetalhes.usuario_2 || "-"}</SafeText>
-                    )}
-                  </p>
+                  <p>{renderUsuarioField(clienteDetalhes.usuario_2)}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Senha 2</p>
