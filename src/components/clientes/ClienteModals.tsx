@@ -38,24 +38,9 @@ export const ClienteModals = ({
   const [showSenha1, setShowSenha1] = useState(false);
   const [showSenha2, setShowSenha2] = useState(false);
 
-  // Função para verificar se um valor parece estar criptografado
-  const isEncrypted = (value: string | null): boolean => {
-    if (!value) return false;
-    // Verificar se é um hash longo e hexadecimal (indicativo de criptografia)
-    return value.length > 50 && /^[a-f0-9]+$/i.test(value);
-  };
-
   // Função para exibir senha com toggle de visibilidade
   const renderSenhaField = (senha: string | null, show: boolean, toggle: () => void) => {
     if (!senha) return "-";
-    
-    if (isEncrypted(senha)) {
-      return (
-        <div className="text-orange-500 text-sm">
-          Erro na descriptografia
-        </div>
-      );
-    }
 
     return (
       <div className="flex items-center gap-2">
@@ -74,16 +59,9 @@ export const ClienteModals = ({
     );
   };
 
-  // Função para renderizar usuário (com verificação de criptografia)
+  // Função para renderizar usuário
   const renderUsuarioField = (usuario: string | null) => {
     if (!usuario) return "-";
-    
-    if (isEncrypted(usuario)) {
-      return (
-        <span className="text-orange-500 text-sm">Erro na descriptografia</span>
-      );
-    }
-
     return <SafeText>{usuario}</SafeText>;
   };
 
@@ -152,11 +130,11 @@ export const ClienteModals = ({
                     <p><SafeText>{clienteDetalhes.aplicativo}</SafeText></p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Usuário</p>
+                    <p className="text-sm font-medium text-muted-foreground">Usuário (MAC)</p>
                     <p>{renderUsuarioField(clienteDetalhes.usuario_aplicativo)}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Senha</p>
+                    <p className="text-sm font-medium text-muted-foreground">Senha (ID)</p>
                     {renderSenhaField(clienteDetalhes.senha_aplicativo, showSenha1, () => setShowSenha1(!showSenha1))}
                   </div>
                   <div className="col-span-2">

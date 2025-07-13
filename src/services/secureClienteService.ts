@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Cliente } from "@/types";
 
@@ -36,10 +35,13 @@ export class SecureClienteService {
         throw new Error("Dados do cliente incompletos após descriptografia");
       }
 
-      return clienteData;
+      // Limpar campos que parecem estar criptografados (falha na descriptografia)
+      const cleanedData = this.cleanEncryptedFields(clienteData);
+
+      return cleanedData;
     } catch (error) {
       console.error("Erro no SecureClienteService:", error);
-      // Em caso de erro, tentar buscar o cliente normal
+      // Em caso de erro, tentar buscar o cliente normal e limpar dados criptografados
       const { data: clienteData, error: clienteError } = await supabase
         .from('clientes')
         .select('*')
@@ -50,7 +52,7 @@ export class SecureClienteService {
         throw clienteError;
       }
 
-      return clienteData as Cliente;
+      return this.cleanEncryptedFields(clienteData as Cliente);
     }
   }
 
@@ -73,22 +75,26 @@ export class SecureClienteService {
         throw error;
       }
 
-      // Para cada cliente, descriptografar os dados sensíveis se necessário
+      // Para cada cliente, tentar descriptografar os dados sensíveis ou limpá-los se estiverem criptografados
       const clientesDescriptografados = await Promise.all(
         (clientes || []).map(async (cliente) => {
           try {
-            // Se os campos parecem estar criptografados (são muito longos e hexadecimais)
+            // Se os campos parecem estar criptografados, tentar descriptografar
             if (this.isEncrypted(cliente.usuario_aplicativo) || 
                 this.isEncrypted(cliente.senha_aplicativo) ||
-                this.isEncrypted(cliente.telefone)) {
+                this.isEncrypted(cliente.telefone) ||
+                this.isEncrypted(cliente.usuario_2) ||
+                this.isEncrypted(cliente.senha_2)) {
               
+              // Tentar usar a função de descriptografia
               return await this.getClienteWithDecryptedData(cliente.id);
             }
             
             return cliente;
           } catch (error) {
             console.warn(`Erro ao descriptografar cliente ${cliente.id}:`, error);
-            return cliente; // Retorna o cliente sem descriptografar se der erro
+            // Se der erro na descriptografia, limpar os campos criptografados
+            return this.cleanEncryptedFields(cliente);
           }
         })
       );
@@ -265,9 +271,41 @@ export class SecureClienteService {
     }
   }
 
+  /**
+   * Verifica se um valor parece estar criptografado
+   */
   private static isEncrypted(value: string | null): boolean {
     if (!value) return false;
-    // Verifica se o valor parece ser um hash criptografado (muito longo e hexadecimal)
-    return value.length > 50 && /^[a-f0-9]+$/i.test(value);
+    // Verifica se o valor parece ser um hash criptografado (muito longo e hexadecimal/base64)
+    return (
+      value.length > 50 && 
+      (/^[a-f0-9]+$/i.test(value) || /^[A-Za-z0-9+/=]+$/.test(value))
+    );
+  }
+
+  /**
+   * Limpa campos que estão visivelmente criptografados, substituindo por null
+   */
+  private static cleanEncryptedFields(cliente: Cliente): Cliente {
+    const cleaned = { ...cliente };
+    
+    // Campos sensíveis que devem ser verificados
+    const sensitiveFields: (keyof Cliente)[] = [
+      'usuario_aplicativo',
+      'senha_aplicativo',
+      'usuario_2', 
+      'senha_2',
+      'telefone'
+    ];
+
+    sensitiveFields.forEach(field => {
+      const value = cleaned[field] as string | null;
+      if (this.isEncrypted(value)) {
+        console.warn(`Campo ${field} parece estar criptografado, limpando para null`);
+        (cleaned[field] as any) = null;
+      }
+    });
+
+    return cleaned;
   }
 }
