@@ -1,4 +1,5 @@
 
+
 import { supabase } from "@/integrations/supabase/client";
 import { secureLog } from "@/utils/secureLogger";
 
@@ -12,13 +13,13 @@ export interface RateLimitResult {
 }
 
 /**
- * Verificar rate limiting no backend (Supabase) - configuração mais permissiva
+ * Verificar rate limiting no backend (Supabase) - configuração muito permissiva
  */
 export const checkRateLimit = async (
   identifier: string, // email ou IP
   operation: string,
-  maxRequests: number = 20, // Aumentado de 5 para 20
-  windowMinutes: number = 5  // Reduzido de 15 para 5 minutos
+  maxRequests: number = 100, // Aumentado de 20 para 100
+  windowMinutes: number = 1   // Reduzido de 5 para 1 minuto
 ): Promise<RateLimitResult> => {
   try {
     const { data, error } = await supabase.rpc('check_auth_rate_limit_enhanced', {
@@ -84,12 +85,12 @@ export const logAuthAttempt = async (
 };
 
 /**
- * Rate limiting por IP (proteção adicional) - mais permissivo
+ * Rate limiting por IP (proteção adicional) - muito permissivo
  */
 export const checkIPRateLimit = async (
   ipAddress?: string,
-  maxRequests: number = 50, // Aumentado de 20 para 50
-  windowMinutes: number = 5  // Mantido em 5 minutos
+  maxRequests: number = 200, // Aumentado de 50 para 200
+  windowMinutes: number = 1   // Mantido em 1 minuto
 ): Promise<boolean> => {
   try {
     const ip = ipAddress || getClientIP();
@@ -129,3 +130,4 @@ const getClientIP = (): string => {
 export const clearLoginAttempts = (email: string): void => {
   secureLog.info('Rate limit clear requested (now handled by backend)', { email });
 };
+

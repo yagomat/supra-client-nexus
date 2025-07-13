@@ -1,20 +1,21 @@
 
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { logAuditEvent } from "./auditLog";
 import { setupSessionExpiration } from "./sessionUtils";
 import { checkRateLimit, logAuthAttempt, checkIPRateLimit } from "./rateLimit";
 
-// Login seguro com rate limiting mais permissivo
+// Login seguro com rate limiting muito permissivo
 export const secureSignIn = async (email: string, password: string): Promise<boolean> => {
   try {
-    // 1. Verificar rate limiting por email - limites mais altos
-    const emailRateLimit = await checkRateLimit(email, 'login', 20, 5); // 20 tentativas em 5 minutos
+    // 1. Verificar rate limiting por email - limites muito altos
+    const emailRateLimit = await checkRateLimit(email, 'login', 100, 1); // 100 tentativas em 1 minuto
     
     if (!emailRateLimit.allowed) {
       const resetTime = emailRateLimit.next_allowed_at 
         ? new Date(emailRateLimit.next_allowed_at).toLocaleTimeString()
-        : 'em alguns minutos';
+        : 'em alguns momentos';
         
       toast.error("Muitas tentativas de login", {
         description: `Tente novamente ${resetTime}. (${emailRateLimit.current_attempts}/${emailRateLimit.max_attempts})`,
@@ -31,12 +32,12 @@ export const secureSignIn = async (email: string, password: string): Promise<boo
       return false;
     }
 
-    // 2. Verificar rate limiting por IP (proteção adicional) - mais permissivo
-    const ipAllowed = await checkIPRateLimit(undefined, 50, 5); // 50 tentativas em 5 minutos
+    // 2. Verificar rate limiting por IP (proteção adicional) - muito permissivo
+    const ipAllowed = await checkIPRateLimit(undefined, 200, 1); // 200 tentativas em 1 minuto
     
     if (!ipAllowed) {
       toast.error("Muitas tentativas detectadas", {
-        description: "Aguarde alguns minutos antes de tentar novamente.",
+        description: "Aguarde alguns momentos antes de tentar novamente.",
       });
       
       // Registrar tentativa bloqueada por IP
@@ -84,7 +85,7 @@ export const secureSignIn = async (email: string, password: string): Promise<boo
         : "Falha na validação";
       
       const errorDescription = result.error || (result.rate_limited 
-        ? "Tente novamente em alguns minutos." 
+        ? "Tente novamente em alguns momentos." 
         : "Dados inválidos.");
 
       toast.error(errorMessage, {
@@ -162,3 +163,4 @@ export const secureSignIn = async (email: string, password: string): Promise<boo
     return false;
   }
 };
+
