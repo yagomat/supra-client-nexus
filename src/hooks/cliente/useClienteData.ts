@@ -55,7 +55,7 @@ export const useClienteData = () => {
         if (isMounted) {
           toast({
             title: "Erro ao carregar cliente",
-            description: "Não foi possível carregar os dados do cliente. Dados sensíveis estão protegidos por criptografia.",
+            description: "Não foi possível carregar os dados do cliente. Tentando novamente...",
             variant: "destructive",
           });
         }

@@ -6,6 +6,9 @@ import { formatDate } from "@/utils/dateUtils";
 import { Badge } from "@/components/ui/badge";
 import { formatPhoneNumber } from "./table/PhoneFormatter";
 import { SafeText } from "@/components/security/SafeText";
+import { Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface ClienteModalsProps {
   clienteDetalhes: Cliente | null;
@@ -32,6 +35,44 @@ export const ClienteModals = ({
   setClienteParaExcluir,
   handleExcluir
 }: ClienteModalsProps) => {
+  const [showSenha1, setShowSenha1] = useState(false);
+  const [showSenha2, setShowSenha2] = useState(false);
+
+  // Função para verificar se um valor parece estar criptografado
+  const isEncrypted = (value: string | null): boolean => {
+    if (!value) return false;
+    return value.length > 50 && /^[a-f0-9]+$/i.test(value);
+  };
+
+  // Função para exibir senha com toggle de visibilidade
+  const renderSenhaField = (senha: string | null, show: boolean, toggle: () => void) => {
+    if (!senha) return "-";
+    
+    if (isEncrypted(senha)) {
+      return (
+        <div className="text-orange-500 text-sm">
+          Erro na descriptografia
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center gap-2">
+        <span className="font-mono">
+          {show ? senha : "*".repeat(Math.min(senha.length, 8))}
+        </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={toggle}
+          className="h-6 w-6 p-0"
+        >
+          {show ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+        </Button>
+      </div>
+    );
+  };
+
   return (
     <>
       {/* Modal para visualizar todos os detalhes do cliente */}
@@ -98,11 +139,17 @@ export const ClienteModals = ({
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Usuário</p>
-                    <p><SafeText>{clienteDetalhes.usuario_aplicativo}</SafeText></p>
+                    <p>
+                      {isEncrypted(clienteDetalhes.usuario_aplicativo) ? (
+                        <span className="text-orange-500 text-sm">Erro na descriptografia</span>
+                      ) : (
+                        <SafeText>{clienteDetalhes.usuario_aplicativo}</SafeText>
+                      )}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Senha</p>
-                    <p><SafeText>{clienteDetalhes.senha_aplicativo}</SafeText></p>
+                    {renderSenhaField(clienteDetalhes.senha_aplicativo, showSenha1, () => setShowSenha1(!showSenha1))}
                   </div>
                   <div className="col-span-2">
                     <p className="text-sm font-medium text-muted-foreground">Data da Licença</p>
@@ -126,11 +173,17 @@ export const ClienteModals = ({
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Usuário 2</p>
-                      <p><SafeText>{clienteDetalhes.usuario_2 || "-"}</SafeText></p>
+                      <p>
+                        {isEncrypted(clienteDetalhes.usuario_2) ? (
+                          <span className="text-orange-500 text-sm">Erro na descriptografia</span>
+                        ) : (
+                          <SafeText>{clienteDetalhes.usuario_2 || "-"}</SafeText>
+                        )}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Senha 2</p>
-                      <p><SafeText>{clienteDetalhes.senha_2 || "-"}</SafeText></p>
+                      {renderSenhaField(clienteDetalhes.senha_2, showSenha2, () => setShowSenha2(!showSenha2))}
                     </div>
                     <div className="col-span-2">
                       <p className="text-sm font-medium text-muted-foreground">Data da Licença 2</p>
@@ -178,11 +231,17 @@ export const ClienteModals = ({
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Usuário 2</p>
-                  <p><SafeText>{clienteDetalhes.usuario_2 || "-"}</SafeText></p>
+                  <p>
+                    {isEncrypted(clienteDetalhes.usuario_2) ? (
+                      <span className="text-orange-500 text-sm">Erro na descriptografia</span>
+                    ) : (
+                      <SafeText>{clienteDetalhes.usuario_2 || "-"}</SafeText>
+                    )}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Senha 2</p>
-                  <p><SafeText>{clienteDetalhes.senha_2 || "-"}</SafeText></p>
+                  {renderSenhaField(clienteDetalhes.senha_2, showSenha2, () => setShowSenha2(!showSenha2))}
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Data da Licença 2</p>
@@ -194,7 +253,6 @@ export const ClienteModals = ({
         </DialogContent>
       </Dialog>
 
-      {/* Modal para visualizar observações */}
       <Dialog open={isObservacoesModalOpen} onOpenChange={setIsObservacoesModalOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -208,7 +266,6 @@ export const ClienteModals = ({
         </DialogContent>
       </Dialog>
 
-      {/* Confirmação de exclusão */}
       <AlertDialog open={!!clienteParaExcluir} onOpenChange={(open) => !open && setClienteParaExcluir(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -220,7 +277,7 @@ export const ClienteModals = ({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleExcluir}>Excluir</AlertDialogAction>
-          </AlertDialogFooter>
+            </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>
