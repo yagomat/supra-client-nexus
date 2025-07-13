@@ -33,7 +33,7 @@ export const useOptimizedClienteFetch = () => {
     }
   }, [toast]);
 
-  const handleExcluir = useCallback(async (clienteId: string) => {
+  const handleExcluir = useCallback(async (clienteId: string): Promise<void> => {
     try {
       await deleteCliente(clienteId);
       
@@ -52,6 +52,7 @@ export const useOptimizedClienteFetch = () => {
         description: "Não foi possível excluir o cliente.",
         variant: "destructive",
       });
+      throw error; // Re-throw para que o caller saiba que houve erro
     }
   }, [toast]);
 
