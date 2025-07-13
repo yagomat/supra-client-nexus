@@ -4,13 +4,12 @@ import { toast } from "sonner";
 import { logAuditEvent } from "./auditLog";
 import { setupSessionExpiration } from "./sessionUtils";
 import { checkRateLimit, logAuthAttempt, checkIPRateLimit } from "./rateLimit";
-import { secureLog } from "@/utils/secureLogger";
 
-// Login seguro com limites de rate limiting mais permissivos
+// Login seguro com auditoria consolidada
 export const secureSignIn = async (email: string, password: string): Promise<boolean> => {
   try {
-    // 1. Verificar rate limiting por email - limites mais permissivos
-    const emailRateLimit = await checkRateLimit(email, 'login', 50, 5); // 50 tentativas em 5 minutos
+    // 1. Verificar rate limiting por email
+    const emailRateLimit = await checkRateLimit(email, 'login', 5, 15);
     
     if (!emailRateLimit.allowed) {
       const resetTime = emailRateLimit.next_allowed_at 
@@ -21,6 +20,7 @@ export const secureSignIn = async (email: string, password: string): Promise<boo
         description: `Tente novamente ${resetTime}. (${emailRateLimit.current_attempts}/${emailRateLimit.max_attempts})`,
       });
       
+      // Registrar apenas uma vez - tentativa bloqueada por rate limit
       await logAuditEvent("auth_login_attempt", { 
         email, 
         success: false, 
@@ -31,14 +31,15 @@ export const secureSignIn = async (email: string, password: string): Promise<boo
       return false;
     }
 
-    // 2. Verificar rate limiting por IP - mais permissivo
-    const ipAllowed = await checkIPRateLimit(undefined, 100, 5); // 100 tentativas em 5 minutos
+    // 2. Verificar rate limiting por IP (proteção adicional)
+    const ipAllowed = await checkIPRateLimit();
     
     if (!ipAllowed) {
       toast.error("Muitas tentativas detectadas", {
         description: "Aguarde alguns minutos antes de tentar novamente.",
       });
       
+      // Registrar tentativa bloqueada por IP
       await logAuditEvent("auth_login_attempt", { 
         email, 
         success: false, 
@@ -49,7 +50,7 @@ export const secureSignIn = async (email: string, password: string): Promise<boo
       return false;
     }
 
-    // 3. Usar função de validação segura do backend com limites mais permissivos
+    // 3. Usar função de validação segura do backend
     const { data: validationResult, error: validationError } = await supabase.rpc('secure_auth_attempt', {
       p_email: email,
       p_password: password,
@@ -60,26 +61,65 @@ export const secureSignIn = async (email: string, password: string): Promise<boo
 
     if (validationError) {
       console.error("Erro na validação:", validationError);
-      // Não mostrar toast de erro para não confundir o usuário
-      secureLog.warn('Validation error, proceeding with direct login', { error: validationError.message });
+      toast.error("Erro de validação", {
+        description: "Erro interno de validação.",
+      });
+      
+      // Registrar erro de validação
+      await logAuditEvent("auth_login_attempt", { 
+        email, 
+        success: false, 
+        error: validationError.message,
+        ip_address: 'client-side',
+        user_agent: navigator.userAgent 
+      });
+      return false;
     }
 
-    // 4. Se a validação do backend falhar, tentar login direto (mais permissivo)
-    if (validationError || !(validationResult as any)?.success) {
-      console.log("Tentando login direto...");
+    const result = validationResult as { 
+      success: boolean; 
+      error?: string; 
+      rate_limited?: boolean;
+      sanitized_email?: string;
+    };
+    
+    if (!result.success) {
+      const errorMessage = result.rate_limited 
+        ? "Muitas tentativas de login" 
+        : "Falha na validação";
+      
+      const errorDescription = result.error || (result.rate_limited 
+        ? "Tente novamente em 15 minutos." 
+        : "Dados inválidos.");
+
+      toast.error(errorMessage, {
+        description: errorDescription,
+      });
+      
+      // Registrar falha na validação
+      await logAuditEvent("auth_login_attempt", { 
+        email: result.sanitized_email || email, 
+        success: false, 
+        error: result.error,
+        rate_limited: result.rate_limited,
+        ip_address: 'client-side',
+        user_agent: navigator.userAgent 
+      });
+      return false;
     }
 
-    // 5. Autenticar com Supabase diretamente
+    // 4. Autenticar com Supabase usando dados sanitizados
     const { error, data } = await supabase.auth.signInWithPassword({
-      email: email.toLowerCase().trim(),
+      email: result.sanitized_email || email,
       password: password,
     });
 
-    // 6. Registrar resultado da autenticação
+    // 5. Registrar resultado da autenticação (sempre, independente do resultado)
     const authSuccess = !error;
+    const sanitizedEmail = result.sanitized_email || email;
 
     await logAuditEvent("auth_login_attempt", { 
-      email: email.toLowerCase().trim(), 
+      email: sanitizedEmail, 
       success: authSuccess, 
       error: error?.message || null,
       user_id: data.user?.id || null,
@@ -89,20 +129,18 @@ export const secureSignIn = async (email: string, password: string): Promise<boo
 
     if (error) {
       toast.error("Falha na autenticação", {
-        description: error.message === "Invalid login credentials" 
-          ? "Email ou senha incorretos." 
-          : error.message,
+        description: error.message,
       });
       return false;
     }
 
-    // 7. Registrar login bem-sucedido
+    // 6. Registrar login bem-sucedido (evento separado para diferenciação)
     await logAuditEvent("login_success", { 
-      email: email.toLowerCase().trim(),
+      email: sanitizedEmail,
       user_id: data.user?.id 
     }, data.user?.id);
 
-    // 8. Configurar expiração de sessão (8 horas)
+    // 7. Configurar expiração de sessão (8 horas)
     setupSessionExpiration(async () => {
       await supabase.auth.signOut();
       toast.warning("Sua sessão expirou", {
@@ -116,7 +154,7 @@ export const secureSignIn = async (email: string, password: string): Promise<boo
     
     // Registrar erro inesperado
     await logAuditEvent("auth_login_attempt", { 
-      email: email.toLowerCase().trim(), 
+      email, 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error',
       ip_address: 'client-side',

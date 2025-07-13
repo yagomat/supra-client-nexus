@@ -12,13 +12,14 @@ export interface RateLimitResult {
 }
 
 /**
- * Verificar rate limiting no backend (Supabase) - versão mais permissiva
+ * Verificar rate limiting no backend (Supabase)
+ * Muito mais seguro que o Map em memória
  */
 export const checkRateLimit = async (
   identifier: string, // email ou IP
   operation: string,
-  maxRequests: number = 50, // Aumentado de 5 para 50
-  windowMinutes: number = 5 // Reduzido de 15 para 5 minutos
+  maxRequests: number = 5,
+  windowMinutes: number = 15
 ): Promise<RateLimitResult> => {
   try {
     const { data, error } = await supabase.rpc('check_auth_rate_limit_enhanced', {
@@ -84,12 +85,12 @@ export const logAuthAttempt = async (
 };
 
 /**
- * Rate limiting por IP (proteção adicional) - mais permissivo
+ * Rate limiting por IP (proteção adicional)
  */
 export const checkIPRateLimit = async (
   ipAddress?: string,
-  maxRequests: number = 100, // Aumentado de 20 para 100
-  windowMinutes: number = 5 // Mantido em 5 minutos
+  maxRequests: number = 20,
+  windowMinutes: number = 5
 ): Promise<boolean> => {
   try {
     const ip = ipAddress || getClientIP();
