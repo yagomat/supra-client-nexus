@@ -25,6 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [sessionExpiresAt, setSessionExpiresAt] = useState<Date | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   
   const authOperations = useAuthOperations();
 
@@ -51,6 +52,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null);
           setSessionExpiresAt(null);
         }
+        
+        // Importante: definir loading como false após qualquer mudança de estado
+        setAuthLoading(false);
       }
     );
 
@@ -70,6 +74,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Calcular tempo de expiração baseado no token JWT
         setSessionExpiresAt(calculateExpiryTime(currentSession));
       }
+      
+      // Importante: sempre definir loading como false após verificação inicial
+      setAuthLoading(false);
     });
 
     return () => {
@@ -81,12 +88,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Use session monitoring hook
   useSessionMonitor(sessionExpiresAt, user, authOperations.signOut);
 
+  // Combinar os loadings - se qualquer um estiver true, mostrar loading
+  const combinedLoading = authLoading || authOperations.loading;
+
   return (
     <AuthContext.Provider
       value={{
         user,
         session,
-        loading: authOperations.loading,
+        loading: combinedLoading,
         signIn: authOperations.signIn,
         signUp: authOperations.signUp,
         signOut: authOperations.signOut,

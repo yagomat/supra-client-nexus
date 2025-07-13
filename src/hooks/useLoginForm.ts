@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { z } from "zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { emailSchema } from "@/services/auth/schemas";
@@ -15,6 +15,7 @@ export const useLoginForm = () => {
   
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
   // Limpar erros quando o usuário digita
@@ -62,7 +63,11 @@ export const useLoginForm = () => {
       await signIn(email, password);
       
       console.log('Login realizado com sucesso');
-      navigate("/dashboard");
+      
+      // Verificar se há um redirect específico
+      const from = (location.state as any)?.from || "/dashboard";
+      navigate(from);
+      
     } catch (error) {
       console.error("Erro ao fazer login", error);
       
