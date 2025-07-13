@@ -104,71 +104,49 @@ export const useEditCliente = () => {
     }
   }, [possuiTelaAdicional, form]);
 
-  // Função para lidar com o submit do formulário
+  // Função simplificada para lidar com o submit do formulário
   const handleFormSubmit = async (data: ClienteFormValues) => {
     if (!id) {
       console.error("ID do cliente não encontrado");
       return;
     }
     
-    console.log("Iniciando submit com dados:", data);
+    console.log("=== INICIANDO SUBMIT ===");
+    console.log("ID do cliente:", id);
+    console.log("Dados do formulário:", data);
     
-    // Validar campos obrigatórios
-    const requiredFields = [
-      { field: 'nome', name: 'Nome' },
-      { field: 'servidor', name: 'Servidor' }, 
-      { field: 'aplicativo', name: 'Aplicativo' }
-    ];
-
-    const missingFields = requiredFields.filter(({ field }) => !data[field as keyof ClienteFormValues]);
-
-    if (missingFields.length > 0) {
-      missingFields.forEach(({ field }) => {
-        form.setError(field as any, {
-          type: 'required',
-          message: 'Este campo é obrigatório'
-        });
-      });
-
-      toast({
-        title: "Campos obrigatórios não preenchidos",
-        description: `Por favor, preencha: ${missingFields.map(f => f.name).join(', ')}`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Preparar dados para atualização
-    const updateData: Partial<Cliente> = {
-      nome: data.nome,
-      telefone: data.telefone?.trim() || null,
-      codigo_pais_telefone: data.codigo_pais_telefone || "+55",
-      uf: data.uf?.trim() || null,
-      servidor: data.servidor,
-      dia_vencimento: data.dia_vencimento,
-      valor_plano: data.valor_plano?.trim() ? Number(data.valor_plano) : null,
-      dispositivo_smart: data.dispositivo_smart?.trim() || null,
-      aplicativo: data.aplicativo,
-      usuario_aplicativo: data.usuario_aplicativo?.trim() || null,
-      senha_aplicativo: data.senha_aplicativo?.trim() || null,
-      data_licenca_aplicativo: data.data_licenca_aplicativo?.trim() || null,
-      possui_tela_adicional: data.possui_tela_adicional || false,
-      dispositivo_smart_2: data.possui_tela_adicional ? (data.dispositivo_smart_2?.trim() || null) : null,
-      aplicativo_2: data.possui_tela_adicional ? (data.aplicativo_2?.trim() || null) : null,
-      usuario_2: data.possui_tela_adicional ? (data.usuario_2?.trim() || null) : null,
-      senha_2: data.possui_tela_adicional ? (data.senha_2?.trim() || null) : null,
-      data_licenca_2: data.possui_tela_adicional ? (data.data_licenca_2?.trim() || null) : null,
-      observacoes: data.observacoes?.trim() || null,
-      status: data.status || "inativo"
-    };
-
-    console.log("Dados preparados para atualização:", updateData);
-
     try {
       setIsSubmitting(true);
       
+      // Preparar dados básicos - sem validação extra
+      const updateData = {
+        nome: data.nome,
+        telefone: data.telefone || null,
+        codigo_pais_telefone: data.codigo_pais_telefone || "+55",
+        uf: data.uf || null,
+        servidor: data.servidor,
+        dia_vencimento: data.dia_vencimento,
+        valor_plano: data.valor_plano ? Number(data.valor_plano) : null,
+        dispositivo_smart: data.dispositivo_smart || null,
+        aplicativo: data.aplicativo,
+        usuario_aplicativo: data.usuario_aplicativo || null,
+        senha_aplicativo: data.senha_aplicativo || null,
+        data_licenca_aplicativo: data.data_licenca_aplicativo || null,
+        possui_tela_adicional: data.possui_tela_adicional || false,
+        dispositivo_smart_2: data.possui_tela_adicional ? (data.dispositivo_smart_2 || null) : null,
+        aplicativo_2: data.possui_tela_adicional ? (data.aplicativo_2 || null) : null,
+        usuario_2: data.possui_tela_adicional ? (data.usuario_2 || null) : null,
+        senha_2: data.possui_tela_adicional ? (data.senha_2 || null) : null,
+        data_licenca_2: data.possui_tela_adicional ? (data.data_licenca_2 || null) : null,
+        observacoes: data.observacoes || null,
+        status: data.status || "inativo"
+      };
+
+      console.log("Dados preparados para envio:", updateData);
+
+      // Chamar diretamente o Supabase sem usar funções seguras
       const result = await SecureClienteService.updateCliente(id, updateData);
-      console.log("Resultado da atualização:", result);
+      console.log("Resultado da atualização (após service):", result);
       
       toast({
         title: "Cliente atualizado com sucesso",
@@ -177,7 +155,10 @@ export const useEditCliente = () => {
       
       navigate("/clientes");
     } catch (error) {
-      console.error("Erro detalhado ao atualizar cliente:", error);
+      console.error("=== ERRO NO SUBMIT ===");
+      console.error("Erro completo:", error);
+      console.error("Stack trace:", error instanceof Error ? error.stack : 'No stack trace');
+      
       toast({
         title: "Erro ao atualizar cliente",
         description: error instanceof Error ? error.message : "Ocorreu um erro interno. Tente novamente.",
@@ -185,6 +166,7 @@ export const useEditCliente = () => {
       });
     } finally {
       setIsSubmitting(false);
+      console.log("=== FIM DO SUBMIT ===");
     }
   };
 

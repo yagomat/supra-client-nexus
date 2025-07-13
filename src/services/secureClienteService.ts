@@ -122,6 +122,8 @@ export class SecureClienteService {
         throw new Error("Usuário não autenticado");
       }
 
+      console.log("Criando cliente com dados:", clienteData);
+
       const { data, error } = await supabase
         .from('clientes')
         .insert({
@@ -137,6 +139,7 @@ export class SecureClienteService {
         throw error;
       }
 
+      console.log("Cliente criado com sucesso:", data);
       return data;
     } catch (error) {
       console.error("Erro ao criar cliente:", error);
@@ -151,8 +154,12 @@ export class SecureClienteService {
         throw new Error("Usuário não autenticado");
       }
 
-      console.log("Atualizando cliente com dados:", clienteData);
+      console.log("=== ATUALIZANDO CLIENTE VIA SUPABASE ===");
+      console.log("ID:", id);
+      console.log("User ID:", currentUser.user.id);
+      console.log("Dados a serem atualizados:", clienteData);
 
+      // Fazer update direto no Supabase sem usar RPC
       const { data, error } = await supabase
         .from('clientes')
         .update(clienteData)
@@ -162,14 +169,24 @@ export class SecureClienteService {
         .single();
 
       if (error) {
-        console.error("Erro na atualização do cliente:", error);
-        throw error;
+        console.error("=== ERRO NA ATUALIZAÇÃO SUPABASE ===");
+        console.error("Código do erro:", error.code);
+        console.error("Mensagem do erro:", error.message);
+        console.error("Detalhes do erro:", error.details);
+        console.error("Hint do erro:", error.hint);
+        throw new Error(`Erro na atualização: ${error.message}`);
       }
 
-      console.log("Cliente atualizado com sucesso:", data);
+      if (!data) {
+        throw new Error("Nenhum dado retornado após a atualização");
+      }
+
+      console.log("=== CLIENTE ATUALIZADO COM SUCESSO ===");
+      console.log("Dados atualizados:", data);
       return data;
     } catch (error) {
-      console.error("Erro ao atualizar cliente:", error);
+      console.error("=== ERRO GERAL NA ATUALIZAÇÃO ===");
+      console.error("Erro:", error);
       throw error;
     }
   }
