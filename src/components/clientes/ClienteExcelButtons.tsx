@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Cliente } from "@/types";
-import { ExcelButtonsActions } from "./excel/ExcelButtonsActions";
+import { SecureExcelActions } from "./excel/SecureExcelActions";
 import { ExcelButtonsInfo } from "./excel/ExcelButtonsInfo";
 import { ImportErrorDialog } from "./excel/ImportErrorDialog";
 
@@ -25,11 +25,7 @@ export const ClienteExcelButtons = ({
   return (
     <>
       <div className="flex flex-col gap-2">
-        <ExcelButtonsActions 
-          clientes={clientes}
-          onImportSuccess={onImportSuccess}
-          onImportErrors={handleImportErrors}
-        />
+        <SecureExcelActions clientesCount={clientes.length} />
         
         <ExcelButtonsInfo />
       </div>
