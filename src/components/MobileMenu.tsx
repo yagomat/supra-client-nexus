@@ -21,8 +21,8 @@ import {
 } from "lucide-react";
 
 export function MobileMenu() {
-  const { user, signOut } = useAuth();
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   const navItems = [
     {

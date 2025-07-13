@@ -14,26 +14,26 @@ export const useOptimizedClienteFilters = (clientes: Cliente[]) => {
   const getDefaultStatus = async (): Promise<StatusFilterType> => {
     try {
       const saved = await CryptoStorage.getItem<StatusFilterType>("defaultStatusFilter");
-      return saved || "todos";
+      return saved || "todos"; // Padrão: "todos"
     } catch (error) {
       logError(error, 'getDefaultStatus');
-      return "todos";
+      return "todos"; // Padrão: "todos"
     }
   };
 
   const getDefaultOrder = async (): Promise<ClienteOrderType> => {
     try {
       const saved = await CryptoStorage.getItem<ClienteOrderType>("defaultOrderFilter");
-      return saved || "data";
+      return saved || "data"; // Padrão: "data" (que corresponde a "cadastro")
     } catch (error) {
       logError(error, 'getDefaultOrder');
-      return "data";
+      return "data"; // Padrão: "data" (que corresponde a "cadastro")
     }
   };
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilterType>("todos");
-  const [orderBy, setOrderBy] = useState<ClienteOrderType>("data");
+  const [statusFilter, setStatusFilter] = useState<StatusFilterType>("todos"); // Padrão: "todos"
+  const [orderBy, setOrderBy] = useState<ClienteOrderType>("data"); // Padrão: "data"
   const [clientesPayments, setClientesPayments] = useState<Map<string, Pagamento[]>>(new Map());
   
   // Carregar configurações padrão na inicialização
@@ -46,6 +46,9 @@ export const useOptimizedClienteFilters = (clientes: Cliente[]) => {
         setOrderBy(defaultOrder);
       } catch (error) {
         logError(error, 'loadDefaultFilters');
+        // Em caso de erro, usar os padrões explícitos
+        setStatusFilter("todos");
+        setOrderBy("data");
       }
     };
     

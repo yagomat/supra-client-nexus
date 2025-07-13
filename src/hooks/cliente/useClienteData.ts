@@ -7,6 +7,7 @@ import { SecureClienteService } from "@/services/secureClienteService";
 import { getPagamentos } from "@/services/pagamentoService";
 import { getValoresPredefinidos } from "@/services/valoresPredefinidosService";
 import { ValoresPredefinidos } from "@/types";
+import { secureLog } from "@/utils/secureLogger";
 
 export const useClienteData = () => {
   const { id } = useParams<{ id: string }>();
@@ -31,6 +32,8 @@ export const useClienteData = () => {
       try {
         if (isMounted) setLoading(true);
         
+        secureLog.clientOperation('fetch_cliente_data_start', { cliente_id: id });
+        
         // Promise.all for parallel fetching
         const [predefinidos, clienteData] = await Promise.all([
           getValoresPredefinidos(),
@@ -42,7 +45,7 @@ export const useClienteData = () => {
           setValoresPredefinidos(predefinidos);
           setCliente(clienteData);
           
-          console.log("Cliente carregado com dados descriptografados:", clienteData);
+          secureLog.clientOperation('cliente_data_loaded', { cliente_id: id });
           
           // Buscar pagamentos relacionados a este cliente
           const pagamentosData = await getPagamentos(id);
@@ -51,11 +54,14 @@ export const useClienteData = () => {
           }
         }
       } catch (error) {
-        console.error("Erro ao buscar dados do cliente:", error);
+        secureLog.error("Erro ao buscar dados do cliente", { 
+          cliente_id: id,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
         if (isMounted) {
           toast({
             title: "Erro ao carregar cliente",
-            description: "Não foi possível carregar os dados do cliente. Dados sensíveis estão protegidos por criptografia.",
+            description: "Não foi possível carregar os dados do cliente. Tentando novamente...",
             variant: "destructive",
           });
         }

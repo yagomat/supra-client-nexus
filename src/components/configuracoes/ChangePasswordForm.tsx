@@ -122,6 +122,7 @@ export function ChangePasswordForm() {
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
           required
+          maxLength={50}
         />
       </div>
       
@@ -129,15 +130,22 @@ export function ChangePasswordForm() {
         <label htmlFor="newPassword" className="text-sm font-medium">
           Nova Senha
         </label>
-        <Input
-          id="newPassword"
-          type="password"
-          placeholder="••••••••"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          required
-          className={passwordError ? "border-destructive" : ""}
-        />
+        <div>
+          <Input
+            id="newPassword"
+            type="password"
+            placeholder="••••••••"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            required
+            maxLength={50}
+            className={passwordError ? "border-destructive" : ""}
+          />
+          <div className="text-xs text-gray-500 text-right mt-0.5">
+            {newPassword.length}/50
+          </div>
+        </div>
+        
         {newPassword && passwordStrength && (
           <div className="flex items-center space-x-2 text-sm">
             <div 
@@ -152,46 +160,37 @@ export function ChangePasswordForm() {
             <span>{passwordFeedback}</span>
           </div>
         )}
+        
         <div className="space-y-1">
           <div className="flex items-center space-x-2 text-sm">
-            {/[A-Z]/.test(newPassword) ? (
+            {/[a-zA-Z]/.test(newPassword) ? (
               <Check size={16} className="text-green-500" />
             ) : (
-              <X size={16} className="text-gray-300" />
+              <X size={16} className="text-red-500" />
             )}
-            <span>Pelo menos uma letra maiúscula</span>
-          </div>
-          <div className="flex items-center space-x-2 text-sm">
-            {/[a-z]/.test(newPassword) ? (
-              <Check size={16} className="text-green-500" />
-            ) : (
-              <X size={16} className="text-gray-300" />
-            )}
-            <span>Pelo menos uma letra minúscula</span>
+            <span className={/[a-zA-Z]/.test(newPassword) ? "text-green-700" : "text-red-600"}>
+              Pelo menos uma letra (obrigatório)
+            </span>
           </div>
           <div className="flex items-center space-x-2 text-sm">
             {/[0-9]/.test(newPassword) ? (
               <Check size={16} className="text-green-500" />
             ) : (
-              <X size={16} className="text-gray-300" />
+              <X size={16} className="text-red-500" />
             )}
-            <span>Pelo menos um número</span>
-          </div>
-          <div className="flex items-center space-x-2 text-sm">
-            {/[^A-Za-z0-9]/.test(newPassword) ? (
-              <Check size={16} className="text-green-500" />
-            ) : (
-              <X size={16} className="text-gray-300" />
-            )}
-            <span>Pelo menos um caractere especial</span>
+            <span className={/[0-9]/.test(newPassword) ? "text-green-700" : "text-red-600"}>
+              Pelo menos um número (obrigatório)
+            </span>
           </div>
           <div className="flex items-center space-x-2 text-sm">
             {newPassword.length >= 8 ? (
               <Check size={16} className="text-green-500" />
             ) : (
-              <X size={16} className="text-gray-300" />
+              <X size={16} className="text-red-500" />
             )}
-            <span>Mínimo de 8 caracteres</span>
+            <span className={newPassword.length >= 8 ? "text-green-700" : "text-red-600"}>
+              Mínimo de 8 caracteres (obrigatório)
+            </span>
           </div>
         </div>
       </div>
@@ -200,15 +199,21 @@ export function ChangePasswordForm() {
         <label htmlFor="confirmPassword" className="text-sm font-medium">
           Confirmar Nova Senha
         </label>
-        <Input
-          id="confirmPassword"
-          type="password"
-          placeholder="••••••••"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          required
-          className={passwordError ? "border-destructive" : ""}
-        />
+        <div>
+          <Input
+            id="confirmPassword"
+            type="password"
+            placeholder="••••••••"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            maxLength={50}
+            className={passwordError ? "border-destructive" : ""}
+          />
+          <div className="text-xs text-gray-500 text-right mt-0.5">
+            {confirmPassword.length}/50
+          </div>
+        </div>
         {passwordError && (
           <p className="text-destructive text-sm">{passwordError}</p>
         )}

@@ -48,9 +48,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
+    let mounted = true;
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
+        if (!mounted) return;
+        
+        console.log('Auth state change:', event, currentSession?.user?.id);
+        
         setSession(currentSession);
         if (currentSession && currentSession.user) {
           setUser({
@@ -70,6 +76,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      if (!mounted) return;
+      
+      console.log('Initial session check:', currentSession?.user?.id);
+      
       setSession(currentSession);
       if (currentSession && currentSession.user) {
         setUser({
@@ -84,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);

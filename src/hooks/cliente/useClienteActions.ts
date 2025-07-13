@@ -1,3 +1,4 @@
+
 import { useCallback } from "react";
 
 export const useClienteActions = () => {
@@ -7,18 +8,19 @@ export const useClienteActions = () => {
 
   const handleExcluir = useCallback(async (
     clienteParaExcluir: any,
-    onExcluir: (cliente: any) => Promise<boolean>,
+    onExcluir: (clienteId: string) => Promise<void>,
     onClose: () => void
-  ) => {
-    if (!clienteParaExcluir) return;
+  ): Promise<boolean> => {
+    if (!clienteParaExcluir) return false;
 
-    const success = await onExcluir(clienteParaExcluir);
-    
-    if (success) {
-      // A lista será atualizada automaticamente via filtros reativos
+    try {
+      await onExcluir(clienteParaExcluir);
+      onClose();
+      return true;
+    } catch (error) {
+      console.error("Erro ao excluir cliente:", error);
+      return false;
     }
-    
-    onClose();
   }, []);
 
   return {

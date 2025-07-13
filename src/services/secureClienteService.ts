@@ -1,316 +1,388 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Cliente } from "@/types";
+import { secureLog } from "@/utils/secureLogger";
+import { validateEncryptionFormat, detectClienteEncryptionStatus } from "@/utils/secureEncryption";
 
 export interface ClienteWithPaymentStatus {
   cliente: Cliente;
-  paymentStatus: {
-    type: 'overdue' | 'today' | 'upcoming' | 'no_info';
+  payment_status: {
+    type: string;
     days: number;
-    lastPaymentDate?: string;
-    nextDueDate?: string;
   };
-  sortingPriority: number;
+  sorting_priority: number;
 }
 
-export interface RateLimitResult {
-  allowed: boolean;
-  current_requests: number;
-  max_requests: number;
-  time_window_minutes: number;
-  reset_time: string;
-  operation: string;
-}
+// Definir campos sensíveis com tipagem específica
+type SensitiveFields = 'usuario_aplicativo' | 'senha_aplicativo' | 'usuario_2' | 'senha_2' | 'telefone';
 
-class SecureClienteService {
-  private static async checkRateLimit(operation: string): Promise<RateLimitResult> {
-    const { data: currentUser } = await supabase.auth.getUser();
-    
-    if (!currentUser.user) {
-      throw new Error("Usuário não autenticado");
-    }
+export class SecureClienteService {
+  static async getClienteWithDecryptedData(clienteId: string): Promise<Cliente> {
+    try {
+      secureLog.clientOperation('get_cliente_decrypted', { cliente_id: clienteId });
 
-    const { data, error } = await supabase.rpc('check_rate_limit', {
-      p_user_id: currentUser.user.id,
-      p_operation: operation,
-      p_max_requests: 50,
-      p_time_window_minutes: 60
-    });
+      // Usar a função RPC para buscar dados descriptografados
+      const { data: decryptedData, error: decryptError } = await supabase.rpc('get_cliente_with_decrypted_data', {
+        p_cliente_id: clienteId
+      });
 
-    if (error) {
-      console.error(`Erro ao verificar rate limit para ${operation}:`, error);
-      throw error;
-    }
-
-    const allowed = data as boolean;
-    
-    const result: RateLimitResult = {
-      allowed,
-      current_requests: allowed ? 0 : 50,
-      max_requests: 50,
-      time_window_minutes: 60,
-      reset_time: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-      operation
-    };
-    
-    if (!result.allowed) {
-      const resetTime = new Date(result.reset_time).toLocaleTimeString();
-      throw new Error(
-        `Limite de ${operation} excedido. Você pode tentar novamente às ${resetTime}. ` +
-        `(${result.current_requests}/${result.max_requests} requisições em ${result.time_window_minutes}min)`
-      );
-    }
-
-    return result;
-  }
-
-  // Obter cliente específico com dados descriptografados usando a função SQL
-  static async getClienteWithDecryptedData(id: string): Promise<Cliente> {
-    await this.checkRateLimit('get_cliente');
-
-    const { data: currentUser } = await supabase.auth.getUser();
-    
-    if (!currentUser.user) {
-      throw new Error("Usuário não autenticado");
-    }
-
-    // Usar a função SQL que descriptografa automaticamente os dados sensíveis
-    const { data, error } = await supabase.rpc('get_cliente_with_decrypted_data', {
-      p_cliente_id: id
-    });
-
-    if (error) {
-      console.error("Erro ao buscar cliente:", error);
-      throw error;
-    }
-
-    if (!data) {
-      throw new Error("Cliente não encontrado");
-    }
-
-    console.log("Cliente carregado com dados descriptografados:", data);
-    
-    // Properly cast the JSON data to Cliente type
-    const cliente = data as unknown as Cliente;
-    return cliente;
-  }
-
-  // Obter clientes com status calculado no backend
-  static async getClientesWithCalculatedStatus(
-    status?: "todos" | "ativo" | "inativo"
-  ): Promise<ClienteWithPaymentStatus[]> {
-    await this.checkRateLimit('list_clientes');
-
-    const { data: currentUser } = await supabase.auth.getUser();
-    
-    if (!currentUser.user) {
-      throw new Error("Usuário não autenticado");
-    }
-
-    // Use the existing filter function for now
-    const { data, error } = await supabase.rpc('filter_clientes_by_status', {
-      p_status: status || null,
-      p_user_id: currentUser.user.id
-    });
-
-    if (error) {
-      console.error("Erro ao buscar clientes:", error);
-      throw error;
-    }
-
-    // Transform to expected format
-    const clientesWithStatus = (data || []).map((cliente: Cliente) => ({
-      cliente,
-      paymentStatus: {
-        type: 'no_info' as const,
-        days: 0
-      },
-      sortingPriority: 0
-    }));
-
-    return clientesWithStatus;
-  }
-
-  // Buscar clientes com dados descriptografados
-  static async getClientes(status?: "todos" | "ativo" | "inativo"): Promise<Cliente[]> {
-    await this.checkRateLimit('list_clientes');
-
-    const { data: currentUser } = await supabase.auth.getUser();
-    const userId = currentUser.user?.id;
-    
-    let clientesData;
-    
-    if (status) {
-      const { data, error } = await supabase.rpc(
-        'filter_clientes_by_status',
-        {
-          p_status: status,
-          p_user_id: userId || null
-        }
-      );
-      
-      if (error) {
-        console.error("Erro ao buscar clientes:", error);
-        throw error;
+      if (!decryptError && decryptedData) {
+        // Converter para Cliente e processar os dados
+        const clienteData = decryptedData as unknown as Cliente;
+        
+        // Processar os dados para garantir que campos criptografados sejam limpos
+        const processedData = this.processClienteData(clienteData);
+        
+        secureLog.clientOperation('cliente_decrypted_success', { 
+          cliente_id: clienteId,
+          method: 'rpc_success'
+        });
+        
+        return processedData;
       }
+
+      // Se a RPC falhou, buscar dados brutos e processar
+      secureLog.clientOperation('fallback_to_raw_data', { 
+        cliente_id: clienteId,
+        rpc_error: decryptError?.message 
+      });
       
-      clientesData = data as Cliente[] || [];
-    } else {
-      const { data, error } = await supabase
+      const { data: rawData, error: rawError } = await supabase
         .from('clientes')
         .select('*')
-        .order('nome');
-        
-      if (error) {
-        console.error("Erro ao buscar clientes:", error);
-        throw error;
+        .eq('id', clienteId)
+        .single();
+
+      if (rawError) {
+        throw rawError;
       }
+
+      if (!rawData) {
+        throw new Error("Cliente não encontrado");
+      }
+
+      return this.processClienteData(rawData);
+
+    } catch (error) {
+      secureLog.error("Erro no SecureClienteService.getClienteWithDecryptedData", { 
+        cliente_id: clienteId,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
       
-      clientesData = data as Cliente[] || [];
-    }
+      // Último recurso: buscar dados brutos sem descriptografia
+      const { data: clienteData, error: clienteError } = await supabase
+        .from('clientes')
+        .select('*')
+        .eq('id', clienteId)
+        .single();
 
-    return clientesData;
-  }
+      if (clienteError) {
+        throw clienteError;
+      }
 
-  // Criar cliente com criptografia automática
-  static async createCliente(cliente: Omit<Cliente, "id" | "created_at" | "status">): Promise<Cliente> {
-    await this.checkRateLimit('create_cliente');
-
-    const { data: currentUser } = await supabase.auth.getUser();
-    
-    if (!currentUser.user) {
-      throw new Error("Usuário não autenticado");
-    }
-    
-    const newCliente = {
-      ...cliente,
-      user_id: currentUser.user.id,
-    };
-    
-    // Inserir cliente (trigger criptografará automaticamente os dados sensíveis)
-    const { data, error } = await supabase
-      .from('clientes')
-      .insert([newCliente])
-      .select()
-      .single();
-      
-    if (error) {
-      console.error("Erro ao criar cliente:", error);
-      throw error;
-    }
-    
-    console.log("Cliente criado - dados sensíveis foram criptografados automaticamente");
-    return data as Cliente;
-  }
-
-  // Atualizar cliente com criptografia automática
-  static async updateCliente(id: string, cliente: Partial<Cliente>): Promise<Cliente> {
-    await this.checkRateLimit('update_cliente');
-
-    // Atualizar cliente (trigger criptografará automaticamente os dados sensíveis)
-    const { data, error } = await supabase
-      .from('clientes')
-      .update(cliente)
-      .eq('id', id)
-      .select()
-      .single();
-      
-    if (error) {
-      console.error("Erro ao atualizar cliente:", error);
-      throw error;
-    }
-    
-    console.log("Cliente atualizado - dados sensíveis foram criptografados automaticamente");
-    return data as Cliente;
-  }
-
-  // Excluir cliente com rate limiting
-  static async deleteCliente(id: string): Promise<void> {
-    await this.checkRateLimit('delete_cliente');
-
-    // Primeiro, excluir todos os pagamentos associados a este cliente
-    const { error: pagamentosError } = await supabase
-      .from('pagamentos')
-      .delete()
-      .eq('cliente_id', id);
-      
-    if (pagamentosError) {
-      console.error("Erro ao excluir pagamentos do cliente:", pagamentosError);
-      throw pagamentosError;
-    }
-    
-    // Em seguida, excluir o cliente
-    const { error } = await supabase
-      .from('clientes')
-      .delete()
-      .eq('id', id);
-      
-    if (error) {
-      console.error("Erro ao excluir cliente:", error);
-      throw error;
+      return this.processClienteData(clienteData);
     }
   }
 
-  // Executar migração de dados existentes
-  static async migrateSensitiveData(): Promise<string> {
-    const { data: currentUser } = await supabase.auth.getUser();
+  private static processClienteData(rawData: any): Cliente {
+    const processedData = { ...rawData } as Cliente;
     
-    if (!currentUser.user) {
-      throw new Error("Usuário não autenticado");
-    }
-
-    // Chamar a função SQL para migrar dados existentes
-    const { data, error } = await supabase.rpc('migrate_existing_sensitive_data');
-
-    if (error) {
-      console.error("Erro na migração:", error);
-      throw error;
-    }
-
-    const result = data as any;
-    console.log("Resultado da migração:", result);
+    // Para dados que parecem criptografados, limpar completamente
+    const sensitiveFields: SensitiveFields[] = ['usuario_aplicativo', 'senha_aplicativo', 'usuario_2', 'senha_2', 'telefone'];
     
-    if (result?.success) {
-      return `${result.message}. Processados: ${result.clientes_processados} clientes de ${result.total_clientes} total.`;
-    } else {
-      throw new Error("Falha na migração de dados sensíveis");
-    }
-  }
-
-  // Função para verificar se dados estão criptografados (para debugging)
-  static async checkEncryptionStatus(): Promise<{ encrypted: number; total: number }> {
-    const { data: currentUser } = await supabase.auth.getUser();
-    
-    if (!currentUser.user) {
-      throw new Error("Usuário não autenticado");
-    }
-
-    const { data, error } = await supabase
-      .from('clientes')
-      .select('telefone, usuario_aplicativo, senha_aplicativo, usuario_2, senha_2')
-      .eq('user_id', currentUser.user.id);
+    sensitiveFields.forEach(field => {
+      const fieldValue = processedData[field];
       
-    if (error) {
-      console.error("Erro ao verificar status de criptografia:", error);
-      throw error;
-    }
-
-    let encrypted = 0;
-    const total = data?.length || 0;
-    
-    data?.forEach(cliente => {
-      // Verificar se campos sensíveis estão em formato hex (criptografados)
-      const fields = [cliente.telefone, cliente.usuario_aplicativo, cliente.senha_aplicativo, cliente.usuario_2, cliente.senha_2];
-      const hasEncryptedData = fields.some(field => 
-        field && field.length > 0 && /^[a-f0-9]{32,}$/.test(field)
-      );
-      
-      if (hasEncryptedData) {
-        encrypted++;
+      if (fieldValue && typeof fieldValue === 'string') {
+        // Se parece criptografado (muito longo e hexadecimal), limpar o campo
+        if (fieldValue.length > 50 && /^[a-f0-9]+$/i.test(fieldValue)) {
+          (processedData as any)[field] = null; // Limpar ao invés de marcar com erro
+        }
+        // Se contém erro de descriptografia, também limpar
+        else if (fieldValue.includes('[ERRO_DESCRIPTOGRAFIA]')) {
+          (processedData as any)[field] = null;
+        }
       }
     });
 
-    return { encrypted, total };
+    return processedData;
+  }
+
+  static async getAllClientesWithDecryptedData(): Promise<Cliente[]> {
+    try {
+      const { data: currentUser } = await supabase.auth.getUser();
+      if (!currentUser.user) {
+        throw new Error("Usuário não autenticado");
+      }
+
+      secureLog.clientOperation('get_all_clientes_decrypted', { user_id: currentUser.user.id });
+
+      // Buscar todos os clientes do usuário
+      const { data: clientes, error } = await supabase
+        .from('clientes')
+        .select('*') 
+        .eq('user_id', currentUser.user.id)
+        .order('nome');
+
+      if (error) {
+        secureLog.error("Erro ao buscar clientes", { error: error.message });
+        throw error;
+      }
+
+      // Para cada cliente, tentar descriptografar usando a função RPC
+      const clientesProcessados: Cliente[] = [];
+      
+      for (const cliente of clientes || []) {
+        try {
+          // Tentar usar a função RPC para descriptografar
+          const { data: decryptedData, error: decryptError } = await supabase.rpc('get_cliente_with_decrypted_data', {
+            p_cliente_id: cliente.id
+          });
+
+          if (!decryptError && decryptedData) {
+            const clienteData = decryptedData as unknown as Cliente;
+            clientesProcessados.push(this.processClienteData(clienteData));
+          } else {
+            // Se a RPC falhou, processar os dados brutos
+            clientesProcessados.push(this.processClienteData(cliente));
+          }
+        } catch (error) {
+          // Em caso de erro, processar os dados brutos
+          clientesProcessados.push(this.processClienteData(cliente));
+        }
+      }
+
+      secureLog.clientOperation('all_clientes_processed', { 
+        total: clientesProcessados.length,
+        user_id: currentUser.user.id
+      });
+
+      return clientesProcessados;
+    } catch (error) {
+      secureLog.error("Erro ao buscar clientes com dados descriptografados", {
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      throw error;
+    }
+  }
+
+  static async getClientes(status?: "todos" | "ativo" | "inativo"): Promise<Cliente[]> {
+    try {
+      const { data: currentUser } = await supabase.auth.getUser();
+      if (!currentUser.user) {
+        throw new Error("Usuário não autenticado");
+      }
+
+      let query = supabase
+        .from('clientes')
+        .select('*')
+        .eq('user_id', currentUser.user.id);
+
+      if (status && status !== 'todos') {
+        query = query.eq('status', status);
+      }
+
+      const { data, error } = await query.order('nome');
+
+      if (error) {
+        throw error;
+      }
+
+      return (data || []).map(cliente => this.processClienteData(cliente));
+    } catch (error) {
+      secureLog.error("Erro ao buscar clientes", {
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      throw error;
+    }
+  }
+
+  static async getClientesWithCalculatedStatus(status?: "todos" | "ativo" | "inativo"): Promise<ClienteWithPaymentStatus[]> {
+    try {
+      const clientes = await this.getAllClientesWithDecryptedData();
+      
+      // Simular o status calculado para cada cliente
+      const clientesWithStatus: ClienteWithPaymentStatus[] = clientes
+        .filter(cliente => {
+          if (!status || status === 'todos') return true;
+          return cliente.status === status;
+        })
+        .map(cliente => ({
+          cliente,
+          payment_status: {
+            type: cliente.status === 'ativo' ? 'up_to_date' : 'overdue',
+            days: 0
+          },
+          sorting_priority: cliente.status === 'ativo' ? 1 : 2
+        }));
+
+      return clientesWithStatus;
+    } catch (error) {
+      secureLog.error("Erro ao buscar clientes com status calculado", {
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      throw error;
+    }
+  }
+
+  static async createCliente(clienteData: Omit<Cliente, "id" | "created_at" | "status">): Promise<Cliente> {
+    try {
+      const { data: currentUser } = await supabase.auth.getUser();
+      if (!currentUser.user) {
+        throw new Error("Usuário não autenticado");
+      }
+
+      secureLog.clientOperation('create_cliente_start', { user_id: currentUser.user.id });
+
+      const { data, error } = await supabase
+        .from('clientes')
+        .insert({
+          ...clienteData,
+          user_id: currentUser.user.id,
+          status: 'inativo'
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      secureLog.clientOperation('create_cliente_success', { 
+        cliente_id: data.id,
+        user_id: currentUser.user.id
+      });
+
+      return data;
+    } catch (error) {
+      secureLog.error("Erro ao criar cliente", {
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      throw error;
+    }
+  }
+
+  static async updateCliente(id: string, clienteData: Partial<Cliente>): Promise<Cliente> {
+    try {
+      const { data: currentUser } = await supabase.auth.getUser();
+      if (!currentUser.user) {
+        throw new Error("Usuário não autenticado");
+      }
+
+      secureLog.clientOperation('update_cliente_start', { 
+        cliente_id: id,
+        user_id: currentUser.user.id
+      });
+
+      const { data, error } = await supabase
+        .from('clientes')
+        .update(clienteData)
+        .eq('id', id)
+        .eq('user_id', currentUser.user.id)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      secureLog.clientOperation('update_cliente_success', { 
+        cliente_id: id,
+        user_id: currentUser.user.id
+      });
+
+      return data;
+    } catch (error) {
+      secureLog.error("Erro ao atualizar cliente", {
+        cliente_id: id,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      throw error;
+    }
+  }
+
+  static async deleteCliente(id: string): Promise<void> {
+    try {
+      const { data: currentUser } = await supabase.auth.getUser();
+      if (!currentUser.user) {
+        throw new Error("Usuário não autenticado");
+      }
+
+      secureLog.clientOperation('delete_cliente_start', { 
+        cliente_id: id,
+        user_id: currentUser.user.id
+      });
+
+      const { error } = await supabase
+        .from('clientes')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', currentUser.user.id);
+
+      if (error) {
+        throw error;
+      }
+
+      secureLog.clientOperation('delete_cliente_success', { 
+        cliente_id: id,
+        user_id: currentUser.user.id
+      });
+    } catch (error) {
+      secureLog.error("Erro ao excluir cliente", {
+        cliente_id: id,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      throw error;
+    }
+  }
+
+  static async migrateSensitiveData(): Promise<string> {
+    try {
+      secureLog.clientOperation('migrate_sensitive_data_start');
+
+      const { data, error } = await supabase.rpc('migrate_existing_sensitive_data');
+
+      if (error) {
+        throw error;
+      }
+
+      secureLog.clientOperation('migrate_sensitive_data_success');
+
+      return data as string || 'Migração concluída com sucesso';
+    } catch (error) {
+      secureLog.error("Erro na migração", {
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      throw error;
+    }
+  }
+
+  static async checkEncryptionStatus(): Promise<{ encrypted: number; total: number }> {
+    try {
+      const clientes = await this.getAllClientesWithDecryptedData();
+      
+      let encryptedCount = 0;
+      clientes.forEach(cliente => {
+        const status = detectClienteEncryptionStatus(cliente);
+        if (status.hasEncryptedFields) {
+          encryptedCount++;
+        }
+      });
+
+      return {
+        encrypted: encryptedCount,
+        total: clientes.length
+      };
+    } catch (error) {
+      secureLog.error("Erro ao verificar status de criptografia", {
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      return { encrypted: 0, total: 0 };
+    }
+  }
+
+  private static isEncrypted(value: string | null): boolean {
+    if (!value) return false;
+    const validation = validateEncryptionFormat(value);
+    return validation.isEncrypted;
   }
 }
-
-export { SecureClienteService };
