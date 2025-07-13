@@ -28,8 +28,15 @@ export class SecureClienteService {
         throw new Error("Cliente não encontrado");
       }
 
-      // Type assertion com verificação
-      return data as Cliente;
+      // Safe type conversion - convert unknown to Cliente properly
+      const clienteData = data as unknown as Cliente;
+      
+      // Validate that we have the required fields
+      if (!clienteData.id || !clienteData.nome || !clienteData.servidor) {
+        throw new Error("Dados do cliente incompletos após descriptografia");
+      }
+
+      return clienteData;
     } catch (error) {
       console.error("Erro no SecureClienteService:", error);
       // Em caso de erro, tentar buscar o cliente normal
