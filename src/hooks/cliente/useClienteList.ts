@@ -6,13 +6,13 @@ import { SecureClienteService } from "@/services/secureClienteService";
 import { useClienteModals } from "./useClienteModals";
 import { useOptimizedClienteFilters } from "./useOptimizedClienteFilters";
 import { ClienteOrderType } from "@/components/clientes/ClienteOrderSelector";
-import { sortClientes } from "./clienteSortUtils";
+import { sortClientesByOrder } from "./clienteSortUtils";
 import { logError } from "@/utils/errorHandler";
 
 export const useClienteList = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
-  const [orderBy, setOrderBy] = useState<ClienteOrderType>("nome");
+  const [orderBy, setOrderBy] = useState<ClienteOrderType>("nome_asc");
   const { toast } = useToast();
 
   const {
@@ -140,7 +140,7 @@ export const useClienteList = () => {
 
   // Aplicar ordenação aos clientes filtrados
   const sortedFilteredClientes = useMemo(() => {
-    return sortClientes(filteredClientes, orderBy);
+    return sortClientesByOrder(filteredClientes, orderBy);
   }, [filteredClientes, orderBy]);
 
   useEffect(() => {
