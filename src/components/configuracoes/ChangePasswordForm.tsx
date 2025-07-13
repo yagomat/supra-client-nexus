@@ -1,15 +1,13 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle, Check, X } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { checkPasswordStrength } from "@/services/auth/passwordUtils";
 import { passwordSchema } from "@/services/auth/schemas";
 import { z } from "zod";
-import { PasswordInput } from "./password/PasswordInput";
-import { PasswordStrengthIndicator } from "./password/PasswordStrengthIndicator";
-import { PasswordRequirementsList } from "./password/PasswordRequirementsList";
-import { PasswordFormAlerts } from "./password/PasswordFormAlerts";
 
 export function ChangePasswordForm() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -99,49 +97,117 @@ export function ChangePasswordForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <PasswordFormAlerts 
-        generalError={generalError}
-        successMessage={successMessage}
-      />
+      {generalError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{generalError}</AlertDescription>
+        </Alert>
+      )}
       
-      <PasswordInput
-        id="currentPassword"
-        label="Senha Atual"
-        placeholder="••••••••"
-        value={currentPassword}
-        onChange={setCurrentPassword}
-        required
-      />
+      {successMessage && (
+        <Alert variant="default" className="bg-green-50 border-green-500">
+          <Check className="h-4 w-4 text-green-500" />
+          <AlertDescription className="text-green-700">{successMessage}</AlertDescription>
+        </Alert>
+      )}
       
       <div className="space-y-2">
-        <PasswordInput
-          id="newPassword"
-          label="Nova Senha"
+        <label htmlFor="currentPassword" className="text-sm font-medium">
+          Senha Atual
+        </label>
+        <Input
+          id="currentPassword"
+          type="password"
           placeholder="••••••••"
-          value={newPassword}
-          onChange={setNewPassword}
-          error={!!passwordError}
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
           required
         />
-        
-        <PasswordStrengthIndicator
-          password={newPassword}
-          strength={passwordStrength}
-          feedback={passwordFeedback}
-        />
-        
-        <PasswordRequirementsList password={newPassword} />
       </div>
       
       <div className="space-y-2">
-        <PasswordInput
+        <label htmlFor="newPassword" className="text-sm font-medium">
+          Nova Senha
+        </label>
+        <Input
+          id="newPassword"
+          type="password"
+          placeholder="••••••••"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          required
+          className={passwordError ? "border-destructive" : ""}
+        />
+        {newPassword && passwordStrength && (
+          <div className="flex items-center space-x-2 text-sm">
+            <div 
+              className={`h-2 w-full rounded ${
+                passwordStrength === 'fraca' 
+                  ? 'bg-red-500' 
+                  : passwordStrength === 'média' 
+                    ? 'bg-yellow-500' 
+                    : 'bg-green-500'
+              }`}
+            />
+            <span>{passwordFeedback}</span>
+          </div>
+        )}
+        <div className="space-y-1">
+          <div className="flex items-center space-x-2 text-sm">
+            {/[A-Z]/.test(newPassword) ? (
+              <Check size={16} className="text-green-500" />
+            ) : (
+              <X size={16} className="text-gray-300" />
+            )}
+            <span>Pelo menos uma letra maiúscula</span>
+          </div>
+          <div className="flex items-center space-x-2 text-sm">
+            {/[a-z]/.test(newPassword) ? (
+              <Check size={16} className="text-green-500" />
+            ) : (
+              <X size={16} className="text-gray-300" />
+            )}
+            <span>Pelo menos uma letra minúscula</span>
+          </div>
+          <div className="flex items-center space-x-2 text-sm">
+            {/[0-9]/.test(newPassword) ? (
+              <Check size={16} className="text-green-500" />
+            ) : (
+              <X size={16} className="text-gray-300" />
+            )}
+            <span>Pelo menos um número</span>
+          </div>
+          <div className="flex items-center space-x-2 text-sm">
+            {/[^A-Za-z0-9]/.test(newPassword) ? (
+              <Check size={16} className="text-green-500" />
+            ) : (
+              <X size={16} className="text-gray-300" />
+            )}
+            <span>Pelo menos um caractere especial</span>
+          </div>
+          <div className="flex items-center space-x-2 text-sm">
+            {newPassword.length >= 8 ? (
+              <Check size={16} className="text-green-500" />
+            ) : (
+              <X size={16} className="text-gray-300" />
+            )}
+            <span>Mínimo de 8 caracteres</span>
+          </div>
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <label htmlFor="confirmPassword" className="text-sm font-medium">
+          Confirmar Nova Senha
+        </label>
+        <Input
           id="confirmPassword"
-          label="Confirmar Nova Senha"
+          type="password"
           placeholder="••••••••"
           value={confirmPassword}
-          onChange={setConfirmPassword}
-          error={!!passwordError}
+          onChange={(e) => setConfirmPassword(e.target.value)}
           required
+          className={passwordError ? "border-destructive" : ""}
         />
         {passwordError && (
           <p className="text-destructive text-sm">{passwordError}</p>
