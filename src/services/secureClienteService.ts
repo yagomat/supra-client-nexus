@@ -133,6 +133,7 @@ export class SecureClienteService {
         .single();
 
       if (error) {
+        console.error("Erro ao criar cliente:", error);
         throw error;
       }
 
@@ -150,6 +151,8 @@ export class SecureClienteService {
         throw new Error("Usuário não autenticado");
       }
 
+      console.log("Atualizando cliente com dados:", clienteData);
+
       const { data, error } = await supabase
         .from('clientes')
         .update(clienteData)
@@ -159,9 +162,11 @@ export class SecureClienteService {
         .single();
 
       if (error) {
+        console.error("Erro na atualização do cliente:", error);
         throw error;
       }
 
+      console.log("Cliente atualizado com sucesso:", data);
       return data;
     } catch (error) {
       console.error("Erro ao atualizar cliente:", error);
