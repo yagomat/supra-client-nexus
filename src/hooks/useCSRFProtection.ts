@@ -10,159 +10,75 @@ import {
 
 export const useCSRFProtection = () => {
   const [csrfToken, setCSRFToken] = useState<string>('');
-  const [isAuthContextAvailable, setIsAuthContextAvailable] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
   
-  // Safely access auth context
-  const { user } = useAuth();
-  
-  // Check auth context availability on mount
-  useEffect(() => {
-    try {
-      // If we get here without error, auth context is available
-      setIsAuthContextAvailable(true);
-      setAuthError(null);
-    } catch (error) {
-      setIsAuthContextAvailable(false);
-      setAuthError((error as Error).message);
-      console.warn('useCSRFProtection: AuthProvider não disponível:', (error as Error).message);
-    }
-  }, []);
+  // Tentar acessar o contexto de forma segura
+  let user = null;
+  try {
+    const authContext = useAuth();
+    user = authContext.user;
+  } catch (error) {
+    // Se o AuthProvider não estiver disponível, user permanece null
+    console.warn('useCSRFProtection: AuthProvider não está disponível ainda');
+  }
   
   // Gerar novo token quando a sessão muda
   useEffect(() => {
     const token = generateCSRFToken(user?.id);
     setCSRFToken(token);
-    
-    // Log para auditoria de geração de tokens
-    console.log('CSRF Token gerado:', {
-      hasUser: !!user,
-      userId: user?.id ? 'present' : 'absent',
-      tokenLength: token.length,
-      timestamp: new Date().toISOString()
-    });
   }, [user?.id]);
   
-  // Validar requisição com logs detalhados para debugging
+  // Validar requisição antes de enviar
   const validateRequest = useCallback((options: {
     origin?: string;
     referer?: string;
     token?: string;
   } = {}): boolean => {
+    // Verificar origem da requisição
     const origin = options.origin || window.location.origin;
     const referer = options.referer || document.referrer;
     
-    console.log('CSRF Validation iniciada:', {
-      origin,
-      referer,
-      hasToken: !!options.token,
-      currentOrigin: window.location.origin
-    });
-    
-    // Verificar origem da requisição com validação rigorosa
-    const originValid = validateCSRFToken(origin, referer);
-    if (!originValid) {
-      console.error('CSRF: Validação de origem falhou', {
+    // Usar a validação corrigida
+    if (!validateCSRFToken(origin, referer)) {
+      console.warn('CSRF: Origem da requisição inválida', {
         origin,
         referer,
-        currentOrigin: window.location.origin,
-        reason: 'Invalid origin or referer'
+        currentOrigin: window.location.origin
       });
       return false;
     }
     
-    // Verificar se é uma requisição da mesma origem
-    const sameOrigin = isSameOriginRequest();
-    if (!sameOrigin) {
-      console.error('CSRF: Requisição de origem cruzada detectada', {
+    // Verificar se é uma requisição da mesma origem (com validação corrigida)
+    if (!isSameOriginRequest()) {
+      console.warn('CSRF: Requisição de origem cruzada detectada', {
         currentOrigin: window.location.origin,
-        referrer: document.referrer,
-        reason: 'Cross-origin request detected'
+        referrer: document.referrer
       });
       return false;
     }
     
-    // Validar token se fornecido - com validação mais rigorosa
-    if (options.token) {
-      const tokenValid = validateCSRFTokenData(options.token, user?.id);
-      if (!tokenValid) {
-        console.error('CSRF: Token inválido ou expirado', {
-          tokenProvided: !!options.token,
-          hasUser: !!user,
-          userId: user?.id ? 'present' : 'absent',
-          reason: 'Token validation failed'
-        });
-        return false;
-      }
+    // Validar token se fornecido
+    if (options.token && !validateCSRFTokenData(options.token, user?.id)) {
+      console.warn('CSRF: Token inválido ou expirado');
+      return false;
     }
     
-    console.log('CSRF: Validação bem-sucedida');
     return true;
   }, [user?.id]);
   
-  // Obter headers seguros com validação adicional
+  // Obter headers seguros com token CSRF
   const getSecureHeaders = useCallback((): HeadersInit => {
-    if (!csrfToken) {
-      console.warn('CSRF: Token não disponível para headers');
-    }
-    
-    const headers: HeadersInit = {
+    return {
       'Content-Type': 'application/json',
       'X-CSRF-Token': csrfToken,
-      'X-Requested-With': 'XMLHttpRequest',
-      'Origin': window.location.origin,
-      'X-Timestamp': new Date().toISOString(),
-      'X-Auth-Context': isAuthContextAvailable ? 'available' : 'unavailable'
+      'X-Requested-With': 'XMLHttpRequest', // Indica que é uma requisição AJAX
+      'Origin': window.location.origin
     };
-    
-    // Adicionar header de validação de origem
-    if (document.referrer) {
-      headers['Referer'] = document.referrer;
-    }
-    
-    return headers;
-  }, [csrfToken, isAuthContextAvailable]);
-  
-  // Validar estado do CSRF antes de operações críticas
-  const validateCSRFState = useCallback((): {
-    valid: boolean;
-    errors: string[];
-    warnings: string[];
-  } => {
-    const errors: string[] = [];
-    const warnings: string[] = [];
-    
-    if (!csrfToken) {
-      errors.push('Token CSRF não foi gerado');
-    }
-    
-    if (!isAuthContextAvailable && !authError) {
-      warnings.push('Contexto de autenticação não disponível');
-    }
-    
-    if (!isSameOriginRequest()) {
-      errors.push('Origem da requisição inválida');
-    }
-    
-    // Validar integridade do token atual
-    if (csrfToken && !validateCSRFTokenData(csrfToken, user?.id)) {
-      errors.push('Token CSRF atual é inválido');
-    }
-    
-    return {
-      valid: errors.length === 0,
-      errors,
-      warnings
-    };
-  }, [csrfToken, isAuthContextAvailable, authError, user?.id]);
+  }, [csrfToken]);
   
   return {
     csrfToken,
     validateRequest,
     getSecureHeaders,
-    validateCSRFState,
-    isValidOrigin: isSameOriginRequest(),
-    isAuthContextAvailable,
-    authError
+    isValidOrigin: isSameOriginRequest()
   };
 };

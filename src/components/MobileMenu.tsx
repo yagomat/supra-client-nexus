@@ -21,8 +21,8 @@ import {
 } from "lucide-react";
 
 export function MobileMenu() {
-  const location = useLocation();
   const { user, signOut } = useAuth();
+  const location = useLocation();
 
   const navItems = [
     {
@@ -60,7 +60,8 @@ export function MobileMenu() {
     // Special case for /clientes - match exact path or related routes
     if (href === "/clientes") {
       return location.pathname === "/clientes" || 
-             location.pathname.startsWith("/clientes/");
+             location.pathname.startsWith("/clientes/cadastrar") ||
+             location.pathname.startsWith("/clientes/editar");
     }
     
     return false;
@@ -100,7 +101,6 @@ export function MobileMenu() {
                 <DrawerClose key={item.href} asChild>
                   <NavLink
                     to={item.href}
-                    end={item.href !== "/clientes"}
                     className={
                       cn(
                         "flex items-center px-4 py-3 my-1 mx-2 rounded-md text-sm font-medium transition-colors",

@@ -5,7 +5,7 @@ import { logAuditEvent } from "./auditLog";
 import { setupSessionExpiration } from "./sessionUtils";
 import { checkRateLimit, logAuthAttempt, checkIPRateLimit } from "./rateLimit";
 
-// Login seguro com auditoria consolidada
+// Login seguro com rate limiting robusto no backend
 export const secureSignIn = async (email: string, password: string): Promise<boolean> => {
   try {
     // 1. Verificar rate limiting por email
@@ -20,14 +20,7 @@ export const secureSignIn = async (email: string, password: string): Promise<boo
         description: `Tente novamente ${resetTime}. (${emailRateLimit.current_attempts}/${emailRateLimit.max_attempts})`,
       });
       
-      // Registrar apenas uma vez - tentativa bloqueada por rate limit
-      await logAuditEvent("auth_login_attempt", { 
-        email, 
-        success: false, 
-        error: 'Rate limit exceeded',
-        ip_address: 'client-side',
-        user_agent: navigator.userAgent 
-      });
+      await logAuthAttempt(email, 'login', false, 'Rate limit exceeded');
       return false;
     }
 
@@ -39,14 +32,7 @@ export const secureSignIn = async (email: string, password: string): Promise<boo
         description: "Aguarde alguns minutos antes de tentar novamente.",
       });
       
-      // Registrar tentativa bloqueada por IP
-      await logAuditEvent("auth_login_attempt", { 
-        email, 
-        success: false, 
-        error: 'IP rate limit exceeded',
-        ip_address: 'client-side',
-        user_agent: navigator.userAgent 
-      });
+      await logAuthAttempt(email, 'login', false, 'IP rate limit exceeded');
       return false;
     }
 
@@ -65,14 +51,7 @@ export const secureSignIn = async (email: string, password: string): Promise<boo
         description: "Erro interno de validação.",
       });
       
-      // Registrar erro de validação
-      await logAuditEvent("auth_login_attempt", { 
-        email, 
-        success: false, 
-        error: validationError.message,
-        ip_address: 'client-side',
-        user_agent: navigator.userAgent 
-      });
+      await logAuthAttempt(email, 'login', false, validationError.message);
       return false;
     }
 
@@ -84,27 +63,17 @@ export const secureSignIn = async (email: string, password: string): Promise<boo
     };
     
     if (!result.success) {
-      const errorMessage = result.rate_limited 
-        ? "Muitas tentativas de login" 
-        : "Falha na validação";
+      if (result.rate_limited) {
+        toast.error("Muitas tentativas de login", {
+          description: result.error || "Tente novamente em 15 minutos.",
+        });
+      } else {
+        toast.error("Falha na validação", {
+          description: result.error || "Dados inválidos.",
+        });
+      }
       
-      const errorDescription = result.error || (result.rate_limited 
-        ? "Tente novamente em 15 minutos." 
-        : "Dados inválidos.");
-
-      toast.error(errorMessage, {
-        description: errorDescription,
-      });
-      
-      // Registrar falha na validação
-      await logAuditEvent("auth_login_attempt", { 
-        email: result.sanitized_email || email, 
-        success: false, 
-        error: result.error,
-        rate_limited: result.rate_limited,
-        ip_address: 'client-side',
-        user_agent: navigator.userAgent 
-      });
+      await logAuthAttempt(email, 'login', false, result.error);
       return false;
     }
 
@@ -114,33 +83,31 @@ export const secureSignIn = async (email: string, password: string): Promise<boo
       password: password,
     });
 
-    // 5. Registrar resultado da autenticação (sempre, independente do resultado)
-    const authSuccess = !error;
-    const sanitizedEmail = result.sanitized_email || email;
-
-    await logAuditEvent("auth_login_attempt", { 
-      email: sanitizedEmail, 
-      success: authSuccess, 
-      error: error?.message || null,
-      user_id: data.user?.id || null,
-      ip_address: 'client-side',
-      user_agent: navigator.userAgent 
-    });
-
     if (error) {
+      await logAuthAttempt(
+        result.sanitized_email || email, 
+        'login', 
+        false, 
+        error.message
+      );
+
       toast.error("Falha na autenticação", {
         description: error.message,
       });
       return false;
     }
 
-    // 6. Registrar login bem-sucedido (evento separado para diferenciação)
-    await logAuditEvent("login_success", { 
-      email: sanitizedEmail,
-      user_id: data.user?.id 
-    }, data.user?.id);
+    // 5. Registrar login bem-sucedido
+    await logAuthAttempt(
+      result.sanitized_email || email, 
+      'login', 
+      true, 
+      'Login successful'
+    );
 
-    // 7. Configurar expiração de sessão (8 horas)
+    await logAuditEvent("login_success", { email: result.sanitized_email || email }, data.user?.id);
+
+    // 6. Configurar expiração de sessão (8 horas)
     setupSessionExpiration(async () => {
       await supabase.auth.signOut();
       toast.warning("Sua sessão expirou", {
@@ -152,14 +119,12 @@ export const secureSignIn = async (email: string, password: string): Promise<boo
   } catch (error) {
     console.error("Erro ao fazer login:", error);
     
-    // Registrar erro inesperado
-    await logAuditEvent("auth_login_attempt", { 
+    await logAuthAttempt(
       email, 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error',
-      ip_address: 'client-side',
-      user_agent: navigator.userAgent 
-    });
+      'login', 
+      false, 
+      error instanceof Error ? error.message : 'Unknown error'
+    );
     
     toast.error("Erro inesperado", {
       description: "Ocorreu um erro ao tentar fazer login.",
