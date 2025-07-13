@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { emailSchema } from "@/services/auth/schemas";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
+import { useCSRFProtection } from "./useCSRFProtection";
 
 export const useLoginForm = () => {
   const [email, setEmail] = useState("");
@@ -15,8 +15,8 @@ export const useLoginForm = () => {
   
   const { signIn } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const { toast } = useToast();
+  const { validateRequest, getSecureHeaders } = useCSRFProtection();
 
   // Limpar erros quando o usuário digita
   useEffect(() => {
@@ -52,37 +52,25 @@ export const useLoginForm = () => {
     setGeneralError("");
     setEmailError("");
 
+    // Validar proteção CSRF antes de prosseguir
+    if (!validateRequest()) {
+      setGeneralError("Erro de segurança: Requisição não autorizada.");
+      return;
+    }
+
     if (!validateForm()) return;
 
     try {
       setIsLoading(true);
       
-      console.log('Tentando fazer login com:', email);
-      
-      // Usar diretamente o signIn do contexto que já tem toda a lógica de segurança
+      // A sanitização agora ocorre no backend, via secureSignIn
       await signIn(email, password);
       
-      console.log('Login realizado com sucesso');
-      
-      // Verificar se há um redirect específico
-      const from = (location.state as any)?.from || "/dashboard";
-      navigate(from);
-      
+      // Usar navigate em vez de window.location para evitar recarregar a página
+      navigate("/dashboard");
     } catch (error) {
       console.error("Erro ao fazer login", error);
-      
-      // Tratamento de erro mais específico
-      if (error instanceof Error) {
-        if (error.message.includes('Rate limit') || error.message.includes('Muitas tentativas')) {
-          setGeneralError("Muitas tentativas de login. Aguarde alguns minutos e tente novamente.");
-        } else if (error.message.includes('Invalid login credentials')) {
-          setGeneralError("Email ou senha incorretos. Verifique seus dados e tente novamente.");
-        } else {
-          setGeneralError("Erro ao fazer login. Verifique seus dados e tente novamente.");
-        }
-      } else {
-        setGeneralError("Erro inesperado. Tente novamente.");
-      }
+      setGeneralError("Verifique seu e-mail e senha e tente novamente.");
     } finally {
       setIsLoading(false);
     }

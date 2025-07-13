@@ -33,13 +33,11 @@ export const CSRFProtection: React.FC<CSRFProtectionProps> = ({
   }>({ valid: true, errors: [], warnings: [] });
 
   useEffect(() => {
-    if (validateCSRFState) {
-      const state = validateCSRFState();
-      setCSRFState(state);
-      
-      if (!state.valid && onValidationFail) {
-        onValidationFail();
-      }
+    const state = validateCSRFState();
+    setCSRFState(state);
+    
+    if (!state.valid && onValidationFail) {
+      onValidationFail();
     }
   }, [validateCSRFState, onValidationFail]);
 

@@ -19,11 +19,11 @@ export const useAuthOperations = () => {
       const success = await secureSignIn(email, password);
       
       if (!success) {
+        setLoading(false);
         throw new Error("Falha na autenticação");
       }
       
       // O estado do usuário será atualizado pelo listener onAuthStateChange
-      // Não definir loading como false aqui - deixar o contexto de auth gerenciar
     } catch (error: any) {
       setLoading(false);
       throw error;
@@ -36,6 +36,7 @@ export const useAuthOperations = () => {
       const success = await secureSignUp(email, password, nome);
       
       if (!success) {
+        setLoading(false);
         throw new Error("Falha no cadastro");
       }
       
