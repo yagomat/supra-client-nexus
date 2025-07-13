@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { logAuditEvent } from "./auditLog";
 import { setupSessionExpiration } from "./sessionUtils";
 import { checkRateLimit, logAuthAttempt, checkIPRateLimit } from "./rateLimit";
+import { secureLog } from "@/utils/secureLogger";
 
 // Login seguro com limites de rate limiting mais permissivos
 export const secureSignIn = async (email: string, password: string): Promise<boolean> => {
@@ -64,7 +65,7 @@ export const secureSignIn = async (email: string, password: string): Promise<boo
     }
 
     // 4. Se a validação do backend falhar, tentar login direto (mais permissivo)
-    if (validationError || !validationResult?.success) {
+    if (validationError || !(validationResult as any)?.success) {
       console.log("Tentando login direto...");
     }
 
