@@ -38,30 +38,9 @@ export const ClienteModals = ({
   const [showSenha1, setShowSenha1] = useState(false);
   const [showSenha2, setShowSenha2] = useState(false);
 
-  // Função para verificar se um valor precisa ser re-inserido
-  const needsReinsertion = (value: string | null): boolean => {
-    if (!value) return false;
-    return value.includes('[ERRO_DESCRIPTOGRAFIA]');
-  };
-
-  // Função para verificar se um valor ainda está criptografado
-  const isStillEncrypted = (value: string | null): boolean => {
-    if (!value) return false;
-    // Se é muito longo e hexadecimal, provavelmente ainda está criptografado
-    return value.length > 50 && /^[a-f0-9]+$/i.test(value);
-  };
-
   // Função para exibir senha com toggle de visibilidade
   const renderSenhaField = (senha: string | null, show: boolean, toggle: () => void) => {
     if (!senha) return "-";
-    
-    if (needsReinsertion(senha) || isStillEncrypted(senha)) {
-      return (
-        <div className="text-orange-500 text-sm">
-          {needsReinsertion(senha) ? "Erro na descriptografia - digite novamente" : "Dados criptografados - atualize o cliente"}
-        </div>
-      );
-    }
 
     return (
       <div className="flex items-center gap-2">
@@ -80,18 +59,9 @@ export const ClienteModals = ({
     );
   };
 
-  // Função para renderizar usuário (com verificação de criptografia)
+  // Função para renderizar usuário
   const renderUsuarioField = (usuario: string | null) => {
     if (!usuario) return "-";
-    
-    if (needsReinsertion(usuario) || isStillEncrypted(usuario)) {
-      return (
-        <span className="text-orange-500 text-sm">
-          {needsReinsertion(usuario) ? "Erro na descriptografia - digite novamente" : "Dados criptografados - atualize o cliente"}
-        </span>
-      );
-    }
-
     return <SafeText>{usuario}</SafeText>;
   };
 

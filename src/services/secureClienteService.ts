@@ -25,15 +25,19 @@ export class SecureClienteService {
         p_cliente_id: clienteId
       });
 
-      if (!decryptError && decryptedData && typeof decryptedData === 'object' && decryptedData !== null && !('error' in decryptedData)) {
+      if (!decryptError && decryptedData) {
+        // Converter para Cliente e processar os dados
         const clienteData = decryptedData as unknown as Cliente;
+        
+        // Processar os dados para garantir que campos criptografados sejam limpos
+        const processedData = this.processClienteData(clienteData);
         
         secureLog.clientOperation('cliente_decrypted_success', { 
           cliente_id: clienteId,
           method: 'rpc_success'
         });
         
-        return clienteData;
+        return processedData;
       }
 
       // Se a RPC falhou, buscar dados brutos e processar
@@ -82,16 +86,20 @@ export class SecureClienteService {
   private static processClienteData(rawData: any): Cliente {
     const processedData = { ...rawData } as Cliente;
     
-    // Para dados que parecem criptografados, marcar para re-inserção
+    // Para dados que parecem criptografados, limpar completamente
     const sensitiveFields: SensitiveFields[] = ['usuario_aplicativo', 'senha_aplicativo', 'usuario_2', 'senha_2', 'telefone'];
     
     sensitiveFields.forEach(field => {
       const fieldValue = processedData[field];
       
       if (fieldValue && typeof fieldValue === 'string') {
-        // Se parece criptografado (muito longo e hexadecimal), marcar como erro para nova inserção
+        // Se parece criptografado (muito longo e hexadecimal), limpar o campo
         if (fieldValue.length > 50 && /^[a-f0-9]+$/i.test(fieldValue)) {
-          (processedData as any)[field] = '[ERRO_DESCRIPTOGRAFIA]';
+          (processedData as any)[field] = null; // Limpar ao invés de marcar com erro
+        }
+        // Se contém erro de descriptografia, também limpar
+        else if (fieldValue.includes('[ERRO_DESCRIPTOGRAFIA]')) {
+          (processedData as any)[field] = null;
         }
       }
     });
@@ -130,8 +138,9 @@ export class SecureClienteService {
             p_cliente_id: cliente.id
           });
 
-          if (!decryptError && decryptedData && typeof decryptedData === 'object' && decryptedData !== null && !('error' in decryptedData)) {
-            clientesProcessados.push(decryptedData as unknown as Cliente);
+          if (!decryptError && decryptedData) {
+            const clienteData = decryptedData as unknown as Cliente;
+            clientesProcessados.push(this.processClienteData(clienteData));
           } else {
             // Se a RPC falhou, processar os dados brutos
             clientesProcessados.push(this.processClienteData(cliente));
