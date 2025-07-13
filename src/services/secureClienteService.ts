@@ -25,7 +25,7 @@ export class SecureClienteService {
         p_cliente_id: clienteId
       });
 
-      if (!decryptError && decryptedData && !decryptedData.error) {
+      if (!decryptError && decryptedData && typeof decryptedData === 'object' && decryptedData !== null && !('error' in decryptedData)) {
         const clienteData = decryptedData as unknown as Cliente;
         
         secureLog.clientOperation('cliente_decrypted_success', { 
@@ -130,7 +130,7 @@ export class SecureClienteService {
             p_cliente_id: cliente.id
           });
 
-          if (!decryptError && decryptedData && !decryptedData.error) {
+          if (!decryptError && decryptedData && typeof decryptedData === 'object' && decryptedData !== null && !('error' in decryptedData)) {
             clientesProcessados.push(decryptedData as unknown as Cliente);
           } else {
             // Se a RPC falhou, processar os dados brutos
