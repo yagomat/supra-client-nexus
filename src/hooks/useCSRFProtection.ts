@@ -63,6 +63,33 @@ export const useCSRFProtection = () => {
     }
   }, [csrfToken]);
   
+  // Função para validar estado CSRF completo
+  const validateCSRFState = useCallback(() => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    
+    // Verificar token
+    if (!csrfToken) {
+      errors.push('Token CSRF não gerado');
+    }
+    
+    // Verificar origem
+    if (!isValidOrigin) {
+      errors.push('Origem inválida detectada');
+    }
+    
+    // Verificar contexto de autenticação
+    if (!user) {
+      warnings.push('Usuário não autenticado');
+    }
+    
+    return {
+      valid: errors.length === 0,
+      errors,
+      warnings
+    };
+  }, [csrfToken, isValidOrigin, user]);
+  
   // Headers seguros simplificados
   const getSecureHeaders = useCallback((): HeadersInit => {
     return {
@@ -76,6 +103,7 @@ export const useCSRFProtection = () => {
   return {
     csrfToken,
     validateRequest,
+    validateCSRFState,
     getSecureHeaders,
     isValidOrigin,
     isAuthContextAvailable: !!user,

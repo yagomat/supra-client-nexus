@@ -38,8 +38,8 @@ serve(async (req) => {
       )
     }
 
-    const url = new URL(req.url)
-    const action = url.searchParams.get('action')
+    const requestBody = await req.json()
+    const action = requestBody.action
 
     if (action === 'generate') {
       // Gerar novo token CSRF
@@ -84,7 +84,7 @@ serve(async (req) => {
 
     if (action === 'validate') {
       // Validar token CSRF
-      const { token, origin: requestOrigin } = await req.json()
+      const { token, origin: requestOrigin } = requestBody
       
       if (!token) {
         return new Response(

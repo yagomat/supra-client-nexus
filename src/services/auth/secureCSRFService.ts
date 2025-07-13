@@ -22,12 +22,7 @@ export async function generateSecureCSRFToken(): Promise<CSRFTokenResult> {
     console.log('Gerando token CSRF seguro...');
     
     const { data, error } = await supabase.functions.invoke('csrf-token-manager', {
-      body: null,
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    }, {
-      get: true // Use GET com query parameter
+      body: { action: 'generate' }
     });
 
     if (error) {
@@ -74,6 +69,7 @@ export async function validateSecureCSRFToken(
     
     const { data, error } = await supabase.functions.invoke('csrf-token-manager', {
       body: {
+        action: 'validate',
         token,
         origin: origin || window.location.origin
       }
