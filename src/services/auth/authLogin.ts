@@ -5,11 +5,11 @@ import { logAuditEvent } from "./auditLog";
 import { setupSessionExpiration } from "./sessionUtils";
 import { checkRateLimit, logAuthAttempt, checkIPRateLimit } from "./rateLimit";
 
-// Login seguro com auditoria consolidada
+// Login seguro com rate limiting mais permissivo
 export const secureSignIn = async (email: string, password: string): Promise<boolean> => {
   try {
-    // 1. Verificar rate limiting por email
-    const emailRateLimit = await checkRateLimit(email, 'login', 5, 15);
+    // 1. Verificar rate limiting por email - limites mais altos
+    const emailRateLimit = await checkRateLimit(email, 'login', 20, 5); // 20 tentativas em 5 minutos
     
     if (!emailRateLimit.allowed) {
       const resetTime = emailRateLimit.next_allowed_at 
@@ -31,8 +31,8 @@ export const secureSignIn = async (email: string, password: string): Promise<boo
       return false;
     }
 
-    // 2. Verificar rate limiting por IP (proteção adicional)
-    const ipAllowed = await checkIPRateLimit();
+    // 2. Verificar rate limiting por IP (proteção adicional) - mais permissivo
+    const ipAllowed = await checkIPRateLimit(undefined, 50, 5); // 50 tentativas em 5 minutos
     
     if (!ipAllowed) {
       toast.error("Muitas tentativas detectadas", {
@@ -76,12 +76,7 @@ export const secureSignIn = async (email: string, password: string): Promise<boo
       return false;
     }
 
-    const result = validationResult as { 
-      success: boolean; 
-      error?: string; 
-      rate_limited?: boolean;
-      sanitized_email?: string;
-    };
+    const result = validationResult as any;
     
     if (!result.success) {
       const errorMessage = result.rate_limited 
@@ -89,7 +84,7 @@ export const secureSignIn = async (email: string, password: string): Promise<boo
         : "Falha na validação";
       
       const errorDescription = result.error || (result.rate_limited 
-        ? "Tente novamente em 15 minutos." 
+        ? "Tente novamente em alguns minutos." 
         : "Dados inválidos.");
 
       toast.error(errorMessage, {
