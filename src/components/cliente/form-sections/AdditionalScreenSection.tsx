@@ -3,6 +3,7 @@ import React from "react";
 import { Control, useWatch } from "react-hook-form";
 import { SelectField } from "@/components/form/SelectField";
 import { InputField } from "@/components/form/InputField";
+import { RestrictedInputField } from "@/components/form/RestrictedInputField";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ValoresPredefinidos } from "@/types";
 
@@ -69,7 +70,7 @@ export const AdditionalScreenSection: React.FC<AdditionalScreenSectionProps> = (
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <InputField
+          <RestrictedInputField
             name="usuario_2"
             control={control}
             label="Usuário (MAC) 2"
@@ -78,7 +79,7 @@ export const AdditionalScreenSection: React.FC<AdditionalScreenSectionProps> = (
             maxLength={50}
           />
 
-          <InputField
+          <RestrictedInputField
             name="senha_2"
             control={control}
             label="Senha (Id) 2"

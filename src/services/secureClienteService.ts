@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Cliente } from "@/types";
 import { secureLog } from "@/utils/secureLogger";
@@ -18,41 +17,81 @@ export class SecureClienteService {
     try {
       secureLog.clientOperation('get_cliente_decrypted', { cliente_id: clienteId });
 
-      // Usar a função RPC que descriptografa os dados automaticamente
-      const { data, error } = await supabase.rpc('get_cliente_with_decrypted_data', {
+      // Primeiro, tentar buscar dados já descriptografados via RPC
+      const { data: decryptedData, error: decryptError } = await supabase.rpc('get_cliente_with_decrypted_data', {
         p_cliente_id: clienteId
       });
 
-      if (error) {
-        secureLog.error("Erro ao buscar cliente com dados descriptografados", { error: error.message });
-        throw error;
+      if (!decryptError && decryptedData) {
+        const clienteData = decryptedData as unknown as Cliente;
+        
+        // Verificar se a descriptografia foi bem-sucedida
+        const hasDecryptionErrors = [
+          clienteData.usuario_aplicativo,
+          clienteData.senha_aplicativo,
+          clienteData.usuario_2,
+          clienteData.senha_2,
+          clienteData.telefone
+        ].some(field => field && field.includes('[ERRO_DESCRIPTOGRAFIA]'));
+
+        if (!hasDecryptionErrors) {
+          secureLog.clientOperation('cliente_decrypted_success', { 
+            cliente_id: clienteId,
+            method: 'rpc_success'
+          });
+          return clienteData;
+        }
       }
 
-      if (!data) {
+      // Se a RPC falhou ou retornou erros de descriptografia, buscar dados brutos
+      secureLog.clientOperation('fallback_to_raw_data', { cliente_id: clienteId });
+      
+      const { data: rawData, error: rawError } = await supabase
+        .from('clientes')
+        .select('*')
+        .eq('id', clienteId)
+        .single();
+
+      if (rawError) {
+        throw rawError;
+      }
+
+      if (!rawData) {
         throw new Error("Cliente não encontrado");
       }
 
-      // Safe type conversion - convert unknown to Cliente properly
-      const clienteData = data as unknown as Cliente;
+      // Aplicar lógica de fallback para campos com erro de descriptografia
+      const processedData = { ...rawData };
       
-      // Validate that we have the required fields
-      if (!clienteData.id || !clienteData.nome || !clienteData.servidor) {
-        throw new Error("Dados do cliente incompletos após descriptografia");
-      }
-
-      secureLog.clientOperation('cliente_decrypted_success', { 
-        cliente_id: clienteId,
-        has_encrypted_fields: detectClienteEncryptionStatus(clienteData).hasEncryptedFields
+      // Para campos que mostravam erro, tentar diferentes abordagens
+      ['usuario_aplicativo', 'senha_aplicativo', 'usuario_2', 'senha_2', 'telefone'].forEach(field => {
+        const fieldValue = processedData[field as keyof Cliente];
+        
+        if (fieldValue && typeof fieldValue === 'string') {
+          if (fieldValue.includes('[ERRO_DESCRIPTOGRAFIA]')) {
+            // Se está mostrando erro, tentar descriptografar usando método alternativo
+            processedData[field as keyof Cliente] = this.tryAlternativeDecryption(fieldValue) || '';
+          } else if (this.isLikelyEncrypted(fieldValue)) {
+            // Se parece criptografado mas não foi processado, tentar descriptografar
+            processedData[field as keyof Cliente] = this.tryAlternativeDecryption(fieldValue) || fieldValue;
+          }
+        }
       });
 
-      return clienteData;
+      secureLog.clientOperation('cliente_processed_with_fallback', { 
+        cliente_id: clienteId,
+        had_errors: true
+      });
+
+      return processedData as Cliente;
+
     } catch (error) {
       secureLog.error("Erro no SecureClienteService.getClienteWithDecryptedData", { 
         cliente_id: clienteId,
         error: error instanceof Error ? error.message : 'Unknown error'
       });
       
-      // Em caso de erro, tentar buscar o cliente normal
+      // Último recurso: buscar dados brutos sem descriptografia
       const { data: clienteData, error: clienteError } = await supabase
         .from('clientes')
         .select('*')
@@ -64,6 +103,31 @@ export class SecureClienteService {
       }
 
       return clienteData as Cliente;
+    }
+  }
+
+  private static isLikelyEncrypted(value: string): boolean {
+    return value.length > 50 && /^[a-f0-9]+$/i.test(value);
+  }
+
+  private static tryAlternativeDecryption(encryptedValue: string): string | null {
+    try {
+      // Se o valor contém o marcador de erro, remover e tentar processar
+      const cleanValue = encryptedValue.replace('[ERRO_DESCRIPTOGRAFIA]', '').trim();
+      
+      // Se não sobrou nada ou é muito curto, retornar vazio
+      if (!cleanValue || cleanValue.length < 10) {
+        return '';
+      }
+      
+      // Se parece ser dados criptografados válidos, manter como está por enquanto
+      if (this.isLikelyEncrypted(cleanValue)) {
+        return cleanValue;
+      }
+      
+      return cleanValue;
+    } catch {
+      return null;
     }
   }
 

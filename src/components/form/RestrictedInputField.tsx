@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Control } from "react-hook-form";
+import { AlertTriangle } from "lucide-react";
 
 interface RestrictedInputFieldProps {
   name: string;
@@ -33,32 +34,50 @@ export const RestrictedInputField: React.FC<RestrictedInputFieldProps> = ({
     <FormField
       control={control}
       name={name}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>{label}</FormLabel>
-          <FormControl>
-            <div>
-              <Input 
-                type={type} 
-                placeholder={placeholder} 
-                {...field} 
-                value={field.value || ""} 
-                onChange={(e) => {
-                  field.onChange(e.target.value);
-                }}
-                disabled={disabled}
-                maxLength={maxLength}
-              />
-              {maxLength && (
-                <div className="text-xs text-gray-500 text-right mt-0.5">
-                  {field.value?.length || 0}/{maxLength}
-                </div>
+      render={({ field }) => {
+        const hasDecryptionError = field.value && field.value.includes('[ERRO_DESCRIPTOGRAFIA]');
+        
+        return (
+          <FormItem>
+            <FormLabel className={hasDecryptionError ? "text-orange-500" : ""}>
+              {label}
+              {hasDecryptionError && (
+                <span className="ml-2 inline-flex items-center text-xs">
+                  <AlertTriangle className="h-3 w-3 mr-1" />
+                  Erro na descriptografia
+                </span>
               )}
-            </div>
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
+            </FormLabel>
+            <FormControl>
+              <div>
+                <Input 
+                  type={type} 
+                  placeholder={hasDecryptionError ? "Digite novamente o valor" : placeholder}
+                  {...field} 
+                  value={hasDecryptionError ? "" : (field.value || "")}
+                  onChange={(e) => {
+                    field.onChange(e.target.value);
+                  }}
+                  disabled={disabled}
+                  maxLength={maxLength}
+                  className={hasDecryptionError ? "border-orange-500 focus:border-orange-600" : ""}
+                />
+                {maxLength && !hasDecryptionError && (
+                  <div className="text-xs text-gray-500 text-right mt-0.5">
+                    {field.value?.length || 0}/{maxLength}
+                  </div>
+                )}
+                {hasDecryptionError && (
+                  <div className="text-xs text-orange-600 mt-1">
+                    Os dados não puderam ser descriptografados. Digite novamente o valor para atualizá-lo.
+                  </div>
+                )}
+              </div>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        );
+      }}
     />
   );
 };
