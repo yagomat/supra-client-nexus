@@ -19,14 +19,19 @@ export const useAuthOperations = () => {
       const success = await secureSignIn(email, password);
       
       if (!success) {
-        setLoading(false);
         throw new Error("Falha na autenticação");
       }
       
       // O estado do usuário será atualizado pelo listener onAuthStateChange
+      // Não resetamos o loading aqui pois ele será resetado no AuthContext
     } catch (error: any) {
       setLoading(false);
       throw error;
+    } finally {
+      // Resetar loading após um pequeno delay para garantir que o AuthContext processou a mudança
+      setTimeout(() => {
+        setLoading(false);
+      }, 100);
     }
   };
 
@@ -36,14 +41,19 @@ export const useAuthOperations = () => {
       const success = await secureSignUp(email, password, nome);
       
       if (!success) {
-        setLoading(false);
         throw new Error("Falha no cadastro");
       }
       
       // O estado do usuário será atualizado pelo listener onAuthStateChange
+      // Não resetamos o loading aqui pois ele será resetado no AuthContext
     } catch (error: any) {
       setLoading(false);
       throw error;
+    } finally {
+      // Resetar loading após um pequeno delay para garantir que o AuthContext processou a mudança
+      setTimeout(() => {
+        setLoading(false);
+      }, 100);
     }
   };
 
