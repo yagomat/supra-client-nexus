@@ -25,46 +25,14 @@ const AppRoutes = () => {
       
       {/* Rotas públicas */}
       <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/clientes" element={
-        <ProtectedRoute>
-          <ListaClientes />
-        </ProtectedRoute>
-      } />
-      <Route path="/clientes/cadastrar" element={
-        <ProtectedRoute>
-          <CadastrarCliente />
-        </ProtectedRoute>
-      } />
-      <Route path="/clientes/editar/:id" element={
-        <ProtectedRoute>
-          <EditarCliente />
-        </ProtectedRoute>
-      } />
-      <Route path="/banco-dados" element={
-        <ProtectedRoute>
-          <BancoDados />
-        </ProtectedRoute>
-      } />
-      <Route path="/configuracoes" element={
-        <ProtectedRoute>
-          <Configuracoes />
-        </ProtectedRoute>
-      } />
-      <Route path="/alterar-senha" element={
-        <ProtectedRoute>
-          <AlterarSenha />
-        </ProtectedRoute>
-      } />
-      <Route path="/templates" element={
-        <ProtectedRoute>
-          <Templates />
-        </ProtectedRoute>
-      } />
-      <Route path="/migracao-dados" element={
-        <ProtectedRoute>
-          <MigracaoDados />
-        </ProtectedRoute>
-      } />
+      <Route path="/clientes" element={<ListaClientes />} />
+      <Route path="/clientes/cadastrar" element={<CadastrarCliente />} />
+      <Route path="/clientes/editar/:id" element={<EditarCliente />} />
+      <Route path="/banco-dados" element={<BancoDados />} />
+      <Route path="/configuracoes" element={<Configuracoes />} />
+      <Route path="/alterar-senha" element={<AlterarSenha />} />
+      <Route path="/templates" element={<Templates />} />
+      <Route path="/migracao-dados" element={<MigracaoDados />} />
       
       {/* Rota 404 */}
       <Route path="*" element={<NotFound />} />
